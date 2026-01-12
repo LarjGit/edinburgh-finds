@@ -6,7 +6,7 @@ from prisma import Prisma
 from pydantic import ValidationError
 
 from engine.schema.venue import VENUE_FIELDS
-from engine.schema.common import LISTING_FIELDS
+from engine.schema.listing import LISTING_FIELDS
 from engine.schema.generator import create_pydantic_model
 
 # 1. Generate Validators

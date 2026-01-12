@@ -1,13 +1,13 @@
 from typing import Optional, List
 from .core import FieldSpec
-from .common import LISTING_FIELDS
+from .listing import LISTING_FIELDS
 
 # ============================================================
 # VENUE-SPECIFIC FIELD DEFINITIONS
 # ============================================================
 #
 # These fields are specific to Venue entities.
-# They extend the common Listing fields from common.py.
+# They extend the base Listing fields from listing.py.
 # ============================================================
 
 VENUE_SPECIFIC_FIELDS: List[FieldSpec] = [
