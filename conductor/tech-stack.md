@@ -18,3 +18,5 @@
 ## Data Engine / Scripts
 - **Language:** Python
 - **Purpose:** Data extraction, processing, and seeding (ETL).
+- **Validation:** Pydantic (Schema-Driven)
+- **ORM:** Prisma Client Python

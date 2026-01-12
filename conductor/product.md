@@ -17,7 +17,7 @@ To build the premier hyper-local, niche-focused online directory for Edinburgh, 
 - **For Businesses:** Targeted exposure to a high-intent audience, offering a direct channel to potential customers who are actively seeking their services.
 
 ## Key Features (MVP)
-- **Multi-Faceted Search & Discovery:** Users can browse and filter by Category (e.g., Padel) and Entity Type (Venue, Retailer, Coach, Club, Event).
+- **Multi-Faceted Search & Discovery:** Users can browse and filter by Category (e.g., Padel) and Entity Type (Venue, Retailer, Coach, Club, Event). The system is architected to support ANY niche or interest via generic attributes.
 - **Rich Entity Profiles:** Detailed pages for each listing, displaying location, contact details, amenities, services, and specific attribute data (e.g., "Indoor Courts", "Equipment Rental").
 - **User Engagement:** Community-driven reviews and ratings to build trust and provide social proof.
 - **Business Portal:** Functionality for business owners to claim, manage, and update their profiles, laying the groundwork for future monetization (subscriptions/ads).
