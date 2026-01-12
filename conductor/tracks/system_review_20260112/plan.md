@@ -18,6 +18,12 @@
 ## [checkpoint: 6929dda]
 
 ## Phase 3: Remediation Planning
-- [ ] Task: Create a new `plan.md` (or update this one) with specific fix tasks based on findings.
-- [ ] Task: Present "Actionable Plan" to user for approval.
+- [x] Task: Create a new `plan.md` (or update this one) with specific fix tasks based on findings.
+- [x] Task: Present "Actionable Plan" to user for approval.
 - [ ] Task: Conductor - User Manual Verification 'Remediation Planning' (Protocol in workflow.md)
+
+## Phase 4: Remediation Execution (Added via Review Findings)
+- [ ] Task: Update `web/prisma/schema.prisma` to include `url = env("DATABASE_URL")` in the datasource block.
+- [ ] Task: Verify `web/.env` contains a valid `DATABASE_URL` (or create if missing, defaulting to SQLite file).
+- [ ] Task: Run `npx prisma validate` in `web/` to confirm the fix.
+- [ ] Task: Conductor - User Manual Verification 'Remediation Execution' (Protocol in workflow.md)
