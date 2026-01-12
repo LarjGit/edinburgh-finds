@@ -148,6 +148,10 @@ Before marking any task complete, verify:
 - [ ] Documentation updated if needed
 - [ ] No security vulnerabilities introduced
 
+## Maintenance Log
+
+- **2026-01-12:** Renamed `engine/schema/common.py` to `engine/schema/listing.py` for consistency with `venue.py` and logical clarity. Updated all internal imports and the ingestion engine.
+
 ## Development Commands
 
 **AI AGENT INSTRUCTION: This section should be adapted to the project's specific language, framework, and build tools.**
