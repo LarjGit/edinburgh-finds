@@ -1,0 +1,12 @@
+node_modules/
+.next/
+__pycache__/
+*.pyc
+.env
+.venv
+dist/
+build/
+*.db
+*.sqlite
+web/dev.db
+conductor/tmp/

@@ -1,0 +1,104 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Category {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  slug        String       @unique
+  description String?
+  image       String?
+  entityTypes EntityType[]
+  listings    Listing[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model EntityType {
+  id         String     @id @default(cuid())
+  name       String     @unique // e.g., Venue, Coach, Club, Retailer
+  slug       String     @unique
+  categories Category[]
+  listings   Listing[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+}
+
+model Listing {
+  // ------------------------------------------------------------------
+  // IDENTIFICATION
+  // ------------------------------------------------------------------
+  id           String     @id @default(cuid()) // listing_id
+  entity_name  String
+  slug         String     @unique
+
+  // Relations
+  entityTypeId String
+  entityType   EntityType @relation(fields: [entityTypeId], references: [id])
+  categories   Category[]
+
+  // ------------------------------------------------------------------
+  // SUMMARY / DESCRIPTION
+  // ------------------------------------------------------------------
+  summary      String?
+
+  // ------------------------------------------------------------------
+  // FLEXIBLE ATTRIBUTE BUCKETS (Core Architecture Refactor)
+  // ------------------------------------------------------------------
+  
+  // attributes: Validated data driven by FieldSpec (Official Schema)
+  // Stored as JSON string in SQLite
+  attributes            String? 
+
+  // discovered_attributes: Catch-all for AI-extracted data not yet in schema
+  // Stored as JSON string in SQLite
+  discovered_attributes String? 
+
+  // ------------------------------------------------------------------
+  // LOCATION
+  // ------------------------------------------------------------------
+  street_address String?
+  city           String?
+  postcode       String?
+  country        String?
+  latitude       Float?
+  longitude      Float?
+
+  // ------------------------------------------------------------------
+  // CONTACT
+  // ------------------------------------------------------------------
+  phone        String?
+  email        String?
+  website_url  String?
+
+  // ------------------------------------------------------------------
+  // SOCIAL MEDIA
+  // ------------------------------------------------------------------
+  instagram_url String?
+  facebook_url  String?
+  twitter_url   String?
+  linkedin_url  String?
+  mainImage     String? // Kept from original plan for thumbnail
+
+  // ------------------------------------------------------------------
+  // OPENING HOURS
+  // ------------------------------------------------------------------
+  opening_hours String? // stored as JSON
+
+  // ------------------------------------------------------------------
+  // METADATA
+  // ------------------------------------------------------------------
+  source_info      String? // stored as JSON
+  field_confidence String? // stored as JSON
+  external_ids     String? // stored as JSON
+  
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}

@@ -1,0 +1,71 @@
+generator client {
+  provider = "prisma-client-py"
+  interface = "asyncio"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:../web/dev.db"
+}
+
+model Category {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  slug        String       @unique
+  description String?
+  image       String?
+  entityTypes EntityType[]
+  listings    Listing[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model EntityType {
+  id         String     @id @default(cuid())
+  name       String     @unique // e.g., Venue, Coach, Club, Retailer
+  slug       String     @unique
+  categories Category[]
+  listings   Listing[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+}
+
+model Listing {
+  id           String     @id @default(cuid())
+  entity_name  String
+  slug         String     @unique
+
+  entityTypeId String
+  entityType   EntityType @relation(fields: [entityTypeId], references: [id])
+  categories   Category[]
+
+  summary      String?
+  attributes   String? 
+  discovered_attributes String? 
+
+  street_address String?
+  city           String?
+  postcode       String?
+  country        String?
+  latitude       Float?
+  longitude      Float?
+
+  phone        String?
+  email        String?
+  website_url  String?
+
+  instagram_url String?
+  facebook_url  String?
+  twitter_url   String?
+  linkedin_url  String?
+  mainImage     String?
+
+  opening_hours String? 
+
+  source_info      String? 
+  field_confidence String? 
+  external_ids     String? 
+  
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
