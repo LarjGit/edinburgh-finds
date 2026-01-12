@@ -20,7 +20,8 @@
 ## Phase 3: Remediation Planning
 - [x] Task: Create a new `plan.md` (or update this one) with specific fix tasks based on findings.
 - [x] Task: Present "Actionable Plan" to user for approval.
-- [ ] Task: Conductor - User Manual Verification 'Remediation Planning' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Remediation Planning' (Protocol in workflow.md)
+## [checkpoint: 2302d4d]
 
 ## Phase 4: Remediation Execution (Added via Review Findings)
 - [ ] Task: Update `web/prisma/schema.prisma` to include `url = env("DATABASE_URL")` in the datasource block.
