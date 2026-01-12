@@ -24,7 +24,7 @@
     - **Logic:** `ingest_entity(data)` -> Detect Type -> Get Schema -> Validate -> Prisma Create `Listing`.
     - **Note:** Use `prisma-client-python` for type-safe DB access.
 
-## Phase 4: Verification
+## Phase 4: Verification [checkpoint: 4ad39f9]
 - [x] Task: Run Seed with Sample Data. [verification_complete]
     - **Action:** Run the new ingestor with the Powerleague sample data.
     - **Check:** Verify data appears in `Listing` table and `attributes` column contains the niche fields.
