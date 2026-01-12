@@ -27,4 +27,5 @@
 - [x] Task: Update `web/prisma/schema.prisma` to include `url = env("DATABASE_URL")` in the datasource block. (REVERTED: False positive, Prisma 7 uses config file).
 - [x] Task: Verify `web/.env` contains a valid `DATABASE_URL` (or create if missing, defaulting to SQLite file).
 - [x] Task: Run `npx prisma validate` in `web/` to confirm the fix. (Confirmed valid state).
-- [ ] Task: Conductor - User Manual Verification 'Remediation Execution' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Remediation Execution' (Protocol in workflow.md)
+## [checkpoint: 041fae5]
