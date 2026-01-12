@@ -9,11 +9,11 @@
 ## [checkpoint: f594c66]
 
 ## Phase 2: Report Generation
-- [ ] Task: Compile findings into `conductor/tracks/system_review_20260112/architecture_report.md`.
+- [x] Task: Compile findings into `conductor/tracks/system_review_20260112/architecture_report.md`.
     - Section: Schema Analysis (Sync status, Generic Model adoption).
     - Section: Documentation Gaps (Docs -> Code and Code -> Docs).
     - Section: Architectural Health (Dependencies, Structure).
-- [ ] Task: Create `conductor/tracks/system_review_20260112/discrepancy_log.md`.
+- [x] Task: Create `conductor/tracks/system_review_20260112/discrepancy_log.md`.
 - [ ] Task: Conductor - User Manual Verification 'Report Generation' (Protocol in workflow.md)
 
 ## Phase 3: Remediation Planning
