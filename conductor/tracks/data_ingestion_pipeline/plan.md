@@ -45,7 +45,7 @@ Build a modular, two-stage data pipeline that separates raw data ingestion from 
 ## Phase 2: Primary Connectors
 
 ### Tasks
-- [ ] Write tests for Serper API connector
+- [x] Write tests for Serper API connector (4e9f518)
 - [ ] Implement `serper.py` connector (search queries, save results)
 - [ ] Test Serper connector with sample Padel query
 - [ ] Write tests for Google Places API connector
