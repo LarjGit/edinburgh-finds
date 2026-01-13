@@ -31,7 +31,7 @@ Build a modular, two-stage data pipeline that separates raw data ingestion from 
 - [x] Write tests for filesystem storage helpers (0eca636)
 - [x] Implement filesystem storage helpers (create dirs, save JSON, generate paths) (1309aa3)
 - [x] Write tests for deduplication logic (hash-based) (39c1e14)
-- [ ] Implement deduplication logic
+- [x] Implement deduplication logic (033274a)
 - [ ] Create `engine/config/sources.yaml` template for API keys and rate limits
 
 **Success Criteria:**
