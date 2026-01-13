@@ -28,7 +28,7 @@ Build a modular, two-stage data pipeline that separates raw data ingestion from 
 - [x] Create `engine/ingestion/` module structure (697d91a)
 - [x] Write tests for base connector interface (900e128)
 - [x] Implement `base.py` with abstract `BaseConnector` class (fetch, save, deduplicate methods) (17208ef)
-- [ ] Write tests for filesystem storage helpers
+- [x] Write tests for filesystem storage helpers (0eca636)
 - [ ] Implement filesystem storage helpers (create dirs, save JSON, generate paths)
 - [ ] Write tests for deduplication logic (hash-based)
 - [ ] Implement deduplication logic
