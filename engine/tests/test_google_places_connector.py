@@ -162,44 +162,39 @@ class TestGooglePlacesConnectorSearch(unittest.IsolatedAsyncioTestCase):
             }
         }
 
-        # Mock Google Places API response for nearby/text search
+        # Mock Google Places API (New) response for text search
         self.mock_search_response = {
-            "results": [
+            "places": [
                 {
-                    "place_id": "ChIJ3SxxxxxxxxxxxxxH4",
-                    "name": "Edinburgh Padel Club",
-                    "formatted_address": "123 Fake St, Edinburgh EH1 1AA",
-                    "geometry": {
-                        "location": {
-                            "lat": 55.9533,
-                            "lng": -3.1883
-                        }
+                    "id": "ChIJ3SxxxxxxxxxxxxxH4",
+                    "displayName": {"text": "Edinburgh Padel Club"},
+                    "formattedAddress": "123 Fake St, Edinburgh EH1 1AA",
+                    "location": {
+                        "latitude": 55.9533,
+                        "longitude": -3.1883
                     },
                     "rating": 4.5,
-                    "user_ratings_total": 120
+                    "userRatingCount": 120
                 },
                 {
-                    "place_id": "ChIJ4TyxxxxxxxxxxxxH5",
-                    "name": "Padel Scotland",
-                    "formatted_address": "456 Other St, Edinburgh EH2 2BB",
-                    "geometry": {
-                        "location": {
-                            "lat": 55.9500,
-                            "lng": -3.1900
-                        }
+                    "id": "ChIJ4TyxxxxxxxxxxxxH5",
+                    "displayName": {"text": "Padel Scotland"},
+                    "formattedAddress": "456 Other St, Edinburgh EH2 2BB",
+                    "location": {
+                        "latitude": 55.9500,
+                        "longitude": -3.1900
                     },
                     "rating": 4.7,
-                    "user_ratings_total": 89
+                    "userRatingCount": 89
                 }
-            ],
-            "status": "OK"
+            ]
         }
 
     @patch('yaml.safe_load')
     @patch('builtins.open', new_callable=mock_open)
     @patch('aiohttp.ClientSession')
     async def test_fetch_makes_api_request(self, mock_session_class, mock_file, mock_yaml):
-        """Test that fetch method makes HTTP request to Google Places API"""
+        """Test that fetch method makes HTTP POST request to Google Places API (New)"""
         from engine.ingestion.google_places import GooglePlacesConnector
 
         mock_yaml.return_value = self.mock_config
@@ -212,7 +207,7 @@ class TestGooglePlacesConnectorSearch(unittest.IsolatedAsyncioTestCase):
         mock_response.__aexit__ = AsyncMock(return_value=None)
 
         mock_session = AsyncMock()
-        mock_session.get = MagicMock(return_value=mock_response)
+        mock_session.post = MagicMock(return_value=mock_response)
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session.__aexit__ = AsyncMock(return_value=None)
 
@@ -221,8 +216,8 @@ class TestGooglePlacesConnectorSearch(unittest.IsolatedAsyncioTestCase):
         connector = GooglePlacesConnector()
         result = await connector.fetch("padel edinburgh")
 
-        # Verify API was called
-        mock_session.get.assert_called_once()
+        # Verify API was called with POST
+        mock_session.post.assert_called_once()
         self.assertEqual(result, self.mock_search_response)
 
     @patch('yaml.safe_load')
@@ -241,7 +236,7 @@ class TestGooglePlacesConnectorSearch(unittest.IsolatedAsyncioTestCase):
         mock_response.__aexit__ = AsyncMock(return_value=None)
 
         mock_session = AsyncMock()
-        mock_session.get = MagicMock(return_value=mock_response)
+        mock_session.post = MagicMock(return_value=mock_response)
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session.__aexit__ = AsyncMock(return_value=None)
 
@@ -250,16 +245,12 @@ class TestGooglePlacesConnectorSearch(unittest.IsolatedAsyncioTestCase):
         connector = GooglePlacesConnector()
         await connector.fetch("padel edinburgh")
 
-        # Verify API key was included in query parameters
-        call_args = mock_session.get.call_args
-        # Check if called with params dict or constructed URL
-        if 'params' in call_args.kwargs:
-            self.assertIn('key', call_args.kwargs['params'])
-            self.assertEqual(call_args.kwargs['params']['key'], "test_google_api_key_123")
-        else:
-            # API key might be in the URL
-            url = call_args.args[0]
-            self.assertIn("key=test_google_api_key_123", url)
+        # Verify API key was included in X-Goog-Api-Key header (new API format)
+        call_args = mock_session.post.call_args
+        self.assertIn('headers', call_args.kwargs)
+        headers = call_args.kwargs['headers']
+        self.assertIn('X-Goog-Api-Key', headers)
+        self.assertEqual(headers['X-Goog-Api-Key'], "test_google_api_key_123")
 
     @patch('yaml.safe_load')
     @patch('builtins.open', new_callable=mock_open)
@@ -277,7 +268,7 @@ class TestGooglePlacesConnectorSearch(unittest.IsolatedAsyncioTestCase):
         mock_response.__aexit__ = AsyncMock(return_value=None)
 
         mock_session = AsyncMock()
-        mock_session.get = MagicMock(return_value=mock_response)
+        mock_session.post = MagicMock(return_value=mock_response)
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session.__aexit__ = AsyncMock(return_value=None)
 
@@ -286,12 +277,12 @@ class TestGooglePlacesConnectorSearch(unittest.IsolatedAsyncioTestCase):
         connector = GooglePlacesConnector()
         await connector.fetch("padel edinburgh")
 
-        # Verify default params were included
-        call_args = mock_session.get.call_args
-        if 'params' in call_args.kwargs:
-            params = call_args.kwargs['params']
-            # Check for either location param or individual lat/lng
-            self.assertTrue('location' in params or 'radius' in params)
+        # Verify default params were included in request body (new API format)
+        call_args = mock_session.post.call_args
+        self.assertIn('json', call_args.kwargs)
+        body = call_args.kwargs['json']
+        self.assertIn('textQuery', body)
+        self.assertEqual(body['textQuery'], "padel edinburgh")
 
     @patch('yaml.safe_load')
     @patch('builtins.open', new_callable=mock_open)
@@ -310,7 +301,7 @@ class TestGooglePlacesConnectorSearch(unittest.IsolatedAsyncioTestCase):
         mock_response.__aexit__ = AsyncMock(return_value=None)
 
         mock_session = AsyncMock()
-        mock_session.get = MagicMock(return_value=mock_response)
+        mock_session.post = MagicMock(return_value=mock_response)
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session.__aexit__ = AsyncMock(return_value=None)
 
@@ -337,7 +328,7 @@ class TestGooglePlacesConnectorSearch(unittest.IsolatedAsyncioTestCase):
         mock_response.__aexit__ = AsyncMock(return_value=None)
 
         mock_session = AsyncMock()
-        mock_session.get = MagicMock(return_value=mock_response)
+        mock_session.post = MagicMock(return_value=mock_response)
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session.__aexit__ = AsyncMock(return_value=None)
 
@@ -352,26 +343,24 @@ class TestGooglePlacesConnectorSearch(unittest.IsolatedAsyncioTestCase):
     @patch('builtins.open', new_callable=mock_open)
     @patch('aiohttp.ClientSession')
     async def test_fetch_handles_api_error_status(self, mock_session_class, mock_file, mock_yaml):
-        """Test that fetch handles Google Places API error statuses"""
+        """Test that fetch handles Google Places API with no results (new API)"""
         from engine.ingestion.google_places import GooglePlacesConnector
 
         mock_yaml.return_value = self.mock_config
 
-        # Mock API error response (HTTP 200 but API error status)
-        error_response = {
-            "results": [],
-            "status": "ZERO_RESULTS",
-            "error_message": "No results found"
+        # Mock API response with no results (HTTP 200 but empty places array)
+        empty_response = {
+            "places": []
         }
 
         mock_response = AsyncMock()
         mock_response.status = 200
-        mock_response.json = AsyncMock(return_value=error_response)
+        mock_response.json = AsyncMock(return_value=empty_response)
         mock_response.__aenter__ = AsyncMock(return_value=mock_response)
         mock_response.__aexit__ = AsyncMock(return_value=None)
 
         mock_session = AsyncMock()
-        mock_session.get = MagicMock(return_value=mock_response)
+        mock_session.post = MagicMock(return_value=mock_response)
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session.__aexit__ = AsyncMock(return_value=None)
 
@@ -380,9 +369,8 @@ class TestGooglePlacesConnectorSearch(unittest.IsolatedAsyncioTestCase):
         connector = GooglePlacesConnector()
         result = await connector.fetch("padel edinburgh")
 
-        # Should return the response even with ZERO_RESULTS
-        # (implementation can decide how to handle different statuses)
-        self.assertEqual(result, error_response)
+        # Should return the response even with empty results
+        self.assertEqual(result, empty_response)
 
 
 class TestGooglePlacesConnectorSave(unittest.IsolatedAsyncioTestCase):
@@ -399,13 +387,12 @@ class TestGooglePlacesConnectorSave(unittest.IsolatedAsyncioTestCase):
         }
 
         self.test_data = {
-            "results": [
+            "places": [
                 {
-                    "place_id": "ChIJ3SxxxxxxxxxxxxxH4",
-                    "name": "Edinburgh Padel Club"
+                    "id": "ChIJ3SxxxxxxxxxxxxxH4",
+                    "displayName": {"text": "Edinburgh Padel Club"}
                 }
-            ],
-            "status": "OK"
+            ]
         }
 
     @patch('yaml.safe_load')
@@ -581,13 +568,12 @@ class TestGooglePlacesConnectorIntegration(unittest.IsolatedAsyncioTestCase):
         }
 
         self.mock_response = {
-            "results": [
+            "places": [
                 {
-                    "place_id": "ChIJ3SxxxxxxxxxxxxxH4",
-                    "name": "Edinburgh Padel Club"
+                    "id": "ChIJ3SxxxxxxxxxxxxxH4",
+                    "displayName": {"text": "Edinburgh Padel Club"}
                 }
-            ],
-            "status": "OK"
+            ]
         }
 
     @patch('yaml.safe_load')
@@ -612,7 +598,7 @@ class TestGooglePlacesConnectorIntegration(unittest.IsolatedAsyncioTestCase):
         mock_response.__aexit__ = AsyncMock(return_value=None)
 
         mock_session = AsyncMock()
-        mock_session.get = MagicMock(return_value=mock_response)
+        mock_session.post = MagicMock(return_value=mock_response)
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session.__aexit__ = AsyncMock(return_value=None)
 

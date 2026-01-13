@@ -93,9 +93,13 @@ class GooglePlacesConnector(BaseConnector):
             )
 
         # Load other configuration
-        self.base_url = google_places_config.get('base_url', 'https://maps.googleapis.com/maps/api/place')
+        self.base_url = google_places_config.get('base_url', 'https://places.googleapis.com/v1')
         self.timeout = google_places_config.get('timeout_seconds', 30)
         self.default_params = google_places_config.get('default_params', {})
+
+        # Field mask for new API (specifies which fields to return)
+        self.field_mask = google_places_config.get('field_mask',
+            'places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.userRatingCount')
 
         # Initialize database connection
         self.db = Prisma()
@@ -112,10 +116,13 @@ class GooglePlacesConnector(BaseConnector):
 
     async def fetch(self, query: str) -> Dict[str, Any]:
         """
-        Fetch place search results from Google Places API.
+        Fetch place search results from Google Places API (New).
 
-        Makes an HTTP GET request to the Google Places Text Search API with
+        Makes an HTTP POST request to the Google Places Text Search API with
         the search query and configured parameters. Returns the raw JSON response.
+
+        Uses the new Places API (v1) with POST method, X-Goog-Api-Key header,
+        and required X-Goog-FieldMask header for field selection.
 
         Args:
             query: Search query string (e.g., "padel edinburgh")
@@ -132,22 +139,32 @@ class GooglePlacesConnector(BaseConnector):
             >>> connector = GooglePlacesConnector()
             >>> await connector.db.connect()
             >>> results = await connector.fetch("padel courts edinburgh")
-            >>> print(results['results'][0]['name'])
+            >>> print(results['places'][0]['displayName']['text'])
             'Edinburgh Padel Club'
             >>> await connector.db.disconnect()
         """
-        # Build request parameters
-        params = {
-            'query': query,
-            'key': self.api_key,
-            **self.default_params  # Include default params from config
+        # Build request body (new API uses JSON body, not query params)
+        body = {
+            'textQuery': query
         }
 
-        # Make API request
+        # Include default params from config if they exist
+        if self.default_params:
+            body.update(self.default_params)
+
+        # Set up headers (new API uses headers for authentication)
+        headers = {
+            'Content-Type': 'application/json',
+            'X-Goog-Api-Key': self.api_key,
+            'X-Goog-FieldMask': self.field_mask  # Required by new API
+        }
+
+        # Make API request (POST instead of GET for new API)
         async with aiohttp.ClientSession() as session:
-            async with session.get(
-                f"{self.base_url}/textsearch/json",
-                params=params,
+            async with session.post(
+                f"{self.base_url}/places:searchText",
+                json=body,
+                headers=headers,
                 timeout=aiohttp.ClientTimeout(total=self.timeout)
             ) as response:
                 # Check for HTTP errors
@@ -190,12 +207,11 @@ class GooglePlacesConnector(BaseConnector):
         # Compute content hash for deduplication
         content_hash = compute_content_hash(data)
 
-        # Extract result count for metadata
-        result_count = len(data.get('results', []))
+        # Extract result count for metadata (new API uses 'places' instead of 'results')
+        result_count = len(data.get('places', []))
 
-        # Generate a simple record ID based on status and hash
-        status = data.get('status', 'unknown')
-        record_id = f"{status.lower()}_{content_hash[:8]}"
+        # Generate a simple record ID based on result count and hash
+        record_id = f"places_{result_count}_{content_hash[:8]}"
 
         # Generate unique file path
         file_path = generate_file_path(self.source_name, record_id)
@@ -206,7 +222,7 @@ class GooglePlacesConnector(BaseConnector):
         # Prepare metadata as JSON string
         metadata = {
             'result_count': result_count,
-            'status': status
+            'api_version': 'v1'  # New API version
         }
         metadata_json_str = json.dumps(metadata)
 

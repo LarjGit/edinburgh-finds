@@ -91,29 +91,31 @@ async def test_google_places_padel_query():
         print("✓ API request successful!")
         print()
         print("Response Summary:")
-        print(f"  - Status: {data.get('status', 'N/A')}")
-        print(f"  - Results: {len(data.get('results', []))} places")
+        print(f"  - Results: {len(data.get('places', []))} places")
         print()
 
         # Show first 3 results
-        results = data.get('results', [])
-        if results:
+        places = data.get('places', [])
+        if places:
             print("First 3 Places:")
-            for i, result in enumerate(results[:3], 1):
-                print(f"  {i}. {result.get('name', 'N/A')}")
-                print(f"     Place ID: {result.get('place_id', 'N/A')}")
-                print(f"     Address: {result.get('formatted_address', 'N/A')}")
+            for i, place in enumerate(places[:3], 1):
+                display_name = place.get('displayName', {})
+                name = display_name.get('text', 'N/A') if isinstance(display_name, dict) else 'N/A'
+
+                print(f"  {i}. {name}")
+                print(f"     Place ID: {place.get('id', 'N/A')}")
+                print(f"     Address: {place.get('formattedAddress', 'N/A')}")
 
                 # Show location
-                location = result.get('geometry', {}).get('location', {})
+                location = place.get('location', {})
                 if location:
-                    print(f"     Location: {location.get('lat', 'N/A')}, {location.get('lng', 'N/A')}")
+                    print(f"     Location: {location.get('latitude', 'N/A')}, {location.get('longitude', 'N/A')}")
 
                 # Show rating
-                rating = result.get('rating')
-                user_ratings_total = result.get('user_ratings_total')
+                rating = place.get('rating')
+                user_rating_count = place.get('userRatingCount')
                 if rating:
-                    print(f"     Rating: {rating}/5 ({user_ratings_total} reviews)")
+                    print(f"     Rating: {rating}/5 ({user_rating_count} reviews)")
 
                 print()
 
@@ -194,18 +196,19 @@ async def test_google_places_padel_query():
     print()
     print("Summary:")
     print(f"  - Query: '{query}'")
-    print(f"  - Results: {len(data.get('results', []))} places")
+    print(f"  - Results: {len(data.get('places', []))} places")
     print(f"  - Saved to: {file_path}")
     print(f"  - Hash: {content_hash}")
     print()
 
     # Show discovered venues
-    results = data.get('results', [])
-    if results:
+    places = data.get('places', [])
+    if places:
         print("Venues Discovered:")
-        for result in results:
-            name = result.get('name', 'N/A')
-            address = result.get('formatted_address', 'N/A').split(',')[0]  # Just street
+        for place in places:
+            display_name = place.get('displayName', {})
+            name = display_name.get('text', 'N/A') if isinstance(display_name, dict) else 'N/A'
+            address = place.get('formattedAddress', 'N/A').split(',')[0]  # Just street
             print(f"  - {name} ({address})")
         print()
 
