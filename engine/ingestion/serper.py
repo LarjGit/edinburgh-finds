@@ -16,6 +16,7 @@ API Documentation: https://serper.dev/
 """
 
 import os
+import json
 import yaml
 import aiohttp
 from typing import Dict, Any, Optional
@@ -203,6 +204,14 @@ class SerperConnector(BaseConnector):
         # Save JSON to filesystem
         save_json(file_path, data)
 
+        # Prepare metadata as JSON string
+        metadata = {
+            'query': query,
+            'result_count': len(data.get('organic', [])),
+            'search_type': data.get('searchParameters', {}).get('type', 'search')
+        }
+        metadata_json_str = json.dumps(metadata)
+
         # Create database record
         await self.db.rawingestion.create(
             data={
@@ -212,11 +221,7 @@ class SerperConnector(BaseConnector):
                 'hash': content_hash,
                 'status': 'success',
                 'ingested_at': datetime.now(),
-                'metadata_json': {
-                    'query': query,
-                    'result_count': len(data.get('organic', [])),
-                    'search_type': data.get('searchParameters', {}).get('type', 'search')
-                }
+                'metadata_json': metadata_json_str
             }
         )
 
