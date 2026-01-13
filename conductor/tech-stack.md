@@ -8,7 +8,7 @@
 
 ## Backend
 - **Framework:** Next.js API Routes (Server Actions/API)
-- **ORM:** Prisma
+- **ORM:** Prisma 5 (Stable) - *Pinned to v5 to ensure stability with SQLite and standard configuration.*
 - **Language:** TypeScript
 
 ## Database

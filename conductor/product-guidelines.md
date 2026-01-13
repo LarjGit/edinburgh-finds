@@ -7,7 +7,7 @@
 
 ## Tone of Voice
 - **The "Local Expert":** The copy should sound like a knowledgeable local guide—warm, helpful, and authoritative.
-- **Curated yet Comprehensive:** Bridge the gap between "hand-picked" and "AI-aggregated." Use language that implies care and selection (e.g., "Discover Edinburgh's Best X") while maintaining the objectivity of a directory.
+- **The "Magic Trick" (AI as Artisan):** The platform uses AI to aggregate data at scale, but the output must *never* feel robotic, scraped, or generic. The tone should bridge the gap between "hand-picked" and "data-rich," ensuring users feel they are browsing a carefully tended garden, not a wild forest.
 - **Trustworthy:** Avoid salesy hype. Focus on accuracy and utility.
 
 ## User Experience (UX) Principles

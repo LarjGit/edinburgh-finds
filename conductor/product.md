@@ -12,6 +12,10 @@ To build the premier hyper-local, niche-focused online directory for Edinburgh, 
 - **Business Owners/Service Providers:** Venues, Retailers, Coaches, and Clubs seeking to increase visibility, attract local traffic, and generate leads.
 - **Event Organizers:** Individuals or groups promoting competitions, social gatherings, or clinics.
 
+## Unique Selling Proposition (USP)
+**"AI-Scale, Local Soul"**
+The platform differentiates itself by using Large Language Models (LLMs) to autonomously source, ingest, and structure directory data. This allows for rapid scaling and high data density with minimal human overhead. However, the presentation and data quality are tuned to mimic a "locally curated" experience. The end user should feel guided by a knowledgeable local expert, unaware that the heavy lifting is done by AI, with humans only strictly in the loop for final quality control.
+
 ## Core Value Proposition
 - **For Enthusiasts:** A centralized, trusted resource to find everything related to their specific hobby in their local area, saving time and uncovering new opportunities.
 - **For Businesses:** Targeted exposure to a high-intent audience, offering a direct channel to potential customers who are actively seeking their services.
