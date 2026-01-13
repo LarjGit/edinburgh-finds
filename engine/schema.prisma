@@ -62,10 +62,25 @@ model Listing {
 
   opening_hours String? 
 
-  source_info      String? 
-  field_confidence String? 
-  external_ids     String? 
-  
+  source_info      String?
+  field_confidence String?
+  external_ids     String?
+
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
+}
+
+model RawIngestion {
+  id            String   @id @default(cuid())
+  source        String   // e.g., "serper", "google_places", "osm"
+  source_url    String   // Original URL or query that generated this data
+  file_path     String   // Path to raw JSON file: engine/data/raw/<source>/<timestamp>_<id>.json
+  status        String   // e.g., "success", "failed", "pending"
+  ingested_at   DateTime @default(now())
+  hash          String   // Content hash for deduplication
+  metadata_json String?  // Additional metadata stored as JSON
+
+  @@index([source])
+  @@index([status])
+  @@index([hash])
 }
