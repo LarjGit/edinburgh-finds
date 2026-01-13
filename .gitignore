@@ -12,3 +12,6 @@ web/dev.db
 conductor/tmp/
 tmpclaude-*
 nul
+.claude/
+.obsidian/
+*.db-journal
