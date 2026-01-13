@@ -23,7 +23,7 @@ Build a modular, two-stage data pipeline that separates raw data ingestion from 
 ## Phase 1: Foundation
 
 ### Tasks
-- [ ] Add `RawIngestion` model to Prisma schema with fields: id, source, source_url, file_path, status, ingested_at, hash, metadata_json
+- [x] Add `RawIngestion` model to Prisma schema with fields: id, source, source_url, file_path, status, ingested_at, hash, metadata_json (a47c3e8)
 - [ ] Run Prisma migration to create table
 - [ ] Create `engine/ingestion/` module structure
 - [ ] Write tests for base connector interface
