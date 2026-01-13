@@ -23,5 +23,7 @@ fetching logic while leveraging shared infrastructure for storage, deduplication
 and error handling.
 """
 
+from engine.ingestion.base import BaseConnector
+
 __version__ = "0.1.0"
-__all__ = []
+__all__ = ["BaseConnector"]
