@@ -49,7 +49,7 @@ Build a modular, two-stage data pipeline that separates raw data ingestion from 
 - [x] Implement `serper.py` connector (search queries, save results) (6e0f6bf)
 - [x] Test Serper connector with sample Padel query (4002dbe)
 - [x] Write tests for Google Places API connector (c07b328)
-- [ ] Implement `google_places.py` connector (place search, place details)
+- [x] Implement `google_places.py` connector (place search, place details) (6f0dc54)
 - [ ] Test Google Places connector with Edinburgh Padel venues
 - [ ] Write tests for OSM Overpass API connector
 - [ ] Implement `open_street_map.py` connector (sports facilities query)
