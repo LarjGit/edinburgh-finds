@@ -1,2 +1,4 @@
 prisma
 pydantic
+pyyaml
+aiohttp
