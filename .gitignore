@@ -10,3 +10,5 @@ build/
 *.sqlite
 web/dev.db
 conductor/tmp/
+tmpclaude-*
+nul
