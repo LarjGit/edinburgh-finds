@@ -27,7 +27,7 @@ Build a modular, two-stage data pipeline that separates raw data ingestion from 
 - [x] Run Prisma migration to create table (a47c3e8)
 - [x] Create `engine/ingestion/` module structure (697d91a)
 - [x] Write tests for base connector interface (900e128)
-- [ ] Implement `base.py` with abstract `BaseConnector` class (fetch, save, deduplicate methods)
+- [x] Implement `base.py` with abstract `BaseConnector` class (fetch, save, deduplicate methods) (17208ef)
 - [ ] Write tests for filesystem storage helpers
 - [ ] Implement filesystem storage helpers (create dirs, save JSON, generate paths)
 - [ ] Write tests for deduplication logic (hash-based)
