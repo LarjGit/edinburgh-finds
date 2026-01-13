@@ -32,7 +32,7 @@ Build a modular, two-stage data pipeline that separates raw data ingestion from 
 - [x] Implement filesystem storage helpers (create dirs, save JSON, generate paths) (1309aa3)
 - [x] Write tests for deduplication logic (hash-based) (39c1e14)
 - [x] Implement deduplication logic (033274a)
-- [ ] Create `engine/config/sources.yaml` template for API keys and rate limits
+- [x] Create `engine/config/sources.yaml` template for API keys and rate limits (46b16a4)
 
 **Success Criteria:**
 - RawIngestion table exists in database
