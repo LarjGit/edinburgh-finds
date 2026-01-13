@@ -1,0 +1,124 @@
+# Data Source Configuration Template
+#
+# This file defines configuration for all data ingestion sources including
+# API credentials, rate limits, and source-specific settings.
+#
+# SETUP INSTRUCTIONS:
+# 1. Copy this file to sources.yaml: cp sources.yaml.example sources.yaml
+# 2. Replace placeholder values with your actual API keys and credentials
+# 3. Never commit sources.yaml to version control (it's in .gitignore)
+#
+# RATE LIMITING:
+# - requests_per_minute: Maximum requests allowed per minute
+# - requests_per_hour: Maximum requests allowed per hour
+# - Use null for unlimited (not recommended for external APIs)
+
+# ==============================================================================
+# PRIMARY SOURCES - Core entity data (venues, coaches, retailers, clubs)
+# ==============================================================================
+
+serper:
+  # Serper API - Web search results
+  # Sign up: https://serper.dev/
+  enabled: true
+  api_key: "YOUR_SERPER_API_KEY_HERE"
+  base_url: "https://google.serper.dev"
+  timeout_seconds: 30
+  rate_limits:
+    requests_per_minute: 60
+    requests_per_hour: 1000
+  # Optional: Specific search parameters
+  default_params:
+    gl: "uk"  # Geolocation: United Kingdom
+    hl: "en"  # Language: English
+    num: 10   # Number of results per query
+
+google_places:
+  # Google Places API - Venue and business data
+  # Get API key: https://developers.google.com/maps/documentation/places/web-service/get-api-key
+  enabled: true
+  api_key: "YOUR_GOOGLE_PLACES_API_KEY_HERE"
+  base_url: "https://maps.googleapis.com/maps/api/place"
+  timeout_seconds: 30
+  rate_limits:
+    requests_per_minute: 60
+    requests_per_hour: 2000
+  # Optional: Default search radius and location
+  default_params:
+    radius: 50000  # 50km radius
+    location: "55.9533,-3.1883"  # Edinburgh coordinates (lat,lng)
+
+open_street_map:
+  # OpenStreetMap Overpass API - Geographic and facility data
+  # Public API, no key required (but please be respectful with rate limits)
+  enabled: true
+  api_key: null  # No API key required
+  base_url: "https://overpass-api.de/api"
+  timeout_seconds: 60  # OSM queries can be slower
+  rate_limits:
+    requests_per_minute: 2   # Conservative limit for public API
+    requests_per_hour: 100
+  # Optional: Default bounding box for Edinburgh
+  default_params:
+    bbox: "-3.5,55.8,-3.0,56.0"  # Edinburgh bounding box (west,south,east,north)
+
+# ==============================================================================
+# ENRICHMENT SOURCES - Additional attributes (EV charging, transit, etc.)
+# ==============================================================================
+
+open_charge_map:
+  # OpenChargeMap API - EV charging station data
+  # Get API key: https://openchargemap.org/site/develop/api
+  enabled: true
+  api_key: "YOUR_OPENCHARGEMAP_API_KEY_HERE"
+  base_url: "https://api.openchargemap.io/v3"
+  timeout_seconds: 30
+  rate_limits:
+    requests_per_minute: 60
+    requests_per_hour: 1000
+  # Optional: Default search parameters
+  default_params:
+    countrycode: "GB"
+    maxresults: 100
+
+sport_scotland:
+  # SportScotland Open Data - Sports facilities and clubs
+  # Check availability: https://sportscotland.org.uk/
+  enabled: false  # Enable when connector is implemented
+  api_key: null  # Check if API key is required
+  base_url: "https://data.sportscotland.org.uk/api"  # Placeholder URL
+  timeout_seconds: 30
+  rate_limits:
+    requests_per_minute: 30
+    requests_per_hour: 500
+
+edinburgh_council:
+  # Edinburgh Council Open Data - Local facilities and services
+  # Data portal: https://edinburghopendata.info/
+  enabled: false  # Enable when connector is implemented
+  api_key: null  # Public data, may not require key
+  base_url: "https://edinburghopendata.info/api"  # Placeholder URL
+  timeout_seconds: 30
+  rate_limits:
+    requests_per_minute: 30
+    requests_per_hour: 500
+
+# ==============================================================================
+# GLOBAL SETTINGS
+# ==============================================================================
+
+global:
+  # Retry configuration for failed requests
+  retry:
+    max_attempts: 3
+    backoff_factor: 2  # Exponential backoff: 1s, 2s, 4s, etc.
+    retry_on_status_codes: [429, 500, 502, 503, 504]
+
+  # User agent for HTTP requests
+  user_agent: "EdinburghFinds/0.1.0 Data Ingestion (https://edinburghfinds.co.uk)"
+
+  # Logging configuration
+  logging:
+    level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+    log_api_requests: true
+    log_api_responses: false  # Set true for debugging (verbose)

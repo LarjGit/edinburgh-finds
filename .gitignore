@@ -15,3 +15,6 @@ nul
 .claude/
 .obsidian/
 *.db-journal
+
+# Engine configuration with API keys
+engine/config/sources.yaml
