@@ -24,6 +24,7 @@ and error handling.
 """
 
 from engine.ingestion.base import BaseConnector
+from engine.ingestion import storage
 
 __version__ = "0.1.0"
-__all__ = ["BaseConnector"]
+__all__ = ["BaseConnector", "storage"]

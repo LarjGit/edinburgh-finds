@@ -190,8 +190,8 @@ class TestStorageHelpers(unittest.TestCase):
         source = "serper"
         source_dir = get_source_dir(source)
 
-        # Should return engine/data/raw/<source>
-        expected = os.path.join("engine", "data", "raw", source)
+        # Should return engine/data/raw/<source> with forward slashes
+        expected = "engine/data/raw/serper"
         self.assertEqual(source_dir, expected)
 
 
