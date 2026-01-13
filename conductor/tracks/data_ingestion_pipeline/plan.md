@@ -53,7 +53,7 @@ Build a modular, two-stage data pipeline that separates raw data ingestion from 
 - [x] Test Google Places connector with Edinburgh Padel venues (4824a2c)
 - [x] Upgrade Google Places connector to new Places API (not deprecated) (c31298b)
 - [x] Write tests for OSM Overpass API connector (6b53005)
-- [ ] Implement `open_street_map.py` connector (sports facilities query)
+- [x] Implement `open_street_map.py` connector (sports facilities query) (fee0fff)
 - [ ] Test OSM connector with Padel/sports facility queries
 - [ ] Create CLI script to run individual connectors (e.g., `python -m engine.ingestion.serper "padel edinburgh"`)
 
