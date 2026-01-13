@@ -25,6 +25,7 @@ and error handling.
 
 from engine.ingestion.base import BaseConnector
 from engine.ingestion import storage
+from engine.ingestion import deduplication
 
 __version__ = "0.1.0"
-__all__ = ["BaseConnector", "storage"]
+__all__ = ["BaseConnector", "storage", "deduplication"]
