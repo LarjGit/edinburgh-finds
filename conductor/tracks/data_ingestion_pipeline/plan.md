@@ -95,7 +95,7 @@ Build a modular, two-stage data pipeline that separates raw data ingestion from 
 ## Phase 4: Quality & Observability
 
 ### Tasks
-- [ ] Write tests for logging infrastructure
+- [x] Write tests for logging infrastructure (f89f431)
 - [ ] Implement structured logging (source, timestamp, status, errors)
 - [ ] Write tests for rate limiting decorator
 - [ ] Implement rate limiting with configurable limits per source
