@@ -1,5 +1,8 @@
 # Technology Stack
 
+## System Architecture
+See /ARCHITECTURE.md for complete system design, 
+component interactions, data flows, entity relationships, and scaling strategies.
 ## Frontend
 - **Framework:** Next.js (React)
 - **Styling:** Tailwind CSS
