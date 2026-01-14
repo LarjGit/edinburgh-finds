@@ -102,7 +102,7 @@ Build a modular, two-stage data pipeline that separates raw data ingestion from 
 - [x] Write tests for retry logic with exponential backoff (4d38829)
 - [x] Implement retry logic for failed requests (26d5dad)
 - [x] Create CLI status command to view ingestion statistics (a28da23)
-- [ ] Write tests for ingestion health checks
+- [x] Write tests for ingestion health checks (6421f91)
 - [ ] Implement health check: failed ingestions, stale data, API quota usage
 - [ ] Create ingestion summary report (records by source, success rate, errors)
 
