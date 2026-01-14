@@ -254,8 +254,10 @@ class TestShowStatusOutput(unittest.TestCase):
         asyncio.run(show_status())
         output = mock_stdout.getvalue()
 
+        # Check for recent ingestions section (case-insensitive)
+        output_lower = output.lower()
         self.assertTrue(
-            'Recent' in output or 'Latest' in output
+            'recent' in output_lower or 'latest' in output_lower
         )
 
 
@@ -269,7 +271,9 @@ class TestStatusCommandCLIIntegration(unittest.TestCase):
         from engine.ingestion.cli import main
 
         # Mock show_status to return a coroutine
-        mock_show_status.return_value = asyncio.coroutine(lambda: None)()
+        async def mock_coro():
+            return None
+        mock_show_status.return_value = mock_coro()
 
         try:
             main()

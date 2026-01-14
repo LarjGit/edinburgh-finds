@@ -496,7 +496,9 @@ class TestHealthCheckIntegration(unittest.TestCase):
         # Should return data that can be displayed
         result = asyncio.run(check_health())
         self.assertIn('status', result)
-        self.assertIn('message' in str(result) or 'status' in str(result), True)
+        # Verify result contains expected fields
+        result_str = str(result)
+        self.assertTrue('message' in result_str or 'status' in result_str)
 
 
 if __name__ == '__main__':
