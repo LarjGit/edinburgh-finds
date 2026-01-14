@@ -55,7 +55,7 @@ Build a modular, two-stage data pipeline that separates raw data ingestion from 
 - [x] Write tests for OSM Overpass API connector (6b53005)
 - [x] Implement `open_street_map.py` connector (sports facilities query) (fee0fff)
 - [x] Test OSM connector with Padel/sports facility queries (92d5a67)
-- [ ] Create CLI script to run individual connectors (e.g., `python -m engine.ingestion.serper "padel edinburgh"`)
+- [x] Create CLI script to run individual connectors (e.g., `python -m engine.ingestion.serper "padel edinburgh"`) (8f0c1eb)
 
 **Success Criteria:**
 - Each connector successfully fetches and saves raw data
