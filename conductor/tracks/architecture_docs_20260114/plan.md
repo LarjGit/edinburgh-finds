@@ -18,10 +18,10 @@
 - [x] Task: Draft "Scaling Path" section (Horizontal vs Vertical scaling strategies).
 - [x] Task: Draft "Deployment & Infrastructure" section.
 
-## Phase 4: Visualization & Assembly
+## Phase 4: Visualization & Assembly [checkpoint: d7a8ff8]
 - [x] Task: Create Mermaid.js diagram for "Universal Entity Framework" (Schema).
 - [x] Task: Create Mermaid.js diagram for "Data Ingestion Pipeline".
 - [x] Task: Create Mermaid.js diagram for "Business Claiming/Override Logic".
 - [x] Task: Assemble all sections into `ARCHITECTURE.md` in the project root.
 - [x] Task: Verify all links to external documents (`docs/architecture/*`, `conductor/*`) are valid.
-- [ ] Task: Conductor - User Manual Verification 'Visualization & Assembly' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Visualization & Assembly' (Protocol in workflow.md)
