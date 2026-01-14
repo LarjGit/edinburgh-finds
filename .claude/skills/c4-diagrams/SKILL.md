@@ -44,10 +44,9 @@ The C4 diagrams should represent only the runtime application architecture (web 
 When invoked, this skill will:
 - **Scope:** Only `engine/` and `web/` folders
 - **Generate:** Level 1 (Context) and Level 2 (Container) diagrams
-- **Format:** Mermaid syntax with top-down (TB) orientation for Obsidian readability
+- **Format:** Mermaid syntax with top-down (TB) orientation, optimized for narrow vertical scrolling (Obsidian-friendly)
 - **Output:** Separate files per diagram level
 - **Location:** `docs/architecture/` at repository root (standard best practice)
-- **Technology labels:** All containers labeled with primary tech stack (e.g., Python/FastAPI, React, PostgreSQL)
 
 ## Core Instructions
 
@@ -349,7 +348,7 @@ Before marking complete:
 1. **Code-Only Inspection** - NEVER read documentation files (README, conductor/, docs/, etc.)
 2. **Technology Labels Are Mandatory** - Every container MUST show its tech stack from actual code
 3. **Use Consistent Naming** - Match names in diagrams to actual code/services in engine/ and web/
-4. **Top-Down Orientation** - Always use `graph TB` for vertical layout (Obsidian-friendly)
+4. **Top-Down Orientation** - Always use `graph TB`. STRONGLY PREFER narrow, vertical stacking over wide horizontal ranks. Avoid wide subgraphs that force horizontal scrolling in Obsidian.
 5. **Separate Files** - One file per diagram level for easier navigation
 6. **Version Control** - Treat diagrams as code, commit with meaningful messages
 7. **Validate Against Code** - Technology labels must match actual package.json, requirements.txt, schema.prisma, imports

@@ -1,64 +1,58 @@
 # C4 Level 1: System Context
 
-**Generated:** 2026-01-13
+**Generated:** 2026-01-14
 **System:** Edinburgh Finds
 
 ## Purpose
 
-This diagram shows how users and external systems interact with Edinburgh Finds, a hyper-local directory platform connecting enthusiasts with venues, coaches, retailers, clubs, and events in Edinburgh.
+This diagram shows how users and external systems interact with Edinburgh Finds, a hyper-local directory platform connecting enthusiasts with venues, coaches, retailers, and clubs.
 
 ## Diagram
 
 ```mermaid
 graph TB
     %% Users
-    User["👤 Enthusiast<br/>(End User)<br/>Discovers and explores local venues, coaches, events"]
-    BusinessOwner["👤 Business Owner<br/>(Content Provider)<br/>Claims and manages listings for marketing visibility"]
-    Admin["👤 Administrator<br/>(System Manager)<br/>Manages platform data and content quality"]
+    User["👤 User<br/>(End User)<br/>Browses and searches for local venues,<br/>coaches, retailers, and clubs"]
+    Admin["👤 Admin<br/>(System Administrator)<br/>Runs data ingestion connectors<br/>to populate the directory"]
 
     %% System
-    System["📦 Edinburgh Finds<br/>Hyper-local Discovery Platform<br/>Niche-focused directory starting with Padel, connecting enthusiasts with local businesses"]
+    System["📦 Edinburgh Finds<br/>Hyper-local directory platform<br/>Connects enthusiasts with local<br/>venues, coaches, retailers, and events"]
 
     %% External Systems
-    GoogleMaps["⚙️ Google Maps API<br/>(Location Service)<br/>Provides geocoding and map data"]
-    DataSources["⚙️ External Data Sources<br/>(Web APIs & Scrapers)<br/>Supplies venue and business information"]
+    SerperAPI["⚙️ Serper API<br/>(Google Search Results)<br/>Provides search result data<br/>for venue discovery"]
+    GooglePlaces["⚙️ Google Places API<br/>(Location Data)<br/>Provides venue details,<br/>reviews, and contact information"]
+    OSM["⚙️ OpenStreetMap<br/>(Geographic Data)<br/>Provides geographic data<br/>for venue locations"]
 
     %% Relationships
-    User -->|"Browses and searches via HTTPS"| System
-    BusinessOwner -->|"Claims listings via HTTPS (future)"| System
-    Admin -->|"Manages data via Python CLI"| System
-    System -->|"Geocoding API / HTTPS"| GoogleMaps
-    DataSources -->|"Provides raw data / HTTP/JSON"| System
+    User -->|"Browses listings via HTTPS"| System
+    Admin -->|"Runs ingestion CLI via Python"| System
+    System -->|"Fetches search results / HTTPS"| SerperAPI
+    System -->|"Fetches venue data / HTTPS"| GooglePlaces
+    System -->|"Fetches geographic data / HTTP"| OSM
 ```
 
 ## Key Actors
 
-- **Enthusiast:** End users discovering local venues, coaches, and events. Includes beginners ("where to start?"), active players ("how to improve?"), and problem-solvers ("where is available?").
-- **Business Owner:** Venue operators, coaches, retailers seeking high-intent leads. Platform is a marketing channel, not a booking engine.
-- **Administrator:** Platform operators managing data quality, running ingestion pipelines, and maintaining content standards.
+- **User:** End users who browse and search for local venues, coaches, retailers, clubs, and events in Edinburgh
+- **Admin:** System administrators who run data ingestion connectors via CLI to populate and update the directory
 
 ## External Dependencies
 
 | System | Purpose | Protocol |
 |--------|---------|----------|
-| Google Maps API | Geocoding addresses, providing map visualization | HTTPS / REST API |
-| External Data Sources | Automated data collection from web APIs and scraping (e.g., Serper, OSM, Google Places) | HTTP/HTTPS / JSON |
+| Serper API | Provides Google search results for discovering venues and entities | HTTPS |
+| Google Places API | Provides detailed venue information, reviews, and contact data | HTTPS |
+| OpenStreetMap | Provides geographic data and location information for venues | HTTP/HTTPS |
 
 ## System Boundary
 
-**Inside the system:**
-- Web application for user discovery
-- Data ingestion and processing engine
-- Listing database with flexible attribute schema
+The Edinburgh Finds system encompasses:
+- Web application for end users to browse listings
+- Data ingestion engine for collecting and validating venue data
+- Database for storing validated listings
+- Raw data storage for archiving source data
 
-**Outside the system:**
-- Payment processing (future)
-- Real-time booking systems (out of scope)
-- Third-party analytics (potential future integration)
-
-## Context Notes
-
-- **MVP Focus:** Single niche (Padel in Edinburgh) with architecture designed for horizontal scaling to other hobbies
-- **Trust Architecture:** Business-claimed data is the gold standard; tiered confidence system
-- **Growth Strategy:** Free listings, SEO-first programmatic content, community trust building
-- **Future Monetization:** Freemium model with premium listings, analytics, featured placement
+External to the system:
+- Third-party data sources (Serper, Google Places, OSM)
+- End user browsers
+- Administrator workstations
