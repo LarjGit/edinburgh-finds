@@ -100,8 +100,33 @@ model Listing {
   field_confidence String? // stored as JSON
   external_ids     String? // stored as JSON
 
+  // ------------------------------------------------------------------
+  // RELATIONSHIPS
+  // ------------------------------------------------------------------
+  outgoingRelationships ListingRelationship[] @relation("SourceListing")
+  incomingRelationships ListingRelationship[] @relation("TargetListing")
+
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
+}
+
+model ListingRelationship {
+  id              String  @id @default(cuid())
+  sourceListingId String
+  targetListingId String
+  type            String  // e.g., "teaches_at", "plays_at", "part_of"
+  confidence      Float?  // Optional confidence score (0.0 - 1.0)
+  source          String  // Which connector/source discovered this relationship
+
+  sourceListing Listing @relation("SourceListing", fields: [sourceListingId], references: [id], onDelete: Cascade)
+  targetListing Listing @relation("TargetListing", fields: [targetListingId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sourceListingId])
+  @@index([targetListingId])
+  @@index([type])
 }
 
 model RawIngestion {
