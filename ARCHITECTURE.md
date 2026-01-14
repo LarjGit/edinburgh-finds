@@ -9,6 +9,27 @@ The system is composed of three primary subsystems:
 2.  **Data Engine (Ingestion):** An autonomous Python-based pipeline that sources, deduplicates, and structures data from multiple external APIs.
 3.  **Universal Entity Framework (Database):** A flexible schema designed to support any vertical (e.g., Padel, Golf) without structural changes.
 
+## 2. Universal Entity Framework
+
+The Core Architecture is built around the "Universal Entity Framework," allowing the system to scale horizontally to any niche (e.g., Padel, Golf, Climbing) without requiring database schema migrations for each new vertical.
+
+### 2.1. The 5 Entity Pillars
+Every entity in the system maps to one of five fundamental types, defined in the `EntityType` model:
+
+1.  **Infrastructure:** Physical locations where the activity happens (e.g., Padel Courts, Golf Courses).
+2.  **Commerce:** Retailers selling equipment (e.g., Racket Shops).
+3.  **Guidance:** Human expertise (e.g., Coaches, Instructors).
+4.  **Organization:** Social structures (e.g., Clubs, Leagues).
+5.  **Momentum:** Time-bound occurrences (e.g., Tournaments, Events).
+
+### 2.2. Schema Implementation
+To support this flexibility, the `Listing` model uses a "Flexible Attribute Bucket" strategy:
+
+-   **Core Fields:** Structured columns for universal data (Name, Location, Contact Info).
+-   **Flexible Attributes:** Two JSON columns store niche-specific details:
+    -   `attributes`: validated data conforming to the official schema.
+    -   `discovered_attributes`: raw AI-extracted properties waiting for validation.
+
 ## 6. Key Technical Decisions
 
 ### 6.1. Next.js (App Router)
