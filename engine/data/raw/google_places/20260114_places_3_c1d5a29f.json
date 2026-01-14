@@ -1,0 +1,62 @@
+{
+  "places": [
+    {
+      "id": "ChIJhwNDsAjFh0gRDARGLR5vtdI",
+      "types": [
+        "sports_activity_location",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "1, New Park Square, Edinburgh Park, Edinburgh EH12 9GR, UK",
+      "location": {
+        "latitude": 55.930189299999995,
+        "longitude": -3.3153414999999997
+      },
+      "rating": 4.4,
+      "googleMapsUri": "https://maps.google.com/?cid=15183163894148760588&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA",
+      "userRatingCount": 15,
+      "displayName": {
+        "text": "Game4Padel | Edinburgh Park",
+        "languageCode": "en"
+      }
+    },
+    {
+      "id": "ChIJJ1wsKEzHh0gRXAPDQl3Xrjs",
+      "types": [
+        "sports_activity_location",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Thistle Padel, Paties Rd, Katesmill Rd, Edinburgh EH14 1JF, UK",
+      "location": {
+        "latitude": 55.9143751,
+        "longitude": -3.251317
+      },
+      "rating": 3.8,
+      "googleMapsUri": "https://maps.google.com/?cid=4300611489737409372&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA",
+      "userRatingCount": 4,
+      "displayName": {
+        "text": "Thistle Padel | Game4Padel",
+        "languageCode": "en"
+      }
+    },
+    {
+      "id": "ChIJjbSf_ZbHh0gRIua9f3sJJIg",
+      "types": [
+        "corporate_office",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Unit 39, 4-5 Lochside Way, Edinburgh EH12 9DT, UK",
+      "location": {
+        "latitude": 55.9528957,
+        "longitude": -3.2024519
+      },
+      "googleMapsUri": "https://maps.google.com/?cid=9809976314348561954&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA",
+      "displayName": {
+        "text": "Padel Tech Ltd",
+        "languageCode": "en"
+      }
+    }
+  ]
+}

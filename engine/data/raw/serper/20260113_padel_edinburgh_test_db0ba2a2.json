@@ -1,0 +1,74 @@
+{
+  "searchParameters": {
+    "q": "padel edinburgh test",
+    "hl": "en",
+    "type": "search",
+    "num": 10,
+    "engine": "google"
+  },
+  "organic": [
+    {
+      "title": "Padel in Edinburgh | Courts, Competitions, Coaching & Clubs",
+      "link": "https://www.ltapadel.org.uk/play/padel-in-your-area/padel-in-edinburgh/",
+      "snippet": "Discover padel in Edinburgh. Find indoor and outdoor courts, book sessions, join clubs, and access coaching for all levels across the city.",
+      "position": 1
+    },
+    {
+      "title": "Padel | Edinburgh Sports Club | Tournaments | Matches",
+      "link": "https://www.edinburghsportsclub.co.uk/copy-of-tennis",
+      "snippet": "Edinburgh Sports Club takes great pride in being \"The Home of Scottish Padel\". We constructed the first Padel Court in Scotland in 2014.",
+      "position": 2
+    },
+    {
+      "title": "Padel in Portobello, Edinburgh | Book a Court at ...",
+      "link": "https://www.powerleague.com/padel-portobello-edinburgh",
+      "snippet": "Experience the best of padel in Portobello, Edinburgh, with Powerleague. Book a court online and join the thriving local padel community.",
+      "position": 3
+    },
+    {
+      "title": "Padel",
+      "link": "https://www.thegrangeclub.com/padel",
+      "snippet": "2 new covered padel courts are now open! Padel section membership is currently full and membership is being offered on a one-out, one-in basis.",
+      "position": 4
+    },
+    {
+      "title": "Game4Padel | Edinburgh Park",
+      "link": "https://www.matchi.se/facilities/game4padeledinburghpark",
+      "snippet": "Welcome to the Edinburgh Park Padel page! Our 2 covered courts are opened all year round! They are open to all with special benefits for Game4Padel members.",
+      "position": 5
+    },
+    {
+      "title": "EDINBURGH PARK",
+      "link": "https://www.game4padel.com/edinburgh-park",
+      "snippet": "Discover Game4Padel's Edinburgh Park, nestled within the Edinburgh City Bypass. Our 2 covered courts are open year-round, welcoming players of all levels.",
+      "position": 6
+    },
+    {
+      "title": "The Scottish woman who's jazzing up the UK's 'fastest ...",
+      "link": "https://www.scotsman.com/lifestyle/the-scottish-woman-whos-jazzing-up-the-uks-fastest-growing-sport-5464881",
+      "snippet": "Padel is currently the fastest-growing sport in the UK, including here in Scotland. People can play at self-serve courts operated by the likes ...",
+      "date": "5 days ago",
+      "position": 7
+    },
+    {
+      "title": "Padel Club - Sports Union - The University of Edinburgh",
+      "link": "https://www.eusu.ed.ac.uk/organisation/uoe-padel-club/",
+      "snippet": "We are one of the EUSU fastest growing Sport Clubs and are entering our second official year in 2025/26 and have lots in store! We are open to all abilities!!!",
+      "position": 8
+    },
+    {
+      "title": "How One of Scotland's First Padel Courts Defied the Rules",
+      "link": "https://www.youtube.com/shorts/FhUP9gjem1Q",
+      "snippet": "From Tennis to Padel: How Sam Macneil Became Scotland's Top Padel Player | Interview. How One of Scotland's First Padel Courts Defied the Rules.",
+      "date": "5 months ago",
+      "position": 9
+    },
+    {
+      "title": "Edinburgh Park Club Information from iPadel Ltd",
+      "link": "https://ipadel.co.uk/Court-Info/Edinburgh-Park/3230/",
+      "snippet": "Edinburgh Park is the third venue in Edinburgh for Game4Padel after Thistle Padel Club and Barnton Park LTC. Edinburgh Park is their first stand-alone venue ...",
+      "position": 10
+    }
+  ],
+  "credits": 1
+}

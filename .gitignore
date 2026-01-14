@@ -12,7 +12,8 @@ web/dev.db
 conductor/tmp/
 tmpclaude-*
 nul
-.claude/
+.claude/settings.local.json
+.claude/cache/
 .obsidian/
 *.db-journal
 

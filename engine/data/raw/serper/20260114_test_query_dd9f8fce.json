@@ -1,0 +1,77 @@
+{
+  "searchParameters": {
+    "q": "test query",
+    "hl": "en",
+    "type": "search",
+    "num": 10,
+    "engine": "google"
+  },
+  "organic": [
+    {
+      "title": "Efficient SQL test query or validation query that will work ...",
+      "link": "https://stackoverflow.com/questions/3668506/efficient-sql-test-query-or-validation-query-that-will-work-across-all-or-most",
+      "snippet": "This is the query that will be executed just before a connection is given to you from the pool to validate that the connection to the database is still alive.",
+      "date": "15 years ago",
+      "position": 1
+    },
+    {
+      "title": "How do you test SQL queries?",
+      "link": "https://www.reddit.com/r/SQL/comments/1kpo7ci/how_do_you_test_sql_queries/",
+      "snippet": "I typically set up a mock for each table interrogated by my queries. Each table is populated with all combinations of data that will test different parts of ...",
+      "date": "8 months ago",
+      "position": 2
+    },
+    {
+      "title": "danicat/testquery: Test query is a command line tool ...",
+      "link": "https://github.com/danicat/testquery",
+      "snippet": "Test query is a command line tool to query test results with a SQL interface - danicat/testquery.",
+      "position": 3
+    },
+    {
+      "title": "Test a query",
+      "link": "https://www.servicenow.com/docs/bundle/yokohama-api-reference/page/integrate/odbc-driver/task/t_TestingAQuery.html",
+      "snippet": "For testing, use a query that returns exactly one record, such as a query using the Number value of a record.",
+      "position": 4
+    },
+    {
+      "title": "RunSQL - Online SQL Playground for MySQL, PostgreSQL ...",
+      "link": "https://runsql.com/",
+      "snippet": "Free online SQL playground for MySQL, PostgreSQL, and SQL Server. Create database structures, run queries, and share results instantly.",
+      "position": 5
+    },
+    {
+      "title": "sql server - how to test query",
+      "link": "https://dba.stackexchange.com/questions/223425/how-to-test-query",
+      "snippet": "Yes, you can use BEGIN TRANSACTION ... ROLLBACK TRANSACTION to check certain queries. I changed the double quotes ( \" ) to the valid single ...",
+      "date": "Nov 26, 2018",
+      "position": 6
+    },
+    {
+      "title": "Defining a query-based test",
+      "link": "https://www.ibm.com/docs/en/gdp/12.x?topic=assessments-defining-query-based-test",
+      "snippet": "Create a test based on a query that runs an SQL statement. About this task You can create a new query-based test by using any of these approaches.",
+      "position": 7
+    },
+    {
+      "title": "Test of a query - PC SOFT - Online documentation",
+      "link": "https://doc.windev.com/en-US/?2019011",
+      "snippet": "The result of a select query corresponds to the records selected by the query. · The result of an insert query corresponds to the record that ...",
+      "date": "Oct 3, 2025",
+      "position": 8
+    },
+    {
+      "title": "SQL Tryit Editor v1.6",
+      "link": "https://www.w3schools.com/sql/trysql.asp?filename=trysql_asc",
+      "snippet": "A Database-object is created in your browser, for testing purposes. You can try any SQL statement, and play with the Database as much as you like. The ...",
+      "position": 9
+    },
+    {
+      "title": "About Queries",
+      "link": "https://testing-library.com/docs/queries/about/",
+      "snippet": "Queries are the methods that Testing Library gives you to find elements on the page. There are several types of queries (\"get\", \"find\", \"query\");",
+      "date": "Mar 19, 2024",
+      "position": 10
+    }
+  ],
+  "credits": 1
+}

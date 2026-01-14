@@ -1,0 +1,72 @@
+{
+  "searchParameters": {
+    "q": "padel edinburgh",
+    "hl": "en",
+    "type": "search",
+    "num": 10,
+    "engine": "google"
+  },
+  "organic": [
+    {
+      "title": "EDINBURGH PARK",
+      "link": "https://www.game4padel.com/edinburgh-park",
+      "snippet": "Discover Game4Padel's Edinburgh Park, nestled within the Edinburgh City Bypass. Our 2 covered courts are open year-round, welcoming players of all levels.",
+      "position": 1
+    },
+    {
+      "title": "Home | Edinburgh Sports Club | Padel | Squash | Tennis",
+      "link": "https://www.edinburghsportsclub.co.uk/",
+      "snippet": "We have six squash courts, three floodlit tennis courts, three fully covered padel courts, a hardball doubles court, first class table-tennis facility, a gym, ...",
+      "position": 2
+    },
+    {
+      "title": "Padel",
+      "link": "https://www.thegrangeclub.com/padel",
+      "snippet": "2 new covered padel courts are now open! Padel section membership is currently full and membership is being offered on a one-out, one-in basis.",
+      "position": 3
+    },
+    {
+      "title": "Game4Padel | Edinburgh Park",
+      "link": "https://www.matchi.se/facilities/game4padeledinburghpark",
+      "snippet": "Welcome to the Edinburgh Park Padel page! Our 2 covered courts are opened all year round! They are open to all with special benefits for Game4Padel members.",
+      "position": 4
+    },
+    {
+      "title": "Play Padel in Portobello, Edinburgh - Powerleague",
+      "link": "https://www.powerleague.com/padel-portobello-edinburgh",
+      "snippet": "Experience the best of padel in Portobello, Edinburgh, with Powerleague. Book a court online and join the thriving local padel community.",
+      "position": 5
+    },
+    {
+      "title": "Padel in Edinburgh | Courts, Competitions, Coaching & ...",
+      "link": "https://www.ltapadel.org.uk/play/padel-in-your-area/padel-in-edinburgh/",
+      "snippet": "Discover padel in Edinburgh. Find indoor and outdoor courts, book sessions, join clubs, and access coaching for all levels across the city.",
+      "position": 6
+    },
+    {
+      "title": "Edinburgh Sports Club",
+      "link": "https://ipadel.co.uk/Court-Info/Edinburgh-Sports-Club/2750/",
+      "snippet": "We have 6 squash courts, 3 floodlit tennis courts, 3 covered padel courts a hardball doubles court, first class table tennis facility, snooker, a gym, bar, ...",
+      "position": 7
+    },
+    {
+      "title": "Play Padel In Edinburgh",
+      "link": "https://www.thepadeldirectory.co.uk/play-padel-in/edinburgh",
+      "snippet": "Find out where to play Padel in or near Edinburgh. Find the nearest courts with county and regional listings. View centre facilities and court info.",
+      "position": 8
+    },
+    {
+      "title": "Padel courts in Edinburgh Shawfair",
+      "link": "https://www.davidlloyd.co.uk/clubs/edinburgh-shawfair/club-facilities/padel/",
+      "snippet": "David Lloyd Edinburgh Shawfair's Padel courts are the perfect place to play this exciting and rapidly growing sport.",
+      "position": 9
+    },
+    {
+      "title": "Clubspark / Craigmillar Park Tennis & Padel Club (SCIO ...",
+      "link": "https://www.craigmillarparktennis.co.uk/",
+      "snippet": "A friendly tennis and padel club in the heart of southern Edinburgh. Conveniently located to the rear of Cameron Toll Shopping Centre.",
+      "position": 10
+    }
+  ],
+  "credits": 1
+}
