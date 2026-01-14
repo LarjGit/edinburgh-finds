@@ -294,7 +294,7 @@ class TestSportScotlandConnectorFetch(unittest.IsolatedAsyncioTestCase):
         call_args = mock_session.get.call_args
         params = call_args.kwargs['params']
         self.assertIn('typeName', params)
-        self.assertEqual(params['typeName'], 'sport_scotland:tennis_courts')
+        self.assertEqual(params['typeName'], 'sh_sptk:tennis_courts')
 
     @patch('yaml.safe_load')
     @patch('builtins.open', new_callable=mock_open)
