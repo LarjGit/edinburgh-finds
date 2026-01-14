@@ -1,4 +1,4 @@
-# Architecture: Edinburgh Finds
+	 # Architecture: Edinburgh Finds
 
 ## 1. System Overview
 
@@ -16,11 +16,13 @@ The Core Architecture is built around the "Universal Entity Framework," allowing
 ### 2.1. The 5 Conceptual Entity Pillars
 The system categorizes the world through five fundamental conceptual "Pillars". These pillars guide the design and user experience but are implemented technically via a concrete `EntityType` Enum.
 
-1.  **Infrastructure:** Physical locations where the activity happens (mapped to Enum: `VENUE`).
-2.  **Commerce:** Retailers selling equipment (mapped to Enum: `RETAILER`).
-3.  **Guidance:** Human expertise (mapped to Enum: `COACH`, `INSTRUCTOR`).
-4.  **Organization:** Social structures (mapped to Enum: `CLUB`, `LEAGUE`).
-5.  **Momentum:** Time-bound occurrences (mapped to Enum: `EVENT`, `TOURNAMENT`).
+*Note: The Enums listed below are the initial set and are designed to be extended as new niches are onboarded.*
+
+1.  **Infrastructure:** Physical locations where the activity happens (mapped to Enum: `VENUE`, etc.).
+2.  **Commerce:** Retailers selling equipment (mapped to Enum: `RETAILER`, etc.).
+3.  **Guidance:** Human expertise (mapped to Enum: `COACH`, `INSTRUCTOR`, etc.).
+4.  **Organization:** Social structures (mapped to Enum: `CLUB`, `LEAGUE`, etc.).
+5.  **Momentum:** Time-bound occurrences (mapped to Enum: `EVENT`, `TOURNAMENT`, etc.).
 
 ### 2.2. Schema Implementation
 To support this flexibility, the `Listing` model uses a "Flexible Attribute Bucket" strategy combined with a strict Enum for categorization:
