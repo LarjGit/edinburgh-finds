@@ -289,15 +289,17 @@ class TestLogLevelFiltering(unittest.TestCase):
 
         logger = IngestionLogger(source="test", level=logging.INFO)
 
-        # Create a handler to capture logs
-        handler = logging.handlers.MemoryHandler(capacity=100)
-        logger.logger.addHandler(handler)
+        # At INFO level, debug messages should not be logged
+        # We test this by logging both an info and debug message,
+        # and verifying only the info message appears
+        with self.assertLogs(logger.logger, level='INFO') as cm:
+            logger.log_debug("Debug message (should not appear)")
+            logger.log_fetch_start(query="test")  # INFO level, should appear
 
-        logger.log_debug("Debug message")
-
-        # Should not capture debug message at INFO level
-        handler.flush()
-        # Note: This test might need adjustment based on implementation
+        # Only one log should be captured (the INFO level one)
+        self.assertEqual(len(cm.output), 1)
+        self.assertNotIn("Debug message", cm.output[0])
+        self.assertIn("fetch_start", cm.output[0])
 
 
 class TestLoggingConfiguration(unittest.TestCase):
