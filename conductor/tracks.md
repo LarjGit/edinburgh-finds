@@ -25,3 +25,8 @@ This file tracks all major tracks for the project. Each track has its own detail
 *Link: [./conductor/archive/architecture_docs_20260114/](./conductor/archive/architecture_docs_20260114/)*
 **Completed:** 2026-01-14
 **Description:** Created comprehensive architecture documentation including System Overview, Entity Framework (Schema), Data Ingestion Pipeline, and Deployment strategy. Produced Mermaid.js diagrams for core systems and consolidated all information into `ARCHITECTURE.md`.
+
+---
+
+- [ ] **Track: Architecture Alignment & Ecosystem Graph**
+*Link: [./tracks/arch_alignment_20260114/](./tracks/arch_alignment_20260114/)*
