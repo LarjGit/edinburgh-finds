@@ -13,18 +13,19 @@ The system is composed of three primary subsystems:
 
 The Core Architecture is built around the "Universal Entity Framework," allowing the system to scale horizontally to any niche (e.g., Padel, Golf, Climbing) without requiring database schema migrations for each new vertical.
 
-### 2.1. The 5 Entity Pillars
-Every entity in the system maps to one of five fundamental types, defined in the `EntityType` model:
+### 2.1. The 5 Conceptual Entity Pillars
+The system categorizes the world through five fundamental conceptual "Pillars". These pillars guide the design and user experience but are implemented technically via a concrete `EntityType` Enum.
 
-1.  **Infrastructure:** Physical locations where the activity happens (e.g., Padel Courts, Golf Courses).
-2.  **Commerce:** Retailers selling equipment (e.g., Racket Shops).
-3.  **Guidance:** Human expertise (e.g., Coaches, Instructors).
-4.  **Organization:** Social structures (e.g., Clubs, Leagues).
-5.  **Momentum:** Time-bound occurrences (e.g., Tournaments, Events).
+1.  **Infrastructure:** Physical locations where the activity happens (mapped to Enum: `VENUE`).
+2.  **Commerce:** Retailers selling equipment (mapped to Enum: `RETAILER`).
+3.  **Guidance:** Human expertise (mapped to Enum: `COACH`, `INSTRUCTOR`).
+4.  **Organization:** Social structures (mapped to Enum: `CLUB`, `LEAGUE`).
+5.  **Momentum:** Time-bound occurrences (mapped to Enum: `EVENT`, `TOURNAMENT`).
 
 ### 2.2. Schema Implementation
-To support this flexibility, the `Listing` model uses a "Flexible Attribute Bucket" strategy:
+To support this flexibility, the `Listing` model uses a "Flexible Attribute Bucket" strategy combined with a strict Enum for categorization:
 
+-   **Categorization:** A native PostgreSQL Enum `EntityType` on the `Listing` model defines the specific type (e.g., `VENUE`, `CLUB`). This replaces the need for a separate `EntityType` lookup table.
 -   **Core Fields:** Structured columns for universal data (Name, Location, Contact Info).
 -   **Flexible Attributes:** Two JSON columns store niche-specific details:
     -   `attributes`: validated data conforming to the official schema.
@@ -42,18 +43,14 @@ To capture the interconnected nature of local hobbies (e.g., "John Smith teaches
 ```mermaid
 erDiagram
     %% Core Schema (Implemented)
-    EntityType ||--|{ Listing : "classifies"
     Category }|--|{ Listing : "tags"
     
     %% Planned Extension
     Listing ||--o{ ListingRelationship : "is_source"
     Listing ||--o{ ListingRelationship : "is_target"
     
-    EntityType {
-        string id PK
-        string name UK "Infrastructure, Commerce, etc."
-        string slug UK
-    }
+    %% Enum Definition (Conceptual)
+    %% EntityType Enum: VENUE, RETAILER, COACH, INSTRUCTOR, CLUB, LEAGUE, EVENT, TOURNAMENT
 
     Category {
         string id PK
@@ -65,7 +62,7 @@ erDiagram
         string id PK
         string entity_name
         string slug UK
-        string entityTypeId FK
+        enum entityType "VENUE, CLUB, etc."
         
         %% Core Structured Data
         string street_address
