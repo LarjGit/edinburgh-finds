@@ -17,9 +17,9 @@
 - [x] Task: Implement/Update the `transform` step in the pipeline. [987e2c1]
     - [x] Sub-task: Create a utility function to map raw connector data to the `attributes` JSON schema.
     - [x] Sub-task: Ensure `attributes` field is included in the database write operation.
-- [ ] Task: Verify with `EdinburghCouncilConnector` (or similar).
-    - [ ] Sub-task: Run a test ingestion.
-    - [ ] Sub-task: Check database to confirm `attributes` column contains valid JSON data.
+- [x] Task: Verify with `EdinburghCouncilConnector` (or similar). [163eb20]
+    - [x] Sub-task: Run a test ingestion.
+    - [x] Sub-task: Check database to confirm `attributes` column contains valid JSON data.
 - [ ] Task: Conductor - User Manual Verification 'Engine Alignment' (Protocol in workflow.md)
 
 ## Phase 3: Frontend Alignment (Attribute Display)
