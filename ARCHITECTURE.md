@@ -30,6 +30,28 @@ To support this flexibility, the `Listing` model uses a "Flexible Attribute Buck
     -   `attributes`: validated data conforming to the official schema.
     -   `discovered_attributes`: raw AI-extracted properties waiting for validation.
 
+## 3. Data Ingestion & Pipeline Architecture
+
+The platform is fueled by an autonomous Python-based data engine (`engine/`) that runs independently of the user-facing web application.
+
+### 3.1. Workflow
+The pipeline follows a strict **ETL (Extract, Transform, Load)** pattern:
+
+1.  **Autonomous Ingestion:**
+    -   **CLI Controller:** Orchestrates jobs via `python -m engine.ingestion.run_<source>`.
+    -   **Connectors:** Modular classes (implementing `BaseConnector`) fetch data from APIs (Serper, Google Places, OSM).
+2.  **Raw Persistence:**
+    -   All raw API responses are saved as JSON files (`engine/data/raw/`).
+    -   A `RawIngestion` record is created in the database to track provenance and enable re-processing.
+3.  **Deduplication:**
+    -   Content hashes are computed to prevent processing the same data twice.
+4.  **Processing & Upsert:**
+    -   Raw data is parsed into Pydantic models.
+    -   Data is "Upserted" (Update or Insert) into the `Listing` table, respecting the Trust Architecture.
+
+### 3.2. Triggers
+Currently, ingestion is triggered manually via CLI or scheduled CRON jobs. It is **not** real-time user-triggered.
+
 ## 6. Key Technical Decisions
 
 ### 6.1. Next.js (App Router)
