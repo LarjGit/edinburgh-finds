@@ -179,8 +179,9 @@ class TestRateLimiterTimeWindows(unittest.TestCase):
         self.assertFalse(limiter.can_make_request())
 
         # Mock time to be 61 seconds later
-        with patch('time.time') as mock_time:
-            mock_time.return_value = time.time() + 61
+        current_time = time.time()
+        with patch('engine.ingestion.rate_limiting.time.time') as mock_time:
+            mock_time.return_value = current_time + 61
             # Old requests should have expired, new request allowed
             self.assertTrue(limiter.can_make_request())
 
@@ -199,8 +200,9 @@ class TestRateLimiterTimeWindows(unittest.TestCase):
         self.assertFalse(limiter.can_make_request())
 
         # Mock time to be 61 minutes later
-        with patch('time.time') as mock_time:
-            mock_time.return_value = time.time() + 3661
+        current_time = time.time()
+        with patch('engine.ingestion.rate_limiting.time.time') as mock_time:
+            mock_time.return_value = current_time + 3661
             # Old requests should have expired, new request allowed
             self.assertTrue(limiter.can_make_request())
 
@@ -215,7 +217,7 @@ class TestRateLimiterWithNoneLimits(unittest.TestCase):
         limiter = RateLimiter(
             source="test",
             requests_per_minute=None,  # Unlimited
-            requests_per_hour=100
+            requests_per_hour=None  # Also unlimited to truly test unlimited per-minute
         )
         # Make many requests - should all be allowed
         for _ in range(200):
@@ -239,6 +241,11 @@ class TestRateLimiterWithNoneLimits(unittest.TestCase):
 
 class TestRateLimiterDecorator(unittest.TestCase):
     """Test rate limiting decorator for async functions"""
+
+    def setUp(self):
+        """Clear rate limiter state before each test"""
+        from engine.ingestion.rate_limiting import _reset_rate_limiters
+        _reset_rate_limiters()
 
     def test_rate_limited_decorator_exists(self):
         """Test that rate_limited decorator can be imported"""
