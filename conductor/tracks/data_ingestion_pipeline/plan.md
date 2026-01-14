@@ -100,7 +100,7 @@ Build a modular, two-stage data pipeline that separates raw data ingestion from 
 - [x] Write tests for rate limiting decorator (80f98c8)
 - [x] Implement rate limiting with configurable limits per source (793a527)
 - [x] Write tests for retry logic with exponential backoff (4d38829)
-- [ ] Implement retry logic for failed requests
+- [x] Implement retry logic for failed requests (26d5dad)
 - [ ] Create CLI status command to view ingestion statistics
 - [ ] Write tests for ingestion health checks
 - [ ] Implement health check: failed ingestions, stale data, API quota usage
