@@ -32,3 +32,12 @@
 ## Design Philosophy
 - "The Sophisticated Canvas".
 - Agnostic elegance.
+
+## Codebase Analysis
+- **Schema Consistency:** `engine/schema.prisma` and `web/prisma/schema.prisma` match.
+  - `Listing` model supports "Flexible Attribute Buckets" (`attributes`, `discovered_attributes`) implementing the UEF.
+  - `EntityType` model supports the 5 Pillars concept.
+- **Ingestion:**
+  - `BaseConnector` (`engine/ingestion/base.py`) enforces the standard interface (`fetch`, `save`, `is_duplicate`).
+  - `RawIngestion` model tracks source provenance.
+- **Trust:** `field_confidence` and `source_info` fields exist in `Listing` model.
