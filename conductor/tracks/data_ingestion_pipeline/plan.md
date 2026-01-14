@@ -104,7 +104,7 @@ Build a modular, two-stage data pipeline that separates raw data ingestion from 
 - [x] Create CLI status command to view ingestion statistics (a28da23)
 - [x] Write tests for ingestion health checks (6421f91)
 - [x] Implement health check: failed ingestions, stale data, API quota usage (aa3b239)
-- [ ] Create ingestion summary report (records by source, success rate, errors)
+- [x] Create ingestion summary report (records by source, success rate, errors) (c55b4a4)
 
 **Success Criteria:**
 - All connector errors logged with context
