@@ -41,3 +41,10 @@
   - `BaseConnector` (`engine/ingestion/base.py`) enforces the standard interface (`fetch`, `save`, `is_duplicate`).
   - `RawIngestion` model tracks source provenance.
 - **Trust:** `field_confidence` and `source_info` fields exist in `Listing` model.
+
+## C4 Diagrams Analysis
+- **Level 1 (Context):** Correctly identifies Users, Admin, System, and 3 external APIs (Google, Serper, OSM).
+- **Level 2 (Container):** Accurate split between WebApp, DataEngine, DB, and FileStore.
+- **Level 3 (Component):**
+  - **Data Engine:** Accurately reflects modular structure (`CLI`, `Connectors`, `Dedup`).
+  - **Web App:** Shows simple Server Component structure (`HomePage`, `PrismaLib`).

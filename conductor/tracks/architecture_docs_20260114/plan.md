@@ -3,7 +3,7 @@
 ## Phase 1: Information Gathering & Analysis
 - [x] Task: Review existing PRD, Tech Stack, and Product Guidelines to extract core architectural principles. [98ed377]
 - [x] Task: Analyze current codebase (especially `engine/schema/`, `engine/ingestion/`, and `web/`) to validate implementation details against desired architecture. [HEAD]
-- [ ] Task: Inspect existing C4 diagrams in `docs/architecture/` to ensure consistency and correct referencing.
+- [~] Task: Inspect existing C4 diagrams in `docs/architecture/` to ensure consistency and correct referencing.
 
 ## Phase 2: Content Drafting - Core Systems
 - [ ] Task: Draft "System Overview" and "Technical Decisions" sections.
