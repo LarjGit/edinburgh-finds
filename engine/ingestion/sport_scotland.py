@@ -178,9 +178,13 @@ class SportScotlandConnector(BaseConnector):
         # Build WFS GetFeature request parameters
         params = {
             **self.default_params,  # service, version, request, outputFormat, srsName
-            'typeName': f'sport_scotland:{layer_name}',  # Namespaced layer name
+            'typeName': f'sh_sptk:{layer_name}',  # Namespaced layer name (Spatial Hub SportScotland workspace)
             'bbox': self._build_bbox_string()  # Edinburgh spatial filter
         }
+
+        # Add API token if configured (Spatial Hub uses 'authkey' parameter)
+        if self.api_key:
+            params['authkey'] = self.api_key
 
         # Make WFS request
         async with aiohttp.ClientSession() as session:
