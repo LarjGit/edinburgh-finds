@@ -91,7 +91,7 @@ class TestTransformEdinburghCouncilFeature:
         result = transform_edinburgh_council_feature(feature)
 
         assert 'source_info' in result
-        source_info = json.loads(result['source_info'])
+        source_info = result['source_info']  # Now a dict, not JSON string
         assert source_info['source'] == 'edinburgh_council'
         assert source_info['dataset'] == 'sports_facilities'
         assert source_info['feature_id'] == 'abc123'
@@ -107,7 +107,7 @@ class TestTransformEdinburghCouncilFeature:
         result = transform_edinburgh_council_feature(feature)
 
         assert 'external_ids' in result
-        external_ids = json.loads(result['external_ids'])
+        external_ids = result['external_ids']  # Now a dict, not JSON string
         assert external_ids['edinburgh_council_id'] == 'feature_456'
 
     def test_transform_handles_alternate_name_fields(self):
@@ -160,7 +160,7 @@ class TestTransformEdinburghCouncilFeature:
         result = transform_edinburgh_council_feature(feature)
 
         assert 'discovered_attributes' in result
-        discovered = json.loads(result['discovered_attributes'])
+        discovered = result['discovered_attributes']  # Now a dict, not JSON string
         assert discovered['CUSTOM_FIELD'] == 'custom_value'
         assert discovered['ANOTHER_FIELD'] == 123
 

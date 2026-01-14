@@ -59,26 +59,26 @@ def transform_edinburgh_council_feature(feature: Dict[str, Any]) -> Dict[str, An
         # Summary
         'summary': properties.get('DESCRIPTION') or properties.get('SUMMARY'),
 
-        # Source tracking
-        'source_info': json.dumps({
+        # Source tracking (as dict - ingest.py will convert to JSON)
+        'source_info': {
             'source': 'edinburgh_council',
             'dataset': properties.get('DATASET_NAME', 'unknown'),
             'feature_id': feature.get('id') or properties.get('OBJECTID') or properties.get('FID')
-        }),
+        },
 
-        # External IDs
-        'external_ids': json.dumps({
+        # External IDs (as dict - ingest.py will convert to JSON)
+        'external_ids': {
             'edinburgh_council_id': feature.get('id') or properties.get('OBJECTID') or properties.get('FID')
-        }),
+        },
 
-        # Discovered attributes - capture all remaining fields
-        'discovered_attributes': json.dumps({
+        # Discovered attributes - capture all remaining fields (as dict - ingest.py will convert to JSON)
+        'discovered_attributes': {
             k: v for k, v in properties.items()
             if k not in ['NAME', 'FACILITY_NAME', 'SITE_NAME', 'ADDRESS', 'STREET_ADDRESS',
                         'POSTCODE', 'PHONE', 'CONTACT_NUMBER', 'EMAIL', 'CONTACT_EMAIL',
                         'WEBSITE', 'URL', 'DESCRIPTION', 'SUMMARY', 'DATASET_NAME',
                         'OBJECTID', 'FID'] and v is not None
-        })
+        }
     }
 
     # Extract specific attributes based on field names
