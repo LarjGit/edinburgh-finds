@@ -8,7 +8,7 @@
 ## Phase 2: Content Drafting - Core Systems
 - [x] Task: Draft "System Overview" and "Technical Decisions" sections. [HEAD]
 - [x] Task: Draft "Universal Entity Framework" section with Schema mapping details. [HEAD]
-- [ ] Task: Draft "Data Ingestion & Pipeline" section including Python engine workflow.
+- [x] Task: Draft "Data Ingestion & Pipeline" section including Python engine workflow. [HEAD]
 - [ ] Task: Draft "Confidence Grading & Trust Architecture" section.
 - [ ] Task: Draft "Content Quality & Local Soul" section.
 
