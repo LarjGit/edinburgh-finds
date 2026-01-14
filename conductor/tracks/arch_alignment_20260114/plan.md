@@ -23,8 +23,8 @@
 - [~] Task: Conductor - User Manual Verification 'Engine Alignment' (Protocol in workflow.md)
 
 ## Phase 3: Frontend Alignment (Attribute Display)
-- [ ] Task: Create/Update a helper function in `web/lib/utils.ts` (or similar) to parse the `attributes` JSON safely.
-- [ ] Task: Update the Listing Detail component (or `page.tsx`).
-    - [ ] Sub-task: Fetch the `attributes` field.
-    - [ ] Sub-task: Render key attributes (e.g., specific amenities) in the UI.
+- [x] Task: Create/Update a helper function in `web/lib/utils.ts` (or similar) to parse the `attributes` JSON safely.
+- [x] Task: Update the Listing Detail component (or `page.tsx`). [89d04a6]
+    - [x] Sub-task: Fetch the `attributes` field.
+    - [x] Sub-task: Render key attributes (e.g., specific amenities) in the UI.
 - [ ] Task: Conductor - User Manual Verification 'Frontend Alignment' (Protocol in workflow.md)
