@@ -75,8 +75,8 @@ Build a modular, two-stage data pipeline that separates raw data ingestion from 
 - [x] Implement `open_charge_map.py` connector (nearby charging stations by lat/lng) (46dec5b)
 - [x] Test OpenChargeMap connector with known venue coordinates (ec2a25c)
 - [x] Research and document additional enrichment sources (SportScotland, Edinburgh Council Open Data) (9e8f1d9)
-- [ ] Write tests for SportScotland Open Data connector
-- [ ] Implement `sport_scotland.py` connector
+- [x] Write tests for SportScotland Open Data connector (11a91e3)
+- [~] Implement `sport_scotland.py` connector
 - [ ] Write tests for Edinburgh Council Open Data connector
 - [ ] Implement `edinburgh_council.py` connector
 - [ ] Create documentation for adding new connectors
