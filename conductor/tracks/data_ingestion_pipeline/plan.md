@@ -71,7 +71,7 @@ Build a modular, two-stage data pipeline that separates raw data ingestion from 
 ## Phase 3: Enrichment Connectors
 
 ### Tasks
-- [ ] Write tests for OpenChargeMap API connector
+- [x] Write tests for OpenChargeMap API connector (7e17e10)
 - [ ] Implement `open_charge_map.py` connector (nearby charging stations by lat/lng)
 - [ ] Test OpenChargeMap connector with known venue coordinates
 - [ ] Research and document additional enrichment sources (SportScotland, Edinburgh Council Open Data)
