@@ -1,6 +1,6 @@
 # Implementation Plan - Architecture Alignment & Ecosystem Graph
 
-## Phase 1: Schema Extension (Ecosystem Graph)
+## Phase 1: Schema Extension (Ecosystem Graph) [checkpoint: 3880cbf]
 - [x] Task: Update `engine/schema.prisma` to include `ListingRelationship` model.
     - [x] Sub-task: Define fields: `id`, `sourceListingId`, `targetListingId`, `type`, `confidence`, `source`.
     - [x] Sub-task: Add relation fields to `Listing` model.
