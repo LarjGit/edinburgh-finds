@@ -5,54 +5,41 @@
 
 ## Purpose
 
-This diagram shows how users and external systems interact with Edinburgh Finds, a hyper-local directory platform connecting enthusiasts with venues, coaches, retailers, and clubs.
+This diagram shows how users and external systems interact with Edinburgh Finds.
 
 ## Diagram
 
 ```mermaid
 graph TB
     %% Users
-    User["👤 User<br/>(End User)<br/>Browses and searches for local venues,<br/>coaches, retailers, and clubs"]
-    Admin["👤 Admin<br/>(System Administrator)<br/>Runs data ingestion connectors<br/>to populate the directory"]
+    User["👤 User<br/>(End User)<br/>Browses and searches for local venues"]
+    Admin["👤 Admin<br/>(System Operator)<br/>Runs data ingestion CLI"]
 
     %% System
-    System["📦 Edinburgh Finds<br/>Hyper-local directory platform<br/>Connects enthusiasts with local<br/>venues, coaches, retailers, and events"]
+    System["📦 Edinburgh Finds<br/>Hyper-local directory platform<br/>Connects users with local venues"]
 
     %% External Systems
-    SerperAPI["⚙️ Serper API<br/>(Google Search Results)<br/>Provides search result data<br/>for venue discovery"]
-    GooglePlaces["⚙️ Google Places API<br/>(Location Data)<br/>Provides venue details,<br/>reviews, and contact information"]
-    OSM["⚙️ OpenStreetMap<br/>(Geographic Data)<br/>Provides geographic data<br/>for venue locations"]
+    GooglePlaces["⚙️ Google Places API<br/>(External Service)<br/>Provides venue details and location"]
+    Serper["⚙️ Serper API<br/>(Google Search Wrapper)<br/>Provides search results"]
+    OSM["⚙️ OpenStreetMap<br/>(External Service)<br/>Provides map data and POIs"]
 
     %% Relationships
-    User -->|"Browses listings via HTTPS"| System
-    Admin -->|"Runs ingestion CLI via Python"| System
-    System -->|"Fetches search results / HTTPS"| SerperAPI
+    User -->|"Browses via HTTPS"| System
+    Admin -->|"Executes CLI commands"| System
     System -->|"Fetches venue data / HTTPS"| GooglePlaces
-    System -->|"Fetches geographic data / HTTP"| OSM
+    System -->|"Searches / HTTPS"| Serper
+    System -->|"Fetches map data / HTTPS"| OSM
 ```
 
 ## Key Actors
 
-- **User:** End users who browse and search for local venues, coaches, retailers, clubs, and events in Edinburgh
-- **Admin:** System administrators who run data ingestion connectors via CLI to populate and update the directory
+- **User:** End users who browse the website to find local venues (e.g., padel courts, cafes).
+- **Admin:** System operators who run the Python CLI scripts to ingest data from external sources.
 
 ## External Dependencies
 
 | System | Purpose | Protocol |
 |--------|---------|----------|
-| Serper API | Provides Google search results for discovering venues and entities | HTTPS |
-| Google Places API | Provides detailed venue information, reviews, and contact data | HTTPS |
-| OpenStreetMap | Provides geographic data and location information for venues | HTTP/HTTPS |
-
-## System Boundary
-
-The Edinburgh Finds system encompasses:
-- Web application for end users to browse listings
-- Data ingestion engine for collecting and validating venue data
-- Database for storing validated listings
-- Raw data storage for archiving source data
-
-External to the system:
-- Third-party data sources (Serper, Google Places, OSM)
-- End user browsers
-- Administrator workstations
+| Google Places API | Provides structured data about places (reviews, photos, details) | HTTPS / JSON |
+| Serper API | Provides Google Search results for discovery | HTTPS / JSON |
+| OpenStreetMap | Provides geospatial data and points of interest | HTTPS / JSON |

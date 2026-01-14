@@ -1,0 +1,19 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Test Facility",
+        "type": "Sports Center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -3.188,
+          55.953
+        ]
+      }
+    }
+  ]
+}

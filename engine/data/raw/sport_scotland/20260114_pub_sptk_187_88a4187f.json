@@ -1,0 +1,6192 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "pub_sptk.12572",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0653,
+            55.9245
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000010",
+        "local_authority": "East Lothian",
+        "uprn": "138007321",
+        "address": "BIRCHLEA, 33 OLD CRAIGHALL, MUSSELBURGH, MIDLOTHIAN, EH21 8SE",
+        "sepa_ref_number": null,
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": 12425,
+        "sh_src": "eab81327-216b-41e2-b838-d4e1e5ed164f",
+        "sh_date_uploaded": "2018-10-18",
+        "source": "Local Authority"
+      },
+      "bbox": [
+        -3.0653,
+        55.9245,
+        -3.0653,
+        55.9245
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.12625",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0676,
+            55.921
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000010",
+        "local_authority": "East Lothian",
+        "uprn": "138014231",
+        "address": "MONKTON HOUSE COTTAGE, 31 OLD CRAIGHALL, MUSSELBURGH, MIDLOTHIAN, EH21 8SF",
+        "sepa_ref_number": null,
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": 12478,
+        "sh_src": "eab81327-216b-41e2-b838-d4e1e5ed164f",
+        "sh_date_uploaded": "2018-10-18",
+        "source": "Local Authority"
+      },
+      "bbox": [
+        -3.0676,
+        55.921,
+        -3.0676,
+        55.921
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.12630",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0602,
+            55.922
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000010",
+        "local_authority": "East Lothian",
+        "uprn": "138012452",
+        "address": "MONKTON LODGE, 32 OLD CRAIGHALL, MUSSELBURGH, MIDLOTHIAN, EH21 8SD",
+        "sepa_ref_number": null,
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": 12483,
+        "sh_src": "eab81327-216b-41e2-b838-d4e1e5ed164f",
+        "sh_date_uploaded": "2018-10-18",
+        "source": "Local Authority"
+      },
+      "bbox": [
+        -3.0602,
+        55.922,
+        -3.0602,
+        55.922
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.12709",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0674,
+            55.9209
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000010",
+        "local_authority": "East Lothian",
+        "uprn": "138016399",
+        "address": "MONKTON HOUSE, 30 OLD CRAIGHALL, MUSSELBURGH, MIDLOTHIAN, EH21 8SE",
+        "sepa_ref_number": null,
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": 12562,
+        "sh_src": "eab81327-216b-41e2-b838-d4e1e5ed164f",
+        "sh_date_uploaded": "2018-10-18",
+        "source": "Local Authority"
+      },
+      "bbox": [
+        -3.0674,
+        55.9209,
+        -3.0674,
+        55.9209
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.12779",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0658,
+            55.9242
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000010",
+        "local_authority": "East Lothian",
+        "uprn": "138020239",
+        "address": "STANMORE, 35 OLD CRAIGHALL, MUSSELBURGH, MIDLOTHIAN, EH21 8SE",
+        "sepa_ref_number": null,
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": 12631,
+        "sh_src": "eab81327-216b-41e2-b838-d4e1e5ed164f",
+        "sh_date_uploaded": "2018-10-18",
+        "source": "Local Authority"
+      },
+      "bbox": [
+        -3.0658,
+        55.9242,
+        -3.0658,
+        55.9242
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.12793",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.044,
+            55.9375
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000010",
+        "local_authority": "East Lothian",
+        "uprn": "138017538",
+        "address": "13 INVERESK VILLAGE, MUSSELBURGH, MIDLOTHIAN, EH21 7TE",
+        "sepa_ref_number": null,
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": 12645,
+        "sh_src": "eab81327-216b-41e2-b838-d4e1e5ed164f",
+        "sh_date_uploaded": "2018-10-18",
+        "source": "Local Authority"
+      },
+      "bbox": [
+        -3.044,
+        55.9375,
+        -3.044,
+        55.9375
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.12805",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0433,
+            55.9382
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000010",
+        "local_authority": "East Lothian",
+        "uprn": "138017529",
+        "address": "13A INVERESK VILLAGE, MUSSELBURGH, MIDLOTHIAN, EH21 7TD",
+        "sepa_ref_number": null,
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": 12656,
+        "sh_src": "eab81327-216b-41e2-b838-d4e1e5ed164f",
+        "sh_date_uploaded": "2018-10-18",
+        "source": "Local Authority"
+      },
+      "bbox": [
+        -3.0433,
+        55.9382,
+        -3.0433,
+        55.9382
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.12812",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0811,
+            55.9402
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000010",
+        "local_authority": "East Lothian",
+        "uprn": "138020059",
+        "address": "(5C) NEWHAILES, MUSSELBURGH, MIDLOTHIAN, EH21 6RY",
+        "sepa_ref_number": null,
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": 12663,
+        "sh_src": "eab81327-216b-41e2-b838-d4e1e5ed164f",
+        "sh_date_uploaded": "2018-10-18",
+        "source": "Local Authority"
+      },
+      "bbox": [
+        -3.0811,
+        55.9402,
+        -3.0811,
+        55.9402
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.12813",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0811,
+            55.9402
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000010",
+        "local_authority": "East Lothian",
+        "uprn": "138020060",
+        "address": "THE ATTIC FLAT, 1B NEWHAILES, MUSSELBURGH, MIDLOTHIAN, EH21 6RY",
+        "sepa_ref_number": null,
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": 12664,
+        "sh_src": "eab81327-216b-41e2-b838-d4e1e5ed164f",
+        "sh_date_uploaded": "2018-10-18",
+        "source": "Local Authority"
+      },
+      "bbox": [
+        -3.0811,
+        55.9402,
+        -3.0811,
+        55.9402
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.12915",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0482,
+            55.9455
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000010",
+        "local_authority": "East Lothian",
+        "uprn": "138025385",
+        "address": "HMS'S RESIDENCE BALCARRES, 33 MILLHILL, MUSSELBURGH, MIDLOTHIAN, EH21 7RH",
+        "sepa_ref_number": null,
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": 12765,
+        "sh_src": "eab81327-216b-41e2-b838-d4e1e5ed164f",
+        "sh_date_uploaded": "2018-10-18",
+        "source": "Local Authority"
+      },
+      "bbox": [
+        -3.0482,
+        55.9455,
+        -3.0482,
+        55.9455
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.13548",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0642,
+            55.9339
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000010",
+        "local_authority": "East Lothian",
+        "uprn": "138032062",
+        "address": "24 STONEYBANK ROAD, MUSSELBURGH, MIDLOTHIAN, EH21 6HJ",
+        "sepa_ref_number": null,
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": 13405,
+        "sh_src": "eab81327-216b-41e2-b838-d4e1e5ed164f",
+        "sh_date_uploaded": "2018-10-18",
+        "source": "Local Authority"
+      },
+      "bbox": [
+        -3.0642,
+        55.9339,
+        -3.0642,
+        55.9339
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.13871",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0652,
+            55.9248
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000010",
+        "local_authority": "East Lothian",
+        "uprn": "138037025",
+        "address": "ROADMAN'S COTTAGE, 34 OLD CRAIGHALL, MUSSELBURGH, MIDLOTHIAN, EH21 8SE",
+        "sepa_ref_number": null,
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": 13726,
+        "sh_src": "eab81327-216b-41e2-b838-d4e1e5ed164f",
+        "sh_date_uploaded": "2018-10-18",
+        "source": "Local Authority"
+      },
+      "bbox": [
+        -3.0652,
+        55.9248,
+        -3.0652,
+        55.9248
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.13988",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0678,
+            55.9228
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000010",
+        "local_authority": "East Lothian",
+        "uprn": "138038391",
+        "address": "25 OLD CRAIGHALL, MUSSELBURGH, MIDLOTHIAN, EH21 8SE",
+        "sepa_ref_number": null,
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": 13840,
+        "sh_src": "eab81327-216b-41e2-b838-d4e1e5ed164f",
+        "sh_date_uploaded": "2018-10-18",
+        "source": "Local Authority"
+      },
+      "bbox": [
+        -3.0678,
+        55.9228,
+        -3.0678,
+        55.9228
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.14196",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0663,
+            55.9233
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000010",
+        "local_authority": "East Lothian",
+        "uprn": "138036092",
+        "address": "6 OLD CRAIGHALL, MUSSELBURGH, MIDLOTHIAN, EH21 8SE",
+        "sepa_ref_number": null,
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": 14044,
+        "sh_src": "eab81327-216b-41e2-b838-d4e1e5ed164f",
+        "sh_date_uploaded": "2018-10-18",
+        "source": "Local Authority"
+      },
+      "bbox": [
+        -3.0663,
+        55.9233,
+        -3.0663,
+        55.9233
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.14197",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0664,
+            55.9232
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000010",
+        "local_authority": "East Lothian",
+        "uprn": "138036093",
+        "address": "7 OLD CRAIGHALL, MUSSELBURGH, MIDLOTHIAN, EH21 8SE",
+        "sepa_ref_number": null,
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": 14045,
+        "sh_src": "eab81327-216b-41e2-b838-d4e1e5ed164f",
+        "sh_date_uploaded": "2018-10-18",
+        "source": "Local Authority"
+      },
+      "bbox": [
+        -3.0664,
+        55.9232,
+        -3.0664,
+        55.9232
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.14198",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0672,
+            55.9222
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000010",
+        "local_authority": "East Lothian",
+        "uprn": "138036096",
+        "address": "MONKTON GARDENS, (29) OLD CRAIGHALL, MUSSELBURGH, MIDLOTHIAN, EH21 8SF",
+        "sepa_ref_number": null,
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": 14046,
+        "sh_src": "eab81327-216b-41e2-b838-d4e1e5ed164f",
+        "sh_date_uploaded": "2018-10-18",
+        "source": "Local Authority"
+      },
+      "bbox": [
+        -3.0672,
+        55.9222,
+        -3.0672,
+        55.9222
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.14219",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.066,
+            55.9235
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000010",
+        "local_authority": "East Lothian",
+        "uprn": "138036067",
+        "address": "1 OLD CRAIGHALL, MUSSELBURGH, MIDLOTHIAN, EH21 8SE",
+        "sepa_ref_number": null,
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": 14067,
+        "sh_src": "eab81327-216b-41e2-b838-d4e1e5ed164f",
+        "sh_date_uploaded": "2018-10-18",
+        "source": "Local Authority"
+      },
+      "bbox": [
+        -3.066,
+        55.9235,
+        -3.066,
+        55.9235
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.14220",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0669,
+            55.9229
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000010",
+        "local_authority": "East Lothian",
+        "uprn": "138036073",
+        "address": "15 OLD CRAIGHALL, MUSSELBURGH, MIDLOTHIAN, EH21 8SE",
+        "sepa_ref_number": null,
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": 14068,
+        "sh_src": "eab81327-216b-41e2-b838-d4e1e5ed164f",
+        "sh_date_uploaded": "2018-10-18",
+        "source": "Local Authority"
+      },
+      "bbox": [
+        -3.0669,
+        55.9229,
+        -3.0669,
+        55.9229
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.14395",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0423,
+            55.9143
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000010",
+        "local_authority": "East Lothian",
+        "uprn": "138045710",
+        "address": "2 HOME FARM COTTAGES, 2 DALKEITH PARK, DALKEITH, MIDLOTHIAN, EH22 2NJ",
+        "sepa_ref_number": null,
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": 14241,
+        "sh_src": "eab81327-216b-41e2-b838-d4e1e5ed164f",
+        "sh_date_uploaded": "2018-10-18",
+        "source": "Local Authority"
+      },
+      "bbox": [
+        -3.0423,
+        55.9143,
+        -3.0423,
+        55.9143
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.14397",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0423,
+            55.9142
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000010",
+        "local_authority": "East Lothian",
+        "uprn": "138045712",
+        "address": "4 HOME FARM COTTAGES, 4 DALKEITH PARK, DALKEITH, MIDLOTHIAN, EH22 2NJ",
+        "sepa_ref_number": null,
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": 14243,
+        "sh_src": "eab81327-216b-41e2-b838-d4e1e5ed164f",
+        "sh_date_uploaded": "2018-10-18",
+        "source": "Local Authority"
+      },
+      "bbox": [
+        -3.0423,
+        55.9142,
+        -3.0423,
+        55.9142
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.14398",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.054,
+            55.9108
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000010",
+        "local_authority": "East Lothian",
+        "uprn": "138045713",
+        "address": "19 DALKEITH PARK, DALKEITH, MIDLOTHIAN, EH22 2NA",
+        "sepa_ref_number": null,
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": 14244,
+        "sh_src": "eab81327-216b-41e2-b838-d4e1e5ed164f",
+        "sh_date_uploaded": "2018-10-18",
+        "source": "Local Authority"
+      },
+      "bbox": [
+        -3.054,
+        55.9108,
+        -3.054,
+        55.9108
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.14399",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0581,
+            55.9143
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000010",
+        "local_authority": "East Lothian",
+        "uprn": "138045714",
+        "address": "CASTLESTEADS, 18 DALKEITH PARK, DALKEITH, MIDLOTHIAN, EH22 2NA",
+        "sepa_ref_number": null,
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": 14245,
+        "sh_src": "eab81327-216b-41e2-b838-d4e1e5ed164f",
+        "sh_date_uploaded": "2018-10-18",
+        "source": "Local Authority"
+      },
+      "bbox": [
+        -3.0581,
+        55.9143,
+        -3.0581,
+        55.9143
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.14400",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0462,
+            55.916
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000010",
+        "local_authority": "East Lothian",
+        "uprn": "138045716",
+        "address": "THE GRIEVES COTTAGE, 15 DALKEITH PARK, DALKEITH, MIDLOTHIAN, EH22 2NA",
+        "sepa_ref_number": null,
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": 14246,
+        "sh_src": "eab81327-216b-41e2-b838-d4e1e5ed164f",
+        "sh_date_uploaded": "2018-10-18",
+        "source": "Local Authority"
+      },
+      "bbox": [
+        -3.0462,
+        55.916,
+        -3.0462,
+        55.916
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.14401",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0555,
+            55.9191
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000010",
+        "local_authority": "East Lothian",
+        "uprn": "138045718",
+        "address": "16 DALKEITH PARK, DALKEITH, MIDLOTHIAN, EH22 2NA",
+        "sepa_ref_number": null,
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": 14247,
+        "sh_src": "eab81327-216b-41e2-b838-d4e1e5ed164f",
+        "sh_date_uploaded": "2018-10-18",
+        "source": "Local Authority"
+      },
+      "bbox": [
+        -3.0555,
+        55.9191,
+        -3.0555,
+        55.9191
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.14402",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0449,
+            55.9159
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000010",
+        "local_authority": "East Lothian",
+        "uprn": "138045719",
+        "address": "SMEATON HOUSE, A DALKEITH PARK, DALKEITH, MIDLOTHIAN, EH22 2NJ",
+        "sepa_ref_number": null,
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": 14248,
+        "sh_src": "eab81327-216b-41e2-b838-d4e1e5ed164f",
+        "sh_date_uploaded": "2018-10-18",
+        "source": "Local Authority"
+      },
+      "bbox": [
+        -3.0449,
+        55.9159,
+        -3.0449,
+        55.9159
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.14403",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0432,
+            55.9145
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000010",
+        "local_authority": "East Lothian",
+        "uprn": "138045720",
+        "address": "SMEATON LODGE, 14 DALKEITH PARK, DALKEITH, MIDLOTHIAN, EH22 2NA",
+        "sepa_ref_number": null,
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": 14249,
+        "sh_src": "eab81327-216b-41e2-b838-d4e1e5ed164f",
+        "sh_date_uploaded": "2018-10-18",
+        "source": "Local Authority"
+      },
+      "bbox": [
+        -3.0432,
+        55.9145,
+        -3.0432,
+        55.9145
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.14459",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0454,
+            55.9379
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000010",
+        "local_authority": "East Lothian",
+        "uprn": "138017528",
+        "address": "5A INVERESK VILLAGE, MUSSELBURGH, MIDLOTHIAN, EH21 7TD",
+        "sepa_ref_number": null,
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": 14303,
+        "sh_src": "eab81327-216b-41e2-b838-d4e1e5ed164f",
+        "sh_date_uploaded": "2018-10-18",
+        "source": "Local Authority"
+      },
+      "bbox": [
+        -3.0454,
+        55.9379,
+        -3.0454,
+        55.9379
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.14675",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0462,
+            55.916
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000010",
+        "local_authority": "East Lothian",
+        "uprn": "138045716",
+        "address": "THE GRIEVES COTTAGE, 15 DALKEITH PARK, DALKEITH, MIDLOTHIAN, EH22 2NA",
+        "sepa_ref_number": null,
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": 14521,
+        "sh_src": "eab81327-216b-41e2-b838-d4e1e5ed164f",
+        "sh_date_uploaded": "2018-10-18",
+        "source": "Local Authority"
+      },
+      "bbox": [
+        -3.0462,
+        55.916,
+        -3.0462,
+        55.916
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.14676",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0555,
+            55.9191
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000010",
+        "local_authority": "East Lothian",
+        "uprn": "138045718",
+        "address": "16 DALKEITH PARK, DALKEITH, MIDLOTHIAN, EH22 2NA",
+        "sepa_ref_number": null,
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": 14522,
+        "sh_src": "eab81327-216b-41e2-b838-d4e1e5ed164f",
+        "sh_date_uploaded": "2018-10-18",
+        "source": "Local Authority"
+      },
+      "bbox": [
+        -3.0555,
+        55.9191,
+        -3.0555,
+        55.9191
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.17308",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0673,
+            55.9238
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": null,
+        "sepa_ref_number": null,
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "Scottish Water"
+      },
+      "bbox": [
+        -3.0673,
+        55.9238,
+        -3.0673,
+        55.9238
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.17764",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1393,
+            55.9214
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": null,
+        "sepa_ref_number": null,
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "Scottish Water"
+      },
+      "bbox": [
+        -3.1393,
+        55.9214,
+        -3.1393,
+        55.9214
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.18381",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1936,
+            55.8813
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "PENTLAND VIEW HOUSE --- PENTLAND VIEW HOUSE, DAMHEAD, EDINBURGH EH10 7DZ",
+        "sepa_ref_number": "CAR/R/1082153",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1936,
+        55.8813,
+        -3.1936,
+        55.8813
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.18819",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.189,
+            55.885
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "23 DAMHEAD HOLDINGS, LOTHIANBURN, EDINBURGH --- 23 DAMHEAD, LOTHIANBURN, EDINBURGH EH10 7EA",
+        "sepa_ref_number": "CAR/R/1053045",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.189,
+        55.885,
+        -3.189,
+        55.885
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.19184",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3308,
+            55.9224
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "61 GOGARBANK --- 61 GOGARBANK, EDINBURGH EH12 9BY",
+        "sepa_ref_number": "CAR/R/1020358",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3308,
+        55.9224,
+        -3.3308,
+        55.9224
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.20168",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.355,
+            55.8847
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "575, 577 & 579A LANARK ROAD WEST BALERNO --- 575, 577 & 579A LANARK ROAD WEST, BALERNO EH14 7BL",
+        "sepa_ref_number": "CAR/R/1182478",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.355,
+        55.8847,
+        -3.355,
+        55.8847
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.21401",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1316,
+            55.8918
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "403 LASSWADE ROAD, EDINBURGH --- 403 LASSWADE ROAD, EDINBURGH EH17 8SA",
+        "sepa_ref_number": "CAR/R/1161732",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1316,
+        55.8918,
+        -3.1316,
+        55.8918
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.21784",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1711,
+            55.8941
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "39 BROOMHILLS FARMHOUSE, EDINBURGH --- 39 BROOMHILLS FARMHOUSE, FROGSTON, EDINBURGH EH17 8RT",
+        "sepa_ref_number": "CAR/R/1111213",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1711,
+        55.8941,
+        -3.1711,
+        55.8941
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.23530",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1026,
+            55.9205
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "PLOT 1 LAND TO THE SOUTH OF HILLTOWN HOUSE, HILLTOWN, WOOLMET, DALKEITH, MIDLOTHIAN",
+        "sepa_ref_number": "CAR/R/5004066",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1026,
+        55.9205,
+        -3.1026,
+        55.9205
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.23662",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1015,
+            55.9202
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "PLOT 3, LAND SOUTH OF HILLTOWN HOUSE, WOOLMET, DALKEITH, EH22 1SG",
+        "sepa_ref_number": "CAR/R/5004155",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1015,
+        55.9202,
+        -3.1015,
+        55.9202
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.23663",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1017,
+            55.9206
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "PLOT 4, LAND SOUTH OF HILLTOWN HOUSE, WOOLMET, DALKEITH, EH22 1SG",
+        "sepa_ref_number": "CAR/R/5004156",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1017,
+        55.9206,
+        -3.1017,
+        55.9206
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.24345",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1931,
+            55.9038
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "TIGH NA GEAT COTTAGES, LOTHIANBURN, EDINBURGH, EH10 7DZ",
+        "sepa_ref_number": "CAR/R/1027852",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1931,
+        55.9038,
+        -3.1931,
+        55.9038
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.24557",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.064,
+            55.9241
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "EAST LOTHIAN CREMATORIUM, LAND OFF OLD CRAIGHALL ROAD (B6415), OLD CRAIGHALL, MUSSELBURGH, EH21 8SA",
+        "sepa_ref_number": "CAR/R/5006837",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.064,
+        55.9241,
+        -3.064,
+        55.9241
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.25019",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1018,
+            55.9208
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "HILLTOWN HOUSE WOOLMET DALKEITH EH22 1SG",
+        "sepa_ref_number": "CAR/R/3003529",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1018,
+        55.9208,
+        -3.1018,
+        55.9208
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.25409",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1887,
+            55.88
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "DAMHEAD FARM STEADING --- DAMHEAD FARM STEADINGS, DAMHEAD, EDINBURGH EH10 7GZ",
+        "sepa_ref_number": "CAR/R/1010241",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1887,
+        55.88,
+        -3.1887,
+        55.88
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.25608",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.2618,
+            55.8971
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "67 BONALY ROAD, EDINBURGH, EH13 0PB",
+        "sepa_ref_number": "CAR/R/3016548",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.2618,
+        55.8971,
+        -3.2618,
+        55.8971
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.25852",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0805,
+            55.8969
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "31 LUGTON BRAE DALKEITH EH22 1JX",
+        "sepa_ref_number": "CAR/R/3006280",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.0805,
+        55.8969,
+        -3.0805,
+        55.8969
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.26104",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3324,
+            55.9305
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "KELLERSTAIN LODGE GOGAR STATION ROAD EDINBURGH EH12 9BS",
+        "sepa_ref_number": "CAR/R/3007526",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3324,
+        55.9305,
+        -3.3324,
+        55.9305
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.26360",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3167,
+            55.9261
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "1 FAIRVIEW GOGAR STATION ROAD EDINBURGH EH12 9BX",
+        "sepa_ref_number": "CAR/R/3008295",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3167,
+        55.9261,
+        -3.3167,
+        55.9261
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.26672",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0857,
+            55.8976
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "KINGS GATE LODGE DALKEITH EH22 1ST",
+        "sepa_ref_number": "CAR/R/3012706",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.0857,
+        55.8976,
+        -3.0857,
+        55.8976
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.27000",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1379,
+            55.8782
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "20 LASSWADE ROAD LOANHEAD EH20 9SE",
+        "sepa_ref_number": "CAR/R/3011706",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1379,
+        55.8782,
+        -3.1379,
+        55.8782
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.27591",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.2198,
+            55.8947
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "107 SWANSTON ROAD EDINBURGH EH10 7DS",
+        "sepa_ref_number": "CAR/R/3010630",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.2198,
+        55.8947,
+        -3.2198,
+        55.8947
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.28857",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1868,
+            55.8845
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "22 LOTHIANBURN EDINBURGH EH10 7EA",
+        "sepa_ref_number": "CAR/R/3013658",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1868,
+        55.8845,
+        -3.1868,
+        55.8845
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.29268",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0433,
+            55.9382
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000010",
+        "local_authority": "East Lothian",
+        "uprn": null,
+        "address": "13A INVERESK VILLAGE MUSSELBURGH EH21 7TD",
+        "sepa_ref_number": "CAR/R/3014478",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.0433,
+        55.9382,
+        -3.0433,
+        55.9382
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.29926",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0759,
+            55.9171
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "WELLINGTON HOUSE DALKEITH EH22 1SA, 2 WELLINGTON COTTAGES DALKEITH EH22 1SA",
+        "sepa_ref_number": "CAR/R/3011544",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.0759,
+        55.9171,
+        -3.0759,
+        55.9171
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.30006",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1909,
+            55.8793
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "TIGH NA GEAT HOUSE LOTHIANBURN EDINBURGH EH10 7DZ",
+        "sepa_ref_number": "CAR/R/3003195",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1909,
+        55.8793,
+        -3.1909,
+        55.8793
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.30048",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0806,
+            55.88
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "HARDENGREEN HOUSE DALKEITH EH22 3LF",
+        "sepa_ref_number": "CAR/R/3004978",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.0806,
+        55.88,
+        -3.0806,
+        55.88
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.30073",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1855,
+            55.8831
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "21 LOTHIANBURN EDINBURGH EH10 7EA",
+        "sepa_ref_number": "CAR/R/3007209",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1855,
+        55.8831,
+        -3.1855,
+        55.8831
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.30213",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0708,
+            55.8829
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "KIRKBANK CENTRE NEWBATTLE ROAD ESKBANK EH22 3LH, NEWBATTLE HOUSE NEWBATTLE ROAD DALKEITH EH22 3LH",
+        "sepa_ref_number": "CAR/R/3007851",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.0708,
+        55.8829,
+        -3.0708,
+        55.8829
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.30758",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.063,
+            55.8926
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "35A NEWMILLS ROAD DALKEITH EH22 1ET, 37 NEWMILLS ROAD DALKEITH EH22 1ET",
+        "sepa_ref_number": "CAR/R/3011694",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.063,
+        55.8926,
+        -3.063,
+        55.8926
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.30837",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0953,
+            55.9008
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "700C OLD DALKEITH ROAD DANDERHALL DALKEITH EH22 1RT, 700D OLD DALKEITH ROAD DANDERHALL DALKEITH EH22 1RT, 700E OLD DALKEITH ROAD DANDERHALL DALKEITH EH22 1RT, 700 OLD DALKEITH ROAD DANDERHALL DALKEITH EH22 1RT, 698 OLD DALKEITH ROAD DANDERHALL DALKEITH EH22 1RT, 700B OLD DALKEITH ROAD DANDERHALL DALKEITH EH22 1RT, 700F OLD DALKEITH ROAD DANDERHALL DALKEITH EH22 1RT",
+        "sepa_ref_number": "CAR/R/3003129",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.0953,
+        55.9008,
+        -3.0953,
+        55.9008
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.31062",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0449,
+            55.9159
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "SMEATON HOUSE DALKEITH EH22 2NJ",
+        "sepa_ref_number": "CAR/R/3010805",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.0449,
+        55.9159,
+        -3.0449,
+        55.9159
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.31681",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1209,
+            55.8818
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "DUNESK HOUSE, LASSWADE, MIDLOTHIAN --- DUNESK, LASSWADE EH18 1HE",
+        "sepa_ref_number": "CAR/R/1071270",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1209,
+        55.8818,
+        -3.1209,
+        55.8818
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.33046",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1935,
+            55.8859
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "THE COTTAGE, OLD PENTLAND ROAD, LOTHIANBURN --- THE COTTAGE, OLD PENTLAND ROAD, LOTHIANBURN EH10 7EB",
+        "sepa_ref_number": "CAR/R/1157011",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1935,
+        55.8859,
+        -3.1935,
+        55.8859
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.33146",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.2757,
+            55.9039
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "WOODHALL MAINS FARM, WOODHALL ROAD, EDINBURGH, EH13",
+        "sepa_ref_number": "CAR/R/5007815",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.2757,
+        55.9039,
+        -3.2757,
+        55.9039
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.33156",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.325,
+            55.9285
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "GOGARBANK FARM COTTAGE B --- GOGARBANK FARM COTTAGE B, GOGAR STATION ROAD, EDINBURGH EH12 9BS",
+        "sepa_ref_number": "CAR/R/1019371",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.325,
+        55.9285,
+        -3.325,
+        55.9285
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.34422",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0778,
+            55.8909
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "DALKEITH TENNIS CLUB, CEMETERY ROAD, DALKEITH --- DALKEITH TENNIS CLUB, CEMETERY ROAD, DALKEITH EH22 3DL",
+        "sepa_ref_number": "CAR/R/1124816",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.0778,
+        55.8909,
+        -3.0778,
+        55.8909
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.34530",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3232,
+            55.9253
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "12,14, 16 & 18 GOGARBANK, EDINBURGH --- 12, 14, 16 & 18 GOGARBANK, EDINBURGH EH12 9DE",
+        "sepa_ref_number": "CAR/R/1131890",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3232,
+        55.9253,
+        -3.3232,
+        55.9253
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.35212",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1001,
+            55.8873
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "BROOMHILL LODGE, LASSWADE --- MELVILLE DYKES ROAD, LASSWADE EH18 1AN",
+        "sepa_ref_number": "CAR/R/1013654",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1001,
+        55.8873,
+        -3.1001,
+        55.8873
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.35452",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.186,
+            55.8825
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "26 DAMHEAD, LOTHIANBURN --- 26 DAMHEAD, LOTHIANBURN, EDINBURGH EH10 7EA",
+        "sepa_ref_number": "CAR/R/1024812",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.186,
+        55.8825,
+        -3.186,
+        55.8825
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.36169",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3385,
+            55.9566
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "LENNIE MAINS, 84 CAMMO ROAD, EDINBURGH --- LENNIE MAINS, 84 CAMMO ROAD, EDINBURGH EH12 0AR",
+        "sepa_ref_number": "CAR/R/1098190",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3385,
+        55.9566,
+        -3.3385,
+        55.9566
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.36303",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1751,
+            55.8741
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "BUZANCY COTTAGE, LOANHEAD --- 6 PENTLAND MAINS, LOANHEAD EH20 9QG",
+        "sepa_ref_number": "CAR/R/1072877",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1751,
+        55.8741,
+        -3.1751,
+        55.8741
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.36395",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3593,
+            55.8975
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "1 & 2 NEWHOUSE COTTAGES, KIRKNEWTON --- 1 & 2 NEWHOUSE COTTAGES, LONG DALMAHOY ROAD, KIRKNEWTON EH27 8EE",
+        "sepa_ref_number": "CAR/R/1074091",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3593,
+        55.8975,
+        -3.3593,
+        55.8975
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.36409",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.2,
+            55.8786
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "10 DAMHEAD, EDINBURGH --- 10 DAMHEAD, LOTHIANBURN, EDINBURGH EH10 7DZ",
+        "sepa_ref_number": "CAR/R/1048208",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.2,
+        55.8786,
+        -3.2,
+        55.8786
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.36950",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1901,
+            55.8816
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "19A DAMHEAD, LOTHIANBURN, EDINBURGH --- 19A DAMHEAD, LOTHIANBURN, EDINBURGH EH10 7EA",
+        "sepa_ref_number": "CAR/R/1163080",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1901,
+        55.8816,
+        -3.1901,
+        55.8816
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.37112",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3221,
+            55.9245
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "GOGAR BANK HOUSE ST01, EDINBURGH --- GOGAR BANK HOUSE ST01, GOGAR STATION ROAD, EDINBURGH EH12 9DE",
+        "sepa_ref_number": "CAR/R/1140128",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3221,
+        55.9245,
+        -3.3221,
+        55.9245
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.37328",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3583,
+            55.8978
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "NEWHOUSE LIVERY YARD --- NEWHOUSE LIVERY YARD, LONG DALMAHOY ROAD, KIRKNEWTON EH27 8EE",
+        "sepa_ref_number": "CAR/R/1023971",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3583,
+        55.8978,
+        -3.3583,
+        55.8978
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.38537",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3488,
+            55.9152
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "ADDISTON MAINS, RATHO, NEWBRIDGE --- ADDISTON MAINS, RATHO, NEWBRIDGE EH28 8NT",
+        "sepa_ref_number": "CAR/R/1065278",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3488,
+        55.9152,
+        -3.3488,
+        55.9152
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.38545",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3606,
+            55.8972
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "THE TUI STEADING, LONG DALMAHOY RD, EDINBURGH --- THE TUI STEADING, LONG DALMAHOY ROAD, EDINBURGH EH27 8EE",
+        "sepa_ref_number": "CAR/R/1157619",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3606,
+        55.8972,
+        -3.3606,
+        55.8972
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.38714",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3435,
+            55.9271
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "1-10 REODDINGLAW COTTAGES, EDINBURGH --- 1-10 RODDINGLAW COTTAGES, RODDINGLAW ROAD, EDINBURGH EH12 9DB",
+        "sepa_ref_number": "CAR/R/1078313",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3435,
+        55.9271,
+        -3.3435,
+        55.9271
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.39246",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1821,
+            55.9027
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "49/8 MORTONHALL GATE (+7) --- 49/8 MORTONHALL GATE, EDINBURGH EH16 6TJ",
+        "sepa_ref_number": "CAR/R/1133544",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1821,
+        55.9027,
+        -3.1821,
+        55.9027
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.40502",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1899,
+            55.8854
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "35 AND 36 DAMHEAD HOLDINGS, LOTHIANBURN, EDN --- 35 DAMHEAD, LOTHIANBURN, EDINBURGH EH10 7EA",
+        "sepa_ref_number": "CAR/R/1050985",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1899,
+        55.8854,
+        -3.1899,
+        55.8854
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.40631",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3279,
+            55.9228
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "47 GOGAR BANK, EDINBURGH --- 47 GOGAR BANK, EDINBURGH EH12 9BY",
+        "sepa_ref_number": "CAR/R/1066684",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3279,
+        55.9228,
+        -3.3279,
+        55.9228
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.40779",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1063,
+            55.9216
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "HILLCREST, WOOLMET, DALKEITH --- HILLCREST, WOOLMET, DALKEITH EH22 1SL",
+        "sepa_ref_number": "CAR/R/1054548",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1063,
+        55.9216,
+        -3.1063,
+        55.9216
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.41070",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1834,
+            55.8847
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "32A DAMHEAD, LOTHIANBURN, EDINBURGH --- 32A DAMHEAD, LOTHIANBURN, EDINBURGH EH10 7EA",
+        "sepa_ref_number": "CAR/R/1105525",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1834,
+        55.8847,
+        -3.1834,
+        55.8847
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.42133",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1931,
+            55.8859
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "ROSENEATH, OLD PENTLAND RD, EDINBURGH --- ROSENEATH, OLD PENTLAND ROAD, EDINBURGH EH10 7EB",
+        "sepa_ref_number": "CAR/R/1051112",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1931,
+        55.8859,
+        -3.1931,
+        55.8859
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.42435",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.189,
+            55.8818
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "19 & 20 DAMHEAD HOLDINGS, LOTHIANBURN --- 19 & 20 DAMHEAD HOLDINGS, LOTHIANBURN, EDINBURGH EH10 7EA",
+        "sepa_ref_number": "CAR/R/1080971",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.189,
+        55.8818,
+        -3.189,
+        55.8818
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.42839",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.2151,
+            55.8925
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "SWANSTON FARM --- 1-10 SWANSTON VILLAGE, EDINBURGH EH10 7DT",
+        "sepa_ref_number": "CAR/R/1093225",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.2151,
+        55.8925,
+        -3.2151,
+        55.8925
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.44002",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.2177,
+            55.8915
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "11 SWANSTON VILLAGE, EDINBURGH --- 11 SWANSTON VILLAGE, EDINBURGH",
+        "sepa_ref_number": "CAR/R/1041311",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.2177,
+        55.8915,
+        -3.2177,
+        55.8915
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.44364",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.329,
+            55.9231
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "49 GOGARBANK, EDINBURGH --- 49 GOGARBANK, EDINBURGH EH12 9BY",
+        "sepa_ref_number": "CAR/R/1045434",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.329,
+        55.9231,
+        -3.329,
+        55.9231
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.44621",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3592,
+            55.931
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "ASHLEY LODGE, FREELANDS RD, NEWBRIDGE --- ASHLEY LODGE, FREELANDS ROAD, NEWBRIDGE EH28 8NW",
+        "sepa_ref_number": "CAR/R/1047742",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3592,
+        55.931,
+        -3.3592,
+        55.931
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.44809",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1979,
+            55.8819
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "15 & 13 DAMHEAD, LOTHIANBURN, EDINBURGH --- 15 & 13 DAMHEAD, LOTHIANBURN, EDINBURGH EH10 7DZ",
+        "sepa_ref_number": "CAR/R/1050020",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1979,
+        55.8819,
+        -3.1979,
+        55.8819
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.45585",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1974,
+            55.8875
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "DUNGAVEL & GLENGARF, HILLEND, EDINBURGH --- DUNGAVAL, HILLEND, EDINBURGH EH10 7DY",
+        "sepa_ref_number": "CAR/R/1052206",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1974,
+        55.8875,
+        -3.1974,
+        55.8875
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.45829",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.2003,
+            55.8845
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "THREE WHEELS, BIGGAR ROAD, EDINBURGH --- THREE WHEELS, BIGGAR ROAD, EDINBURGH EH10 7DX",
+        "sepa_ref_number": "CAR/R/1018717",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.2003,
+        55.8845,
+        -3.2003,
+        55.8845
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.46134",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1128,
+            55.9271
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "PROPOSED NEW HOME, THE WISP, EDINBURGH --- PROPOSED NEW HOME AT LAND ADJACENT, TO 6 CLOVERFOOT COTTAGES, THE WISP, EDINBURGH EH16 4SH",
+        "sepa_ref_number": "CAR/R/1030821",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1128,
+        55.9271,
+        -3.1128,
+        55.9271
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.46367",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.2648,
+            55.9188
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "EXISTING BOTHY, KINGSKNOWE LEVEL CROSSING --- EXISTING BOTHY, KINGSKNOWE LEVEL CROSSING, EDINBURGH EH14 2JR",
+        "sepa_ref_number": "CAR/R/1165363",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.2648,
+        55.9188,
+        -3.2648,
+        55.9188
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.46813",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.2906,
+            55.974
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "LINDORES, EDINBURGH --- 14 CRAMOND ROAD NORTH, EDINBURGH EH4 6HS",
+        "sepa_ref_number": "CAR/R/1070137",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.2906,
+        55.974,
+        -3.2906,
+        55.974
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.47083",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1955,
+            55.8763
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "CAERKETTON LEA,6A DAMHEAD HOLDINGS,LOTHIANBUR --- CAERKETTON LEA, 6A DAMHEAD HOLDINGS, LOTHIANBURN, MID LOTHIAN EH16 7DZ",
+        "sepa_ref_number": "CAR/R/1147448",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1955,
+        55.8763,
+        -3.1955,
+        55.8763
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.47170",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1985,
+            55.8864
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "HILLEND HOUSE & NORTH HILLEND HOUSE,EDINBURGH --- HILLEND HOUSE, BIGGAR ROAD, EDINBURGH EH10 7DX",
+        "sepa_ref_number": "CAR/R/1150974",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1985,
+        55.8864,
+        -3.1985,
+        55.8864
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.47453",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3296,
+            55.8764
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "BIRCHWOOD COTTAGE, 1 THE GREEN, BALERNO --- 1 THE GREEN, BALERNO EH14 7LD",
+        "sepa_ref_number": "CAR/R/1065115",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3296,
+        55.8764,
+        -3.3296,
+        55.8764
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.48708",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3295,
+            55.9331
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "LESSER MILLBURN, GOGAR, EDINBURGH --- LESSER MILLBURN, GOGAR STATION ROAD, GOGAR, EDINBURGH EH12 9BS",
+        "sepa_ref_number": "CAR/R/1033463",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3295,
+        55.9331,
+        -3.3295,
+        55.9331
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.48732",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.2038,
+            55.8812
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "ERRAID STUDIO, ERRAID, BIGGAR ROAD, EDINBURGH --- ERRAID, BIGGAR ROAD, EDINBURGH EH10 7DX",
+        "sepa_ref_number": "CAR/R/1050697",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.2038,
+        55.8812,
+        -3.2038,
+        55.8812
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.49214",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.2947,
+            55.8902
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "EAST KINLEITH FARMHOUSE, CURRIE --- EAST KINLEITH FARMHOUSE, CURRIE, MIDLOTHIAN EH14 6AS",
+        "sepa_ref_number": "CAR/R/1125106",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.2947,
+        55.8902,
+        -3.2947,
+        55.8902
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.49997",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3339,
+            55.9278
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "KELLERSTAIN STABLES,GOGAR,EDINBURGH --- KELLERSTAIN STABLES, GOGAR, EDINBURGH EH12 9BS",
+        "sepa_ref_number": "CAR/R/1017401",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3339,
+        55.9278,
+        -3.3339,
+        55.9278
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.50049",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3203,
+            55.9268
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "GOGARBURN POULTRY FARM --- GOGARBURN POULTRY FARM, GOGAR STATION ROAD, EDINBURGH EH12 9BS",
+        "sepa_ref_number": "CAR/R/1019370",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3203,
+        55.9268,
+        -3.3203,
+        55.9268
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.50145",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3319,
+            55.9495
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "1-12 LENNIE COTTAGES, EDINBURGH --- 1-12 LENNIE COTTAGES, EDINBURGH EH12 0BB",
+        "sepa_ref_number": "CAR/R/1048230",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3319,
+        55.9495,
+        -3.3319,
+        55.9495
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.50817",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3574,
+            55.8857
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "580 & 580A LANARK ROAD WEST, BALERNO --- 580 LANARK ROAD WEST, BALERNO EH14 7BN",
+        "sepa_ref_number": "CAR/R/1092891",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3574,
+        55.8857,
+        -3.3574,
+        55.8857
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.51517",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0463,
+            55.8851
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "LIZVILLE COTTAGE, KIPPIELAW, BY DALKEITH, MID --- LIZVILLE COTTAGE, KIPPIELAW, BY DALKEITH EH22 2PX",
+        "sepa_ref_number": "CAR/R/1113054",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.0463,
+        55.8851,
+        -3.0463,
+        55.8851
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.51533",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1822,
+            55.886
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "29 & 30 DAMHEAD, EDINBURGH --- 29 & 30 DAMHEAD, OLD PENTLAND ROAD, EDINBURGH EH10 7EA",
+        "sepa_ref_number": "CAR/R/1160832",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1822,
+        55.886,
+        -3.1822,
+        55.886
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.51700",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1934,
+            55.8747
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "DAMHEAD HOLDINGS, LOTHIANBURN --- 4 DAMHEAD HOLDINGS, LOTHIANBURN EH10 7DZ",
+        "sepa_ref_number": "CAR/R/1009173",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1934,
+        55.8747,
+        -3.1934,
+        55.8747
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.52887",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3262,
+            55.9237
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "33 GOGARBANK, EDINBURGH --- 33 GOGARBANK, EDINBURGH EH12 9BY",
+        "sepa_ref_number": "CAR/R/1082120",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3262,
+        55.9237,
+        -3.3262,
+        55.9237
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.53463",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3274,
+            55.9229
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "SUNTRAP HOUSE AND GARDEN --- SUNTRAP, 43 GOGARBANK, EDINBURGH EH12 9BY",
+        "sepa_ref_number": "CAR/R/1107918",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3274,
+        55.9229,
+        -3.3274,
+        55.9229
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.53485",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1852,
+            55.9071
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "99 & 101 LIBERTON DRIVE, EDINBURGH --- 99 & 101 LIBERTON DRIVE, EDINBURGH EH16 6TH",
+        "sepa_ref_number": "CAR/R/1108716",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1852,
+        55.9071,
+        -3.1852,
+        55.9071
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.53527",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1174,
+            55.8838
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "DROMAN HOUSE, LASSWADE --- DROMAN HOUSE, LASSWADE EH18 1HA",
+        "sepa_ref_number": "CAR/R/1111899",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1174,
+        55.8838,
+        -3.1174,
+        55.8838
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.53716",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1163,
+            55.8826
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "SUNNYBRAE HOUSE, 18 SCHOOL BRAE, LASSWADE --- 18 SCHOOL GREEN, LASSWADE EH18 1NB",
+        "sepa_ref_number": "CAR/R/1052663",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1163,
+        55.8826,
+        -3.1163,
+        55.8826
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.54334",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1769,
+            55.9004
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "MORTONHALL, EDINBURGH --- FROGSTON ROAD EAST, EDINBURGH EH16 6TJ",
+        "sepa_ref_number": "CAR/R/1050032",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1769,
+        55.9004,
+        -3.1769,
+        55.9004
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.54385",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1973,
+            55.8794
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "WHITEHILL + 1, 12 DAMHEAD, LOTHIANBURN --- WHITEHILL, 12 DAMHEAD LOTHIANBURN, EDINBURGH EH10 7DZ",
+        "sepa_ref_number": "CAR/R/1050858",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1973,
+        55.8794,
+        -3.1973,
+        55.8794
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.54401",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3505,
+            55.9346
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "NORTH LODGE,GOGAR MOUNT HOUSE. INGLISTON --- GOGAR MOUNT HOUSE, INGLISTON, EDINBURGH EH12 9BL",
+        "sepa_ref_number": "CAR/R/1013098",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3505,
+        55.9346,
+        -3.3505,
+        55.9346
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.55093",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1557,
+            55.9774
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "CEMEX UK MATERIALS, LEITH COATING PLANT --- CEMEX UK MATERIALS LTD, LEITH COATING PLANT, 65 EDINBURGH DOCK, LEITH DOCKS, EDINBURGH EH6 7DW",
+        "sepa_ref_number": "CAR/R/1102031",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1557,
+        55.9774,
+        -3.1557,
+        55.9774
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.55136",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.108,
+            55.9054
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "SITE TOILET BLOCK + STATIC CARAVAN, EDINBURGH --- SITE TOILET BLOCK (TEMP CONTAINER), TODHILL COMPOSTING SITE, 684 OLD DALKEITH ROAD, EDINBURGH EH22 1RR",
+        "sepa_ref_number": "CAR/R/1151454",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.108,
+        55.9054,
+        -3.108,
+        55.9054
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.55197",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3563,
+            55.8813
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "BANKHEAD HOUSE & THE COACH HOUSE, EDINBURGH --- BANKHEAD HOUSE, GLENBROOK ROAD, BALERNO EH14 7BE",
+        "sepa_ref_number": "CAR/R/1062879",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3563,
+        55.8813,
+        -3.3563,
+        55.8813
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.56291",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1387,
+            55.9258
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "1-7 & CASTLE COTT, MAINS OF CRAIGMILLAR, EDIN --- 1 - 7 & CASTLE COTTAGE, MAINS OF CRAIGMILLAR, EDINBURGH EH16 4SE",
+        "sepa_ref_number": "CAR/R/1075429",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1387,
+        55.9258,
+        -3.1387,
+        55.9258
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.56559",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1023,
+            55.8968
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "4 MELVILLE COTTAGES, LASSWADE --- 4 MELVILLE COTTAGES, LASSWADE EH18 1AR",
+        "sepa_ref_number": "CAR/R/1030761",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1023,
+        55.8968,
+        -3.1023,
+        55.8968
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.57046",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3523,
+            55.9102
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "ADDISTOUN HOUSE(+1), BY DALMAHOY, RATHO --- ADDISTOUN HOUSE BY DALMAHOY, RATHO, NEWBRIDGE EH28 8NT",
+        "sepa_ref_number": "CAR/R/1090833",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3523,
+        55.9102,
+        -3.3523,
+        55.9102
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.57152",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3456,
+            55.9266
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "BRIDGE 7 COMPOUND, EDINBURGH --- BRIDGE 7 COMPUND, BAM NUTTALL COMPOUND, RODDINGLAW ROAD, EDINBURGH EH12 9DB",
+        "sepa_ref_number": "CAR/R/1041145",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3456,
+        55.9266,
+        -3.3456,
+        55.9266
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.57344",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3406,
+            55.9508
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "MACLEOD BUILDING, SERVICES 39 TURNHOUSE ROAD --- MACLEOD BUILDING SERVICES, 39 TURNHOUSE ROAD, EDINBURGH EH12 0AE",
+        "sepa_ref_number": "CAR/R/1109773",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3406,
+        55.9508,
+        -3.3406,
+        55.9508
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.57634",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3325,
+            55.9091
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "ELLSWOOD COTTAGE, CURRIE --- ELLSWOOD COTTAGE, CURRIE EH14 4AF",
+        "sepa_ref_number": "CAR/R/1133749",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3325,
+        55.9091,
+        -3.3325,
+        55.9091
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.60248",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3292,
+            55.9386
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "THE LODGE, CASTLE GOGAR --- THE LODGE, GLASGOW ROAD, EDINBURGH EH12 9BQ",
+        "sepa_ref_number": "CAR/R/1014883",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3292,
+        55.9386,
+        -3.3292,
+        55.9386
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.62829",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3308,
+            55.9222
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "63 GOGARBANK, EDINBURGH --- 63 GOGARBANK, EDINBURGH EH12 9BY",
+        "sepa_ref_number": "CAR/R/1088049",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3308,
+        55.9222,
+        -3.3308,
+        55.9222
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.63009",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3318,
+            55.9719
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "LOWOOD HOUSE, BY CRAMOND BRIDGE, EDINBURGH --- LOWOOD HOUSE, BY CRAMOND BRIDGE, EDINBURGH EH30 9TH",
+        "sepa_ref_number": "CAR/R/1144975",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3318,
+        55.9719,
+        -3.3318,
+        55.9719
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.63095",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.358,
+            55.9279
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "ASHLEY HOUSE + 1, FREELANDS ROAD, RATHO --- FREELANDS ROAD, RATHO, EDINBURGH EH28 8NW",
+        "sepa_ref_number": "CAR/R/1150336",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.358,
+        55.9279,
+        -3.358,
+        55.9279
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.63488",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1978,
+            55.8872
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "HILLEND COTTAGE & HILLEND FARM COTTAGE --- BIGGAR ROAD, EDINBURGH EH10 7DY",
+        "sepa_ref_number": "CAR/R/1164628",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1978,
+        55.8872,
+        -3.1978,
+        55.8872
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.63566",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.2563,
+            55.8977
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "DRUIM, 63 BONALY ROAD, EDINBURGH --- DRUIM, 63 BONALY ROAD, EDINBURGH EH13 0PB",
+        "sepa_ref_number": "CAR/R/1168323",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.2563,
+        55.8977,
+        -3.2563,
+        55.8977
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.63659",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3324,
+            55.9588
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "LENNIE GATE, 72 CAMMO ROAD. EDINBURGH --- LENNIE GATE, 72 CAMMO ROAD, EDINBURGH EH12 0AR",
+        "sepa_ref_number": "CAR/R/1012189",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3324,
+        55.9588,
+        -3.3324,
+        55.9588
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.63671",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0602,
+            55.9029
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "SCOTTISH NATURAL HERITAGE, DALKEITH --- LAUNDRY HOUSE, DALKEITH COUNTRY PARK, DALKEITH. MIDLOTHIAN EH22 2NA",
+        "sepa_ref_number": "CAR/R/1013655",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.0602,
+        55.9029,
+        -3.0602,
+        55.9029
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.63719",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0839,
+            55.9225
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "LAND TO THE SOUTH OF MILLERHILL RECYCLING AND ENERGY RECOVERY CENTRE, WHITEHILL ROAD, MILLERHILL, DALKIETH, EH22 1SX",
+        "sepa_ref_number": "CAR/R/5005126",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.0839,
+        55.9225,
+        -3.0839,
+        55.9225
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.64558",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1824,
+            55.877
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "THE STEADING, PENTLAND MAINS --- THE STEADING, PENTLAND MAINS, LOANHEAD EH20 9QG",
+        "sepa_ref_number": "CAR/R/1021697",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1824,
+        55.877,
+        -3.1824,
+        55.877
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.65194",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1305,
+            55.8766
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "GLENKEVOCK HOUSE, KEVOCK ROAD, LASSWADE --- GLENKEVOCK HOUSE, KEVOCK ROAD, LASSWADE EH18 1HX",
+        "sepa_ref_number": "CAR/R/1111384",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1305,
+        55.8766,
+        -3.1305,
+        55.8766
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.65205",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1129,
+            55.927
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "1-6 CLOVERFOOT, THE WISP, EDINBURGH --- 1-6 CLOVERFOOT, THE WISP, EDINBURGH EH16 4SH",
+        "sepa_ref_number": "CAR/R/1150383",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1129,
+        55.927,
+        -3.1129,
+        55.927
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.66223",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1013,
+            55.9212
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "HILLTOWN FARM COTTAGE, NEWTON, DALKEITH --- NEWTON VILLAGE, DALKEITH EH22 1SG",
+        "sepa_ref_number": "CAR/R/1017065",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1013,
+        55.9212,
+        -3.1013,
+        55.9212
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.66525",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1557,
+            55.9774
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "CEMEX UK MATERIALS, 65 EDINBURGH DOCK --- CEMEX UK MATERIALS LTD, 65 EDINBURGH DOCK, LEITH DOCKS, EDINBURGH EH6 7DW",
+        "sepa_ref_number": "CAR/R/1102029",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1557,
+        55.9774,
+        -3.1557,
+        55.9774
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.67285",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3267,
+            55.9033
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "MALCOLMSTON FARM, CURRIE, EDINBURGH --- MALCOMSTON FARM, CURRIE EH14 4AD",
+        "sepa_ref_number": "CAR/R/1069360",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3267,
+        55.9033,
+        -3.3267,
+        55.9033
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.68342",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1975,
+            55.8847
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "AUCHNACREE --- SEAFIELD MOOR ROAD, HILLEND, LOTHIANBURN, EDINBURGH EH10 7DY",
+        "sepa_ref_number": "CAR/R/1019844",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1975,
+        55.8847,
+        -3.1975,
+        55.8847
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.69135",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0788,
+            55.9152
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "54 MILLERHILL & 56 MILLERHILL, DALKEITH --- 54 & 56 MILLERHILL, DALKEITH, MIDLOTHIAN EH22 1RZ",
+        "sepa_ref_number": "CAR/R/1156757",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.0788,
+        55.9152,
+        -3.0788,
+        55.9152
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.69424",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3509,
+            55.9169
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "ADDISTON COTTAGE, RATHO, NEWBRIDGE --- ADDISTOUN COTTAGE, RATHO, NEWBRIDGE EH28 8NT",
+        "sepa_ref_number": "CAR/R/1130224",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3509,
+        55.9169,
+        -3.3509,
+        55.9169
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.69571",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0639,
+            55.8912
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "THE OLD MILLHOUSE, 40 NEWMILLS ROAD, DALKEITH --- 40 NEWMILLS ROAD, DALKEITH EH22 2AQ",
+        "sepa_ref_number": "CAR/R/1136467",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.0639,
+        55.8912,
+        -3.0639,
+        55.8912
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.69687",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1639,
+            55.9823
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "BREDERO SHAW LTD, LEITH, EDINBURGH --- BREDERO HOUSE, IMPERIAL DOCK, LEITH, EDINBURGH EH6 7DT",
+        "sepa_ref_number": "CAR/R/1099651",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1639,
+        55.9823,
+        -3.1639,
+        55.9823
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.70095",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1153,
+            55.913
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "606 OLD DALKEITH ROAD, EDINBURGH --- 606 OLD DALKEITH ROAD, EDINBURGH EH16 4SN",
+        "sepa_ref_number": "CAR/R/1014873",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1153,
+        55.913,
+        -3.1153,
+        55.913
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.70624",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0798,
+            55.939
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "GATE LODGE,NEWHAILES, MUSSELBURGH --- GATE LODGE, NEWHAILES, MUSSELBURGH",
+        "sepa_ref_number": "CAR/R/1033041",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.0798,
+        55.939,
+        -3.0798,
+        55.939
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.71639",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.2098,
+            55.8728
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "BOGHALL FARM + 3, BIGGAR ROAD, EDINBURGH --- BOGHALL FARM + 3, BIGGAR ROAD, EDINBURGH EH10 7DX",
+        "sepa_ref_number": "CAR/R/1147371",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.2098,
+        55.8728,
+        -3.2098,
+        55.8728
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.71956",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.2993,
+            55.9104
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "1, 2 & 3 BABERTON MAINS COTTAGES, EDINBURGH --- 3 BABERTON MAINS COTTAGES, JUNIPER GREEN, EDINBURGH EH14 5AB",
+        "sepa_ref_number": "CAR/R/1134721",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.2993,
+        55.9104,
+        -3.2993,
+        55.9104
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.72060",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1034,
+            55.9196
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "6 HILLTOWN TERRACE --- 6 HILLTOWN TERRACE, WOOLMET, DALKEITH EH22 1LG",
+        "sepa_ref_number": "CAR/R/1018382",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1034,
+        55.9196,
+        -3.1034,
+        55.9196
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.72510",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3331,
+            55.9285
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "3 KELLERSTANE HOUSE, EDINBURGH --- 3 KELLERSTANE HOUSE, GOGAR STATION ROAD, EDINBURGH EH12 9BS",
+        "sepa_ref_number": "CAR/R/1032172",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3331,
+        55.9285,
+        -3.3331,
+        55.9285
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.73645",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.2414,
+            55.9056
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "141 REDFORD ROAD, EDINBURGH --- 141 REDFORD ROAD, EDINBURGH EH13 0AS",
+        "sepa_ref_number": "CAR/R/1063167",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.2414,
+        55.9056,
+        -3.2414,
+        55.9056
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.75744",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3392,
+            55.9213
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "GOGARMUIR COTTAGE, EDINBURGH --- GOGARMUIR COTTAGE, GOGARBANK, EDINBURGH EH12 9BZ",
+        "sepa_ref_number": "CAR/R/1103629",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3392,
+        55.9213,
+        -3.3392,
+        55.9213
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.75782",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3272,
+            55.923
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "MILLBUIES, SUNTRAP 43 GOGARBANK, EDINBURGH --- MILLBUIES, SUNTRAP, 43 GOGARBANK, EDINBURGH EH12 9BY",
+        "sepa_ref_number": "CAR/R/1107444",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3272,
+        55.923,
+        -3.3272,
+        55.923
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.76003",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.2842,
+            55.9715
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "MILFIELD, 1 CRAMOND ROAD SOUTH, EDINBURGH --- MILFIELD, 1 CRAMOND ROAD SOUTH, EDINBURGH EH4 6HR",
+        "sepa_ref_number": "CAR/R/1123174",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.2842,
+        55.9715,
+        -3.2842,
+        55.9715
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.76160",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3203,
+            55.9268
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "GOGARBANK POULTRY FARM --- GOGARBANK POULTRY FARM, CORSTORPHINE, EDINBURGH EH12 9DE",
+        "sepa_ref_number": "CAR/R/1019324",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3203,
+        55.9268,
+        -3.3203,
+        55.9268
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.76161",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3243,
+            55.9281
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "GOGARBURN FARM COTTAGE A --- GOGARBURN FARM COTTAGE A, GOGAR STATION ROAD, EDINBURGH EH12 9BS",
+        "sepa_ref_number": "CAR/R/1019368",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3243,
+        55.9281,
+        -3.3243,
+        55.9281
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.76672",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.2406,
+            55.9059
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "REDFORD HOUSE + 4, REDFORD RD, EDINBURGH --- REDFORD HOUSE + 4, 113, 133, 135 & 137 REDFORD ROAD, EDINBURGH EH13 0AS",
+        "sepa_ref_number": "CAR/R/1034936",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.2406,
+        55.9059,
+        -3.2406,
+        55.9059
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.77314",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0768,
+            55.8912
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "MIDLOTHIAN COUNCIL CEMETERY BOTHY+4, DALKEITH --- MIDLOTHIAN COUNCIL CEMETERY BOTHY, CEMETERY ROAD, DALKEITH EH22 3DL",
+        "sepa_ref_number": "CAR/R/1143559",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.0768,
+        55.8912,
+        -3.0768,
+        55.8912
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.77635",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0698,
+            55.9167
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "NEWTON FARM, EAST WEMYSS, FIFE --- NEWTON FARM, EAST WEMYSS, KIRKCALDY KY1 4TD",
+        "sepa_ref_number": "CAR/R/1067395",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.0698,
+        55.9167,
+        -3.0698,
+        55.9167
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.78403",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1038,
+            55.9197
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "1-5 & 7-12 HILLTOWN TERRACE, DALKEITH --- 10 HILLTOWN TERRACE, WOOLMET, DALKEITH EH22 1LG",
+        "sepa_ref_number": "CAR/R/1085140",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1038,
+        55.9197,
+        -3.1038,
+        55.9197
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.80605",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1995,
+            55.8848
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "KINTALLON --- KINTALLON, BIGGAR ROAD, EDINBURGH EH10 7DX",
+        "sepa_ref_number": "CAR/R/1019653",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1995,
+        55.8848,
+        -3.1995,
+        55.8848
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.82232",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0983,
+            55.912
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "NEWTOUN MANSE, --- NEWTOUN CHURCH RD, DANDERHALL, EDINBURGH EH22 1SR",
+        "sepa_ref_number": "CAR/R/1168040",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.0983,
+        55.912,
+        -3.0983,
+        55.912
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.82328",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3356,
+            55.8741
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "BROOMFIELD, MANSFIELD ROAD, BALERNO --- BROOMFIELD, MANSFIELD ROAD, BALERNO EH14 7JX",
+        "sepa_ref_number": "CAR/R/1010716",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3356,
+        55.8741,
+        -3.3356,
+        55.8741
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.82849",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0712,
+            55.8801
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "OLD GOLF HOUSE --- OLD GOLF HOUSE, NEWBATTLE, DALKEITH EH22 3LX",
+        "sepa_ref_number": "CAR/R/1018392",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.0712,
+        55.8801,
+        -3.0712,
+        55.8801
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.83766",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.356,
+            55.8849
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "WESTACRES, 579 LANARK RD WEST, BALERNO --- WESTACRES, 579 LANARK ROAD WEST, BALERNO EH14 7BL",
+        "sepa_ref_number": "CAR/R/1161562",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.356,
+        55.8849,
+        -3.356,
+        55.8849
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.83861",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3271,
+            55.9039
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "MALCOLMSTONE FARMHOUSE, CURRIE --- MALCOLMSTONE FARMHOUSE, LONG DALMAHOY ROAD, CURRIE EH14 4AD",
+        "sepa_ref_number": "CAR/R/1172615",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3271,
+        55.9039,
+        -3.3271,
+        55.9039
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.83916",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1743,
+            55.8834
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "LOANHEAD CONCRETE, STRAITON, EDINBURGH --- LOANHEAD CONCRETE, OLD PENTLAND ROAD, STRAITON, EDINBURGH EH20 9NU",
+        "sepa_ref_number": "CAR/R/1178065",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1743,
+        55.8834,
+        -3.1743,
+        55.8834
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.84508",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3489,
+            55.9347
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "GOGAR MOUNT HOUSE,GOGAR MOUNT HOUSE.INGLISTON --- GOGAR MOUNT HOUSE, INGLISTON, EDINBURGH EH12 9BL",
+        "sepa_ref_number": "CAR/R/1013100",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3489,
+        55.9347,
+        -3.3489,
+        55.9347
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.84717",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0442,
+            55.9391
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000010",
+        "local_authority": "East Lothian",
+        "uprn": null,
+        "address": "NEW PAVILION, MUSSELBURGH TENNIS CLUB, LEWISVALE PARK, MUSSELBURGH, EH21 7AR",
+        "sepa_ref_number": "CAR/R/5009851",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.0442,
+        55.9391,
+        -3.0442,
+        55.9391
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.85643",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3284,
+            55.9237
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "42 GOGARBANK, EDINBURGH --- 42 GOGARBANK, EDINBURGH EH12 9DE",
+        "sepa_ref_number": "CAR/R/1126591",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3284,
+        55.9237,
+        -3.3284,
+        55.9237
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.85793",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3375,
+            55.9011
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "COCKLAW FARM (+3) LONG DALMAHOY RD, CURRIE --- 3 COCKLAW FARM, LONG DALMAHOY ROAD, CURRIE EH14 4AD",
+        "sepa_ref_number": "CAR/R/1134375",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3375,
+        55.9011,
+        -3.3375,
+        55.9011
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.86172",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3342,
+            55.8778
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "HARMENY SCHOOL, MANSFIELD ROAD, BALERNO --- 45 MANSFIELD ROAD, BALERNO EH14 7JY",
+        "sepa_ref_number": "CAR/R/1104983",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3342,
+        55.8778,
+        -3.3342,
+        55.8778
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.86333",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0422,
+            55.8887
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "ALMONDHILL LODGE, LAUDER ROAD, DALKEITH --- ALMONDHILL LODGE, LAUDER ROAD, DALKEITH EH22 2PX",
+        "sepa_ref_number": "CAR/R/1177230",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.0422,
+        55.8887,
+        -3.0422,
+        55.8887
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.87065",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1835,
+            55.8845
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "DAMHEAD HOLDINGS LTD, 32A DAMHEAD, EDINBURGH --- 32A DAMHEAD, OLD PENTLAND ROAD, LOTHIANBURN, EDINBURGH EH10 7EA",
+        "sepa_ref_number": "CAR/R/1033279",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1835,
+        55.8845,
+        -3.1835,
+        55.8845
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.87067",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3299,
+            55.9333
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "GOGARMILL COTTAGE, GOGAR, EDINBURGH --- GOGARMILL COTTAGE, LESSERMILBURN, GOGAR, EDINBURGH EH12 9BS",
+        "sepa_ref_number": "CAR/R/1033456",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3299,
+        55.9333,
+        -3.3299,
+        55.9333
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.88043",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0998,
+            55.8874
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "SOUTH MELVILLE HOUSE, LASSWADE --- SOUTH MELVILLE HOUSE, LASSWADE, EDINBURGH EH18 1AN",
+        "sepa_ref_number": "CAR/R/1110743",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.0998,
+        55.8874,
+        -3.0998,
+        55.8874
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.88638",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.0728,
+            55.9187
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "NEWTON, 2 NEWTON COTTAGES, DALKEITH --- 2 NEWTON COTTAGES, MILLERHILL, DALKEITH EH22 1SA",
+        "sepa_ref_number": "CAR/R/1026871",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.0728,
+        55.9187,
+        -3.0728,
+        55.9187
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.89080",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3306,
+            55.9715
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "LOWOOD COTTAGE, BY CRAMOND BRIDGE, EDINBURGH --- LOWOOD COTTAGE, BY CRAMOND BRIDGE, EDINBURGH EH30 9TH",
+        "sepa_ref_number": "CAR/R/1144976",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3306,
+        55.9715,
+        -3.3306,
+        55.9715
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.90260",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1817,
+            55.9028
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "47/5 47 MORTONHALL GATE + 4, EDINBURGH, EH16 --- 47/5 47 MORTONHALL GATE, EDINBURGH EH16 6TJ",
+        "sepa_ref_number": "CAR/R/1141820",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1817,
+        55.9028,
+        -3.1817,
+        55.9028
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.90495",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.1878,
+            55.8852
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "34 & 35 DAMHEAD HOLDINGS, LOTHIANBURN --- 34 DAMHEAD, LOTHIANBURN, EDINBURGH EH10 7EA",
+        "sepa_ref_number": "CAR/R/1069958",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.1878,
+        55.8852,
+        -3.1878,
+        55.8852
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.91213",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3509,
+            55.9348
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "WEST LODGE,GOGAR MOUNT HOUSE,INGLISTON --- GOGAR MOUNT HOUSE, INGLISTON, EDINBURGH EH12 9BL",
+        "sepa_ref_number": "CAR/R/1013099",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3509,
+        55.9348,
+        -3.3509,
+        55.9348
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.91970",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.2171,
+            55.8922
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "12 SWANSTON VILLAGE + 2, EDINBURGH, EH10 7DT --- 12 SWANSTON VILLAGE, EDINBURGH EH10 7DT",
+        "sepa_ref_number": "CAR/R/1142618",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.2171,
+        55.8922,
+        -3.2171,
+        55.8922
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.91976",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.3616,
+            55.9233
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000036",
+        "local_authority": "City of Edinburgh",
+        "uprn": null,
+        "address": "RATHO PARK GOLF CLUB, 3 NEWBRIDGE, EH28 8NX --- RATHO PARK GOLF CLUB, 3 NEWBRIDGE EH28 8NX",
+        "sepa_ref_number": "CAR/R/1143154",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.3616,
+        55.9233,
+        -3.3616,
+        55.9233
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.92026",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.213,
+            55.8739
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "HILL COTTAGE, 3 BOGHALL FARM, EDINBURGH --- HILL COTTAGE, 3 BOGHALL FARM, BIGGAR ROAD, EDINBURGH EH10 7DX",
+        "sepa_ref_number": "CAR/R/1144918",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.213,
+        55.8739,
+        -3.213,
+        55.8739
+      ]
+    },
+    {
+      "type": "Feature",
+      "id": "pub_sptk.92336",
+      "geometry": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -3.2022,
+            55.8816
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "la_s_code": "S12000019",
+        "local_authority": "Midlothian",
+        "uprn": null,
+        "address": "FAYGATE, BIGGAR ROAD, EDINBURGH --- FAYGATE, BIGGAR ROAD, EDINBURGH EH10 7DX",
+        "sepa_ref_number": "CAR/R/1119962",
+        "assessors_ref_number": null,
+        "la_ref_number": null,
+        "sh_src_id": null,
+        "sh_src": null,
+        "sh_date_uploaded": "2023-07-01",
+        "source": "SEPA"
+      },
+      "bbox": [
+        -3.2022,
+        55.8816,
+        -3.2022,
+        55.8816
+      ]
+    }
+  ],
+  "totalFeatures": 187,
+  "numberMatched": 187,
+  "numberReturned": 187,
+  "timeStamp": "2026-01-14T10:58:30.396Z",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::4326"
+    }
+  },
+  "bbox": [
+    -3.3616,
+    55.8728,
+    -3.0422,
+    55.9823
+  ]
+}
