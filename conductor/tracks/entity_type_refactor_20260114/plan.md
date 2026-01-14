@@ -2,7 +2,7 @@
 
 ## Phase 1: Documentation & Preparation
 - [x] Task: Update `ARCHITECTURE.md` with new Entity Pillar concepts and Enum definition. [d4a5c36]
-- [ ] Task: Create specific tests for schema validation (to fail first) - verifying the new Enum structure.
+- [x] Task: Create specific tests for schema validation (to fail first) - verifying the new Enum structure. [25e41d2]
 - [ ] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
 
 ## Phase 2: Schema & Engine Refactoring
