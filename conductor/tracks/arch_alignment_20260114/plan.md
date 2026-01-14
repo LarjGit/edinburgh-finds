@@ -13,10 +13,10 @@
 - [~] Task: Conductor - User Manual Verification 'Schema Extension' (Protocol in workflow.md)
 
 ## Phase 2: Engine Alignment (Attribute Parsing)
-- [ ] Task: Analyze current "Upsert" logic in `engine` to identify where `attributes` should be populated.
-- [ ] Task: Implement/Update the `transform` step in the pipeline.
-    - [ ] Sub-task: Create a utility function to map raw connector data to the `attributes` JSON schema.
-    - [ ] Sub-task: Ensure `attributes` field is included in the database write operation.
+- [x] Task: Analyze current "Upsert" logic in `engine` to identify where `attributes` should be populated.
+- [x] Task: Implement/Update the `transform` step in the pipeline. [987e2c1]
+    - [x] Sub-task: Create a utility function to map raw connector data to the `attributes` JSON schema.
+    - [x] Sub-task: Ensure `attributes` field is included in the database write operation.
 - [ ] Task: Verify with `EdinburghCouncilConnector` (or similar).
     - [ ] Sub-task: Run a test ingestion.
     - [ ] Sub-task: Check database to confirm `attributes` column contains valid JSON data.
