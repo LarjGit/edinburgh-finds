@@ -23,6 +23,7 @@ This directory contains connectors for fetching raw data from external sources.
 |-----------|------|-------------|-------|--------|
 | **open_charge_map.py** | REST API | EV charging stations | 23 | ✅ Complete |
 | **sport_scotland.py** | WFS | SportScotland facilities (GeoServer) | 21 | ✅ Complete |
+| **edinburgh_council.py** | ArcGIS REST | Edinburgh Council civic facilities | 22 | ✅ Complete |
 
 ## Architecture
 
