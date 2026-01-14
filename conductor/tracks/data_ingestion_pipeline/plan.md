@@ -77,6 +77,7 @@ Build a modular, two-stage data pipeline that separates raw data ingestion from 
 - [x] Research and document additional enrichment sources (SportScotland, Edinburgh Council Open Data) (9e8f1d9)
 - [x] Write tests for SportScotland Open Data connector (11a91e3)
 - [x] Implement `sport_scotland.py` connector (7830afb)
+- [x] Test SportScotland connector with real WFS endpoint (ad8b353)
 - [ ] Write tests for Edinburgh Council Open Data connector
 - [ ] Implement `edinburgh_council.py` connector
 - [ ] Create documentation for adding new connectors
