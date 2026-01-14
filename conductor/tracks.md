@@ -18,3 +18,8 @@ This file tracks all major tracks for the project. Each track has its own detail
 *Link: [./conductor/archive/data_ingestion_pipeline_20260114/](./conductor/archive/data_ingestion_pipeline_20260114/)*
 **Completed:** 2026-01-14
 **Description:** Built modular ingestion system to gather raw data from 6 sources (Serper, Google Places, OSM, OpenChargeMap, SportScotland, Edinburgh Council) with hybrid storage (filesystem + metadata table). Includes quality & observability features: structured logging, rate limiting, retry logic, health checks, and reporting.
+
+---
+
+- [~] **Track: Create project architecture documentation ARCHITECTURE.md**
+*Link: [./tracks/architecture_docs_20260114/](./tracks/architecture_docs_20260114/)*
