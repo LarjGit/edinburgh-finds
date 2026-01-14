@@ -20,7 +20,7 @@
 - [x] Task: Verify with `EdinburghCouncilConnector` (or similar). [163eb20]
     - [x] Sub-task: Run a test ingestion.
     - [x] Sub-task: Check database to confirm `attributes` column contains valid JSON data.
-- [ ] Task: Conductor - User Manual Verification 'Engine Alignment' (Protocol in workflow.md)
+- [~] Task: Conductor - User Manual Verification 'Engine Alignment' (Protocol in workflow.md)
 
 ## Phase 3: Frontend Alignment (Attribute Display)
 - [ ] Task: Create/Update a helper function in `web/lib/utils.ts` (or similar) to parse the `attributes` JSON safely.
