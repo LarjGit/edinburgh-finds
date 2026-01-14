@@ -22,7 +22,7 @@
     - [x] Sub-task: Check database to confirm `attributes` column contains valid JSON data.
 - [~] Task: Conductor - User Manual Verification 'Engine Alignment' (Protocol in workflow.md)
 
-## Phase 3: Frontend Alignment (Attribute Display)
+## Phase 3: Frontend Alignment (Attribute Display) [checkpoint: 43e76aa]
 - [x] Task: Create/Update a helper function in `web/lib/utils.ts` (or similar) to parse the `attributes` JSON safely.
 - [x] Task: Update the Listing Detail component (or `page.tsx`). [89d04a6]
     - [x] Sub-task: Fetch the `attributes` field.
