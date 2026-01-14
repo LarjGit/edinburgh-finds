@@ -12,7 +12,7 @@
     - [x] Sub-task: `prisma generate` (for Engine/Python).
 - [~] Task: Conductor - User Manual Verification 'Schema Extension' (Protocol in workflow.md)
 
-## Phase 2: Engine Alignment (Attribute Parsing)
+## Phase 2: Engine Alignment (Attribute Parsing) [checkpoint: 3ea6df5]
 - [x] Task: Analyze current "Upsert" logic in `engine` to identify where `attributes` should be populated.
 - [x] Task: Implement/Update the `transform` step in the pipeline. [987e2c1]
     - [x] Sub-task: Create a utility function to map raw connector data to the `attributes` JSON schema.
