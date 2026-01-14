@@ -1,7 +1,7 @@
 # Implementation Plan - Refactor EntityType to Enum
 
 ## Phase 1: Documentation & Preparation
-- [x] Task: Update `ARCHITECTURE.md` with new Entity Pillar concepts and Enum definition. [d4a5c36]
+- [x] Task: Update `ARCHITECTURE.md` with new Entity Pillar concepts and Enum definition. [4c54205]
 - [x] Task: Create specific tests for schema validation (to fail first) - verifying the new Enum structure. [25e41d2]
 - [ ] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
 
