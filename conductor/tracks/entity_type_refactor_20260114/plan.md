@@ -7,7 +7,7 @@
 
 ## Phase 2: Schema & Engine Refactoring
 - [x] Task: Update `schema.prisma`: remove `EntityType` model, add Enum, update `Listing` and `Category`. [ae9d3bc]
-- [ ] Task: Update Python Pydantic models in `engine/schema/` to use the new Enum.
+- [x] Task: Update Python Pydantic models in `engine/schema/` to use the new Enum. [328ff24]
 - [ ] Task: Refactor `engine/transform.py` and `engine/ingest.py` to handle the Enum mapping.
 - [ ] Task: Update `seed_data.py` to use new Enum values.
 - [ ] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md)
