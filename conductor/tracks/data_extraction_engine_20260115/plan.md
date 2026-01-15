@@ -26,7 +26,7 @@ This plan details the phased implementation of the Data Extraction Engine. Each 
 - [x] Implement attribute splitter (schema-defined → attributes, rest → discovered_attributes) (7e4618a)
 - [x] Create `ExtractedListing` Prisma model for intermediate extraction results (e939646)
 - [x] Create `FailedExtraction` Prisma model for quarantine pattern (4bbfeef)
-- [ ] Run Prisma migration to create tables
+- [x] Run Prisma migration to create tables (dbd4f3f)
 
 **Success Criteria:**
 - BaseExtractor interface is tested and documented
