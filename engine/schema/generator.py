@@ -2,6 +2,7 @@ from typing import Optional, List, Dict, Any, Type
 from pydantic import create_model, Field
 from datetime import datetime
 from .core import FieldSpec
+from .types import EntityType
 
 def get_type_from_string(type_str: str) -> Type:
     """
@@ -20,6 +21,7 @@ def get_type_from_string(type_str: str) -> Type:
         "List": List,
         "Dict": Dict,
         "Any": Any,
+        "EntityType": EntityType,
     }
     
     try:

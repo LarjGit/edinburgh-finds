@@ -1,5 +1,6 @@
 from typing import Optional, List, Dict, Any
 from .core import FieldSpec
+from .types import EntityType
 
 # ============================================================
 # LISTING FIELDS (Common to all entity types)
@@ -35,7 +36,7 @@ LISTING_FIELDS: List[FieldSpec] = [
     ),
     FieldSpec(
         name="entity_type",
-        type_annotation="str",
+        type_annotation="EntityType",
         description="Type of entity (venue, retailer, cafe, event, members_club, etc)",
         nullable=False,
         required=True,

@@ -1,6 +1,7 @@
 import unittest
 from engine.schema.listing import LISTING_FIELDS
 from engine.schema.generator import create_pydantic_model
+from engine.schema.types import EntityType
 from pydantic import ValidationError
 
 class TestEntityTypeEnum(unittest.TestCase):
@@ -9,8 +10,9 @@ class TestEntityTypeEnum(unittest.TestCase):
         ListingModel = create_pydantic_model("TestListing", LISTING_FIELDS)
         
         valid_types = [
-            "VENUE", "RETAILER", "COACH", "INSTRUCTOR", 
-            "CLUB", "LEAGUE", "EVENT", "TOURNAMENT"
+            EntityType.VENUE, EntityType.RETAILER, EntityType.COACH, 
+            EntityType.INSTRUCTOR, EntityType.CLUB, EntityType.LEAGUE, 
+            EntityType.EVENT, EntityType.TOURNAMENT
         ]
         
         # Test valid types
