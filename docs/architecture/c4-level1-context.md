@@ -5,47 +5,54 @@
 
 ## Purpose
 
-This diagram shows how users and external systems interact with Edinburgh Finds.
+This diagram shows how users and external systems interact with Edinburgh Finds, a hyper-local directory platform that aggregates venue and business data from multiple sources.
 
 ## Diagram
 
 ```mermaid
 graph TB
-    User["User<br/>(End User)<br/>Browses listings"]
-    Operator["Data Operator<br/>(Ingestion CLI user)<br/>Runs data fetches"]
+    %% Users
+    User["👤 End User<br/>(Public)<br/>Discovers and browses local venues,<br/>businesses, and activities"]
+    Admin["👤 Data Administrator<br/>(System Admin)<br/>Runs data ingestion and<br/>manages data pipeline"]
 
-    System["Edinburgh Finds<br/>Local venue discovery platform<br/>Indexes and displays listings"]
+    %% System
+    System["📦 Edinburgh Finds<br/>(Hyper-local Directory Platform)<br/>Aggregates and displays local venue<br/>and business data from multiple sources"]
 
-    Serper["Serper API<br/>(Search results API)<br/>Provides web search data"]
-    GooglePlaces["Google Places API<br/>(Places search)<br/>Provides place details"]
-    OSM["OpenStreetMap Overpass API<br/>(OSM data query)<br/>Provides map features"]
-    OpenChargeMap["OpenChargeMap API<br/>(EV charging data)<br/>Provides station data"]
-    EdinburghCouncil["Edinburgh Council ArcGIS Hub<br/>(Civic datasets)<br/>Provides facility data"]
-    SportScotland["SportScotland WFS<br/>(Sports facilities data)<br/>Provides facility layers"]
+    %% External Systems
+    Serper["⚙️ Serper API<br/>(Google Search Results)<br/>Provides search results data"]
+    GooglePlaces["⚙️ Google Places API<br/>(Google Maps Platform)<br/>Provides venue details and metadata"]
+    OSM["⚙️ OpenStreetMap API<br/>(Open Geo Data)<br/>Provides geographic and location data"]
+    OpenChargeMap["⚙️ Open Charge Map API<br/>(EV Infrastructure)<br/>Provides EV charging station data"]
+    SportScotland["⚙️ Sport Scotland API<br/>(Sports Facilities)<br/>Provides sports venue data"]
+    EdinburghCouncil["⚙️ Edinburgh Council API<br/>(Public Services)<br/>Provides council facility data"]
 
-    User -->|"HTTPS"| System
-    Operator -->|"Runs CLI"| System
-
-    System -->|"HTTPS"| Serper
-    System -->|"HTTPS"| GooglePlaces
-    System -->|"HTTPS"| OSM
-    System -->|"HTTPS"| OpenChargeMap
-    System -->|"HTTPS"| EdinburghCouncil
-    System -->|"HTTPS"| SportScotland
+    %% Relationships
+    User -->|"Browses via HTTPS"| System
+    Admin -->|"Runs ingestion via CLI"| System
+    System -->|"Fetches search results / HTTPS"| Serper
+    System -->|"Fetches venue data / HTTPS"| GooglePlaces
+    System -->|"Fetches geo data / HTTPS"| OSM
+    System -->|"Fetches charging stations / HTTPS"| OpenChargeMap
+    System -->|"Fetches sports facilities / HTTPS"| SportScotland
+    System -->|"Fetches council data / HTTPS"| EdinburghCouncil
 ```
 
 ## Key Actors
 
-- **User:** Uses the web app to browse venue listings.
-- **Data Operator:** Runs ingestion CLI to fetch external data sources.
+- **End User:** Public users who browse and discover local venues, businesses, sports facilities, and activities through the web interface
+- **Data Administrator:** System administrators who run data ingestion pipelines via CLI to collect and process data from external sources
 
 ## External Dependencies
 
 | System | Purpose | Protocol |
 |--------|---------|----------|
-| Serper API | Search results ingestion | HTTPS |
-| Google Places API | Places search ingestion | HTTPS |
-| OpenStreetMap Overpass API | Map feature ingestion | HTTPS |
-| OpenChargeMap API | EV charging data ingestion | HTTPS |
-| Edinburgh Council ArcGIS Hub | Civic dataset ingestion | HTTPS |
-| SportScotland WFS | Sports facility ingestion | HTTPS |
+| Serper API | Google search results for discovering venues | HTTPS/JSON |
+| Google Places API | Detailed venue information (location, ratings, contact) | HTTPS/JSON |
+| OpenStreetMap API | Geographic and location data | HTTPS/JSON |
+| Open Charge Map API | EV charging station locations and details | HTTPS/JSON |
+| Sport Scotland API | Sports facilities and venue data | HTTPS/JSON |
+| Edinburgh Council API | Council-managed facilities and public services | HTTPS/JSON |
+
+## System Boundary
+
+The Edinburgh Finds system aggregates data from multiple external sources, processes and validates it through a data pipeline, stores it in a local database, and serves it to end users through a web application.
