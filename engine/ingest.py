@@ -52,9 +52,11 @@ async def ingest_venue(data: Dict[str, Any]):
             if key in CORE_COLUMNS:
                 core_data[key] = value
             elif key == "listing_id":
-                continue 
+                continue
             elif key == "entity_type":
-                continue # Handled via relation
+                # Store EntityType Enum value for Prisma
+                # Convert Enum to its value (e.g., EntityType.VENUE -> "VENUE")
+                core_data["entityType"] = value.value if hasattr(value, 'value') else value
             elif key in ["categories", "canonical_categories"]:
                 continue # Handled via relations
             else:
@@ -86,14 +88,6 @@ async def ingest_venue(data: Dict[str, Any]):
              slug = core_data.get("entity_name", "").lower().replace(" ", "-")
              core_data["slug"] = slug
 
-        # Entity Type Relation
-        entity_type_slug = "venue"
-        et = await db.entitytype.find_unique(where={"slug": entity_type_slug})
-        if not et:
-             et = await db.entitytype.create(data={"name": "Venue", "slug": "venue"})
-        
-        core_data["entityTypeId"] = et.id
-        
         # Categories Relation
         # Input 'canonical_categories' is List[str] e.g. ["Padel", "Football"]
         category_connect = []

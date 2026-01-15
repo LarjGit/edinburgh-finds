@@ -10,6 +10,7 @@ Universal Entity Framework schema.
 import json
 from typing import Dict, Any, List, Optional
 from pathlib import Path
+from engine.schema.types import EntityType
 
 
 def transform_edinburgh_council_feature(feature: Dict[str, Any]) -> Dict[str, Any]:
@@ -40,7 +41,7 @@ def transform_edinburgh_council_feature(feature: Dict[str, Any]) -> Dict[str, An
     venue_data = {
         'entity_name': entity_name,
         'slug': slug,
-        'entity_type': 'venue',
+        'entity_type': EntityType.VENUE,  # Use Enum
         'canonical_categories': _extract_categories(properties),
 
         # Location
