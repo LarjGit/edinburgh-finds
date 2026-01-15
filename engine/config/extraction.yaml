@@ -1,0 +1,13 @@
+llm:
+  model: "claude-haiku-20250318"
+
+trust_levels:
+  manual_override: 100
+  sport_scotland: 90
+  edinburgh_council: 85
+  google_places: 70
+  serper: 50
+  osm: 40
+  open_charge_map: 40
+  unknown_source: 10
+

@@ -87,6 +87,47 @@ model ListingRelationship {
   @@index([type])
 }
 
+model ExtractedListing {
+  id                    String   @id @default(cuid())
+  raw_ingestion_id      String
+  source                String
+  entity_type           String
+  attributes            String?
+  discovered_attributes String?
+  external_ids          String?
+  extraction_hash       String?
+  model_used            String?
+
+  raw_ingestion RawIngestion @relation(fields: [raw_ingestion_id], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([raw_ingestion_id])
+  @@index([source])
+  @@index([entity_type])
+  @@index([extraction_hash])
+}
+
+model FailedExtraction {
+  id               String   @id @default(cuid())
+  raw_ingestion_id String
+  source           String
+  error_message    String
+  error_details    String?
+  retry_count      Int      @default(0)
+  last_attempt_at  DateTime?
+
+  raw_ingestion RawIngestion @relation(fields: [raw_ingestion_id], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([raw_ingestion_id])
+  @@index([source])
+  @@index([retry_count])
+}
+
 model RawIngestion {
   id            String   @id @default(cuid())
   source        String   // e.g., "serper", "google_places", "osm"
