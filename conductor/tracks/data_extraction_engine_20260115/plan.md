@@ -22,7 +22,7 @@ This plan details the phased implementation of the Data Extraction Engine. Each 
 - [x] Create `engine/config/extraction.yaml` with model and trust level settings (7e4618a)
 - [x] Write tests for config loading (`test_config.py`) (7e4618a)
 - [x] Implement config loader with validation (7e4618a)
-- [ ] Write tests for attribute splitting logic (`test_attribute_splitter.py`)
+- [x] Write tests for attribute splitting logic (`test_attribute_splitter.py`) (7e4618a)
 - [ ] Implement attribute splitter (schema-defined → attributes, rest → discovered_attributes)
 - [ ] Create `ExtractedListing` Prisma model for intermediate extraction results
 - [ ] Create `FailedExtraction` Prisma model for quarantine pattern
