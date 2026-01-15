@@ -8,8 +8,11 @@ datasource db {
   url      = "file:../web/dev.db"
 }
 
-// Note: SQLite doesn't support native enums. EntityType is stored as String in the database
-// but validated as an Enum in application code (TypeScript/Python).
+// TODO: When migrating to Supabase (PostgreSQL), replace entityType String with native enum:
+//   enum EntityType { VENUE, RETAILER, COACH, INSTRUCTOR, CLUB, LEAGUE, EVENT, TOURNAMENT }
+//
+// TEMPORARY SQLite LIMITATION: SQLite doesn't support native Prisma enums.
+// EntityType is currently stored as String but validated as Enum in application code.
 // Valid values: VENUE, RETAILER, COACH, INSTRUCTOR, CLUB, LEAGUE, EVENT, TOURNAMENT
 
 model Category {

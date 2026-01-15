@@ -27,7 +27,9 @@ The system categorizes the world through five fundamental conceptual "Pillars". 
 ### 2.2. Schema Implementation
 To support this flexibility, the `Listing` model uses a "Flexible Attribute Bucket" strategy combined with a strict Enum for categorization:
 
--   **Categorization:** A native PostgreSQL Enum `EntityType` on the `Listing` model defines the specific type (e.g., `VENUE`, `CLUB`). This replaces the need for a separate `EntityType` lookup table.
+-   **Categorization:** An `EntityType` Enum on the `Listing` model defines the specific type (e.g., `VENUE`, `CLUB`). This replaces the need for a separate `EntityType` lookup table.
+    -   **Current (SQLite):** Stored as String, validated as Enum at application layer (Python: `engine/schema/types.py`)
+    -   **Future (Supabase/PostgreSQL):** Will be migrated to native Prisma Enum for database-level validation
 -   **Core Fields:** Structured columns for universal data (Name, Location, Contact Info).
 -   **Flexible Attributes:** Two JSON columns store niche-specific details:
     -   `attributes`: validated data conforming to the official schema.
