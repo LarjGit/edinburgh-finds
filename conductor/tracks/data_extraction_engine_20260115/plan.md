@@ -25,7 +25,7 @@ This plan details the phased implementation of the Data Extraction Engine. Each 
 - [x] Write tests for attribute splitting logic (`test_attribute_splitter.py`) (7e4618a)
 - [x] Implement attribute splitter (schema-defined → attributes, rest → discovered_attributes) (7e4618a)
 - [x] Create `ExtractedListing` Prisma model for intermediate extraction results (e939646)
-- [ ] Create `FailedExtraction` Prisma model for quarantine pattern
+- [x] Create `FailedExtraction` Prisma model for quarantine pattern (4bbfeef)
 - [ ] Run Prisma migration to create tables
 
 **Success Criteria:**
