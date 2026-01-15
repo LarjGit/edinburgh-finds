@@ -1,3 +1,15 @@
+# [GLOBAL RULES]
+### Mermaid Diagram Standards
+- **Orientation:** Always start with `graph TD` or `flowchart TD` (Top-Down). Never use `LR` unless explicitly told.
+- **Quoting:** Wrap ALL display labels in double quotes `" "` to escape special characters (e.g., `Node["Label (Info)"]`).
+- **Special Characters:** Never use `(`, `)`, `[`, `]`, `{`, `}`, or `-->` directly in a label; they MUST be inside double quotes.
+- **Formatting:** - Use alphanumeric IDs for nodes (e.g., `Step1`, `DB_Audit`).
+  - Use `<br/>` for line breaks within a node; do not use actual newlines.
+- **Subgraphs:** Include `direction TD` inside every `subgraph` block to maintain vertical consistency.
+- **Links:** Use labels on arrows as follows: `A -->|"Step Description"| B`.
+- **Lists**: Avoid edge labels that begin with list-like patterns (e.g., 1., -, *) in Mermaid diagrams; use words or move numbering into node labels instead.
+
+# [PROJECT CONTEXT]
 # Conductor - Context-Driven Development for Claude Code
 
 Conductor is an AI agent skill that enables **Context-Driven Development**. It transforms Claude Code into a proactive project manager that follows a strict protocol to specify, plan, and implement software features and bug fixes.

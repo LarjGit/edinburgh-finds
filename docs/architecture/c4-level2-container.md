@@ -1,6 +1,6 @@
 # C4 Level 2: Container Diagram
 
-**Generated:** 2026-01-14
+**Generated:** 2026-01-15
 **System:** Edinburgh Finds
 
 ## Purpose
@@ -11,49 +11,50 @@ This diagram shows the high-level technical building blocks of Edinburgh Finds.
 
 ```mermaid
 graph TB
-    %% Users
-    User["👤 User"]
-    Admin["👤 Admin"]
+    User["User"]
+    Operator["Data Operator"]
 
-    %% System Boundary
     subgraph System["Edinburgh Finds"]
-        WebApp["🌐 Web Application<br/><b>Tech: Next.js 16, React 19, TypeScript</b><br/>Delivers UI and handles server-side logic"]
-        DataEngine["🔧 Data Engine<br/><b>Tech: Python, Pydantic, Aiohttp</b><br/>Ingests and processes raw data"]
-        DB["🗄️ Database<br/><b>Tech: SQLite</b><br/>Stores listings, categories, and ingestion logs"]
-        FileStore["📂 Raw Data Store<br/><b>Tech: File System (JSON)</b><br/>Stores raw API responses"]
+        Web["Web Application<br/><b>Tech: Next.js 16, React 19, TypeScript, Prisma Client</b><br/>Renders UI and queries listings"]
+        DataEngine["Data Engine<br/><b>Tech: Python, Pydantic, Prisma Client (py), aiohttp</b><br/>Fetches and stores raw data"]
+        DB["Database<br/><b>Tech: SQLite (Prisma)</b><br/>Stores listings and ingestion records"]
+        RawStorage["Raw Data Storage<br/><b>Tech: Local filesystem (JSON)</b><br/>Stores raw ingestion payloads"]
     end
 
-    %% External Systems
-    GooglePlaces["⚙️ Google Places API"]
-    Serper["⚙️ Serper API"]
-    OSM["⚙️ OpenStreetMap"]
+    Serper["Serper API"]
+    GooglePlaces["Google Places API"]
+    OSM["OpenStreetMap Overpass API"]
+    OpenChargeMap["OpenChargeMap API"]
+    EdinburghCouncil["Edinburgh Council ArcGIS Hub"]
+    SportScotland["SportScotland WFS"]
 
-    %% Relationships
-    User -->|"HTTPS"| WebApp
-    Admin -->|"CLI Commands"| DataEngine
-    
-    WebApp -->|"Reads/Writes via Prisma (SQL)"| DB
-    
-    DataEngine -->|"Writes metadata via Prisma (SQL)"| DB
-    DataEngine -->|"Writes raw JSON"| FileStore
-    
-    DataEngine -->|"HTTPS / JSON"| GooglePlaces
-    DataEngine -->|"HTTPS / JSON"| Serper
-    DataEngine -->|"HTTPS / JSON"| OSM
+    User -->|"HTTPS"| Web
+    Operator -->|"CLI"| DataEngine
+
+    Web -->|"Prisma / SQL"| DB
+    DataEngine -->|"Prisma / SQL"| DB
+    DataEngine -->|"Write JSON"| RawStorage
+
+    DataEngine -->|"HTTPS"| Serper
+    DataEngine -->|"HTTPS"| GooglePlaces
+    DataEngine -->|"HTTPS"| OSM
+    DataEngine -->|"HTTPS"| OpenChargeMap
+    DataEngine -->|"HTTPS"| EdinburghCouncil
+    DataEngine -->|"HTTPS"| SportScotland
 ```
 
 ## Containers
 
 | Container | Technology | Responsibility |
-|-----------|-----------|----------------|
-| Web Application | Next.js 16, React 19, TypeScript | Delivers the user interface and handles data access via Server Components. |
-| Data Engine | Python, Pydantic, Aiohttp | Runs offline ingestion jobs, fetches data from APIs, and manages raw data storage. |
-| Database | SQLite | Relational storage for structured data (Listings, Categories) and ingestion metadata. |
-| Raw Data Store | File System (JSON) | Stores the original raw JSON responses from external APIs for audit and re-processing. |
+|-----------|------------|----------------|
+| Web Application | Next.js, React, TypeScript, Prisma Client | Render UI and query listings |
+| Data Engine | Python, Pydantic, Prisma Client (py), aiohttp | Fetch, deduplicate, and store raw data |
+| Database | SQLite (via Prisma) | Persist listings and ingestion records |
+| Raw Data Storage | Local filesystem (JSON) | Store raw ingestion payloads |
 
 ## Technology Stack Summary
 
-- **Frontend/App:** Next.js 16 (React 19, Tailwind CSS)
-- **Backend/Ingestion:** Python (AsyncIO, Aiohttp, Pydantic)
-- **Database:** SQLite (accessed via Prisma Client in both TS and Python)
-- **Infrastructure:** Local filesystem for raw data blobs
+- **Frontend:** Next.js 16, React 19, TypeScript
+- **Backend:** Python, aiohttp, Prisma Client (py)
+- **Database:** SQLite
+- **Storage:** Local filesystem (JSON)

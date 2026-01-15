@@ -1,6 +1,6 @@
 # C4 Level 1: System Context
 
-**Generated:** 2026-01-14
+**Generated:** 2026-01-15
 **System:** Edinburgh Finds
 
 ## Purpose
@@ -11,35 +11,41 @@ This diagram shows how users and external systems interact with Edinburgh Finds.
 
 ```mermaid
 graph TB
-    %% Users
-    User["👤 User<br/>(End User)<br/>Browses and searches for local venues"]
-    Admin["👤 Admin<br/>(System Operator)<br/>Runs data ingestion CLI"]
+    User["User<br/>(End User)<br/>Browses listings"]
+    Operator["Data Operator<br/>(Ingestion CLI user)<br/>Runs data fetches"]
 
-    %% System
-    System["📦 Edinburgh Finds<br/>Hyper-local directory platform<br/>Connects users with local venues"]
+    System["Edinburgh Finds<br/>Local venue discovery platform<br/>Indexes and displays listings"]
 
-    %% External Systems
-    GooglePlaces["⚙️ Google Places API<br/>(External Service)<br/>Provides venue details and location"]
-    Serper["⚙️ Serper API<br/>(Google Search Wrapper)<br/>Provides search results"]
-    OSM["⚙️ OpenStreetMap<br/>(External Service)<br/>Provides map data and POIs"]
+    Serper["Serper API<br/>(Search results API)<br/>Provides web search data"]
+    GooglePlaces["Google Places API<br/>(Places search)<br/>Provides place details"]
+    OSM["OpenStreetMap Overpass API<br/>(OSM data query)<br/>Provides map features"]
+    OpenChargeMap["OpenChargeMap API<br/>(EV charging data)<br/>Provides station data"]
+    EdinburghCouncil["Edinburgh Council ArcGIS Hub<br/>(Civic datasets)<br/>Provides facility data"]
+    SportScotland["SportScotland WFS<br/>(Sports facilities data)<br/>Provides facility layers"]
 
-    %% Relationships
-    User -->|"Browses via HTTPS"| System
-    Admin -->|"Executes CLI commands"| System
-    System -->|"Fetches venue data / HTTPS"| GooglePlaces
-    System -->|"Searches / HTTPS"| Serper
-    System -->|"Fetches map data / HTTPS"| OSM
+    User -->|"HTTPS"| System
+    Operator -->|"Runs CLI"| System
+
+    System -->|"HTTPS"| Serper
+    System -->|"HTTPS"| GooglePlaces
+    System -->|"HTTPS"| OSM
+    System -->|"HTTPS"| OpenChargeMap
+    System -->|"HTTPS"| EdinburghCouncil
+    System -->|"HTTPS"| SportScotland
 ```
 
 ## Key Actors
 
-- **User:** End users who browse the website to find local venues (e.g., padel courts, cafes).
-- **Admin:** System operators who run the Python CLI scripts to ingest data from external sources.
+- **User:** Uses the web app to browse venue listings.
+- **Data Operator:** Runs ingestion CLI to fetch external data sources.
 
 ## External Dependencies
 
 | System | Purpose | Protocol |
 |--------|---------|----------|
-| Google Places API | Provides structured data about places (reviews, photos, details) | HTTPS / JSON |
-| Serper API | Provides Google Search results for discovery | HTTPS / JSON |
-| OpenStreetMap | Provides geospatial data and points of interest | HTTPS / JSON |
+| Serper API | Search results ingestion | HTTPS |
+| Google Places API | Places search ingestion | HTTPS |
+| OpenStreetMap Overpass API | Map feature ingestion | HTTPS |
+| OpenChargeMap API | EV charging data ingestion | HTTPS |
+| Edinburgh Council ArcGIS Hub | Civic dataset ingestion | HTTPS |
+| SportScotland WFS | Sports facility ingestion | HTTPS |

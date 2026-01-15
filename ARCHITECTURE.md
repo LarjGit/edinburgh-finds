@@ -47,51 +47,59 @@ To capture the interconnected nature of local hobbies (e.g., "John Smith teaches
 ```mermaid
 erDiagram
     %% Core Schema (Implemented)
-    Category }|--|{ Listing : "tags"
-    
+    Category ||--o{ ListingCategory : "has_tags"
+    Listing ||--o{ ListingCategory : "tagged_by"
+
     %% Planned Extension
     Listing ||--o{ ListingRelationship : "is_source"
     Listing ||--o{ ListingRelationship : "is_target"
-    
+
     %% Enum Definition (Conceptual)
     %% EntityType Enum: VENUE, RETAILER, COACH, INSTRUCTOR, CLUB, LEAGUE, EVENT, TOURNAMENT
 
     Category {
-        string id PK
+        string id PK "id"
         string name UK "Indoor, Outdoor, Sale, etc."
-        string slug UK
+        string slug UK "slug"
+    }
+
+    ListingCategory {
+        string id PK "id"
+        string listingId FK "listingId"
+        string categoryId FK "categoryId"
+        datetime createdAt "createdAt"
     }
 
     Listing {
-        string id PK
-        string entity_name
-        string slug UK
+        string id PK "id"
+        string entity_name "entity_name"
+        string slug UK "slug"
         enum entityType "VENUE, CLUB, etc."
-        
+
         %% Core Structured Data
-        string street_address
-        float latitude
-        float longitude
-        string contact_info
-        
+        string street_address "street_address"
+        float latitude "latitude"
+        float longitude "longitude"
+        string contact_info "contact_info"
+
         %% Flexible Attribute Buckets
         json attributes "Validated Niche Data"
         json discovered_attributes "Raw Scraped Data"
-        
+
         %% Trust & Provenance
-        string source_info
-        string field_confidence
-        datetime last_verified
+        string source_info "source_info"
+        string field_confidence "field_confidence"
+        datetime last_verified "last_verified"
     }
 
     ListingRelationship {
-        string id PK
-        string sourceListingId FK
-        string targetListingId FK
+        string id PK "id"
+        string sourceListingId FK "sourceListingId"
+        string targetListingId FK "targetListingId"
         string relationshipType "teaches_at, plays_at"
-        float confidenceScore
-        string dataSource
-        datetime verifiedAt
+        float confidenceScore "confidenceScore"
+        string dataSource "dataSource"
+        datetime verifiedAt "verifiedAt"
     }
 ```
 
@@ -116,54 +124,54 @@ The pipeline follows a strict **ETL (Extract, Transform, Load)** pattern:
 
 ```mermaid
 graph TD
-    subgraph "External Sources"
-        Google[Google Places]
+    subgraph ExternalSources["External Sources"]
+        Google["Google Places"]
         Serper["Serper / Google Search"]
-        OSM[OpenStreetMap]
-        Council[Edinburgh Council]
-        SportScot[Sport Scotland]
-        OCM[Open Charge Map]
+        OSM["OpenStreetMap"]
+        Council["Edinburgh Council"]
+        SportScot["Sport Scotland"]
+        OCM["Open Charge Map"]
     end
 
-    subgraph "Data Engine (ETL)"
-        CLI((CLI / Cron))
-        
-        subgraph "Ingestion"
+    subgraph DataEngineETL["Data Engine (ETL)"]
+        CLI["CLI / Cron"]
+
+        subgraph IngestionGroup["Ingestion"]
             Fetcher["BaseConnector.fetch()"]
-            RawStore[Raw JSON Storage]
-            Dedup{Deduplication Check}
+            RawStore["Raw JSON Storage"]
+            Dedup{"Deduplication Check"}
         end
-        
-        subgraph "Processing"
-            Parser[Pydantic Models]
+
+        subgraph ProcessingGroup["Processing"]
+            Parser["Pydantic Models"]
             Logic["Business Logic / Trust"]
         end
     end
 
-    subgraph "Persistence"
-        DB[(PostgreSQL / SQLite)]
-        Files[File System]
+    subgraph PersistenceGroup["Persistence"]
+        DB["PostgreSQL / SQLite"]
+        Files["File System"]
     end
 
     CLI -->|"Triggers"| Fetcher
-    
-    Fetcher -->|"1. Extract"| Google
-    Fetcher -->|"1. Extract"| Serper
-    Fetcher -->|"1. Extract"| OSM
-    Fetcher -->|"1. Extract"| Council
-    Fetcher -->|"1. Extract"| SportScot
-    Fetcher -->|"1. Extract"| OCM
-    
-    Fetcher -->|"2. Raw Response"| RawStore
+
+    Fetcher -->|"Ingest"| Google
+    Fetcher -->|"Ingest"| Serper
+    Fetcher -->|"Ingest"| OSM
+    Fetcher -->|"Ingest"| Council
+    Fetcher -->|"Ingest"| SportScot
+    Fetcher -->|"Ingest"| OCM
+
+    Fetcher -->|"Raw Response 2"| RawStore
     RawStore -->|"Write"| Files
     RawStore -->|"Create Record"| DB
-    
-    RawStore -->|"3. Hash"| Dedup
-    Dedup -- "Duplicate" --> Stop((Stop))
-    Dedup -- "New Data" --> Parser
-    
-    Parser -->|"4. Transform"| Logic
-    Logic -->|"5. Load (Upsert)"| DB
+
+    RawStore -->|"Hash 3"| Dedup
+    Dedup -->|"Duplicate"| Stop["Stop"]
+    Dedup -->|"New Data"| Parser
+
+    Parser -->|"Transform 4"| Logic
+    Logic -->|"Load 5"| DB
 ```
 
 ### 3.2. Triggers
@@ -226,25 +234,25 @@ The "Business Claiming" feature is the mechanism that elevates data from Level 3
 
 ```mermaid
 sequenceDiagram
-    participant Owner as Business Owner
-    participant Web as Web App
-    participant DB as Database
-    participant Engine as Ingestion Engine
+    participant Owner as "Business Owner"
+    participant Web as "Web App"
+    participant DB as "Database"
+    participant Engine as "Ingestion Engine"
 
-    Note over Owner, DB: Manual Override (Golden Data)
-    Owner->>Web: Updates "Opening Hours"
-    Web->>DB: UPDATE Listing SET attributes = {...}, locked_fields = ['opening_hours']
-    DB-->>Web: Success
+    Note over Owner, DB: "Manual Override (Golden Data)"
+    Owner->>Web: "Updates \"Opening Hours\""
+    Web->>DB: "UPDATE Listing SET attributes = {...}, locked_fields = ['opening_hours']"
+    DB-->>Web: "Success"
 
-    Note over Engine, DB: Automated Ingestion Run
-    Engine->>Engine: Fetches Google Places Data
-    Engine->>DB: READ locked_fields FROM Listing
-    DB-->>Engine: Returns ['opening_hours']
+    Note over Engine, DB: "Automated Ingestion Run"
+    Engine->>Engine: "Fetches Google Places Data"
+    Engine->>DB: "READ locked_fields FROM Listing"
+    DB-->>Engine: "Returns ['opening_hours']"
     
-    alt Field is Locked
-        Engine->>Engine: Discard Google "Opening Hours"
-    else Field is Unlocked
-        Engine->>DB: UPDATE Listing (other fields)
+    alt "Field is Locked"
+        Engine->>Engine: "Discard Google \"Opening Hours\""
+    else "Field is Unlocked"
+        Engine->>DB: "UPDATE Listing (other fields)"
     end
 ```
 
