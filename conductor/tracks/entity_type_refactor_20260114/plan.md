@@ -13,7 +13,7 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md)
 
 ## Phase 3: Database Reset & Verification
-- [ ] Task: Drop local database and generate new migrations/client (`prisma migrate reset`).
-- [ ] Task: Run updated seed script to verify end-to-end data flow.
-- [ ] Task: Run full test suite (Python & TypeScript) to ensure no regressions.
-- [ ] Task: Conductor - User Manual Verification 'Phase 3' (Protocol in workflow.md)
+- [x] Task: Drop local database and generate new migrations/client (`prisma migrate reset`). [07efac3]
+- [x] Task: Run updated seed script to verify end-to-end data flow. [07efac3]
+- [x] Task: Run full test suite (Python & TypeScript) to ensure no regressions. [07efac3]
+- [~] Task: Conductor - User Manual Verification 'Phase 3' (Protocol in workflow.md)
