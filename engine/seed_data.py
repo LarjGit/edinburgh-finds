@@ -44,47 +44,16 @@ def seed_data():
             category_map[cat['name']] = cat_id
             print(f"Created Category '{cat['name']}'.")
 
-    # 2. Create EntityType
-    entity_type_name = "Venue"
-    entity_type_slug = "venue"
-    
-    cursor.execute("SELECT id FROM EntityType WHERE slug = ?", (entity_type_slug,))
-    row = cursor.fetchone()
-    if row:
-        entity_type_id = row['id']
-        print(f"EntityType '{entity_type_name}' already exists.")
-    else:
-        entity_type_id = str(uuid.uuid4())
-        cursor.execute(
-            "INSERT INTO EntityType (id, name, slug, updatedAt) VALUES (?, ?, ?, ?)",
-            (entity_type_id, entity_type_name, entity_type_slug, datetime.now())
-        )
-        print(f"Created EntityType '{entity_type_name}'.")
-        
-        # Link Categories to EntityType (Many-to-Many)
-        # For simplicity, linking Padel and Football to Venue
-        for cat_name in ["Padel", "Football"]:
-             cat_id = category_map.get(cat_name)
-             if cat_id:
-                 # Check if relation exists (implicit table _CategoryToEntityType in Prisma)
-                 # Note: Prisma specific naming convention for implicit m-n
-                 try:
-                    cursor.execute(
-                        "INSERT OR IGNORE INTO _CategoryToEntityType (A, B) VALUES (?, ?)",
-                        (cat_id, entity_type_id)
-                    )
-                 except sqlite3.OperationalError:
-                     print("Warning: Could not link Category to EntityType. Prisma implicit table might have different name.")
-
-    # 3. Insert Listing Data
+    # 2. Insert Listing Data
+    # Note: EntityType is now an Enum in the schema, not a separate model
     # The JSON data provided by the user
     raw_data = {
       "entity_name": "Powerleague Edinburgh Portobello",
-      "entity_type": "venue",
+      "entity_type": "VENUE",
       "extraction_timestamp": "2026-01-10T23:39:17.976278",
       "data": {
         "entity_name": "Powerleague Edinburgh Portobello",
-        "entity_type": "venue",
+        "entity_type": "VENUE",
         "summary": "PowerLeague Edinburgh Portobello is a sports complex specializing in 5-a-side and 7-a-side football with 3 five-a-side pitches and 2 seven-a-side pitches on 3G astroturf. The venue recently invested £600,000 to add 3 covered padel courts, making it Portobello's first padel facility. On-site amenities include a clubhouse bar, Costa Coffee cafe, free parking, and WiFi, with kids' birthday parties and FA-accredited football holiday camps for ages 5-12.",
         "categories": [
           "football",
@@ -269,7 +238,114 @@ def seed_data():
         
         # Serialize JSON fields
         opening_hours_json = json.dumps(data.get('opening_hours'))
-        other_attributes_json = json.dumps(data.get('other_attributes'))
+
+        # Build attributes JSON with all venue-specific fields
+        attributes = {
+            # Tennis
+            'tennis_summary': data.get('tennis_summary'),
+            'tennis': data.get('tennis'),
+            'tennis_total_courts': data.get('tennis_total_courts'),
+            'tennis_indoor_courts': data.get('tennis_indoor_courts'),
+            'tennis_outdoor_courts': data.get('tennis_outdoor_courts'),
+            'tennis_covered_courts': data.get('tennis_covered_courts'),
+            'tennis_floodlit_courts': data.get('tennis_floodlit_courts'),
+            # Padel
+            'padel_summary': data.get('padel_summary'),
+            'padel': data.get('padel'),
+            'padel_total_courts': data.get('padel_total_courts'),
+            # Pickleball
+            'pickleball_summary': data.get('pickleball_summary'),
+            'pickleball': data.get('pickleball'),
+            'pickleball_total_courts': data.get('pickleball_total_courts'),
+            # Badminton
+            'badminton_summary': data.get('badminton_summary'),
+            'badminton': data.get('badminton'),
+            'badminton_total_courts': data.get('badminton_total_courts'),
+            # Squash
+            'squash_summary': data.get('squash_summary'),
+            'squash': data.get('squash'),
+            'squash_total_courts': data.get('squash_total_courts'),
+            'squash_glass_back_courts': data.get('squash_glass_back_courts'),
+            # Table Tennis
+            'table_tennis_summary': data.get('table_tennis_summary'),
+            'table_tennis': data.get('table_tennis'),
+            'table_tennis_total_tables': data.get('table_tennis_total_tables'),
+            # Football
+            'football_summary': data.get('football_summary'),
+            'football_5_a_side': data.get('football_5_a_side'),
+            'football_5_a_side_total_pitches': data.get('football_5_a_side_total_pitches'),
+            'football_7_a_side': data.get('football_7_a_side'),
+            'football_7_a_side_total_pitches': data.get('football_7_a_side_total_pitches'),
+            'football_11_a_side': data.get('football_11_a_side'),
+            'football_11_a_side_total_pitches': data.get('football_11_a_side_total_pitches'),
+            # Swimming
+            'swimming_summary': data.get('swimming_summary'),
+            'indoor_pool': data.get('indoor_pool'),
+            'outdoor_pool': data.get('outdoor_pool'),
+            'indoor_pool_length_m': data.get('indoor_pool_length_m'),
+            'outdoor_pool_length_m': data.get('outdoor_pool_length_m'),
+            'family_swim': data.get('family_swim'),
+            'adult_only_swim': data.get('adult_only_swim'),
+            'swimming_lessons': data.get('swimming_lessons'),
+            # Gym
+            'gym_summary': data.get('gym_summary'),
+            'gym_available': data.get('gym_available'),
+            'gym_size': data.get('gym_size'),
+            # Classes
+            'classes_summary': data.get('classes_summary'),
+            'classes_per_week': data.get('classes_per_week'),
+            'hiit_classes': data.get('hiit_classes'),
+            'yoga_classes': data.get('yoga_classes'),
+            'pilates_classes': data.get('pilates_classes'),
+            'strength_classes': data.get('strength_classes'),
+            'cycling_studio': data.get('cycling_studio'),
+            'functional_training_zone': data.get('functional_training_zone'),
+            # Spa
+            'spa_summary': data.get('spa_summary'),
+            'spa_available': data.get('spa_available'),
+            'sauna': data.get('sauna'),
+            'steam_room': data.get('steam_room'),
+            'hydro_pool': data.get('hydro_pool'),
+            'hot_tub': data.get('hot_tub'),
+            'outdoor_spa': data.get('outdoor_spa'),
+            'ice_cold_plunge': data.get('ice_cold_plunge'),
+            'relaxation_area': data.get('relaxation_area'),
+            # Amenities
+            'amenities_summary': data.get('amenities_summary'),
+            'restaurant': data.get('restaurant'),
+            'bar': data.get('bar'),
+            'cafe': data.get('cafe'),
+            'childrens_menu': data.get('childrens_menu'),
+            'wifi': data.get('wifi'),
+            # Family
+            'family_summary': data.get('family_summary'),
+            'creche_available': data.get('creche_available'),
+            'creche_age_min': data.get('creche_age_min'),
+            'creche_age_max': data.get('creche_age_max'),
+            'kids_swimming_lessons': data.get('kids_swimming_lessons'),
+            'kids_tennis_lessons': data.get('kids_tennis_lessons'),
+            'holiday_club': data.get('holiday_club'),
+            'play_area': data.get('play_area'),
+            # Parking
+            'parking_and_transport_summary': data.get('parking_and_transport_summary'),
+            'parking_spaces': data.get('parking_spaces'),
+            'disabled_parking': data.get('disabled_parking'),
+            'parent_child_parking': data.get('parent_child_parking'),
+            'ev_charging_available': data.get('ev_charging_available'),
+            'ev_charging_connectors': data.get('ev_charging_connectors'),
+            'public_transport_nearby': data.get('public_transport_nearby'),
+            'nearest_railway_station': data.get('nearest_railway_station'),
+            # Reviews
+            'reviews_summary': data.get('reviews_summary'),
+            'review_count': data.get('review_count'),
+            'google_review_count': data.get('google_review_count'),
+            'facebook_likes': data.get('facebook_likes'),
+        }
+        # Remove None values
+        attributes = {k: v for k, v in attributes.items() if v is not None}
+        attributes_json = json.dumps(attributes)
+
+        discovered_attributes_json = json.dumps(data.get('other_attributes', {}))
         source_info_json = json.dumps({
             "extraction_timestamp": raw_data.get('extraction_timestamp'),
             "enrichment_log": data.get('enrichment_log')
@@ -279,19 +355,20 @@ def seed_data():
         
         cursor.execute("""
             INSERT INTO Listing (
-                id, entity_name, slug, summary, 
-                other_attributes, street_address, city, postcode, country,
+                id, entity_name, slug, summary,
+                attributes, discovered_attributes, street_address, city, postcode, country,
                 latitude, longitude, phone, email, website_url,
                 instagram_url, facebook_url, twitter_url, linkedin_url,
                 opening_hours, source_info, field_confidence, external_ids,
-                entityTypeId, updatedAt
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                entityType, updatedAt
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             listing_id,
             data['entity_name'],
             listing_slug,
             data['summary'],
-            other_attributes_json,
+            attributes_json,
+            discovered_attributes_json,
             data['street_address'],
             data['city'],
             data['postcode'],
@@ -309,7 +386,7 @@ def seed_data():
             source_info_json,
             field_confidence_json,
             external_ids_json,
-            entity_type_id,
+            data['entity_type'],  # Use Enum value directly
             datetime.now()
         ))
         print(f"Created Listing '{data['entity_name']}'.")
@@ -332,69 +409,6 @@ def seed_data():
                     )
                 except sqlite3.OperationalError:
                     print("Warning: Could not link Category to Listing. Prisma implicit table issue.")
-
-        # 5. Create Venue
-        venue_id = str(uuid.uuid4())
-        
-        # Helper to safely get bools as 0/1 for SQLite if needed, though usually handled
-        # But standard python sqlite3 needs bools as 0/1 or similar? 
-        # Actually it handles bool as 0/1 automatically or preserves it.
-        
-        cursor.execute("""
-            INSERT INTO Venue (
-                id, listingId,
-                tennis_summary, tennis, tennis_total_courts, tennis_indoor_courts, tennis_outdoor_courts, tennis_covered_courts, tennis_floodlit_courts,
-                padel_summary, padel, padel_total_courts,
-                pickleball_summary, pickleball, pickleball_total_courts,
-                badminton_summary, badminton, badminton_total_courts,
-                squash_summary, squash, squash_total_courts, squash_glass_back_courts,
-                table_tennis_summary, table_tennis, table_tennis_total_tables,
-                football_summary, football_5_a_side, football_5_a_side_total_pitches, football_7_a_side, football_7_a_side_total_pitches, football_11_a_side, football_11_a_side_total_pitches,
-                swimming_summary, indoor_pool, outdoor_pool, indoor_pool_length_m, outdoor_pool_length_m, family_swim, adult_only_swim, swimming_lessons,
-                gym_summary, gym_available, gym_size,
-                classes_summary, classes_per_week, hiit_classes, yoga_classes, pilates_classes, strength_classes, cycling_studio, functional_training_zone,
-                spa_summary, spa_available, sauna, steam_room, hydro_pool, hot_tub, outdoor_spa, ice_cold_plunge, relaxation_area,
-                amenities_summary, restaurant, bar, cafe, childrens_menu, wifi,
-                family_summary, creche_available, creche_age_min, creche_age_max, kids_swimming_lessons, kids_tennis_lessons, holiday_club, play_area,
-                parking_and_transport_summary, parking_spaces, disabled_parking, parent_child_parking, ev_charging_available, ev_charging_connectors, public_transport_nearby, nearest_railway_station,
-                reviews_summary, review_count, google_review_count, facebook_likes
-            ) VALUES (
-                ?, ?,
-                ?, ?, ?, ?, ?, ?, ?,
-                ?, ?, ?,
-                ?, ?, ?,
-                ?, ?, ?,
-                ?, ?, ?, ?,
-                ?, ?, ?,
-                ?, ?, ?, ?, ?, ?, ?,
-                ?, ?, ?, ?, ?, ?, ?, ?,
-                ?, ?, ?,
-                ?, ?, ?, ?, ?, ?, ?, ?,
-                ?, ?, ?, ?, ?, ?, ?, ?, ?,
-                ?, ?, ?, ?, ?, ?,
-                ?, ?, ?, ?, ?, ?, ?, ?,
-                ?, ?, ?, ?, ?, ?, ?, ?,
-                ?, ?, ?, ?
-            )
-        """, (
-            venue_id, listing_id,
-            data['tennis_summary'], data['tennis'], data['tennis_total_courts'], data['tennis_indoor_courts'], data['tennis_outdoor_courts'], data['tennis_covered_courts'], data['tennis_floodlit_courts'],
-            data['padel_summary'], data['padel'], data['padel_total_courts'],
-            data['pickleball_summary'], data['pickleball'], data['pickleball_total_courts'],
-            data['badminton_summary'], data['badminton'], data['badminton_total_courts'],
-            data['squash_summary'], data['squash'], data['squash_total_courts'], data['squash_glass_back_courts'],
-            data['table_tennis_summary'], data['table_tennis'], data['table_tennis_total_tables'],
-            data['football_summary'], data['football_5_a_side'], data['football_5_a_side_total_pitches'], data['football_7_a_side'], data['football_7_a_side_total_pitches'], data['football_11_a_side'], data['football_11_a_side_total_pitches'],
-            data['swimming_summary'], data['indoor_pool'], data['outdoor_pool'], data['indoor_pool_length_m'], data['outdoor_pool_length_m'], data['family_swim'], data['adult_only_swim'], data['swimming_lessons'],
-            data['gym_summary'], data['gym_available'], data['gym_size'],
-            data['classes_summary'], data['classes_per_week'], data['hiit_classes'], data['yoga_classes'], data['pilates_classes'], data['strength_classes'], data['cycling_studio'], data['functional_training_zone'],
-            data['spa_summary'], data['spa_available'], data['sauna'], data['steam_room'], data['hydro_pool'], data['hot_tub'], data['outdoor_spa'], data['ice_cold_plunge'], data['relaxation_area'],
-            data['amenities_summary'], data['restaurant'], data['bar'], data['cafe'], data['childrens_menu'], data['wifi'],
-            data['family_summary'], data['creche_available'], data['creche_age_min'], data['creche_age_max'], data['kids_swimming_lessons'], data['kids_tennis_lessons'], data['holiday_club'], data['play_area'],
-            data['parking_and_transport_summary'], data['parking_spaces'], data['disabled_parking'], data['parent_child_parking'], data['ev_charging_available'], data['ev_charging_connectors'], data['public_transport_nearby'], data['nearest_railway_station'],
-            data['reviews_summary'], data['review_count'], data['google_review_count'], data['facebook_likes']
-        ))
-        print(f"Created Venue details for '{data['entity_name']}'.")
 
     conn.commit()
     conn.close()
