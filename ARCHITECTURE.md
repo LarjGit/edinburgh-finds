@@ -1,4 +1,4 @@
-	 # Architecture: Edinburgh Finds
+# Architecture: Edinburgh Finds
 
 ## 1. System Overview
 
