@@ -7,6 +7,7 @@ from engine.extraction.schema_utils import (
     get_llm_config,
     is_field_in_schema,
 )
+from engine.schema.types import EntityType
 
 
 def test_get_extraction_fields_includes_venue_fields():
@@ -16,9 +17,20 @@ def test_get_extraction_fields_includes_venue_fields():
     assert "tennis" in field_names
 
 
+def test_get_extraction_fields_for_listing_excludes_venue_fields():
+    fields = get_extraction_fields(EntityType.RETAILER)
+    field_names = {field.name for field in fields}
+    assert "entity_name" in field_names
+    assert "tennis" not in field_names
+
+
 def test_is_field_in_schema_true_false():
     assert is_field_in_schema("entity_name") is True
     assert is_field_in_schema("not_a_real_field") is False
+
+
+def test_is_field_in_schema_excludes_internal_fields():
+    assert is_field_in_schema("listing_id") is False
 
 
 def test_get_llm_config_contains_expected_metadata():
@@ -34,3 +46,27 @@ def test_get_llm_config_contains_expected_metadata():
     assert entity_name_config["required"] is True
     assert "name" in entity_name_config["search_keywords"]
 
+
+def test_get_llm_config_excludes_internal_fields():
+    config = get_llm_config()
+    names = {item["name"] for item in config}
+    assert "listing_id" not in names
+
+
+def test_get_llm_config_defaults_search_keywords():
+    config = get_llm_config()
+    facebook_config = None
+    for item in config:
+        if item["name"] == "facebook_url":
+            facebook_config = item
+            break
+
+    assert facebook_config is not None
+    assert facebook_config["search_keywords"] == []
+
+
+def test_get_llm_config_for_listing_skips_venue_fields():
+    config = get_llm_config("retailer")
+    names = {item["name"] for item in config}
+    assert "entity_name" in names
+    assert "tennis" not in names
