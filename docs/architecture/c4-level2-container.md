@@ -20,7 +20,7 @@ graph TB
         direction TB
         Web["🌐 Web Application<br/><b>Tech: Next.js 16, React 19, TypeScript 5</b><br/>Server-side rendered UI that displays<br/>listings and venue data to users"]
 
-        DataEngine["🔧 Data Engine<br/><b>Tech: Python, Pydantic, aiohttp</b><br/>Ingests data from external APIs,<br/>validates, transforms, and stores<br/>raw and extracted listings"]
+        DataEngine["🔧 Data Engine<br/><b>Tech: Python, Pydantic, aiohttp</b><br/>Stage 1: Ingests raw data from APIs<br/>Stage 2: Extracts structured listings<br/>Tracks success/failures with validation"]
 
         DB["🗄️ Database<br/><b>Tech: SQLite (via Prisma)</b><br/>Stores listings, categories,<br/>raw ingestions, and extractions"]
 
@@ -59,18 +59,27 @@ graph TB
 | Container | Technology | Responsibility |
 |-----------|-----------|----------------|
 | Web Application | Next.js 16, React 19, TypeScript 5, Prisma Client 5, Tailwind CSS 4 | Delivers server-side rendered UI, fetches listings from database, displays venue data to end users |
-| Data Engine | Python, Pydantic, PyYAML, aiohttp, Prisma (Python) | Runs data ingestion connectors, fetches from external APIs, validates data, transforms to schema, stores raw and processed data |
-| Database | SQLite via Prisma ORM | Stores validated listings, categories, raw ingestions, extracted listings, failed extractions, and listing relationships |
+| Data Engine | Python, Pydantic, PyYAML, aiohttp, Prisma (Python) | **Stage 1 (Ingestion):** Runs data connectors, fetches from external APIs, stores raw JSON with deduplication. **Stage 2 (Extraction):** Transforms raw data to schema, validates with Pydantic, tracks extraction success/failures |
+| Database | SQLite via Prisma ORM | Stores validated listings, categories, raw ingestions (RawIngestion), extracted listings (ExtractedListing), failed extractions (FailedExtraction), and listing relationships (ListingRelationship) |
 | Raw Data Storage | File System (JSON files in `engine/data/raw/`) | Persists raw JSON responses from external APIs for auditing, reprocessing, and debugging |
 
 ## Data Flow
 
-1. **Data Ingestion**: Data administrators run CLI commands to trigger data connectors in the Data Engine
-2. **External API Calls**: Data Engine fetches data from external APIs (Serper, Google Places, OSM, etc.)
-3. **Raw Storage**: Raw JSON responses are saved to the file system with content hashing for deduplication
-4. **Database Persistence**: Raw ingestion records are stored in the SQLite database via Prisma
-5. **Extraction & Validation**: Data Engine extracts structured data, validates against Pydantic models, and stores in database
-6. **Web Display**: End users access the web application, which queries the database and renders listings
+### Stage 1: Ingestion (Raw Data Capture)
+1. **Trigger Ingestion**: Data administrators run CLI commands (`python -m engine.ingestion.run_<source>`)
+2. **Fetch from APIs**: Data Engine connectors fetch data from external APIs (Serper, Google Places, OSM, OpenChargeMap, Edinburgh Council, Sport Scotland)
+3. **Deduplication Check**: Compute SHA-256 hash; skip if already ingested
+4. **Raw Storage**: Raw JSON responses saved to `engine/data/raw/<source>/<timestamp>_<id>.json`
+5. **Track Ingestion**: Create `RawIngestion` record in database with file path, hash, source metadata
+
+### Stage 2: Extraction (Structured Processing)
+6. **Trigger Extraction**: CLI commands process `RawIngestion` records
+7. **Transform & Validate**: Parse raw JSON, split into `attributes` and `discovered_attributes`, validate with Pydantic
+8. **Track Extraction**: Create `ExtractedListing` (success) or `FailedExtraction` (failure with retry tracking)
+9. **Upsert Listings**: Validated `ExtractedListing` data upserted into `Listing` table with trust rules applied
+
+### User Access
+10. **Web Display**: End users access the web application, which queries validated `Listing` records and renders venue pages
 
 ## Technology Stack Summary
 
@@ -83,7 +92,9 @@ graph TB
 ## Key Architectural Patterns
 
 - **Separation of Concerns**: Web application (read-only) is decoupled from data engine (write-heavy)
-- **Raw Data Preservation**: All external API responses are stored as raw JSON for reprocessing and debugging
-- **Schema Validation**: Pydantic models validate all incoming data before database insertion
-- **Dual-Bucket Attributes**: Structured attributes (validated) vs discovered attributes (flexible)
-- **Deduplication**: Content hashing prevents duplicate ingestions from external APIs
+- **Two-Stage Pipeline**: Ingestion (raw capture) separated from extraction (structured processing) for data lineage and reprocessing
+- **Raw Data Preservation**: All external API responses stored as raw JSON for auditing, reprocessing, and debugging
+- **Extraction Tracking**: Success (`ExtractedListing`) and failure (`FailedExtraction`) tracked separately with retry logic
+- **Schema Validation**: Pydantic models validate all data before database insertion
+- **Dual-Bucket Attributes**: Structured `attributes` (validated) vs `discovered_attributes` (flexible AI-extracted)
+- **Deduplication**: Content hashing (SHA-256) prevents duplicate ingestions and extractions
