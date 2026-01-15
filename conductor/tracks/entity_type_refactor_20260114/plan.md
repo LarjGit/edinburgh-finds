@@ -6,7 +6,7 @@
 - [ ] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
 
 ## Phase 2: Schema & Engine Refactoring
-- [ ] Task: Update `schema.prisma`: remove `EntityType` model, add Enum, update `Listing` and `Category`.
+- [x] Task: Update `schema.prisma`: remove `EntityType` model, add Enum, update `Listing` and `Category`. [ae9d3bc]
 - [ ] Task: Update Python Pydantic models in `engine/schema/` to use the new Enum.
 - [ ] Task: Refactor `engine/transform.py` and `engine/ingest.py` to handle the Enum mapping.
 - [ ] Task: Update `seed_data.py` to use new Enum values.
