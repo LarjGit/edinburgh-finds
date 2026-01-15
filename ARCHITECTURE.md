@@ -6,8 +6,16 @@ Edinburgh Finds is a hyper-local, niche-focused discovery platform designed to c
 
 The system is composed of three primary subsystems:
 1.  **Frontend (Web Application):** A Next.js-based user interface that delivers a fast, SEO-optimized experience.
-2.  **Data Engine (Ingestion):** An autonomous Python-based pipeline that sources, deduplicates, and structures data from multiple external APIs.
+2.  **Data Engine (Ingestion & Extraction):** An autonomous Python-based pipeline that sources, deduplicates, and structures data from multiple external APIs.
 3.  **Universal Entity Framework (Database):** A flexible schema designed to support any vertical (e.g., Padel, Golf) without structural changes.
+
+### Visual Architecture Reference
+For detailed visual architecture diagrams using the C4 model, see:
+- **[C4 Level 1: System Context](./docs/architecture/c4-level1-context.md)** - Shows how users and external systems interact with Edinburgh Finds
+- **[C4 Level 2: Container Diagram](./docs/architecture/c4-level2-container.md)** - Shows the high-level technical building blocks (web app, data engine, database, storage)
+- **[C4 Level 3: Component Diagram (Data Engine)](./docs/architecture/c4-level3-component-engine.md)** - Shows internal components of the data engine
+- **[C4 Level 3: Component Diagram (Web App)](./docs/architecture/c4-level3-component-web.md)** - Shows internal components of the web application
+- **[Architecture Diagrams README](./docs/architecture/README.md)** - Overview and maintenance guidelines for all architecture diagrams
 
 ## 2. Universal Entity Framework
 
@@ -35,8 +43,8 @@ To support this flexibility, the `Listing` model uses a "Flexible Attribute Buck
     -   `attributes`: validated data conforming to the official schema.
     -   `discovered_attributes`: raw AI-extracted properties waiting for validation.
 
-### 2.3. The Ecosystem Graph (Relationships) - [Planned]
-*Note: This section describes the architectural vision for inter-listing relationships. The `ListingRelationship` table is designed but not yet implemented in the schema.*
+### 2.3. The Ecosystem Graph (Relationships)
+*Implementation Status: The `ListingRelationship` table schema is implemented and migrated (migration `20260114223935_add_listing_relationship`), but extraction and population functionality is not yet built. Relationship extraction is planned as a future track dependent on the Data Extraction Engine completion.*
 
 To capture the interconnected nature of local hobbies (e.g., "John Smith teaches at Powerleague Portobello"), the system models relationships between listings using a `ListingRelationship` table.
 
@@ -47,12 +55,15 @@ To capture the interconnected nature of local hobbies (e.g., "John Smith teaches
 ```mermaid
 erDiagram
     %% Core Schema (Implemented)
-    Category ||--o{ ListingCategory : "has_tags"
-    Listing ||--o{ ListingCategory : "tagged_by"
+    Category ||--o{ Listing : "categorizes"
 
-    %% Planned Extension
+    %% Ecosystem Graph (Schema Implemented, Population Logic Future)
     Listing ||--o{ ListingRelationship : "is_source"
     Listing ||--o{ ListingRelationship : "is_target"
+
+    %% Extraction Pipeline (Implemented)
+    RawIngestion ||--o{ ExtractedListing : "produces"
+    RawIngestion ||--o{ FailedExtraction : "records_failures"
 
     %% Enum Definition (Conceptual)
     %% EntityType Enum: VENUE, RETAILER, COACH, INSTRUCTOR, CLUB, LEAGUE, EVENT, TOURNAMENT
@@ -61,45 +72,99 @@ erDiagram
         string id PK "id"
         string name UK "Indoor, Outdoor, Sale, etc."
         string slug UK "slug"
-    }
-
-    ListingCategory {
-        string id PK "id"
-        string listingId FK "listingId"
-        string categoryId FK "categoryId"
+        string description "description"
+        string image "image"
         datetime createdAt "createdAt"
+        datetime updatedAt "updatedAt"
     }
 
     Listing {
         string id PK "id"
         string entity_name "entity_name"
         string slug UK "slug"
-        enum entityType "VENUE, CLUB, etc."
-
-        %% Core Structured Data
-        string street_address "street_address"
-        float latitude "latitude"
-        float longitude "longitude"
-        string contact_info "contact_info"
+        string entityType "VENUE, CLUB, etc."
+        string summary "summary"
 
         %% Flexible Attribute Buckets
         json attributes "Validated Niche Data"
         json discovered_attributes "Raw Scraped Data"
 
+        %% Core Structured Data
+        string street_address "street_address"
+        string city "city"
+        string postcode "postcode"
+        string country "country"
+        float latitude "latitude"
+        float longitude "longitude"
+
+        %% Contact Info
+        string phone "phone"
+        string email "email"
+        string website_url "website_url"
+
+        %% Social Media
+        string instagram_url "instagram_url"
+        string facebook_url "facebook_url"
+        string twitter_url "twitter_url"
+        string linkedin_url "linkedin_url"
+        string mainImage "mainImage"
+
         %% Trust & Provenance
-        string source_info "source_info"
-        string field_confidence "field_confidence"
-        datetime last_verified "last_verified"
+        json opening_hours "opening_hours"
+        json source_info "source_info"
+        json field_confidence "field_confidence"
+        json external_ids "external_ids"
+
+        datetime createdAt "createdAt"
+        datetime updatedAt "updatedAt"
     }
 
     ListingRelationship {
         string id PK "id"
         string sourceListingId FK "sourceListingId"
         string targetListingId FK "targetListingId"
-        string relationshipType "teaches_at, plays_at"
-        float confidenceScore "confidenceScore"
-        string dataSource "dataSource"
-        datetime verifiedAt "verifiedAt"
+        string type "teaches_at, plays_at, based_at"
+        float confidence "confidence"
+        string source "source"
+        datetime createdAt "createdAt"
+        datetime updatedAt "updatedAt"
+    }
+
+    RawIngestion {
+        string id PK "id"
+        string source "serper, google_places, osm, etc."
+        string source_url "source_url"
+        string file_path "file_path"
+        string status "success, failed, pending"
+        datetime ingested_at "ingested_at"
+        string hash "hash"
+        json metadata_json "metadata_json"
+    }
+
+    ExtractedListing {
+        string id PK "id"
+        string raw_ingestion_id FK "raw_ingestion_id"
+        string source "source"
+        string entity_type "entity_type"
+        json attributes "attributes"
+        json discovered_attributes "discovered_attributes"
+        json external_ids "external_ids"
+        string extraction_hash "extraction_hash"
+        string model_used "model_used"
+        datetime createdAt "createdAt"
+        datetime updatedAt "updatedAt"
+    }
+
+    FailedExtraction {
+        string id PK "id"
+        string raw_ingestion_id FK "raw_ingestion_id"
+        string source "source"
+        string error_message "error_message"
+        string error_details "error_details"
+        int retry_count "retry_count"
+        datetime last_attempt_at "last_attempt_at"
+        datetime createdAt "createdAt"
+        datetime updatedAt "updatedAt"
     }
 ```
 
@@ -107,24 +172,41 @@ erDiagram
 
 The platform is fueled by an autonomous Python-based data engine (`engine/`) that runs independently of the user-facing web application.
 
-### 3.1. Workflow
-The pipeline follows a strict **ETL (Extract, Transform, Load)** pattern:
+### 3.1. Two-Stage Pipeline
+The data pipeline operates in two distinct stages to maintain data lineage and enable reprocessing:
+
+#### Stage 1: Ingestion (Raw Data Capture)
+The ingestion stage captures raw data from external APIs and persists it for processing.
 
 1.  **Autonomous Ingestion:**
     -   **CLI Controller:** Orchestrates jobs via `python -m engine.ingestion.run_<source>`.
     -   **Connectors:** Modular classes (implementing `BaseConnector`) fetch data from APIs (Serper, Google Places, OSM, Edinburgh Council, Sport Scotland, Open Charge Map).
 2.  **Raw Persistence:**
-    -   All raw API responses are saved as JSON files (`engine/data/raw/`).
+    -   All raw API responses are saved as JSON files (`engine/data/raw/<source>/<timestamp>_<id>.json`).
     -   A `RawIngestion` record is created in the database to track provenance and enable re-processing.
+    -   Fields include: `source`, `source_url`, `file_path`, `status`, `hash`, `ingested_at`, `metadata_json`.
 3.  **Deduplication:**
-    -   Content hashes are computed to prevent processing the same data twice.
-4.  **Processing & Upsert:**
-    -   Raw data is parsed into Pydantic models.
-    -   Data is "Upserted" (Update or Insert) into the `Listing` table, respecting the Trust Architecture.
+    -   Content hashes (SHA-256) are computed to prevent processing the same data twice.
+    -   If hash exists, ingestion is skipped.
+
+#### Stage 2: Extraction (Structured Data Processing)
+The extraction stage transforms raw ingested data into validated, structured listings.
+
+1.  **Transform Pipeline:**
+    -   Raw data from `RawIngestion` is parsed using connector-specific transform logic.
+    -   Data is split into `attributes` (validated fields) and `discovered_attributes` (unstructured AI-extracted data).
+    -   Pydantic models validate data against the schema.
+2.  **Extraction Tracking:**
+    -   **Success:** `ExtractedListing` records are created with `extraction_hash` for deduplication.
+    -   **Failure:** `FailedExtraction` records capture errors with retry tracking (`retry_count`, `error_message`, `error_details`).
+3.  **Listing Upsert:**
+    -   Validated `ExtractedListing` data is "Upserted" (Update or Insert) into the `Listing` table.
+    -   Trust Architecture rules determine which source wins during conflicts.
 
 ```mermaid
 graph TD
     subgraph ExternalSources["External Sources"]
+        direction TD
         Google["Google Places"]
         Serper["Serper / Google Search"]
         OSM["OpenStreetMap"]
@@ -133,45 +215,53 @@ graph TD
         OCM["Open Charge Map"]
     end
 
-    subgraph DataEngineETL["Data Engine (ETL)"]
-        CLI["CLI / Cron"]
-
-        subgraph IngestionGroup["Ingestion"]
-            Fetcher["BaseConnector.fetch()"]
-            RawStore["Raw JSON Storage"]
-            Dedup{"Deduplication Check"}
-        end
-
-        subgraph ProcessingGroup["Processing"]
-            Parser["Pydantic Models"]
-            Logic["Business Logic / Trust"]
-        end
+    subgraph Stage1["Stage 1: Ingestion (Raw Data Capture)"]
+        direction TD
+        CLI["CLI Controller"]
+        Connectors["Connectors<br/>(BaseConnector)"]
+        HashCheck{"Hash Check<br/>(Deduplication)"}
+        RawStore["Raw Storage Helper"]
     end
 
-    subgraph PersistenceGroup["Persistence"]
-        DB["PostgreSQL / SQLite"]
-        Files["File System"]
+    subgraph Stage2["Stage 2: Extraction (Structured Processing)"]
+        direction TD
+        Transform["Transform Pipeline"]
+        Validate["Pydantic Validation"]
+        ExtractTrack{"Extraction<br/>Success?"}
+        Ingestor["Listing Ingestor<br/>(Upsert Logic)"]
     end
 
-    CLI -->|"Triggers"| Fetcher
+    subgraph PersistenceLayer["Persistence Layer"]
+        direction TD
+        FileSystem["File System<br/>(engine/data/raw/)"]
+        Database["SQLite Database<br/>(via Prisma)"]
+    end
 
-    Fetcher -->|"Ingest"| Google
-    Fetcher -->|"Ingest"| Serper
-    Fetcher -->|"Ingest"| OSM
-    Fetcher -->|"Ingest"| Council
-    Fetcher -->|"Ingest"| SportScot
-    Fetcher -->|"Ingest"| OCM
+    CLI -->|"1. Triggers"| Connectors
 
-    Fetcher -->|"Raw Response 2"| RawStore
-    RawStore -->|"Write"| Files
-    RawStore -->|"Create Record"| DB
+    Connectors -->|"Fetch"| Google
+    Connectors -->|"Fetch"| Serper
+    Connectors -->|"Fetch"| OSM
+    Connectors -->|"Fetch"| Council
+    Connectors -->|"Fetch"| SportScot
+    Connectors -->|"Fetch"| OCM
 
-    RawStore -->|"Hash 3"| Dedup
-    Dedup -->|"Duplicate"| Stop["Stop"]
-    Dedup -->|"New Data"| Parser
+    Connectors -->|"2. Raw JSON"| HashCheck
+    HashCheck -->|"Duplicate"| Stop["Stop"]
+    HashCheck -->|"3. New Data"| RawStore
 
-    Parser -->|"Transform 4"| Logic
-    Logic -->|"Load 5"| DB
+    RawStore -->|"4. Write JSON"| FileSystem
+    RawStore -->|"5. Create<br/>RawIngestion record"| Database
+
+    Database -->|"6. Read RawIngestion"| Transform
+    Transform -->|"7. Parse & Split"| Validate
+    Validate -->|"8. Validated Data"| ExtractTrack
+
+    ExtractTrack -->|"Success:<br/>Create ExtractedListing"| Database
+    ExtractTrack -->|"Failure:<br/>Create FailedExtraction"| Database
+
+    Database -->|"9. Read ExtractedListing"| Ingestor
+    Ingestor -->|"10. Upsert Listing<br/>(Trust Rules Apply)"| Database
 ```
 
 ### 3.2. Triggers
