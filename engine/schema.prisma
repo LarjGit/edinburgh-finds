@@ -8,26 +8,26 @@ datasource db {
   url      = "file:../web/dev.db"
 }
 
+enum EntityType {
+  VENUE
+  RETAILER
+  COACH
+  INSTRUCTOR
+  CLUB
+  LEAGUE
+  EVENT
+  TOURNAMENT
+}
+
 model Category {
   id          String       @id @default(cuid())
   name        String       @unique
   slug        String       @unique
   description String?
   image       String?
-  entityTypes EntityType[]
   listings    Listing[]
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
-}
-
-model EntityType {
-  id         String     @id @default(cuid())
-  name       String     @unique // e.g., Venue, Coach, Club, Retailer
-  slug       String     @unique
-  categories Category[]
-  listings   Listing[]
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
 }
 
 model Listing {
@@ -35,8 +35,7 @@ model Listing {
   entity_name  String
   slug         String     @unique
 
-  entityTypeId String
-  entityType   EntityType @relation(fields: [entityTypeId], references: [id])
+  entityType   EntityType
   categories   Category[]
 
   summary      String?
