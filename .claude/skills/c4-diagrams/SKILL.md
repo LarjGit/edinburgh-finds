@@ -6,9 +6,10 @@ Generate comprehensive C4 architecture diagrams (Context, Container, Component, 
 
 **Name:** c4-diagrams
 **Trigger:** User explicitly requests C4 diagrams or architecture documentation
-**Version:** 1.2.0
+**Version:** 2.0.0
 **Category:** Documentation & Architecture
 **Data Source:** Code inspection only (no documentation files)
+**Default Mode:** Comprehensive code inspection with mandatory discovery and validation phases
 
 ## When to Invoke
 
@@ -41,12 +42,18 @@ The C4 diagrams should represent only the runtime application architecture (web 
 
 ## Default Behavior
 
-When invoked, this skill will:
+**MODE: COMPREHENSIVE CODE INSPECTION (Not Incremental Update)**
+
+When invoked with no parameters, this skill will:
+- **Approach:** Code-first comprehensive discovery - enumerate ALL schema models, ALL engine components, then generate complete diagrams
+- **Validation:** Compare discoveries with existing diagrams, report gaps, ADD missing pieces
 - **Scope:** Only `engine/` and `web/` folders
 - **Generate:** Level 1 (Context) and Level 2 (Container) diagrams
 - **Format:** Mermaid syntax with top-down (TB) orientation, optimized for narrow vertical scrolling (Obsidian-friendly)
 - **Output:** Separate files per diagram level
 - **Location:** `docs/architecture/` at repository root (standard best practice)
+
+**CRITICAL:** The default is NOT "update tech stack labels" or "tweak existing diagrams". The default is "comprehensively inspect code, discover all components, ensure everything is documented".
 
 ## Core Instructions
 
@@ -58,31 +65,93 @@ This skill derives ALL architecture information from actual code files only:
 
 If information doesn't exist in actual running code, don't include it in the diagram.
 
-### Step 1: Gather Context from Code Only
+### Step 1: Comprehensive Discovery Phase (MANDATORY)
 
-**CRITICAL:** Only inspect actual code files. DO NOT read documentation files.
+**CRITICAL:** This is a MANDATORY discovery phase. Do NOT skip to generation. Only inspect actual code files. DO NOT read documentation files.
 
-Read the following files in parallel to understand the system:
-- `web/package.json` - Frontend dependencies and structure
+#### 1A: Read Schema Files and Enumerate ALL Models
+
+Read ALL schema.prisma files (check both `web/prisma/schema.prisma` AND `engine/schema.prisma`):
+- List EVERY model definition found (e.g., Listing, Category, RawIngestion, ExtractedListing, etc.)
+- For each model, note:
+  - Model name
+  - Key relationships (foreign keys, relations)
+  - Purpose inferred from fields (e.g., RawIngestion = raw data tracking, ExtractedListing = processed data tracking)
+
+**Output a checklist:**
+```
+SCHEMA MODELS DISCOVERED:
+- [ ] Listing (core entity)
+- [ ] Category (taxonomy)
+- [ ] RawIngestion (pipeline tracking)
+- [ ] ExtractedListing (pipeline tracking)
+- [ ] FailedExtraction (pipeline tracking)
+- [ ] ListingRelationship (ecosystem graph)
+... (list ALL models found)
+```
+
+#### 1B: Scan Engine Architecture
+
+Scan `engine/` directory structure:
+- List all subdirectories (e.g., ingestion/, extraction/, schema/)
+- List key Python modules in each directory
+- Note their purpose from imports and function names
+
+**Output inventory:**
+```
+ENGINE COMPONENTS:
+- engine/ingestion/: [list key modules]
+- engine/extraction/: [list key modules]
+- engine/schema/: [list key modules]
+```
+
+#### 1C: Read Dependency Files
+
+Read the following files in parallel:
+- `web/package.json` - Frontend dependencies and versions
 - `engine/requirements.txt` or `engine/pyproject.toml` - Backend dependencies
-- `web/prisma/schema.prisma` or equivalent - Database schema
-- Main application entry points in web/ and engine/ (e.g., `web/app/page.tsx`, `engine/ingest.py`)
-- Actual import statements in code files to identify libraries used
+- Extract exact versions of key frameworks (Next.js, React, Prisma, Pydantic, etc.)
+
+#### 1D: Validate Existing Diagrams (If Present)
+
+If `docs/architecture/c4-*.md` files exist:
+- Read them
+- Extract all entities mentioned (models, components, containers)
+- Compare with discoveries from 1A-1C
+- Report gaps:
+  ```
+  DRIFT DETECTED:
+  - ExtractedListing model exists in schema but NOT in diagrams
+  - FailedExtraction model exists in schema but NOT in diagrams
+  - engine/extraction/ directory exists but NOT shown in component diagram
+  ```
+
+**IF gaps found, you MUST document them in the new diagrams. Do NOT skip them.**
 
 ### Step 2: Analyze System Architecture from Code Only
 
-Based on **ACTUAL CODE** in `engine/` and `web/` folders:
+Based on **ACTUAL CODE** in `engine/` and `web/` folders AND the comprehensive discovery from Step 1:
+
 - **Identify actors** - Infer from code usage (e.g., web app = end users, CLI scripts = admins)
 - **Map system boundaries** - What's inside vs outside based on actual code structure
 - **Catalog containers** - Applications, databases, file stores identified from actual code:
   - Database: Check `schema.prisma` provider field for actual database type
+  - **CRITICAL:** Database description MUST list ALL models discovered in Step 1A (e.g., "Stores Listing, Category, RawIngestion, ExtractedListing, FailedExtraction, ListingRelationship")
   - Web app: Check `package.json` dependencies and actual route files
   - Data engine: Check Python imports and module structure
+  - **CRITICAL:** Data engine description MUST reflect ALL subdirectories discovered in Step 1B (e.g., if engine/extraction/ exists, mention extraction functionality)
   - Storage: Check actual file I/O operations in code
 - **List components** - Key modules within containers from actual Python/TypeScript files
+  - Use discoveries from Step 1B to ensure ALL major components are included
 - **Track dependencies** - Parse import statements and API calls
 - **External systems** - Identify from API calls, import statements, environment variables (not from documentation comments)
 - **NEVER use:** conductor/, docs/, .claude/, README files, or any documentation sources
+
+**VALIDATION BEFORE PROCEEDING:**
+Before moving to Step 3, verify:
+- [ ] All models from Step 1A are accounted for in your architecture understanding
+- [ ] All engine/ subdirectories from Step 1B are understood and will be represented
+- [ ] If gaps detected in Step 1D, you have a plan to add them to diagrams
 
 ### Step 3: Generate C4 Level 1 - System Context
 
@@ -248,9 +317,54 @@ Update these diagrams when:
 - Modifying system boundaries
 ```
 
-### Step 6: Validate and Review
+### Step 6: Comprehensive Validation (MANDATORY)
 
-Before finalizing:
+**CRITICAL:** This validation phase is MANDATORY. Do NOT skip. You must verify completeness against Step 1 discoveries.
+
+#### 6A: Schema Completeness Check
+
+Go back to your Step 1A discovery checklist. For EACH model found:
+- [ ] Verify it appears in at least one diagram (Container or Component level)
+- [ ] If a model is missing, explain WHY (e.g., "ListingRelationship schema exists but table is unpopulated - documented in notes")
+- [ ] Database container description must list ALL models or have a clear "stores X tables including..." statement
+
+**Example validation output:**
+```
+SCHEMA MODEL COVERAGE:
+✅ Listing - Documented in Container diagram DB description
+✅ Category - Documented in Container diagram DB description
+✅ RawIngestion - Documented in Container diagram DB description
+✅ ExtractedListing - Documented in Container diagram DB description
+✅ FailedExtraction - Documented in Container diagram DB description
+❌ ListingRelationship - MISSING! Adding to DB description now...
+```
+
+**If any model is missing, ADD IT before proceeding.**
+
+#### 6B: Component Coverage Check
+
+Go back to your Step 1B engine/ directory scan. For EACH major subdirectory:
+- [ ] Verify it's represented in Data Engine container description
+- [ ] If engine/extraction/ exists, Data Engine MUST mention extraction functionality
+- [ ] If engine/ingestion/ exists, Data Engine MUST mention ingestion functionality
+
+**Example validation output:**
+```
+COMPONENT COVERAGE:
+✅ engine/ingestion/ - Documented as "Stage 1: Ingestion"
+✅ engine/extraction/ - Documented as "Stage 2: Extraction"
+✅ engine/schema/ - Represented by Schema component
+```
+
+#### 6C: Data Flow Validation
+
+Ensure data flows reflect the actual pipeline:
+- [ ] If ExtractedListing and FailedExtraction exist in schema, diagrams must show extraction stage
+- [ ] If RawIngestion exists, diagrams must show raw data capture stage
+- [ ] Data flow must be numbered/sequenced to show the actual process
+
+#### 6D: Standard Quality Checks
+
 1. Verify all major containers are represented
 2. Check that relationships and protocols are accurate
 3. Ensure diagrams follow C4 model conventions (top-down, clear boundaries)
@@ -258,12 +372,25 @@ Before finalizing:
 5. Verify external systems are correctly identified
 6. Ensure Mermaid syntax is valid (test in Mermaid Live if uncertain)
 
-Present to user:
-- "I've created C4 diagrams in `docs/architecture/`:"
-- "  - `c4-level1-context.md` - System Context"
-- "  - `c4-level2-container.md` - Container Diagram"
-- "  - `README.md` - Index and viewing instructions"
-- "All containers are labeled with their technology stacks."
+#### 6E: Present Validation Report to User
+
+Before presenting final output, show:
+```
+VALIDATION REPORT:
+✅ All 6 schema models documented
+✅ All engine/ subdirectories represented
+✅ Data flow matches actual pipeline (2-stage: ingestion → extraction)
+✅ Technology labels verified against code
+✅ Mermaid syntax validated
+
+I've created C4 diagrams in `docs/architecture/`:
+  - `c4-level1-context.md` - System Context
+  - `c4-level2-container.md` - Container Diagram
+  - `README.md` - Index and viewing instructions
+
+All containers are labeled with their technology stacks.
+All discovered models and components are documented.
+```
 
 ## Error Handling
 
@@ -291,6 +418,14 @@ Present to user:
 ## Quality Checklist
 
 Before marking complete:
+
+### Discovery Phase Completion
+- [ ] Step 1A completed: ALL schema.prisma models enumerated (not just main ones)
+- [ ] Step 1B completed: ALL engine/ subdirectories scanned
+- [ ] Step 1C completed: Tech stack versions extracted from package.json/requirements.txt
+- [ ] Step 1D completed: If existing diagrams present, gap analysis performed
+
+### Diagram Generation
 - [ ] Level 1 (Context) diagram created in separate file
 - [ ] Level 2 (Container) diagram created in separate file
 - [ ] README.md created in architecture folder
@@ -302,6 +437,14 @@ Before marking complete:
 - [ ] Relationships show protocols (HTTPS, SQL, JSON, etc.)
 - [ ] Files saved in `docs/architecture/` at repository root
 - [ ] README includes viewing instructions for Mermaid
+
+### Validation Phase Completion (CRITICAL)
+- [ ] Step 6A completed: ALL schema models verified as documented
+- [ ] Step 6B completed: ALL engine/ subdirectories represented in diagrams
+- [ ] Step 6C completed: Data flows match actual pipeline architecture
+- [ ] Step 6D completed: Standard quality checks passed
+- [ ] Step 6E completed: Validation report presented to user
+- [ ] If any gaps found during validation, they were ADDED to diagrams (not skipped)
 
 ## Examples
 
@@ -375,10 +518,32 @@ Before marking complete:
 
 ---
 
-**Version:** 1.2.0
-**Last Updated:** 2026-01-13
+**Version:** 2.0.0
+**Last Updated:** 2026-01-15
 **Skill Type:** Documentation Generator
+**Default Mode:** COMPREHENSIVE CODE INSPECTION (not incremental update)
 **Default Output:** Mermaid (TB), Context + Container, Separate files, Technology-labeled
 **Scope:** engine/ and web/ folders only (runtime architecture)
 **Output Location:** docs/architecture/ at repository root
 **Data Source:** Code inspection ONLY - no documentation files (README, conductor/, docs/, etc.)
+
+## Changelog
+
+### v2.0.0 (2026-01-15) - MAJOR UPDATE
+**Breaking changes to default behavior:**
+- **NEW:** Mandatory comprehensive discovery phase (Step 1A-1D) that enumerates ALL schema models and engine components before generation
+- **NEW:** Comprehensive validation phase (Step 6A-6E) that cross-checks diagrams against discoveries and REQUIRES all models/components be documented
+- **CHANGED:** Default mode is now "comprehensive code inspection" NOT "incremental update of existing diagrams"
+- **ADDED:** Gap detection - compares existing diagrams with code reality and reports/fixes drift
+- **ADDED:** Validation report output showing schema coverage, component coverage, and data flow validation
+- **IMPROVED:** Quality checklist expanded to include discovery and validation phase completion
+
+**Why this update:** Previous version missed newly added database tables (ExtractedListing, FailedExtraction) and architectural components (extraction pipeline) when updating diagrams, because it assumed existing diagrams were complete and only updated specific fields. New version always starts from code reality, not diagram assumptions.
+
+### v1.2.0 (2026-01-13)
+- Code-only inspection rules
+- Technology stack labels mandatory
+- Standard location (docs/architecture/)
+
+### v1.0.0 (Initial)
+- Basic C4 diagram generation
