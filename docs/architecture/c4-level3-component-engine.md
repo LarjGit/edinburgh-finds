@@ -70,8 +70,8 @@ graph TB
     Extractor -->|"Process"| Transform
     Transform -->|"Validate"| Schema
     Transform -->|"Track"| ExtractTrack
-    ExtractTrack -->|"Success: ExtractedListing"| DB
-    ExtractTrack -->|"Failure: FailedExtraction"| DB
+    ExtractTrack -->|"Success - ExtractedListing"| DB
+    ExtractTrack -->|"Failure - FailedExtraction"| DB
     ExtractTrack -->|"Log events"| Logging
 
     DB -->|"Read ExtractedListing"| Ingestor
