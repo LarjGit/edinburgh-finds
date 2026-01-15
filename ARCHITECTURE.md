@@ -206,7 +206,6 @@ The extraction stage transforms raw ingested data into validated, structured lis
 ```mermaid
 graph TD
     subgraph ExternalSources["External Sources"]
-        direction TD
         Google["Google Places"]
         Serper["Serper / Google Search"]
         OSM["OpenStreetMap"]
@@ -216,7 +215,6 @@ graph TD
     end
 
     subgraph Stage1["Stage 1: Ingestion (Raw Data Capture)"]
-        direction TD
         CLI["CLI Controller"]
         Connectors["Connectors<br/>(BaseConnector)"]
         HashCheck{"Hash Check<br/>(Deduplication)"}
@@ -224,7 +222,6 @@ graph TD
     end
 
     subgraph Stage2["Stage 2: Extraction (Structured Processing)"]
-        direction TD
         Transform["Transform Pipeline"]
         Validate["Pydantic Validation"]
         ExtractTrack{"Extraction<br/>Success?"}
@@ -232,7 +229,6 @@ graph TD
     end
 
     subgraph PersistenceLayer["Persistence Layer"]
-        direction TD
         FileSystem["File System<br/>(engine/data/raw/)"]
         Database["SQLite Database<br/>(via Prisma)"]
     end
