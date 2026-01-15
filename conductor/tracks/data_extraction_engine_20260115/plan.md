@@ -19,7 +19,7 @@ This plan details the phased implementation of the Data Extraction Engine. Each 
 - [x] Implement `base.py` with abstract `BaseExtractor` class (extract, validate, split_attributes methods) (fd40963)
 - [x] Write tests for schema utilities (`test_schema_utils.py`) (9c80845)
 - [x] Implement `schema_utils.py` (get_extraction_fields, get_llm_config, is_field_in_schema functions) (7e4618a)
-- [ ] Create `engine/config/extraction.yaml` with model and trust level settings
+- [x] Create `engine/config/extraction.yaml` with model and trust level settings (7e4618a)
 - [ ] Write tests for config loading (`test_config.py`)
 - [ ] Implement config loader with validation
 - [ ] Write tests for attribute splitting logic (`test_attribute_splitter.py`)
