@@ -138,6 +138,9 @@ model RawIngestion {
   hash          String   // Content hash for deduplication
   metadata_json String?  // Additional metadata stored as JSON
 
+  extractedListings ExtractedListing[]
+  failedExtractions FailedExtraction[]
+
   @@index([source])
   @@index([status])
   @@index([hash])
