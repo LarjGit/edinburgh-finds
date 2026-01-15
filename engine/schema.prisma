@@ -8,16 +8,9 @@ datasource db {
   url      = "file:../web/dev.db"
 }
 
-enum EntityType {
-  VENUE
-  RETAILER
-  COACH
-  INSTRUCTOR
-  CLUB
-  LEAGUE
-  EVENT
-  TOURNAMENT
-}
+// Note: SQLite doesn't support native enums. EntityType is stored as String in the database
+// but validated as an Enum in application code (TypeScript/Python).
+// Valid values: VENUE, RETAILER, COACH, INSTRUCTOR, CLUB, LEAGUE, EVENT, TOURNAMENT
 
 model Category {
   id          String       @id @default(cuid())
@@ -35,7 +28,7 @@ model Listing {
   entity_name  String
   slug         String     @unique
 
-  entityType   EntityType
+  entityType   String     // Enum validated in application layer: VENUE, RETAILER, COACH, etc.
   categories   Category[]
 
   summary      String?
