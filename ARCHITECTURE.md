@@ -257,11 +257,11 @@ graph TD
     Transform -->|"7. Parse & Split"| Validate
     Validate -->|"8. Validated Data"| ExtractTrack
 
-    ExtractTrack -->|"Success:<br/>Create ExtractedListing"| Database
-    ExtractTrack -->|"Failure:<br/>Create FailedExtraction"| Database
+    ExtractTrack -->|"Success - ExtractedListing"| Database
+    ExtractTrack -->|"Failure - FailedExtraction"| Database
 
     Database -->|"9. Read ExtractedListing"| Ingestor
-    Ingestor -->|"10. Upsert Listing<br/>(Trust Rules Apply)"| Database
+    Ingestor -->|"10. Upsert Listing"| Database
 ```
 
 ### 3.2. Triggers
