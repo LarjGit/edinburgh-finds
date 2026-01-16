@@ -225,17 +225,17 @@ This plan details the phased implementation of the Data Extraction Engine. Each 
 - [x] Implement `deduplication.py` with strategy cascade (external ID → slug → fuzzy)
 - [x] Test with known duplicate fixtures (same venue, different sources)
 
-### Task 5.2: Field-Level Trust Merging
+### Task 5.2: Field-Level Trust Merging (b3adb7e)
 
-- [ ] Write tests for trust hierarchy (`test_trust_hierarchy.py`)
-- [ ] Implement trust level loader from extraction.yaml
-- [ ] Write tests for field-level merge logic (`test_field_merge.py`)
-- [ ] Implement `merge_field()` function (higher trust wins)
-- [ ] Add field_sources tracking to Listing model (or separate FieldProvenance table)
-- [ ] Run Prisma migration for field provenance tracking
-- [ ] Write tests for full listing merge (`test_listing_merge.py`)
-- [ ] Implement `merge_listings()` that combines multiple ExtractedListing records
-- [ ] Test merge scenarios:
+- [x] Write tests for trust hierarchy (`test_trust_hierarchy.py`)
+- [x] Implement trust level loader from extraction.yaml
+- [x] Write tests for field-level merge logic (`test_field_merge.py`)
+- [x] Implement `merge_field()` function (higher trust wins)
+- [x] Add field_sources tracking to Listing model (or separate FieldProvenance table)
+- [x] Run Prisma migration for field provenance tracking (not needed - schema already has fields)
+- [x] Write tests for full listing merge (`test_listing_merge.py`)
+- [x] Implement `merge_listings()` that combines multiple ExtractedListing records
+- [x] Test merge scenarios:
   - 2 sources, no conflicts (simple merge)
   - 2 sources, conflicting fields (trust hierarchy resolves)
   - 3+ sources, complex conflicts
