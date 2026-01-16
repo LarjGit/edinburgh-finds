@@ -394,9 +394,6 @@ This plan details the phased implementation of the Data Extraction Engine. Each 
 - [ ] Test compatibility with web app (Listing queries work)
 - [ ] Verify extracted data displays correctly in frontend
 - [ ] Test seed data generation from extracted listings
-- [ ] Migrate away from legacy `engine/ingestion/transform.py` (deprecated in favor of BaseExtractor)
-- [ ] Update any code still using old transform functions to use new extractors
-- [ ] Remove legacy transform.py and associated tests after migration verified
 
 **Success Criteria:**
 - ✅ End-to-end tests cover full pipeline
