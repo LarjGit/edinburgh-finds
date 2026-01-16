@@ -69,12 +69,12 @@ This plan details the phased implementation of the Data Extraction Engine. Each 
 
 ### Task 2.3: Edinburgh Council Extractor
 
-- [ ] Update existing `transform.py` to new BaseExtractor interface
-- [ ] Write comprehensive tests for Edinburgh Council (`test_edinburgh_council_extractor.py`)
-- [ ] Refactor existing transform logic into `edinburgh_council_extractor.py`
-- [ ] Ensure compatibility with BaseExtractor interface
-- [ ] Add external ID tracking for council features
-- [ ] Test with existing raw Edinburgh Council data
+- [x] Update existing `transform.py` to new BaseExtractor interface
+- [x] Write comprehensive tests for Edinburgh Council (`test_edinburgh_council_extractor.py`)
+- [x] Refactor existing transform logic into `edinburgh_council_extractor.py`
+- [x] Ensure compatibility with BaseExtractor interface
+- [x] Add external ID tracking for council features
+- [x] Test with existing raw Edinburgh Council data
 
 ### Task 2.4: OpenChargeMap Extractor
 
