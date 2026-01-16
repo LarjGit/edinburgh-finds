@@ -126,14 +126,14 @@ This plan details the phased implementation of the Data Extraction Engine. Each 
 
 ### Task 3.3: OSM Extractor
 
-- [ ] Write tests for OSM extraction (`test_osm_extractor.py`)
-- [ ] Create test fixtures: `fixtures/osm_overpass_sports_facility.json`
-- [ ] Implement `osm_extractor.py` extending BaseExtractor with LLM mode
-- [ ] Create OSM-specific prompt template (handle free-text tags)
-- [ ] Map OSM tags to venue fields (sport=* → sports offered, amenity=* → categories)
-- [ ] Extract OSM ID for deduplication
-- [ ] Handle multilingual tags and descriptions
-- [ ] Test extraction with real OSM Overpass data
+- [x] Write tests for OSM extraction (`test_osm_extractor.py`) (d68b56f)
+- [x] Create test fixtures: `fixtures/osm_overpass_sports_facility.json` (d68b56f)
+- [x] Implement `osm_extractor.py` extending BaseExtractor with LLM mode (d68b56f)
+- [x] Create OSM-specific prompt template (handle free-text tags) (d68b56f)
+- [x] Map OSM tags to venue fields (sport=* → sports offered, amenity=* → categories) (d68b56f)
+- [x] Extract OSM ID for deduplication (d68b56f)
+- [x] Handle multilingual tags and descriptions (d68b56f)
+- [x] Test extraction with real OSM Overpass data (d68b56f)
 
 **Success Criteria:**
 - ✅ Instructor library integrated with retry logic
