@@ -102,14 +102,14 @@ This plan details the phased implementation of the Data Extraction Engine. Each 
 
 ### Task 3.1: Instructor Setup
 
-- [ ] Add `instructor` and `anthropic` to project dependencies
-- [ ] Write tests for Instructor integration (`test_instructor_client.py`)
-- [ ] Implement `llm_client.py` wrapping Anthropic client with Instructor
-- [ ] Create Pydantic models for structured LLM output (`models/venue_extraction.py`)
-- [ ] Implement retry logic with validation feedback (max 2 retries)
-- [ ] Write tests for null semantics enforcement (`test_null_semantics.py`)
-- [ ] Create prompt templates with null semantic rules (`prompts/extraction_base.txt`)
-- [ ] Test LLM client with sample prompts
+- [x] Add `instructor` and `anthropic` to project dependencies
+- [x] Write tests for Instructor integration (`test_instructor_client.py`)
+- [x] Implement `llm_client.py` wrapping Anthropic client with Instructor
+- [x] Create Pydantic models for structured LLM output (`models/venue_extraction.py`)
+- [x] Implement retry logic with validation feedback (max 2 retries)
+- [x] Write tests for null semantics enforcement (`test_null_semantics.py`)
+- [x] Create prompt templates with null semantic rules (`prompts/extraction_base.txt`)
+- [x] Test LLM client with sample prompts
 
 ### Task 3.2: Serper Extractor
 
