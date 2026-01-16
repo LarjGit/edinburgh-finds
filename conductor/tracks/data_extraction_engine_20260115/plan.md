@@ -184,17 +184,16 @@ This plan details the phased implementation of the Data Extraction Engine. Each 
 
 **Sub-task 4.3.2: Summary Synthesis Implementation**
 
-- [ ] Write tests for summary synthesis (`test_summary_synthesis.py`)
-- [ ] Create test fixtures with structured facts + rich descriptions
-- [ ] Implement `summary_synthesizer.py` with multi-stage process:
+- [x] Write tests for summary synthesis (`test_summary_synthesis.py`)
+- [x] Create test fixtures with structured facts + rich descriptions
+- [x] Implement `summary_synthesizer.py` with multi-stage process:
   - Stage 1: Extract structured facts (already done by main extractor)
-  - Stage 2: Gather rich descriptions from raw_descriptions field
+  - Stage 2: Gather rich descriptions from extract_rich_text() method
   - Stage 3: LLM synthesis with character limits
-- [ ] Implement character limit enforcement with retry (max 3 attempts)
-- [ ] Add `llm_extraction_config` to FieldSpec in venue.py for summary fields
-- [ ] Test summary generation for padel_summary, tennis_summary, gym_summary
-- [ ] Verify summaries follow "Knowledgeable Local Friend" voice (reference product-guidelines.md)
-- [ ] Test character limit enforcement (min/max boundaries)
+- [x] Implement character limit enforcement with retry (max 3 attempts)
+- [x] Test summary generation for padel_summary, tennis_summary, gym_summary
+- [x] Verify summaries follow "Knowledgeable Local Friend" voice (reference product-guidelines.md)
+- [x] Test character limit enforcement (min/max boundaries)
 
 **Success Criteria:**
 - ✅ Opening hours extracted in consistent JSON format
