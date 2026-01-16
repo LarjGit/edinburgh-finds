@@ -160,7 +160,7 @@ This plan details the phased implementation of the Data Extraction Engine. Each 
 - [x] Implement validation: 24-hour format, valid times, CLOSED vs null handling (a1117b3)
 - [x] Test with edge cases (24-hour venues, seasonal hours, irregular schedules) (a1117b3)
 - [x] Integrate into Google Places extractor (bfcbe68)
-- [ ] Integrate into remaining extractors (Serper, OSM, Edinburgh Council, etc.)
+- [x] Integrate into remaining extractors (Serper, OSM, Edinburgh Council, etc.)
 
 ### Task 4.2: Categories Handling
 
