@@ -5,3 +5,5 @@ aiohttp
 instructor
 anthropic
 phonenumbers
+fuzzywuzzy
+python-Levenshtein
