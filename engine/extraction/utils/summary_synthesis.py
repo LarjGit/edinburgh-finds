@@ -66,6 +66,14 @@ class SummarySynthesizer:
     Combines structured facts with rich text descriptions to create
     concise, engaging summaries that follow the "Knowledgeable Local Friend"
     voice from product-guidelines.md.
+
+    Convention-based approach:
+    - Automatically discovers relevant fields based on naming conventions
+    - Summary type "padel_summary" → finds all fields starting with "padel_"
+    - Summary type "restaurant_summary" → finds all fields starting with "restaurant_"
+    - Fully extensible: adding new entity types or fields requires no code changes
+
+    Special cases with custom prefixes can be defined in CUSTOM_FIELD_PREFIXES.
     """
 
     # Default character limits for summaries
@@ -75,52 +83,19 @@ class SummarySynthesizer:
     # Maximum retry attempts for character limit enforcement
     DEFAULT_MAX_RETRIES = 3
 
-    # Mapping of summary types to their relevant fact fields
-    SUMMARY_TYPE_FIELDS = {
-        "padel_summary": ["padel", "padel_total_courts"],
-        "tennis_summary": [
-            "tennis", "tennis_total_courts", "tennis_indoor_courts",
-            "tennis_outdoor_courts", "tennis_covered_courts", "tennis_floodlit_courts"
-        ],
-        "pickleball_summary": ["pickleball", "pickleball_total_courts"],
-        "badminton_summary": ["badminton", "badminton_total_courts"],
-        "squash_summary": ["squash", "squash_total_courts", "squash_glass_back_courts"],
-        "table_tennis_summary": ["table_tennis", "table_tennis_total_tables"],
-        "football_summary": [
-            "football_5_a_side", "football_5_a_side_total_pitches",
-            "football_7_a_side", "football_7_a_side_total_pitches",
-            "football_11_a_side", "football_11_a_side_total_pitches"
-        ],
-        "swimming_summary": [
-            "indoor_pool", "outdoor_pool", "indoor_pool_length_m",
-            "outdoor_pool_length_m", "family_swim", "adult_only_swim", "swimming_lessons"
-        ],
-        "gym_summary": [
-            "gym_available", "gym_size"
-        ],
-        "classes_summary": [
-            "classes_per_week", "hiit_classes", "yoga_classes",
-            "pilates_classes", "strength_classes", "cycling_studio", "functional_training_zone"
-        ],
-        "spa_summary": [
-            "spa_available", "sauna", "steam_room", "hydro_pool",
-            "hot_tub", "outdoor_spa", "ice_cold_plunge", "relaxation_area"
-        ],
-        "amenities_summary": [
-            "restaurant", "bar", "cafe", "childrens_menu", "wifi"
-        ],
-        "family_summary": [
-            "creche_available", "creche_age_min", "creche_age_max",
-            "kids_swimming_lessons", "kids_tennis_lessons", "holiday_club", "play_area"
-        ],
-        "parking_and_transport_summary": [
-            "parking_spaces", "disabled_parking", "parent_child_parking",
-            "ev_charging_available", "ev_charging_connectors",
-            "public_transport_nearby", "nearest_railway_station"
-        ],
-        "reviews_summary": [
-            "review_count", "google_review_count", "facebook_likes"
-        ]
+    # Custom field prefix mappings for summary types that don't follow the standard convention
+    # Format: {"summary_type": ["prefix1_", "prefix2_", ...]}
+    CUSTOM_FIELD_PREFIXES = {
+        # "swimming_summary" matches both "swimming_" and pool-related fields
+        "swimming_summary": ["swimming_", "pool"],
+        # "parking_and_transport_summary" matches parking and transport fields
+        "parking_and_transport_summary": ["parking_", "transport", "ev_charging"],
+        # "amenities_summary" matches amenity fields
+        "amenities_summary": ["restaurant", "bar", "cafe", "wifi", "childrens_menu"],
+        # "family_summary" matches family/kids fields
+        "family_summary": ["family_", "kids_", "creche_", "holiday_club", "play_area"],
+        # "reviews_summary" matches review/social fields
+        "reviews_summary": ["review_", "_review", "facebook_", "rating"],
     }
 
     def __init__(self):
@@ -241,9 +216,58 @@ CRITICAL BRAND VOICE RULES (from product-guidelines.md):
 
         return None
 
+    def _get_field_prefixes(self, summary_type: str) -> list:
+        """
+        Get the field prefixes relevant to this summary type.
+
+        Uses convention-based approach:
+        - "padel_summary" → ["padel_"]
+        - "restaurant_summary" → ["restaurant_"]
+
+        Special cases defined in CUSTOM_FIELD_PREFIXES override the convention.
+
+        Args:
+            summary_type: Type of summary (e.g., "padel_summary")
+
+        Returns:
+            list: List of field prefixes to match against
+        """
+        # Check for custom prefix mapping
+        if summary_type in self.CUSTOM_FIELD_PREFIXES:
+            return self.CUSTOM_FIELD_PREFIXES[summary_type]
+
+        # Convention-based: extract prefix from summary type
+        # "padel_summary" → "padel_"
+        # "tennis_summary" → "tennis_"
+        if summary_type.endswith("_summary"):
+            prefix = summary_type[:-8]  # Remove "_summary"
+            return [prefix + "_", prefix]  # Match "padel_" or "padel"
+
+        # Fallback: use the whole summary type as prefix
+        return [summary_type]
+
+    def _field_matches_prefixes(self, field_name: str, prefixes: list) -> bool:
+        """
+        Check if a field name matches any of the given prefixes.
+
+        Args:
+            field_name: Name of the field to check
+            prefixes: List of prefixes to match against
+
+        Returns:
+            bool: True if field matches any prefix
+        """
+        for prefix in prefixes:
+            if field_name.startswith(prefix) or prefix in field_name:
+                return True
+        return False
+
     def _has_relevant_data(self, summary_type: str, facts: Dict) -> bool:
         """
         Check if venue has relevant data for this summary type.
+
+        Uses convention-based field discovery: finds fields matching the
+        summary type's prefix (e.g., "padel_summary" → "padel_*" fields).
 
         Args:
             summary_type: Type of summary to check
@@ -252,19 +276,27 @@ CRITICAL BRAND VOICE RULES (from product-guidelines.md):
         Returns:
             bool: True if venue has at least one relevant field with data
         """
-        relevant_fields = self.SUMMARY_TYPE_FIELDS.get(summary_type, [])
+        prefixes = self._get_field_prefixes(summary_type)
 
-        for field in relevant_fields:
-            value = facts.get(field)
-            # Check for meaningful values (not None, not False for booleans)
-            if value is not None and value is not False:
-                return True
+        for field_name, value in facts.items():
+            # Skip entity_name (it's metadata, not relevant data)
+            if field_name == "entity_name":
+                continue
+
+            # Check if field matches any prefix
+            if self._field_matches_prefixes(field_name, prefixes):
+                # Check for meaningful values (not None, not False for booleans)
+                if value is not None and value is not False:
+                    return True
 
         return False
 
     def _extract_relevant_facts(self, summary_type: str, facts: Dict) -> Dict:
         """
         Extract only the facts relevant to this summary type.
+
+        Uses convention-based field discovery to automatically find
+        relevant fields based on naming patterns.
 
         Args:
             summary_type: Type of summary
@@ -273,17 +305,23 @@ CRITICAL BRAND VOICE RULES (from product-guidelines.md):
         Returns:
             Dict: Filtered facts containing only relevant fields
         """
-        relevant_fields = self.SUMMARY_TYPE_FIELDS.get(summary_type, [])
+        prefixes = self._get_field_prefixes(summary_type)
+        relevant_facts = {}
 
         # Always include entity_name for context
-        relevant_facts = {}
         if "entity_name" in facts:
             relevant_facts["entity_name"] = facts["entity_name"]
 
-        # Add summary-specific fields
-        for field in relevant_fields:
-            if field in facts and facts[field] is not None:
-                relevant_facts[field] = facts[field]
+        # Add summary-specific fields based on prefix matching
+        for field_name, value in facts.items():
+            # Skip entity_name (already added)
+            if field_name == "entity_name":
+                continue
+
+            # Check if field matches any prefix
+            if self._field_matches_prefixes(field_name, prefixes):
+                if value is not None:
+                    relevant_facts[field_name] = value
 
         return relevant_facts
 

@@ -473,6 +473,90 @@ class TestEdgeCases:
         assert len(summary) > 0
 
 
+class TestExtensibility:
+    """Test that new summary types work automatically without code changes"""
+
+    @skip_without_api_key
+    def test_new_entity_type_restaurant_summary(self):
+        """Test that a new entity type (restaurant) works without modifying synthesizer code"""
+        from engine.extraction.utils.summary_synthesis import SummarySynthesizer
+
+        synthesizer = SummarySynthesizer()
+
+        # Hypothetical future entity type: RESTAURANT
+        restaurant_facts = {
+            "entity_name": "The Kitchin",
+            "restaurant_cuisine": "Modern Scottish",
+            "restaurant_michelin_stars": 1,
+            "restaurant_price_range": "£££",
+            "restaurant_seating_capacity": 60,
+            "restaurant_outdoor_seating": True
+        }
+
+        rich_text = [
+            "The Kitchin is Edinburgh's premier Michelin-starred restaurant showcasing the finest Scottish seasonal produce."
+        ]
+
+        # This should work automatically due to convention-based field discovery
+        summary = synthesizer.synthesize_summary(
+            summary_type="restaurant_summary",
+            structured_facts=restaurant_facts,
+            rich_text=rich_text
+        )
+
+        # Should generate a summary from the restaurant_* fields
+        assert summary is not None
+        assert isinstance(summary, str)
+        assert len(summary) > 0
+
+    @skip_without_api_key
+    def test_new_fields_added_to_existing_type(self):
+        """Test that adding new fields to existing type works automatically"""
+        from engine.extraction.utils.summary_synthesis import SummarySynthesizer
+
+        synthesizer = SummarySynthesizer()
+
+        # Add new hypothetical padel fields not in original code
+        padel_facts = {
+            "entity_name": "Future Padel Club",
+            "padel": True,
+            "padel_total_courts": 6,
+            "padel_indoor_courts": 4,  # NEW field
+            "padel_outdoor_courts": 2,  # NEW field
+            "padel_court_surface": "panoramic glass",  # NEW field
+            "padel_booking_system": "online"  # NEW field
+        }
+
+        # Should automatically include all padel_* fields
+        summary = synthesizer.synthesize_summary(
+            summary_type="padel_summary",
+            structured_facts=padel_facts,
+            rich_text=[]
+        )
+
+        assert summary is not None
+        assert isinstance(summary, str)
+
+    @skip_without_api_key
+    def test_convention_based_field_discovery(self):
+        """Test that field discovery works via naming convention"""
+        from engine.extraction.utils.summary_synthesis import SummarySynthesizer
+
+        synthesizer = SummarySynthesizer()
+
+        # Test the internal field prefix logic
+        prefixes_padel = synthesizer._get_field_prefixes("padel_summary")
+        assert "padel_" in prefixes_padel or "padel" in prefixes_padel
+
+        prefixes_restaurant = synthesizer._get_field_prefixes("restaurant_summary")
+        assert "restaurant_" in prefixes_restaurant or "restaurant" in prefixes_restaurant
+
+        # Test field matching
+        assert synthesizer._field_matches_prefixes("padel_total_courts", ["padel_", "padel"])
+        assert synthesizer._field_matches_prefixes("restaurant_cuisine", ["restaurant_", "restaurant"])
+        assert not synthesizer._field_matches_prefixes("tennis_total_courts", ["padel_", "padel"])
+
+
 class TestIntegrationWithExtractors:
     """Test integration with existing extractors"""
 
