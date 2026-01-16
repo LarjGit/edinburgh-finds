@@ -105,6 +105,27 @@ model FailedExtraction {
   @@index([retry_count])
 }
 
+model MergeConflict {
+  id                 String   @id @default(cuid())
+  field_name         String
+  conflicting_values String
+  winner_source      String
+  winner_value       String
+  trust_difference   Int
+  severity           Float
+  listing_id         String?
+  resolved           Boolean  @default(false)
+  resolution_notes   String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([field_name])
+  @@index([winner_source])
+  @@index([severity])
+  @@index([resolved])
+  @@index([listing_id])
+}
+
 model RawIngestion {
   id                String             @id @default(cuid())
   source            String

@@ -364,3 +364,129 @@ class ListingMerger:
         agreements = sum(1 for fv in field_values if fv.value == winning_value)
 
         return agreements / len(field_values)
+
+
+@dataclass
+class MergeConflict:
+    """Represents a merge conflict between sources."""
+    field_name: str
+    conflicting_values: List[Dict[str, Any]]
+    winner_source: str
+    winner_value: Any
+    trust_difference: int
+    severity: float
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for storage."""
+        return {
+            "field_name": self.field_name,
+            "conflicting_values": self.conflicting_values,
+            "winner_source": self.winner_source,
+            "winner_value": self.winner_value,
+            "trust_difference": self.trust_difference,
+            "severity": self.severity
+        }
+
+
+class ConflictDetector:
+    """Detects and reports merge conflicts."""
+
+    def __init__(
+        self,
+        trust_hierarchy: Optional[TrustHierarchy] = None,
+        trust_difference_threshold: int = 15
+    ):
+        """
+        Initialize conflict detector.
+
+        Args:
+            trust_hierarchy: Optional trust hierarchy instance
+            trust_difference_threshold: Maximum trust difference before flagging conflict.
+                                       Conflicts are only reported if the trust difference
+                                       is less than this threshold (default: 15 points)
+        """
+        self.trust_hierarchy = trust_hierarchy or TrustHierarchy()
+        self.trust_difference_threshold = trust_difference_threshold
+
+    def detect_conflict(
+        self,
+        field_name: str,
+        field_values: List[Dict[str, Any]]
+    ) -> Optional[MergeConflict]:
+        """
+        Detect if there's a reportable conflict for a field.
+
+        A conflict is reportable when:
+        1. Multiple sources provide different (non-None) values
+        2. The trust level difference between top sources is small (< threshold)
+
+        Args:
+            field_name: Name of the field being checked
+            field_values: List of dicts with 'value', 'source', 'confidence'
+
+        Returns:
+            MergeConflict if conflict detected, None otherwise
+        """
+        # Need at least 2 sources to have a conflict
+        if len(field_values) < 2:
+            return None
+
+        # Filter out None values
+        non_none_values = [fv for fv in field_values if fv.get("value") is not None]
+
+        if len(non_none_values) < 2:
+            return None
+
+        # Get unique values
+        unique_values = set(str(fv["value"]) for fv in non_none_values)
+
+        # If all values are the same, no conflict
+        if len(unique_values) == 1:
+            return None
+
+        # Sort by trust level (highest first), then by confidence
+        sorted_values = sorted(
+            non_none_values,
+            key=lambda fv: (
+                self.trust_hierarchy.get_trust_level(fv["source"]),
+                fv.get("confidence", 0.5)
+            ),
+            reverse=True
+        )
+
+        # Get trust levels for top 2 sources
+        winner = sorted_values[0]
+        runner_up = sorted_values[1]
+
+        winner_trust = self.trust_hierarchy.get_trust_level(winner["source"])
+        runner_up_trust = self.trust_hierarchy.get_trust_level(runner_up["source"])
+
+        trust_difference = winner_trust - runner_up_trust
+
+        # Only report conflict if trust difference is small
+        if trust_difference >= self.trust_difference_threshold:
+            return None
+
+        # Calculate severity (0.0-1.0, higher = more severe)
+        # Severity is inversely proportional to trust difference
+        # 0 difference = 1.0 severity, threshold difference = 0.0 severity
+        severity = 1.0 - (trust_difference / self.trust_difference_threshold)
+
+        # Build conflicting values list with trust levels
+        conflicting_values = []
+        for fv in sorted_values:
+            conflicting_values.append({
+                "value": fv["value"],
+                "source": fv["source"],
+                "trust": self.trust_hierarchy.get_trust_level(fv["source"]),
+                "confidence": fv.get("confidence", 0.5)
+            })
+
+        return MergeConflict(
+            field_name=field_name,
+            conflicting_values=conflicting_values,
+            winner_source=winner["source"],
+            winner_value=winner["value"],
+            trust_difference=trust_difference,
+            severity=severity
+        )
