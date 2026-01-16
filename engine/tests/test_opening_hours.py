@@ -418,6 +418,7 @@ class TestOpeningHoursRetryLogic:
 class TestOpeningHoursIntegrationWithExtractors:
     """Test integration of opening hours parsing with existing extractors"""
 
+    @skip_without_api_key
     def test_google_places_extractor_uses_opening_hours_util(self):
         """Test that Google Places extractor integrates opening hours utility"""
         # This test will verify that extractor calls parse_opening_hours
@@ -431,11 +432,14 @@ class TestOpeningHoursIntegrationWithExtractors:
             "formattedAddress": "123 Test St, Edinburgh EH1 1AA, UK",
             "location": {"latitude": 55.9533, "longitude": -3.1883},
             "regularOpeningHours": {
-                "periods": [
-                    {
-                        "open": {"day": 1, "hour": 9, "minute": 0},
-                        "close": {"day": 1, "hour": 17, "minute": 0}
-                    }
+                "weekdayDescriptions": [
+                    "Monday: 9:00 AM – 5:00 PM",
+                    "Tuesday: 9:00 AM – 5:00 PM",
+                    "Wednesday: 9:00 AM – 5:00 PM",
+                    "Thursday: 9:00 AM – 5:00 PM",
+                    "Friday: 9:00 AM – 5:00 PM",
+                    "Saturday: Closed",
+                    "Sunday: Closed"
                 ]
             }
         }
@@ -444,8 +448,12 @@ class TestOpeningHoursIntegrationWithExtractors:
         extracted = extractor.extract(raw_data)
 
         # Should extract opening_hours field
-        # Note: Actual assertion depends on implementation
-        # This test may fail until integration is complete
+        assert "opening_hours" in extracted
+        assert extracted["opening_hours"] is not None
+        assert "monday" in extracted["opening_hours"]
+        assert extracted["opening_hours"]["monday"]["open"] == "09:00"
+        assert extracted["opening_hours"]["monday"]["close"] == "17:00"
+        assert extracted["opening_hours"]["saturday"] == "CLOSED"
 
     def test_llm_extractor_uses_opening_hours_util(self):
         """Test that LLM-based extractors integrate opening hours utility"""

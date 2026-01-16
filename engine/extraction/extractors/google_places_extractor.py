@@ -12,6 +12,7 @@ from phonenumbers import NumberParseException
 
 from engine.extraction.base import BaseExtractor
 from engine.extraction.schema_utils import get_extraction_fields, is_field_in_schema
+from engine.extraction.utils.opening_hours import parse_opening_hours
 from engine.schema.types import EntityType
 
 
@@ -199,6 +200,19 @@ class GooglePlacesExtractor(BaseExtractor):
 
         if "userRatingCount" in raw_data:
             extracted["user_rating_count"] = raw_data["userRatingCount"]
+
+        # Opening hours
+        if "regularOpeningHours" in raw_data:
+            opening_hours_raw = raw_data["regularOpeningHours"]
+
+            # Google provides weekdayDescriptions which we can parse
+            if "weekdayDescriptions" in opening_hours_raw:
+                descriptions = opening_hours_raw["weekdayDescriptions"]
+                # Join descriptions for parsing
+                hours_text = " | ".join(descriptions)
+                parsed_hours = parse_opening_hours(hours_text)
+                if parsed_hours:
+                    extracted["opening_hours"] = parsed_hours
 
         # External ID (Google Place ID)
         if "id" in raw_data:
