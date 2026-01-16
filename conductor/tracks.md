@@ -50,6 +50,15 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
+## [ ] Track: YAML Schema - Single Source of Truth
+*Link: [./conductor/tracks/yaml_schema_source_of_truth_20260116/](./conductor/tracks/yaml_schema_source_of_truth_20260116/)*
+**Status:** Ready for Implementation
+**Priority:** High
+**Dependencies:** None
+**Description:** Eliminate schema drift by implementing YAML-based single source of truth for all schema definitions. Currently, Prisma schema, Python FieldSpecs, and TypeScript types are maintained separately with no synchronization, creating high risk of drift and blocking horizontal scaling. This track creates a YAML schema format that generates all schemas automatically. From `engine/config/schemas/*.yaml`, generate: (1) Prisma schema for database, (2) Python FieldSpecs for extraction engine, (3) TypeScript types for frontend (optional). Includes validation tests to prevent drift, CLI tool for generation, and migration of existing schemas. Enables adding new entity types (WINERY, RESTAURANT) without code changes - just create new YAML file. Foundational infrastructure for true horizontal scaling across multiple verticals. 8 phases: YAML format & parser, Python generator, Prisma generator, migration & validation, CLI tool, documentation, replacement & cleanup, TypeScript generator (optional).
+
+---
+
 ## [ ] Track: Ecosystem Graph - Relationship Extraction
 **Status:** Planned (Blocked by Data Extraction Engine)
 **Dependencies:** Data Extraction Engine must complete first
