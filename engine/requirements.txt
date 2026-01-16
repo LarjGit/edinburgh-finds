@@ -2,3 +2,6 @@ prisma
 pydantic
 pyyaml
 aiohttp
+instructor
+anthropic
+phonenumbers
