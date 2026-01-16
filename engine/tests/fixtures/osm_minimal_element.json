@@ -1,0 +1,20 @@
+{
+  "version": 0.6,
+  "generator": "Overpass API",
+  "osm3s": {
+    "timestamp_osm_base": "2026-01-16T12:00:00Z",
+    "copyright": "The data included in this document is from www.openstreetmap.org. It is made available under ODbL."
+  },
+  "elements": [
+    {
+      "type": "node",
+      "id": 9012345678,
+      "lat": 55.9500,
+      "lon": -3.2000,
+      "tags": {
+        "name": "Unnamed Sports Facility",
+        "sport": "padel"
+      }
+    }
+  ]
+}
