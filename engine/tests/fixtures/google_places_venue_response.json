@@ -1,0 +1,53 @@
+{
+  "places": [
+    {
+      "id": "ChIJhwNDsAjFh0gRDARGLR5vtdI",
+      "types": [
+        "sports_activity_location",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "1, New Park Square, Edinburgh Park, Edinburgh EH12 9GR, UK",
+      "location": {
+        "latitude": 55.930189299999995,
+        "longitude": -3.3153414999999997
+      },
+      "rating": 4.4,
+      "googleMapsUri": "https://maps.google.com/?cid=15183163894148760588",
+      "userRatingCount": 15,
+      "displayName": {
+        "text": "Game4Padel | Edinburgh Park",
+        "languageCode": "en"
+      },
+      "nationalPhoneNumber": "0131 539 7071",
+      "internationalPhoneNumber": "+44 131 539 7071",
+      "websiteUri": "https://www.game4padel.co.uk/edinburgh-park",
+      "regularOpeningHours": {
+        "openNow": true,
+        "periods": [
+          {
+            "open": {
+              "day": 1,
+              "hour": 9,
+              "minute": 0
+            },
+            "close": {
+              "day": 1,
+              "hour": 22,
+              "minute": 0
+            }
+          }
+        ],
+        "weekdayDescriptions": [
+          "Monday: 9:00 AM – 10:00 PM",
+          "Tuesday: 9:00 AM – 10:00 PM",
+          "Wednesday: 9:00 AM – 10:00 PM",
+          "Thursday: 9:00 AM – 10:00 PM",
+          "Friday: 9:00 AM – 10:00 PM",
+          "Saturday: 8:00 AM – 10:00 PM",
+          "Sunday: 8:00 AM – 10:00 PM"
+        ]
+      }
+    }
+  ]
+}

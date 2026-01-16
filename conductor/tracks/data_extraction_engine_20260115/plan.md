@@ -43,19 +43,19 @@ This plan details the phased implementation of the Data Extraction Engine. Each 
 
 ### Task 2.1: Google Places Extractor
 
-- [ ] Write tests for Google Places extraction (`test_google_places_extractor.py`)
-- [ ] Create test fixture: `fixtures/google_places_venue_response.json`
-- [ ] Implement `google_places_extractor.py` extending BaseExtractor
-- [ ] Implement field mapping (displayName → entity_name, location → lat/lng, etc.)
-- [ ] Implement external ID capture (Google Place ID)
-- [ ] Write tests for phone number formatting (`test_phone_formatting.py`)
-- [ ] Implement `format_phone_uk()` using phonenumbers library
-- [ ] Integrate phone formatting into Google Places extractor
-- [ ] Write tests for postcode formatting (`test_postcode_formatting.py`)
-- [ ] Implement `format_postcode_uk()` with UK regex
-- [ ] Integrate postcode formatting into extractor
-- [ ] Test extraction with real Google Places fixture data
-- [ ] Verify all extracted fields match expected schema
+- [x] Write tests for Google Places extraction (`test_google_places_extractor.py`)
+- [x] Create test fixture: `fixtures/google_places_venue_response.json`
+- [x] Implement `google_places_extractor.py` extending BaseExtractor
+- [x] Implement field mapping (displayName → entity_name, location → lat/lng, etc.)
+- [x] Implement external ID capture (Google Place ID)
+- [x] Write tests for phone number formatting (integrated in test_google_places_extractor.py)
+- [x] Implement `format_phone_uk()` using phonenumbers library
+- [x] Integrate phone formatting into Google Places extractor
+- [x] Write tests for postcode formatting (integrated in test_google_places_extractor.py)
+- [x] Implement `format_postcode_uk()` with UK regex
+- [x] Integrate postcode formatting into extractor
+- [x] Test extraction with real Google Places fixture data
+- [x] Verify all extracted fields match expected schema
 
 ### Task 2.2: Sport Scotland Extractor
 
