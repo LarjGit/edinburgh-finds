@@ -78,12 +78,12 @@ This plan details the phased implementation of the Data Extraction Engine. Each 
 
 ### Task 2.4: OpenChargeMap Extractor
 
-- [ ] Write tests for OpenChargeMap extraction (`test_open_charge_map_extractor.py`)
-- [ ] Create test fixture: `fixtures/open_charge_map_response.json`
-- [ ] Implement `open_charge_map_extractor.py` extending BaseExtractor
-- [ ] Map charging station data to venue attributes (discovered_attributes for EV-specific fields)
-- [ ] Handle enrichment-only extractions (coordinates, availability)
-- [ ] Test extraction with real OpenChargeMap data
+- [x] Write tests for OpenChargeMap extraction (`test_open_charge_map_extractor.py`)
+- [x] Create test fixture: `fixtures/open_charge_map_response.json`
+- [x] Implement `open_charge_map_extractor.py` extending BaseExtractor
+- [x] Map charging station data to venue attributes (discovered_attributes for EV-specific fields)
+- [x] Handle enrichment-only extractions (coordinates, availability)
+- [x] Test extraction with real OpenChargeMap data
 
 **Success Criteria:**
 - ✅ All 4 deterministic extractors implemented and tested
