@@ -6,7 +6,7 @@ must follow to ensure consistent behavior across sources.
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Tuple
+from typing import Dict, Tuple, List
 
 
 class BaseExtractor(ABC):
@@ -67,4 +67,28 @@ class BaseExtractor(ABC):
             Tuple[Dict, Dict]: (attributes, discovered_attributes)
         """
         pass
+
+    def extract_rich_text(self, raw_data: Dict) -> List[str]:
+        """
+        Extract rich text descriptions from raw data for summary synthesis.
+
+        This method extracts unstructured text content (reviews, descriptions,
+        snippets, etc.) that can be used by the summary synthesizer to create
+        high-quality summary fields.
+
+        Default implementation returns an empty list. Extractors should override
+        this method to return source-specific rich text.
+
+        Args:
+            raw_data: Raw ingestion payload for a single record
+
+        Returns:
+            List[str]: List of text descriptions/snippets from the raw data
+
+        Examples:
+            >>> extractor = GooglePlacesExtractor()
+            >>> rich_text = extractor.extract_rich_text(raw_place_data)
+            >>> # Returns: ["Editorial summary...", "Review 1 text...", "Review 2 text..."]
+        """
+        return []
 

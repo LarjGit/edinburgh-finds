@@ -255,3 +255,28 @@ class SerperExtractor(BaseExtractor):
             dict_keys(['custom_field'])
         """
         return split_attrs(extracted, self.schema_fields)
+
+    def extract_rich_text(self, raw_data: Dict) -> List[str]:
+        """
+        Extract rich text descriptions from Serper search results.
+
+        Extracts snippets from organic search results which provide contextual
+        descriptions of venues from various web sources.
+
+        Args:
+            raw_data: Serper API response with organic search results
+
+        Returns:
+            List[str]: List of snippets from search results
+        """
+        rich_text = []
+
+        # Extract snippets from organic search results
+        organic_results = raw_data.get("organic", [])
+        for result in organic_results:
+            if isinstance(result, dict):
+                snippet = result.get("snippet", "")
+                if snippet and isinstance(snippet, str):
+                    rich_text.append(snippet)
+
+        return rich_text

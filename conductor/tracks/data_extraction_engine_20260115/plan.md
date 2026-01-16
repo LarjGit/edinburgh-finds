@@ -175,12 +175,12 @@ This plan details the phased implementation of the Data Extraction Engine. Each 
 
 **Sub-task 4.3.1: Rich Text Capture (Update Ingestion)**
 
-- [ ] Update `engine/config/sources.yaml` - add rich text fields to Google Places field mask
-- [ ] Update `google_places.py` connector to capture editorialSummary and reviews
-- [ ] Update `serper.py` connector to extract meta descriptions from snippets
-- [ ] Add `raw_descriptions` field to RawIngestion model or extraction output
-- [ ] Write tests for rich text storage (`test_rich_text_capture.py`)
-- [ ] Test that reviews and descriptions are captured in raw data
+- [x] Update `engine/config/sources.yaml` - add rich text fields to Google Places field mask
+- [x] Update `google_places.py` connector to capture editorialSummary and reviews
+- [x] Update `serper.py` connector to extract meta descriptions from snippets
+- [x] Add `raw_descriptions` field to RawIngestion model or extraction output
+- [x] Write tests for rich text storage (`test_rich_text_capture.py`)
+- [x] Test that reviews and descriptions are captured in raw data
 
 **Sub-task 4.3.2: Summary Synthesis Implementation**
 

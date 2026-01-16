@@ -204,11 +204,25 @@ class SerperConnector(BaseConnector):
         # Save JSON to filesystem
         save_json(file_path, data)
 
+        # Extract rich text availability for metadata (snippets, descriptions)
+        organic_results = data.get('organic', [])
+        rich_text_stats = {
+            'has_snippet': 0,
+            'total_snippet_length': 0
+        }
+
+        for result in organic_results:
+            snippet = result.get('snippet', '')
+            if snippet:
+                rich_text_stats['has_snippet'] += 1
+                rich_text_stats['total_snippet_length'] += len(snippet)
+
         # Prepare metadata as JSON string
         metadata = {
             'query': query,
-            'result_count': len(data.get('organic', [])),
-            'search_type': data.get('searchParameters', {}).get('type', 'search')
+            'result_count': len(organic_results),
+            'search_type': data.get('searchParameters', {}).get('type', 'search'),
+            'rich_text': rich_text_stats
         }
         metadata_json_str = json.dumps(metadata)
 

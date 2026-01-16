@@ -208,7 +208,23 @@ class GooglePlacesConnector(BaseConnector):
         content_hash = compute_content_hash(data)
 
         # Extract result count for metadata (new API uses 'places' instead of 'results')
-        result_count = len(data.get('places', []))
+        places = data.get('places', [])
+        result_count = len(places)
+
+        # Extract rich text availability for metadata
+        rich_text_stats = {
+            'has_editorial_summary': 0,
+            'total_reviews': 0,
+            'has_opening_hours': 0
+        }
+
+        for place in places:
+            if place.get('editorialSummary'):
+                rich_text_stats['has_editorial_summary'] += 1
+            if place.get('reviews'):
+                rich_text_stats['total_reviews'] += len(place.get('reviews', []))
+            if place.get('regularOpeningHours'):
+                rich_text_stats['has_opening_hours'] += 1
 
         # Generate a simple record ID based on result count and hash
         record_id = f"places_{result_count}_{content_hash[:8]}"
@@ -222,7 +238,8 @@ class GooglePlacesConnector(BaseConnector):
         # Prepare metadata as JSON string
         metadata = {
             'result_count': result_count,
-            'api_version': 'v1'  # New API version
+            'api_version': 'v1',  # New API version
+            'rich_text': rich_text_stats
         }
         metadata_json_str = json.dumps(metadata)
 

@@ -6,7 +6,7 @@ Uses deterministic extraction (clean, structured API data).
 """
 
 import re
-from typing import Dict, Tuple, Optional
+from typing import Dict, Tuple, Optional, List
 import phonenumbers
 from phonenumbers import NumberParseException
 
@@ -299,3 +299,41 @@ class GooglePlacesExtractor(BaseExtractor):
                 discovered[key] = value
 
         return attributes, discovered
+
+    def extract_rich_text(self, raw_data: Dict) -> List[str]:
+        """
+        Extract rich text descriptions from Google Places data.
+
+        Extracts:
+        - editorialSummary: Google's editorial description of the place
+        - reviews: User review texts (up to first 5 reviews)
+
+        Args:
+            raw_data: Single place object from Google Places API v1 response
+
+        Returns:
+            List[str]: List of text descriptions for summary synthesis
+        """
+        rich_text = []
+
+        # Extract editorial summary
+        if "editorialSummary" in raw_data:
+            editorial = raw_data["editorialSummary"]
+            # editorialSummary can be a dict with 'text' key or a direct string
+            if isinstance(editorial, dict) and "text" in editorial:
+                rich_text.append(editorial["text"])
+            elif isinstance(editorial, str):
+                rich_text.append(editorial)
+
+        # Extract reviews (limit to first 5 to avoid overwhelming the synthesizer)
+        if "reviews" in raw_data and isinstance(raw_data["reviews"], list):
+            for review in raw_data["reviews"][:5]:
+                if isinstance(review, dict) and "text" in review:
+                    # Review text can be nested in 'text' dict or direct
+                    review_text = review["text"]
+                    if isinstance(review_text, dict) and "text" in review_text:
+                        rich_text.append(review_text["text"])
+                    elif isinstance(review_text, str):
+                        rich_text.append(review_text)
+
+        return rich_text
