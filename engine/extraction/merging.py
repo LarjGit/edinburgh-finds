@@ -1,0 +1,366 @@
+"""
+Field-level trust merging for extracted listings.
+
+This module implements intelligent merging of data from multiple sources
+based on a trust hierarchy. Each field is merged independently, choosing
+the value from the most trusted source.
+"""
+
+from dataclasses import dataclass, field as dataclass_field
+from typing import Dict, List, Optional, Any
+import yaml
+from pathlib import Path
+
+
+@dataclass
+class FieldValue:
+    """Represents a field value from a specific source."""
+    value: Any
+    source: str
+    confidence: float
+    all_sources: List[str] = dataclass_field(default_factory=list)
+
+
+class TrustHierarchy:
+    """Manages trust levels for different data sources."""
+
+    def __init__(self, config_path: Optional[str] = None):
+        """
+        Initialize trust hierarchy from config.
+
+        Args:
+            config_path: Path to extraction.yaml config file
+        """
+        if config_path is None:
+            # Default to engine/config/extraction.yaml
+            config_path = Path(__file__).parent.parent / "config" / "extraction.yaml"
+
+        with open(config_path, 'r') as f:
+            config = yaml.safe_load(f)
+
+        self.trust_levels: Dict[str, int] = config.get("trust_levels", {})
+        self.default_trust = self.trust_levels.get("unknown_source", 10)
+
+    def get_trust_level(self, source: str) -> int:
+        """
+        Get trust level for a source.
+
+        Args:
+            source: Source name (e.g., "google_places", "osm")
+
+        Returns:
+            Trust level (0-100), or default if source unknown
+        """
+        return self.trust_levels.get(source, self.default_trust)
+
+    def is_more_trusted(self, source1: str, source2: str) -> bool:
+        """
+        Check if source1 is more trusted than source2.
+
+        Args:
+            source1: First source name
+            source2: Second source name
+
+        Returns:
+            True if source1 has higher trust level
+        """
+        return self.get_trust_level(source1) > self.get_trust_level(source2)
+
+    def get_highest_trust_source(self, sources: List[str]) -> Optional[str]:
+        """
+        Get the source with highest trust level from a list.
+
+        Args:
+            sources: List of source names
+
+        Returns:
+            Source name with highest trust, or None if list is empty
+        """
+        if not sources:
+            return None
+
+        return max(sources, key=lambda s: self.get_trust_level(s))
+
+    def sort_by_trust(self, sources: List[str], reverse: bool = True) -> List[str]:
+        """
+        Sort sources by trust level.
+
+        Args:
+            sources: List of source names
+            reverse: If True, sort descending (highest trust first)
+
+        Returns:
+            Sorted list of sources
+        """
+        return sorted(sources, key=lambda s: self.get_trust_level(s), reverse=reverse)
+
+
+class FieldMerger:
+    """Merges individual field values from multiple sources."""
+
+    def __init__(self, trust_hierarchy: Optional[TrustHierarchy] = None):
+        """
+        Initialize field merger.
+
+        Args:
+            trust_hierarchy: Optional trust hierarchy instance
+        """
+        self.trust_hierarchy = trust_hierarchy or TrustHierarchy()
+
+    def merge_field(
+        self,
+        field_name: str,
+        field_values: List[FieldValue]
+    ) -> FieldValue:
+        """
+        Merge a single field from multiple sources.
+
+        Strategy:
+        1. Filter out None values
+        2. Sort by trust level (highest first)
+        3. If trust levels equal, use confidence as tie-breaker
+        4. Return the winning value with provenance tracking
+
+        Args:
+            field_name: Name of the field being merged
+            field_values: List of field values from different sources
+
+        Returns:
+            Merged FieldValue with winning value and source tracking
+        """
+        if not field_values:
+            return FieldValue(value=None, source=None, confidence=0.0)
+
+        # Track all sources that provided values
+        all_sources = [fv.source for fv in field_values]
+
+        # Filter out None values, but keep track of them
+        non_none_values = [fv for fv in field_values if fv.value is not None]
+
+        # If all values are None, return None with highest trust source
+        if not non_none_values:
+            highest_trust_source = self.trust_hierarchy.get_highest_trust_source(all_sources)
+            result = FieldValue(
+                value=None,
+                source=highest_trust_source,
+                confidence=0.0
+            )
+            result.all_sources = all_sources
+            return result
+
+        # Sort by trust level (highest first), then by confidence
+        sorted_values = sorted(
+            non_none_values,
+            key=lambda fv: (
+                self.trust_hierarchy.get_trust_level(fv.source),
+                fv.confidence
+            ),
+            reverse=True
+        )
+
+        # Winner is the first (highest trust/confidence)
+        winner = sorted_values[0]
+
+        # Create result with provenance tracking
+        result = FieldValue(
+            value=winner.value,
+            source=winner.source,
+            confidence=winner.confidence
+        )
+        result.all_sources = all_sources
+
+        return result
+
+
+class ListingMerger:
+    """Merges multiple ExtractedListing records into a single Listing."""
+
+    def __init__(
+        self,
+        trust_hierarchy: Optional[TrustHierarchy] = None,
+        field_merger: Optional[FieldMerger] = None
+    ):
+        """
+        Initialize listing merger.
+
+        Args:
+            trust_hierarchy: Optional trust hierarchy instance
+            field_merger: Optional field merger instance
+        """
+        self.trust_hierarchy = trust_hierarchy or TrustHierarchy()
+        self.field_merger = field_merger or FieldMerger(self.trust_hierarchy)
+
+    def merge_listings(self, extracted_listings: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+        """
+        Merge multiple extracted listings into a single listing.
+
+        Args:
+            extracted_listings: List of ExtractedListing records (as dicts)
+
+        Returns:
+            Merged listing dict with optimal field values and provenance tracking
+        """
+        if not extracted_listings:
+            return None
+
+        if len(extracted_listings) == 1:
+            # No merging needed, but still format the output
+            return self._format_single_listing(extracted_listings[0])
+
+        # Collect all fields across all listings
+        all_fields = set()
+        for listing in extracted_listings:
+            if "attributes" in listing and listing["attributes"]:
+                all_fields.update(listing["attributes"].keys())
+
+        # Merge each field independently
+        merged_attributes = {}
+        source_info = {}
+        field_confidence = {}
+
+        for field_name in all_fields:
+            # Collect values for this field from all sources
+            field_values = []
+
+            for listing in extracted_listings:
+                attributes = listing.get("attributes", {})
+                if field_name in attributes:
+                    value = attributes[field_name]
+                    source = listing["source"]
+                    # Use a default confidence if not specified
+                    confidence = listing.get("confidence", 0.8)
+
+                    field_values.append(
+                        FieldValue(value=value, source=source, confidence=confidence)
+                    )
+
+            # Merge this field
+            if field_values:
+                merged_value = self.field_merger.merge_field(field_name, field_values)
+
+                if merged_value.value is not None:
+                    merged_attributes[field_name] = merged_value.value
+                    source_info[field_name] = merged_value.source
+
+                    # Calculate field confidence based on agreement
+                    agreement_ratio = self._calculate_agreement(field_values, merged_value.value)
+                    field_confidence[field_name] = agreement_ratio
+
+        # Merge discovered_attributes
+        merged_discovered = self._merge_discovered_attributes(extracted_listings)
+
+        # Combine external_ids from all sources
+        merged_external_ids = self._merge_external_ids(extracted_listings)
+
+        # Build final merged listing
+        merged_listing = {
+            **merged_attributes,
+            "discovered_attributes": merged_discovered,
+            "external_ids": merged_external_ids,
+            "source_info": source_info,
+            "field_confidence": field_confidence,
+            "sources": [listing["source"] for listing in extracted_listings],
+            "source_count": len(extracted_listings)
+        }
+
+        return merged_listing
+
+    def _format_single_listing(self, listing: Dict[str, Any]) -> Dict[str, Any]:
+        """Format a single listing to match merged listing structure."""
+        attributes = listing.get("attributes", {})
+        source = listing["source"]
+
+        # Create source_info mapping for all fields
+        source_info = {field_name: source for field_name in attributes.keys()}
+
+        # Default confidence of 1.0 for single source
+        field_confidence = {field_name: 1.0 for field_name in attributes.keys()}
+
+        return {
+            **attributes,
+            "discovered_attributes": listing.get("discovered_attributes", {}),
+            "external_ids": listing.get("external_ids", {}),
+            "source_info": source_info,
+            "field_confidence": field_confidence,
+            "sources": [source],
+            "source_count": 1
+        }
+
+    def _merge_discovered_attributes(
+        self,
+        extracted_listings: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        """
+        Merge discovered_attributes from multiple sources.
+
+        Discovered attributes are merged with same trust hierarchy as regular fields.
+        """
+        all_discovered_fields = set()
+        for listing in extracted_listings:
+            discovered = listing.get("discovered_attributes", {})
+            if discovered:
+                all_discovered_fields.update(discovered.keys())
+
+        merged_discovered = {}
+
+        for field_name in all_discovered_fields:
+            field_values = []
+
+            for listing in extracted_listings:
+                discovered = listing.get("discovered_attributes", {})
+                if field_name in discovered:
+                    value = discovered[field_name]
+                    source = listing["source"]
+                    confidence = listing.get("confidence", 0.8)
+
+                    field_values.append(
+                        FieldValue(value=value, source=source, confidence=confidence)
+                    )
+
+            if field_values:
+                merged_value = self.field_merger.merge_field(field_name, field_values)
+                if merged_value.value is not None:
+                    merged_discovered[field_name] = merged_value.value
+
+        return merged_discovered
+
+    def _merge_external_ids(
+        self,
+        extracted_listings: List[Dict[str, Any]]
+    ) -> Dict[str, str]:
+        """
+        Combine external IDs from all sources.
+
+        Each source can contribute its own external ID.
+        """
+        merged_ids = {}
+
+        for listing in extracted_listings:
+            external_ids = listing.get("external_ids", {})
+            if external_ids:
+                merged_ids.update(external_ids)
+
+        return merged_ids
+
+    def _calculate_agreement(
+        self,
+        field_values: List[FieldValue],
+        winning_value: Any
+    ) -> float:
+        """
+        Calculate agreement ratio for a field.
+
+        Args:
+            field_values: All values for this field
+            winning_value: The value that won the merge
+
+        Returns:
+            Agreement ratio (0.0-1.0), where 1.0 means all sources agree
+        """
+        if not field_values:
+            return 0.0
+
+        # Count how many sources provided the winning value
+        agreements = sum(1 for fv in field_values if fv.value == winning_value)
+
+        return agreements / len(field_values)
