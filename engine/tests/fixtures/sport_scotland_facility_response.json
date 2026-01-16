@@ -1,0 +1,33 @@
+{
+  "type": "FeatureCollection",
+  "totalFeatures": 1,
+  "features": [
+    {
+      "type": "Feature",
+      "id": "tennis_courts.1",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-3.1883, 55.9533]
+      },
+      "properties": {
+        "name": "Craiglockhart Tennis Centre",
+        "facility_type": "Tennis Courts",
+        "surface_type": "Hard Court",
+        "number_of_courts": "6",
+        "indoor_outdoor": "Outdoor",
+        "floodlit": "Yes",
+        "ownership": "Local Authority",
+        "address": "177 Colinton Road, Edinburgh",
+        "postcode": "EH14 1BH",
+        "phone": "0131 444 1969",
+        "website": "http://www.edinburghleisure.co.uk"
+      }
+    }
+  ],
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "EPSG:4326"
+    }
+  }
+}
