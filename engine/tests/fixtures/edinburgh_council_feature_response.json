@@ -1,0 +1,36 @@
+{
+  "type": "FeatureCollection",
+  "totalFeatures": 1,
+  "features": [
+    {
+      "type": "Feature",
+      "id": "facilities.123",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-3.188, 55.953]
+      },
+      "properties": {
+        "OBJECTID": 123,
+        "NAME": "Portobello Swim Centre",
+        "FACILITY_TYPE": "Swimming Pool",
+        "TYPE": "Leisure Facility",
+        "ADDRESS": "57 The Promenade",
+        "POSTCODE": "EH15 2BS",
+        "PHONE": "0131 669 6888",
+        "EMAIL": "portobello@edinburghleisure.co.uk",
+        "WEBSITE": "http://www.edinburghleisure.co.uk",
+        "DESCRIPTION": "Modern swimming centre with 25m pool, learner pool, and gym facilities",
+        "CAPACITY": 150,
+        "ACCESSIBLE": "Yes",
+        "OPENING_HOURS": "Mon-Sun 6:30am-10:00pm",
+        "DATASET_NAME": "Edinburgh Council Sports Facilities"
+      }
+    }
+  ],
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "EPSG:4326"
+    }
+  }
+}
