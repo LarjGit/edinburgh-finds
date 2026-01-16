@@ -212,18 +212,18 @@ This plan details the phased implementation of the Data Extraction Engine. Each 
 
 **Goal:** Combine multi-source data into single high-quality listings
 
-### Task 5.1: Deduplication Detection
+### Task 5.1: Deduplication Detection (e1a6cd2)
 
-- [ ] Write tests for external ID matching (`test_external_id_matching.py`)
-- [ ] Implement external ID matcher (Google Place ID, OSM ID, etc.)
-- [ ] Write tests for slug matching (`test_slug_matching.py`)
-- [ ] Implement slug-based deduplication
-- [ ] Add `fuzzywuzzy` dependency for string similarity
-- [ ] Write tests for fuzzy name + location matching (`test_fuzzy_matching.py`)
-- [ ] Implement fuzzy matcher with confidence scoring
-- [ ] Write tests for multi-strategy matching orchestration
-- [ ] Implement `deduplication.py` with strategy cascade (external ID → slug → fuzzy)
-- [ ] Test with known duplicate fixtures (same venue, different sources)
+- [x] Write tests for external ID matching (`test_external_id_matching.py`)
+- [x] Implement external ID matcher (Google Place ID, OSM ID, etc.)
+- [x] Write tests for slug matching (`test_slug_matching.py`)
+- [x] Implement slug-based deduplication
+- [x] Add `fuzzywuzzy` dependency for string similarity
+- [x] Write tests for fuzzy name + location matching (`test_fuzzy_matching.py`)
+- [x] Implement fuzzy matcher with confidence scoring
+- [x] Write tests for multi-strategy matching orchestration
+- [x] Implement `deduplication.py` with strategy cascade (external ID → slug → fuzzy)
+- [x] Test with known duplicate fixtures (same venue, different sources)
 
 ### Task 5.2: Field-Level Trust Merging
 
