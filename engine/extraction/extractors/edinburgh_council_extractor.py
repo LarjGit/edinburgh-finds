@@ -12,6 +12,7 @@ from typing import Dict, Tuple, Optional, List
 from engine.extraction.base import BaseExtractor
 from engine.extraction.schema_utils import get_extraction_fields, is_field_in_schema
 from engine.extraction.extractors.google_places_extractor import format_phone_uk, format_postcode_uk
+from engine.extraction.utils.opening_hours import parse_opening_hours
 from engine.schema.types import EntityType
 
 
@@ -173,7 +174,9 @@ class EdinburghCouncilExtractor(BaseExtractor):
 
         # Opening hours
         if "OPENING_HOURS" in properties and properties["OPENING_HOURS"]:
-            extracted["opening_hours"] = properties["OPENING_HOURS"]
+            parsed_hours = parse_opening_hours(properties["OPENING_HOURS"])
+            if parsed_hours:
+                extracted["opening_hours"] = parsed_hours
 
         # Store dataset name for provenance
         if "DATASET_NAME" in properties:

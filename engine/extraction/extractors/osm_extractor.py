@@ -59,6 +59,7 @@ from engine.extraction.llm_client import InstructorClient
 from engine.extraction.models.venue_extraction import VenueExtraction
 from engine.extraction.attribute_splitter import split_attributes as split_attrs
 from engine.extraction.schema_utils import get_extraction_fields
+from engine.extraction.utils.opening_hours import parse_opening_hours
 
 
 class OSMExtractor(BaseExtractor):
@@ -260,6 +261,11 @@ class OSMExtractor(BaseExtractor):
 
         # Add entity_type default
         extracted_dict['entity_type'] = 'VENUE'
+
+        # Parse and normalize opening hours if present
+        if 'opening_hours' in extracted_dict and extracted_dict['opening_hours'] is not None:
+            parsed_hours = parse_opening_hours(extracted_dict['opening_hours'])
+            extracted_dict['opening_hours'] = parsed_hours
 
         # Extract and add OSM ID for deduplication
         osm_id = self._extract_primary_osm_id(elements)

@@ -13,6 +13,7 @@ from typing import Dict, Tuple, Optional
 from engine.extraction.base import BaseExtractor
 from engine.extraction.schema_utils import get_extraction_fields, is_field_in_schema
 from engine.extraction.extractors.google_places_extractor import format_phone_uk, format_postcode_uk
+from engine.extraction.utils.opening_hours import parse_opening_hours
 from engine.schema.types import EntityType
 
 
@@ -153,6 +154,18 @@ class SportScotlandExtractor(BaseExtractor):
 
                 except (ValueError, TypeError):
                     pass
+
+        # Opening hours
+        # Check various possible field names for opening hours
+        opening_hours_raw = (
+            properties.get("opening_hours") or
+            properties.get("open_hours") or
+            properties.get("hours")
+        )
+        if opening_hours_raw:
+            parsed_hours = parse_opening_hours(opening_hours_raw)
+            if parsed_hours:
+                extracted["opening_hours"] = parsed_hours
 
         return extracted
 
