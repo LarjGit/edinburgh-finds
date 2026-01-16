@@ -153,12 +153,12 @@ This plan details the phased implementation of the Data Extraction Engine. Each 
 
 ### Task 4.1: Opening Hours Extraction
 
-- [ ] Write tests for opening hours parsing (`test_opening_hours.py`)
-- [ ] Create test fixtures with various hour formats ("Mon-Fri 9-5", "24/7", structured JSON)
-- [ ] Implement `opening_hours_extractor.py` with LLM template
-- [ ] Define strict JSON schema for opening hours output
-- [ ] Implement validation: 24-hour format, valid times, CLOSED vs null handling
-- [ ] Test with edge cases (24-hour venues, seasonal hours, irregular schedules)
+- [x] Write tests for opening hours parsing (`test_opening_hours.py`) (a1117b3)
+- [x] Create test fixtures with various hour formats ("Mon-Fri 9-5", "24/7", structured JSON) (a1117b3)
+- [x] Implement `opening_hours_extractor.py` with LLM template (a1117b3)
+- [x] Define strict JSON schema for opening hours output (a1117b3)
+- [x] Implement validation: 24-hour format, valid times, CLOSED vs null handling (a1117b3)
+- [x] Test with edge cases (24-hour venues, seasonal hours, irregular schedules) (a1117b3)
 - [ ] Integrate into all extractors
 
 ### Task 4.2: Categories Handling
