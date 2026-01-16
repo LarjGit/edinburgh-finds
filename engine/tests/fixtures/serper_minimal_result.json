@@ -1,0 +1,18 @@
+{
+  "searchParameters": {
+    "q": "padel glasgow westend",
+    "gl": "uk",
+    "hl": "en",
+    "num": 10,
+    "type": "search"
+  },
+  "organic": [
+    {
+      "title": "Westend Padel Club",
+      "link": "https://example.com/westend-padel",
+      "snippet": "Padel courts in Glasgow's West End.",
+      "position": 1
+    }
+  ],
+  "credits": 1
+}

@@ -1,0 +1,44 @@
+{
+  "searchParameters": {
+    "q": "padel edinburgh",
+    "gl": "uk",
+    "hl": "en",
+    "num": 10,
+    "type": "search"
+  },
+  "organic": [
+    {
+      "title": "Game4Padel | Edinburgh Park",
+      "link": "https://www.game4padel.co.uk/edinburgh-park",
+      "snippet": "Welcome to Game4Padel Edinburgh Park, Scotland's premier indoor padel facility. Located at New Park Square in Edinburgh Park, we offer world-class padel courts available for booking. Our venue features 3 indoor courts, coaching sessions, and equipment rental. Open Mon-Fri 7am-10pm, Sat-Sun 8am-9pm. Contact: 0131 539 7071. Rated 4.4 stars with parking available.",
+      "position": 1,
+      "date": "2025-12-15"
+    },
+    {
+      "title": "Edinburgh Indoor Padel Centre - Book Courts Online",
+      "link": "https://edinburghpadel.com",
+      "snippet": "Edinburgh's newest padel venue near Leith. Book your court online today! Indoor and outdoor courts available. 5 courts total, cafe on-site, equipment shop. Address: 45 Ocean Drive, Leith, Edinburgh EH6 6JJ. Call 0131 555 1234 for bookings. We're open 7 days a week from 8am to 10pm.",
+      "position": 2,
+      "date": "2026-01-10"
+    },
+    {
+      "title": "David Lloyd Edinburgh Corstorphine - Padel Courts",
+      "link": "https://www.davidlloyd.co.uk/clubs/edinburgh-corstorphine",
+      "snippet": "Part of the David Lloyd club chain, offering premium facilities including padel courts, gym, spa and restaurant. Membership required. Located in Corstorphine area. Full address: Marine Drive, Edinburgh EH12 9DJ. Highly rated facility with experienced coaches.",
+      "position": 3
+    },
+    {
+      "title": "Padel in Edinburgh - Find Courts Near You",
+      "link": "https://padellocator.co.uk/edinburgh",
+      "snippet": "Looking for padel courts in Edinburgh? There are several excellent venues across the city offering both indoor and outdoor courts. Most venues offer pay-and-play as well as membership options. Prices typically range from £20-40 per hour depending on peak times.",
+      "position": 4
+    },
+    {
+      "title": "Game4Padel Reviews and Information",
+      "link": "https://www.google.com/maps/place/Game4Padel",
+      "snippet": "Game4Padel Edinburgh has received excellent reviews from the padel community. Players praise the court quality, friendly staff, and convenient location near Edinburgh Park train station. The facility has shower facilities and a comfortable lounge area.",
+      "position": 5
+    }
+  ],
+  "credits": 1
+}
