@@ -164,12 +164,12 @@ This plan details the phased implementation of the Data Extraction Engine. Each 
 
 ### Task 4.2: Categories Handling
 
-- [ ] Create `engine/config/canonical_categories.yaml` with initial taxonomy
-- [ ] Write tests for category extraction (`test_categories.py`)
-- [ ] Implement LLM category extraction (free-form, multiple allowed)
-- [ ] Implement canonical category mapping (config-based, manual promotion workflow)
-- [ ] Write tests for category promotion logic
-- [ ] Document category promotion workflow in README
+- [x] Create `engine/config/canonical_categories.yaml` with initial taxonomy (2caaa25)
+- [x] Write tests for category extraction (`test_categories.py`) (2caaa25)
+- [x] Implement LLM category extraction (free-form, multiple allowed) (2caaa25)
+- [x] Implement canonical category mapping (config-based, manual promotion workflow) (2caaa25)
+- [x] Write tests for category promotion logic (2caaa25)
+- [x] Document category promotion workflow in README (2caaa25)
 
 ### Task 4.3: Summary Synthesis (Multi-Stage)
 
