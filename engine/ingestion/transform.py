@@ -1,6 +1,40 @@
 """
 Transform Module - Raw Data to Listing Format
 
+⚠️ DEPRECATION NOTICE ⚠️
+=========================
+
+This module is part of the LEGACY ingestion pipeline and is being superseded
+by the new extraction engine architecture.
+
+**Old Architecture (this file):**
+- Raw data → Transform → Ingest directly to database
+- Tightly coupled transformation and ingestion
+- No standardized interface across sources
+- Limited observability and error handling
+
+**New Architecture (engine/extraction/):**
+- Raw data → Extract (BaseExtractor) → Validate → Merge → Ingest
+- Clean separation of concerns with standardized BaseExtractor interface
+- Schema-driven attribute splitting
+- Built-in validation, quarantine, health monitoring, deduplication
+- Multi-source merging with trust hierarchy
+
+**Migration Path:**
+- New code should use: `engine/extraction/extractors/edinburgh_council_extractor.py`
+- This file remains functional for backward compatibility with existing tests
+- Will be removed in Phase 8 (Integration & End-to-End Testing) after full migration
+
+**For Edinburgh Council data, use:**
+```python
+from engine.extraction.extractors.edinburgh_council_extractor import EdinburghCouncilExtractor
+
+extractor = EdinburghCouncilExtractor()
+extracted = extractor.extract(feature)
+validated = extractor.validate(extracted)
+attributes, discovered = extractor.split_attributes(validated)
+```
+
 This module provides transformation functions that convert raw connector data
 into the format expected by the ingest_venue function. Each connector type
 may have its own transformation logic to map source-specific fields to the
