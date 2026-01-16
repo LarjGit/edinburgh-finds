@@ -113,16 +113,16 @@ This plan details the phased implementation of the Data Extraction Engine. Each 
 
 ### Task 3.2: Serper Extractor
 
-- [ ] Write tests for Serper extraction (`test_serper_extractor.py`)
-- [ ] Create test fixtures: `fixtures/serper_padel_search.json`
-- [ ] Implement `serper_extractor.py` extending BaseExtractor with LLM mode
-- [ ] Create Serper-specific prompt template
-- [ ] Implement snippet aggregation (combine multiple search results)
-- [ ] Handle missing fields gracefully (lots of nulls expected)
-- [ ] Write tests for conflict detection within raw text
-- [ ] Implement conflict resolution logic (recency wins, specificity wins)
-- [ ] Test extraction with real Serper fixtures
-- [ ] Verify confidence scoring for ambiguous fields
+- [x] Write tests for Serper extraction (`test_serper_extractor.py`)
+- [x] Create test fixtures: `fixtures/serper_padel_search.json`
+- [x] Implement `serper_extractor.py` extending BaseExtractor with LLM mode
+- [x] Create Serper-specific prompt template
+- [x] Implement snippet aggregation (combine multiple search results)
+- [x] Handle missing fields gracefully (lots of nulls expected)
+- [x] Write tests for conflict detection within raw text
+- [x] Implement conflict resolution logic (recency wins, specificity wins)
+- [x] Test extraction with real Serper fixtures
+- [x] Verify confidence scoring for ambiguous fields
 
 ### Task 3.3: OSM Extractor
 
