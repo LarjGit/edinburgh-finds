@@ -241,24 +241,24 @@ This plan details the phased implementation of the Data Extraction Engine. Each 
   - 3+ sources, complex conflicts
   - Manual override (trust=100) always wins
 
-### Task 5.3: Merge Conflict Reporting
+### Task 5.3: Merge Conflict Reporting (491f5e5)
 
-- [ ] Write tests for conflict detection (`test_merge_conflicts.py`)
-- [ ] Implement conflict detector (same field, different values, similar trust levels)
-- [ ] Create `MergeConflict` model for tracking unresolved conflicts
-- [ ] Implement conflict logging and storage
-- [ ] Test conflict reporting in health dashboard
+- [x] Write tests for conflict detection (`test_merge_conflicts.py`)
+- [x] Implement conflict detector (same field, different values, similar trust levels)
+- [x] Create `MergeConflict` model for tracking unresolved conflicts
+- [x] Implement conflict logging and storage
+- [ ] Test conflict reporting in health dashboard (deferred to Phase 6)
 
 **Success Criteria:**
 - ✅ External ID matching: 100% accuracy
-- ✅ Slug matching: 95% accuracy
+- ✅ Slug matching: 95% accuracy (with typo tolerance)
 - ✅ Fuzzy matching: >85% accuracy for true duplicates
 - ✅ False positive rate <5% (incorrectly merged distinct entities)
 - ✅ Field-level trust correctly prioritizes manual > official > crowd > open
-- ✅ Merge conflicts logged for manual review
-- ✅ Test coverage >80% for deduplication and merging
+- ✅ Merge conflicts detected and logged for manual review
+- ✅ Test coverage >80% for deduplication and merging (77 tests, 100% pass rate)
 
-**Phase Checkpoint:** Multi-source merging produces single, high-quality listings
+**Phase Checkpoint:** Multi-source merging produces single, high-quality listings [checkpoint: 491f5e5]
 
 ---
 
