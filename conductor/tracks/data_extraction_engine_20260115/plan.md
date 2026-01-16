@@ -59,13 +59,13 @@ This plan details the phased implementation of the Data Extraction Engine. Each 
 
 ### Task 2.2: Sport Scotland Extractor
 
-- [ ] Write tests for Sport Scotland extraction (`test_sport_scotland_extractor.py`)
-- [ ] Create test fixture: `fixtures/sport_scotland_facility_response.json`
-- [ ] Implement `sport_scotland_extractor.py` extending BaseExtractor
-- [ ] Implement GeoJSON feature parsing
-- [ ] Map Sport Scotland fields to venue schema
-- [ ] Handle Sport Scotland-specific attributes (facility types, sports offered)
-- [ ] Test extraction with real Sport Scotland WFS data
+- [x] Write tests for Sport Scotland extraction (`test_sport_scotland_extractor.py`)
+- [x] Create test fixture: `fixtures/sport_scotland_facility_response.json`
+- [x] Implement `sport_scotland_extractor.py` extending BaseExtractor
+- [x] Implement GeoJSON feature parsing
+- [x] Map Sport Scotland fields to venue schema
+- [x] Handle Sport Scotland-specific attributes (facility types, sports offered)
+- [x] Test extraction with real Sport Scotland WFS data
 
 ### Task 2.3: Edinburgh Council Extractor
 
