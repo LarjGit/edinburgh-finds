@@ -314,7 +314,7 @@ This plan details the phased implementation of the Data Extraction Engine. Each 
 - ✅ LLM cost tracked and visible
 - ✅ Test coverage >80% for observability features
 
-**Phase Checkpoint:** Extraction engine observable and resilient
+**Phase Checkpoint:** Extraction engine observable and resilient [checkpoint: 8c2b74b]
 
 ---
 
