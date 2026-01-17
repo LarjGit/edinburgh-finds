@@ -291,11 +291,11 @@ This plan details the phased implementation of the Data Extraction Engine. Each 
 
 ### Task 6.3: Structured Logging
 
-- [ ] Write tests for logging configuration (`test_logging.py`)
-- [ ] Implement structured logging (JSON format with contextual fields)
-- [ ] Add logging to all extractors (info, warning, error levels)
-- [ ] Log extraction metadata: source, duration, tokens, fields extracted, confidence
-- [ ] Test log output format and content
+- [x] Write tests for logging configuration (`test_logging.py`)
+- [x] Implement structured logging (JSON format with contextual fields)
+- [x] Add logging to all extractors (info, warning, error levels)
+- [x] Log extraction metadata: source, duration, tokens, fields extracted, confidence
+- [x] Test log output format and content
 
 ### Task 6.4: LLM Cost Tracking
 
