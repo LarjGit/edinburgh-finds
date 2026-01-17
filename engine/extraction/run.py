@@ -453,13 +453,12 @@ async def run_all_extraction(
     logger.info("Starting batch extraction for all unprocessed records")
 
     # Query for all unprocessed records
-    query_params = {
-        "order_by": {"created_at": "asc"},
-    }
+    query_params = {}
 
     if limit is not None:
         query_params["take"] = limit
 
+    # Note: Prisma Python client doesn't support order_by in kwargs format
     raw_records = await db.rawingestion.find_many(**query_params)
 
     total_records = len(raw_records)

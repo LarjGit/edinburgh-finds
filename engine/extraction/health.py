@@ -132,6 +132,9 @@ def format_health_report(
 ) -> str:
     """Format extraction health metrics for console output."""
     timestamp = metrics.get("timestamp") or _now_utc()
+    # Handle string timestamps (from ISO format)
+    if isinstance(timestamp, str):
+        timestamp = datetime.fromisoformat(timestamp)
     if isinstance(timestamp, datetime) and timestamp.tzinfo is None:
         timestamp = timestamp.replace(tzinfo=timezone.utc)
 
