@@ -324,10 +324,10 @@ This plan details the phased implementation of the Data Extraction Engine. Each 
 
 ### Task 7.1: Single Record Extraction
 
-- [ ] Write tests for CLI single mode (`test_cli_single.py`)
-- [ ] Implement `run.py --raw-id=<uuid>` command
-- [ ] Implement verbose output (field-by-field extraction results)
-- [ ] Test with various RawIngestion record IDs
+- [x] Write tests for CLI single mode (`test_cli_single.py`)
+- [x] Implement `run.py --raw-id=<uuid>` command
+- [x] Implement verbose output (field-by-field extraction results)
+- [x] Test with various RawIngestion record IDs
 
 ### Task 7.2: Per-Source Batch Extraction
 
