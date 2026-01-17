@@ -19,6 +19,9 @@ import instructor
 from pathlib import Path
 import yaml
 
+from engine.extraction.llm_cost import get_usage_tracker, calculate_cost
+from engine.extraction.logging_config import get_extraction_logger, log_llm_call
+
 
 T = TypeVar('T', bound=BaseModel)
 
@@ -79,7 +82,9 @@ class InstructorClient:
         response_model: Type[T],
         context: str,
         system_message: Optional[str] = None,
-        max_retries: int = 2
+        max_retries: int = 2,
+        source: Optional[str] = None,
+        record_id: Optional[str] = None,
     ) -> T:
         """
         Extract structured data using LLM with automatic retry on validation failure.
@@ -90,6 +95,8 @@ class InstructorClient:
             context: The raw data context to extract from
             system_message: Optional custom system message
             max_retries: Maximum number of retry attempts (default: 2)
+            source: Optional data source name for tracking
+            record_id: Optional record ID for tracking
 
         Returns:
             Instance of response_model with extracted data
@@ -156,6 +163,30 @@ class InstructorClient:
                     output_cost = (usage.output_tokens / 1_000_000) * self._output_cost_per_million
                     call_cost = input_cost + output_cost
                     self._total_cost += call_cost
+
+                    # Record usage in global tracker
+                    if source and record_id:
+                        tracker = get_usage_tracker()
+                        tracker.record_usage(
+                            model=self.model_name,
+                            tokens_in=usage.input_tokens,
+                            tokens_out=usage.output_tokens,
+                            source=source,
+                            record_id=record_id,
+                        )
+
+                        # Log the LLM call
+                        logger = get_extraction_logger()
+                        log_llm_call(
+                            logger=logger,
+                            source=source,
+                            record_id=record_id,
+                            model=self.model_name,
+                            tokens_in=usage.input_tokens,
+                            tokens_out=usage.output_tokens,
+                            duration_seconds=0.0,  # Duration tracked by caller
+                            cost_usd=call_cost,
+                        )
 
                 return response
 
