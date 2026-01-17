@@ -1,0 +1,297 @@
+# Monitoring Alert Thresholds Configuration
+#
+# This file defines thresholds for monitoring alerts in the extraction engine.
+# Alerts are categorized by severity: CRITICAL, WARNING, INFO
+#
+# Usage:
+# - Integrate with monitoring system (Datadog, Prometheus, CloudWatch, etc.)
+# - Configure alert notifications (email, Slack, PagerDuty, etc.)
+# - Review and adjust thresholds based on production experience
+
+# ==============================================================================
+# CRITICAL ALERTS - Immediate Action Required
+# ==============================================================================
+
+critical_alerts:
+  # Extraction failure rate exceeds threshold
+  - name: "High Extraction Failure Rate"
+    metric: "extraction_failure_rate"
+    threshold: 0.10  # 10% failure rate
+    description: "More than 10% of extractions are failing"
+    action: |
+      1. Check health dashboard: python -m engine.extraction.health
+      2. Review recent error logs for common patterns
+      3. Verify API keys are valid (ANTHROPIC_API_KEY, connector keys)
+      4. Check database connectivity
+      5. Investigate specific failure messages in FailedExtraction table
+    severity: "CRITICAL"
+    notification_channels: ["email", "pagerduty"]
+
+  # Database connection failures
+  - name: "Database Connection Failures"
+    metric: "database_connection_errors"
+    threshold: 1  # Any connection failure
+    description: "Cannot connect to database"
+    action: |
+      1. Verify database is running
+      2. Check connection string (DATABASE_URL environment variable)
+      3. Verify database credentials
+      4. Check network connectivity to database host
+      5. Review database logs for issues
+    severity: "CRITICAL"
+    notification_channels: ["email", "pagerduty", "slack"]
+
+  # Disk space critically low
+  - name: "Disk Space Critical"
+    metric: "disk_space_free_percent"
+    threshold: 10  # Less than 10% free
+    description: "Disk space below 10% free"
+    action: |
+      1. Check disk usage: df -h
+      2. Identify large files/directories: du -h --max-depth=1 /
+      3. Archive or delete old raw ingestion files (engine/data/raw/)
+      4. Clean up logs if necessary
+      5. Consider increasing disk capacity
+    severity: "CRITICAL"
+    notification_channels: ["email", "slack"]
+
+  # LLM API key invalid or quota exceeded
+  - name: "LLM API Authentication Failure"
+    metric: "llm_api_auth_errors"
+    threshold: 3  # 3 consecutive auth failures
+    description: "Cannot authenticate with LLM API"
+    action: |
+      1. Verify ANTHROPIC_API_KEY environment variable is set
+      2. Check API key validity in Anthropic console
+      3. Verify API quota/credits available
+      4. Check for API service outages (Anthropic status page)
+    severity: "CRITICAL"
+    notification_channels: ["email", "pagerduty"]
+
+# ==============================================================================
+# WARNING ALERTS - Review Within 24 Hours
+# ==============================================================================
+
+warning_alerts:
+  # LLM costs exceed daily budget
+  - name: "High LLM Costs"
+    metric: "llm_cost_per_day_gbp"
+    threshold: 50.0  # £50 per day
+    description: "LLM costs exceed £50/day"
+    action: |
+      1. Check cost breakdown: python -m engine.extraction.health | grep "Estimated Cost"
+      2. Review extraction volume - is it higher than expected?
+      3. Check for retry loops (FailedExtraction with high retry_count)
+      4. Verify cache hit rate - should be >20%
+      5. Consider switching to cheaper model if quality permits
+      6. Review and optimize extraction prompts to reduce token usage
+    severity: "WARNING"
+    notification_channels: ["email", "slack"]
+    budget:
+      daily_limit_gbp: 50.0
+      monthly_limit_gbp: 1000.0
+
+  # Large number of failed extractions
+  - name: "High Failed Extraction Count"
+    metric: "failed_extraction_count"
+    threshold: 100  # More than 100 failed records
+    description: "More than 100 failed extraction records"
+    action: |
+      1. Query FailedExtraction table: SELECT error_message, COUNT(*) FROM FailedExtraction GROUP BY error_message
+      2. Identify common error patterns
+      3. Review source data quality for problematic sources
+      4. Check if specific entity types are failing
+      5. Review and update extraction prompts if needed
+    severity: "WARNING"
+    notification_channels: ["email"]
+
+  # High field null rates indicate data quality issues
+  - name: "High Field Null Rate"
+    metric: "field_null_rate_percent"
+    threshold: 70  # >70% null for critical fields
+    description: "Critical fields have >70% null values"
+    fields: ["entity_name", "street_address", "city", "postcode", "latitude", "longitude"]
+    action: |
+      1. Check health dashboard field null rates
+      2. Review extraction logic for affected fields
+      3. Verify source data contains expected information
+      4. Update field mappings in extractors if needed
+      5. Check LLM prompts for clarity on required fields
+    severity: "WARNING"
+    notification_channels: ["email"]
+
+  # Cache hit rate too low
+  - name: "Low Cache Hit Rate"
+    metric: "cache_hit_rate_percent"
+    threshold: 20  # Less than 20% cache hits
+    description: "LLM cache hit rate below 20%"
+    action: |
+      1. Verify extraction_hash is being computed and stored
+      2. Check for high variance in raw data (preventing cache matches)
+      3. Review cache key computation logic
+      4. Check if raw data is being normalized before hashing
+      5. Analyze cache statistics: use get_cache_stats()
+    severity: "WARNING"
+    notification_channels: ["slack"]
+
+  # Unprocessed backlog growing
+  - name: "Large Unprocessed Backlog"
+    metric: "unprocessed_raw_records"
+    threshold: 1000  # More than 1000 unprocessed records
+    description: "More than 1000 raw ingestion records unprocessed"
+    action: |
+      1. Check extraction throughput: records/hour
+      2. Identify bottlenecks (LLM latency, database writes, etc.)
+      3. Consider increasing extraction frequency
+      4. Evaluate need for parallel processing
+      5. Check for stuck/hanging extraction jobs
+    severity: "WARNING"
+    notification_channels: ["email"]
+
+# ==============================================================================
+# INFO ALERTS - Review Weekly
+# ==============================================================================
+
+info_alerts:
+  # Merge conflicts detected
+  - name: "Merge Conflicts Detected"
+    metric: "merge_conflict_count"
+    threshold: 10  # More than 10 unresolved conflicts
+    description: "Data merge conflicts detected"
+    action: |
+      1. Query MergeConflict table for details
+      2. Review conflicting sources and fields
+      3. Verify trust hierarchy is configured correctly
+      4. Manually resolve high-severity conflicts
+      5. Update trust levels in extraction.yaml if needed
+    severity: "INFO"
+    notification_channels: ["email"]
+    review_frequency: "weekly"
+
+  # Extraction throughput declining
+  - name: "Extraction Throughput Decline"
+    metric: "extraction_throughput_records_per_hour"
+    threshold: 20  # Less than 20 records/hour (if baseline is higher)
+    description: "Extraction throughput declining"
+    action: |
+      1. Compare current throughput to baseline
+      2. Check for increased LLM latency
+      3. Review database query performance
+      4. Check for resource constraints (CPU, memory, network)
+      5. Consider optimizations (async processing, caching, indexing)
+    severity: "INFO"
+    notification_channels: ["slack"]
+    review_frequency: "weekly"
+
+  # Duplicate listings detected
+  - name: "Potential Duplicate Listings"
+    metric: "duplicate_listing_percentage"
+    threshold: 5  # More than 5% suspected duplicates
+    description: "Deduplication may not be working correctly"
+    action: |
+      1. Review deduplication logic (external ID, slug, fuzzy matching)
+      2. Check for false negatives (distinct entities incorrectly merged)
+      3. Check for false positives (duplicates not detected)
+      4. Analyze duplicate detection confidence scores
+      5. Tune fuzzy matching thresholds if needed
+    severity: "INFO"
+    notification_channels: ["email"]
+    review_frequency: "weekly"
+
+# ==============================================================================
+# PERFORMANCE THRESHOLDS
+# ==============================================================================
+
+performance_targets:
+  # Extraction throughput
+  extraction_throughput:
+    target_records_per_hour: 60  # 1 record per minute average
+    minimum_acceptable: 20  # Alert if below this
+
+  # LLM cost efficiency
+  llm_cost:
+    target_cost_per_100_records_gbp: 0.30  # £0.30 per 100 records
+    maximum_acceptable: 0.50  # Alert if above £0.50 per 100
+
+  # Success rates
+  success_rates:
+    deterministic_extractors:
+      target: 1.00  # 100% success
+      minimum_acceptable: 0.95  # 95% minimum
+
+    llm_extractors:
+      target: 0.90  # 90% success
+      minimum_acceptable: 0.85  # 85% minimum
+
+  # Cache effectiveness
+  cache:
+    target_hit_rate: 0.40  # 40% cache hit rate
+    minimum_acceptable: 0.20  # 20% minimum
+
+  # Data quality
+  field_completeness:
+    entity_name: 1.00  # 100% (required field)
+    street_address: 0.80  # 80% target
+    city: 0.85  # 85% target
+    postcode: 0.75  # 75% target
+    latitude: 0.90  # 90% target
+    longitude: 0.90  # 90% target
+    phone: 0.60  # 60% target (often missing)
+    website_url: 0.50  # 50% target (often missing)
+
+# ==============================================================================
+# MONITORING INTERVALS
+# ==============================================================================
+
+monitoring_schedule:
+  # How often to check metrics
+  health_check_interval_minutes: 15  # Run health check every 15 minutes
+  cost_review_interval_hours: 4  # Review costs every 4 hours
+  performance_review_interval_hours: 24  # Daily performance review
+  data_quality_review_interval_hours: 168  # Weekly data quality review (168 hours = 1 week)
+
+  # Alert suppression (prevent alert fatigue)
+  alert_cooldown_minutes: 60  # Don't re-alert for same issue within 1 hour
+  max_alerts_per_hour: 5  # Maximum 5 alerts per hour
+
+# ==============================================================================
+# NOTIFICATION CHANNELS
+# ==============================================================================
+
+notification_channels:
+  email:
+    enabled: true
+    recipients: ["ops@edinburghfinds.co.uk"]
+    severity_filter: ["CRITICAL", "WARNING"]
+
+  slack:
+    enabled: true
+    webhook_url: "${SLACK_WEBHOOK_URL}"  # Set via environment variable
+    channel: "#extraction-alerts"
+    severity_filter: ["CRITICAL", "WARNING", "INFO"]
+
+  pagerduty:
+    enabled: true
+    integration_key: "${PAGERDUTY_INTEGRATION_KEY}"
+    severity_filter: ["CRITICAL"]  # Only page for critical issues
+
+# ==============================================================================
+# HEALTH CHECK COMMANDS
+# ==============================================================================
+
+health_check_commands:
+  # Commands to run for monitoring
+  - name: "Extraction Health"
+    command: "python -m engine.extraction.health"
+    interval_minutes: 15
+    timeout_seconds: 30
+
+  - name: "Cache Statistics"
+    command: "python -c 'import asyncio; from extraction.llm_cache import get_cache_stats; print(asyncio.run(get_cache_stats()))'"
+    interval_minutes: 60
+    timeout_seconds: 10
+
+  - name: "Database Connectivity"
+    command: "python -c 'import asyncio; from prisma import Prisma; db = Prisma(); asyncio.run(db.connect()); print(\"OK\"); asyncio.run(db.disconnect())'"
+    interval_minutes: 5
+    timeout_seconds: 10
