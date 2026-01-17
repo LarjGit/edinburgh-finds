@@ -299,12 +299,12 @@ This plan details the phased implementation of the Data Extraction Engine. Each 
 
 ### Task 6.4: LLM Cost Tracking
 
-- [ ] Write tests for cost calculation (`test_llm_cost.py`)
-- [ ] Implement token counter (from Anthropic API response)
-- [ ] Implement cost estimator (tokens × model pricing)
-- [ ] Add cost tracking to health dashboard
-- [ ] Create CLI command for cost report (`--cost-report`)
-- [ ] Test cost tracking with sample LLM calls
+- [x] Write tests for cost calculation (`test_llm_cost.py`)
+- [x] Implement token counter (from Anthropic API response)
+- [x] Implement cost estimator (tokens × model pricing)
+- [x] Add cost tracking to health dashboard
+- [x] Create CLI command for cost report (`--cost-report`)
+- [x] Test cost tracking with sample LLM calls
 
 **Success Criteria:**
 - ✅ Failed extractions automatically quarantined (don't halt pipeline)
