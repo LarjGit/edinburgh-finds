@@ -340,11 +340,17 @@ engine/config/schemas/
 
 ### Generating Schemas
 
-All Python FieldSpecs and Prisma schemas are auto-generated from YAML:
+All Python FieldSpecs, Prisma schemas, and TypeScript interfaces are auto-generated from YAML:
 
 ```bash
-# Generate all schemas from YAML
+# Generate all Python schemas from YAML
 python -m engine.schema.generate
+
+# Generate Python and TypeScript schemas
+python -m engine.schema.generate --typescript
+
+# Generate TypeScript with Zod validation schemas
+python -m engine.schema.generate --typescript --zod
 
 # Generate specific schema
 python -m engine.schema.generate --schema=listing
@@ -360,6 +366,7 @@ python -m engine.schema.generate --dry-run
 - `engine/schema/listing.py` - Generated from `listing.yaml`
 - `engine/schema/venue.py` - Generated from `venue.yaml`
 - `prisma/schema.prisma` - Generated from YAML schemas
+- `web/types/*.ts` - Generated TypeScript interfaces (when using --typescript)
 
 All generated files include a "GENERATED FILE - DO NOT EDIT" warning.
 

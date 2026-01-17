@@ -17,6 +17,7 @@ from typing import List, Optional, Tuple
 from engine.schema.parser import SchemaParser, SchemaValidationError
 from engine.schema.generators.python_fieldspec import PythonFieldSpecGenerator
 from engine.schema.generators.prisma import PrismaGenerator
+from engine.schema.generators.typescript import TypeScriptGenerator
 
 
 # Color codes for terminal output
@@ -141,6 +142,60 @@ def generate_python_schema(
         return False, f"Error generating from {yaml_file.name}: {e}"
 
 
+def generate_typescript_schema(
+    yaml_file: Path,
+    output_dir: Path,
+    include_zod: bool = False,
+    dry_run: bool = False,
+    force: bool = False
+) -> Tuple[bool, str]:
+    """
+    Generate TypeScript interface file from YAML schema.
+
+    Args:
+        yaml_file: Path to YAML schema file
+        output_dir: Directory to write generated file
+        include_zod: If True, generate Zod schemas
+        dry_run: If True, don't write file
+        force: If True, overwrite without prompt
+
+    Returns:
+        Tuple of (success: bool, message: str)
+    """
+    try:
+        # Parse YAML
+        parser = SchemaParser()
+        schema = parser.parse(yaml_file)
+
+        # Generate TypeScript code
+        generator = TypeScriptGenerator(include_zod=include_zod)
+        generated_code = generator.generate_file(schema)
+
+        # Determine output file name
+        output_file = output_dir / f"{yaml_file.stem}.ts"
+
+        if dry_run:
+            return True, f"Would generate: {output_file}"
+
+        # Create output directory if it doesn't exist
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        # Check if file exists and prompt if not force
+        if output_file.exists() and not force:
+            response = input(f"File {output_file} exists. Overwrite? [y/N] ")
+            if response.lower() != 'y':
+                return False, f"Skipped: {output_file}"
+
+        # Write file
+        output_file.write_text(generated_code, encoding='utf-8')
+        return True, f"Generated: {output_file}"
+
+    except SchemaValidationError as e:
+        return False, f"Validation error in {yaml_file.name}: {e}"
+    except Exception as e:
+        return False, f"Error generating from {yaml_file.name}: {e}"
+
+
 def validate_schema_sync(schema_dir: Path, python_dir: Path) -> Tuple[bool, List[str]]:
     """
     Validate that YAML schemas match generated Python schemas.
@@ -227,8 +282,14 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Generate all schemas
+  # Generate all schemas (Python only)
   python -m engine.schema.generate
+
+  # Generate Python and TypeScript schemas
+  python -m engine.schema.generate --typescript
+
+  # Generate TypeScript with Zod validation schemas
+  python -m engine.schema.generate --typescript --zod
 
   # Validate schemas are in sync
   python -m engine.schema.generate --validate
@@ -295,6 +356,24 @@ Examples:
         help='Disable colored output'
     )
 
+    parser.add_argument(
+        '--typescript',
+        action='store_true',
+        help='Generate TypeScript interfaces'
+    )
+
+    parser.add_argument(
+        '--zod',
+        action='store_true',
+        help='Include Zod schemas (requires --typescript)'
+    )
+
+    parser.add_argument(
+        '--typescript-output-dir',
+        type=Path,
+        help='Output directory for TypeScript files (default: web/types)'
+    )
+
     args = parser.parse_args()
 
     # Disable colors if requested or not a TTY
@@ -305,6 +384,12 @@ Examples:
     project_root = Path(__file__).parent.parent.parent
     schema_dir = args.schema_dir or (project_root / "engine" / "config" / "schemas")
     output_dir = args.output_dir or (project_root / "engine" / "schema")
+    typescript_output_dir = args.typescript_output_dir or (project_root / "web" / "types")
+
+    # Validate Zod flag
+    if args.zod and not args.typescript:
+        print_error("--zod requires --typescript flag")
+        sys.exit(1)
 
     # Validate mode
     if args.validate:
@@ -343,6 +428,7 @@ Examples:
     for yaml_file in yaml_files:
         print(f"\n{colorize('Processing:', Colors.BOLD)} {yaml_file.name}")
 
+        # Generate Python schema
         success, message = generate_python_schema(
             yaml_file,
             output_dir,
@@ -351,13 +437,30 @@ Examples:
         )
 
         if success:
-            print_success(message)
+            print_success(f"Python: {message}")
             success_count += 1
             if not args.dry_run:
                 generated_files.append(output_dir / f"{yaml_file.stem}.py")
         else:
-            print_error(message)
+            print_error(f"Python: {message}")
             error_count += 1
+
+        # Generate TypeScript schema if requested
+        if args.typescript:
+            ts_success, ts_message = generate_typescript_schema(
+                yaml_file,
+                typescript_output_dir,
+                include_zod=args.zod,
+                dry_run=args.dry_run,
+                force=args.force
+            )
+
+            if ts_success:
+                print_success(f"TypeScript: {ts_message}")
+                success_count += 1
+            else:
+                print_error(f"TypeScript: {ts_message}")
+                error_count += 1
 
     # Format files if requested
     if args.format and generated_files and not args.dry_run:
