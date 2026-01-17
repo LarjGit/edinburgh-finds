@@ -49,6 +49,13 @@ model Listing {
   incomingRelationships ListingRelationship[] @relation("TargetListing")
   outgoingRelationships ListingRelationship[] @relation("SourceListing")
   categories            Category[]            @relation("CategoryToListing")
+
+  @@index([entityType])
+  @@index([city])
+  @@index([postcode])
+  @@index([latitude, longitude])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model ListingRelationship {
@@ -86,6 +93,8 @@ model ExtractedListing {
   @@index([source])
   @@index([entity_type])
   @@index([extraction_hash])
+  @@index([source, entity_type])
+  @@index([createdAt])
 }
 
 model FailedExtraction {
@@ -103,6 +112,8 @@ model FailedExtraction {
   @@index([raw_ingestion_id])
   @@index([source])
   @@index([retry_count])
+  @@index([last_attempt_at])
+  @@index([retry_count, last_attempt_at])
 }
 
 model MergeConflict {
@@ -141,4 +152,7 @@ model RawIngestion {
   @@index([source])
   @@index([status])
   @@index([hash])
+  @@index([ingested_at])
+  @@index([source, status])
+  @@index([status, ingested_at])
 }
