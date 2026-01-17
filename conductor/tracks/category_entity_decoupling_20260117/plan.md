@@ -4,9 +4,9 @@
 - [x] **Refactor Taxonomy Configuration** (a3d903f)
     - [x] Edit `engine/config/canonical_categories.yaml`: Remove `parent: venue` from all sports.
     - [x] Create a new top-level conceptual grouping (optional) or just keep them flat.
-- [ ] **Update Category Mapper**
-    - [ ] Modify `engine/extraction/utils/category_mapper.py` to remove reliance on hierarchy for validation or pathing.
-    - [ ] Update `get_category_hierarchy` to reflect the flat structure (or deprecate it if no longer useful).
+- [x] **Update Category Mapper** (c7b2072)
+    - [x] Modify `engine/extraction/utils/category_mapper.py` to remove reliance on hierarchy for validation or pathing.
+    - [x] Update `get_category_hierarchy` to reflect the flat structure (or deprecate it if no longer useful).
 
 ## Phase 2: Extraction Engine Updates
 - [ ] **Update Extraction Models**
