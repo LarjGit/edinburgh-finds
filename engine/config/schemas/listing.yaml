@@ -44,6 +44,17 @@ fields:
         - called
         - named
 
+  - name: entity_type
+    type: string
+    description: Type of entity (venue, retailer, cafe, event, members_club, etc)
+    nullable: false
+    required: true
+    index: true
+    python:
+      type_annotation: "EntityType"
+    prisma:
+      type: "String"  # String in SQLite, Enum in PostgreSQL
+
   - name: slug
     type: string
     description: URL-safe version of entity name (auto-generated)
@@ -71,6 +82,7 @@ fields:
   # ------------------------------------------------------------------
   # CLASSIFICATION
   # ------------------------------------------------------------------
+
   - name: categories
     type: list[string]
     description: Raw free-form categories detected by the LLM (uncontrolled labels)
@@ -86,3 +98,204 @@ fields:
     prisma:
       type: "Category[]"  # Relation in Prisma
       skip: true  # Will be handled as a relation, not a simple field
+
+  - name: canonical_categories
+    type: list[string]
+    description: Cleaned, controlled categories used for navigation and taxonomy
+    nullable: true
+    exclude: true  # Auto-generated from categories
+    python:
+      sa_column: "Column(ARRAY(String))"
+
+  # ------------------------------------------------------------------
+  # FLEXIBLE ATTRIBUTE BUCKET
+  # ------------------------------------------------------------------
+  - name: discovered_attributes
+    type: json
+    description: Dictionary containing any extra attributes not explicitly defined in Listing or Entity models
+    nullable: true
+    python:
+      sa_column: "Column(JSON)"
+
+  # ------------------------------------------------------------------
+  # LOCATION
+  # ------------------------------------------------------------------
+  - name: street_address
+    type: string
+    description: Full street address including building number, street name, city and postcode
+    nullable: true
+    search:
+      category: location
+      keywords:
+        - address
+        - location
+        - street
+
+  - name: city
+    type: string
+    description: City or town
+    nullable: true
+    index: true
+    search:
+      category: location
+      keywords:
+        - city
+        - town
+
+  - name: postcode
+    type: string
+    description: Full UK postcode with correct spacing (e.g., 'SW1A 0AA')
+    nullable: true
+    index: true
+    search:
+      category: location
+      keywords:
+        - postcode
+        - postal code
+        - zip
+
+  - name: country
+    type: string
+    description: Country name
+    nullable: true
+    search:
+      category: location
+      keywords:
+        - country
+
+  - name: latitude
+    type: float
+    description: WGS84 Latitude coordinate (decimal degrees)
+    nullable: true
+
+  - name: longitude
+    type: float
+    description: WGS84 Longitude coordinate (decimal degrees)
+    nullable: true
+
+  # ------------------------------------------------------------------
+  # CONTACT
+  # ------------------------------------------------------------------
+  - name: phone
+    type: string
+    description: Primary contact phone number with country code. MUST be E.164 UK format (e.g. '+441315397071')
+    nullable: true
+    search:
+      category: contact
+      keywords:
+        - phone
+        - telephone
+        - contact
+
+  - name: email
+    type: string
+    description: Primary public email address
+    nullable: true
+    search:
+      category: contact
+      keywords:
+        - email
+        - contact
+
+  - name: website_url
+    type: string
+    description: Official website URL
+    nullable: true
+    search:
+      category: contact
+      keywords:
+        - website
+        - url
+        - site
+
+  # ------------------------------------------------------------------
+  # SOCIAL MEDIA
+  # ------------------------------------------------------------------
+  - name: instagram_url
+    type: string
+    description: Instagram profile URL or handle
+    nullable: true
+
+  - name: facebook_url
+    type: string
+    description: Facebook page URL
+    nullable: true
+
+  - name: twitter_url
+    type: string
+    description: Twitter/X profile URL or handle
+    nullable: true
+
+  - name: linkedin_url
+    type: string
+    description: LinkedIn company page URL
+    nullable: true
+
+  # ------------------------------------------------------------------
+  # OPENING HOURS
+  # ------------------------------------------------------------------
+  - name: opening_hours
+    type: json
+    description: "Opening hours per day. May contain strings or nested open/close times. Example: {'monday': {'open': '05:30', 'close': '22:00'}, 'sunday': 'CLOSED'}"
+    nullable: true
+    python:
+      sa_column: "Column(JSON)"
+    search:
+      category: hours
+      keywords:
+        - hours
+        - opening
+        - times
+
+  # ------------------------------------------------------------------
+  # METADATA (excluded from extraction)
+  # ------------------------------------------------------------------
+  - name: source_info
+    type: json
+    description: "Provenance metadata: URLs, method (tavily/manual), timestamps, notes"
+    nullable: false
+    default: dict
+    exclude: true
+    python:
+      default: "default_factory=dict"
+      sa_column: "Column(JSON)"
+
+  - name: field_confidence
+    type: json
+    description: Per-field confidence scores used for overwrite decisions
+    nullable: false
+    default: dict
+    exclude: true
+    python:
+      default: "default_factory=dict"
+      sa_column: "Column(JSON)"
+
+  - name: created_at
+    type: datetime
+    description: Creation timestamp
+    nullable: true
+    exclude: true
+    python:
+      sa_column: "Column(DateTime(timezone=True), nullable=False, server_default=func.now())"
+    prisma:
+      attributes:
+        - "@default(now())"
+
+  - name: updated_at
+    type: datetime
+    description: Last update timestamp
+    nullable: true
+    exclude: true
+    python:
+      sa_column: "Column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())"
+    prisma:
+      attributes:
+        - "@updatedAt"
+
+  - name: external_ids
+    type: json
+    description: "External system IDs (e.g., {'wordpress': 123, 'google': 'abc'})"
+    nullable: true
+    exclude: true
+    python:
+      sa_column: "Column(JSON)"

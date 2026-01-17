@@ -43,13 +43,16 @@ class PythonFieldSpecGenerator:
         Raises:
             ValueError: If field type is not supported
         """
-        if field.type not in self.TYPE_MAP:
-            raise ValueError(
-                f"Unsupported type '{field.type}'. "
-                f"Supported types: {', '.join(sorted(self.TYPE_MAP.keys()))}"
-            )
-
-        base_type = self.TYPE_MAP[field.type]
+        # Check for explicit type_annotation override in python metadata
+        if field.python and "type_annotation" in field.python:
+            base_type = field.python["type_annotation"]
+        else:
+            if field.type not in self.TYPE_MAP:
+                raise ValueError(
+                    f"Unsupported type '{field.type}'. "
+                    f"Supported types: {', '.join(sorted(self.TYPE_MAP.keys()))}"
+                )
+            base_type = self.TYPE_MAP[field.type]
 
         # Wrap in Optional if nullable
         if field.nullable:
@@ -74,6 +77,7 @@ class PythonFieldSpecGenerator:
         # Track which typing imports we need
         typing_imports = set()
         needs_datetime = False
+        needs_entity_type = False
 
         # Always need List for the LISTING_FIELDS/VENUE_SPECIFIC_FIELDS declaration
         typing_imports.add("List")
@@ -96,6 +100,12 @@ class PythonFieldSpecGenerator:
             if field.type == "datetime":
                 needs_datetime = True
 
+            # Check for custom type annotations
+            if field.python and "type_annotation" in field.python:
+                type_annotation = field.python["type_annotation"]
+                if "EntityType" in type_annotation:
+                    needs_entity_type = True
+
         # Build import lines
         import_lines = []
 
@@ -110,6 +120,10 @@ class PythonFieldSpecGenerator:
 
         # Add core import
         import_lines.append("from .core import FieldSpec")
+
+        # Add EntityType import if needed
+        if needs_entity_type:
+            import_lines.append("from .types import EntityType")
 
         return "\n".join(import_lines)
 
@@ -148,8 +162,11 @@ class PythonFieldSpecGenerator:
             params.append('exclude=True')
 
         # Handle default value
+        # Check for python-specific default override first
+        if field.python and "default" in field.python:
+            params.append(f'default="{field.python["default"]}"')
         # Special case: cuid() in YAML becomes "None" in Python
-        if field.default is not None:
+        elif field.default is not None:
             if field.default == "cuid()":
                 params.append('default="None"')
             elif field.default == "null":

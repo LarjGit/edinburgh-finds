@@ -12,34 +12,742 @@ schema:
   name: Venue
   description: Venue-specific fields for sports facilities
   extends: Listing
-
 fields:
-  # ------------------------------------------------------------------
-  # RACQUET SPORTS - Tennis
-  # ------------------------------------------------------------------
-  - name: tennis_summary
-    type: string
-    description: A short overall description of the tennis facilities summarising all gathered data
-    nullable: true
-
-  - name: tennis
-    type: boolean
-    description: Whether tennis is available at this venue
-    nullable: true
-    search:
-      category: racquet_sports
-      keywords:
-        - tennis
-        - courts
-        - indoor
-        - outdoor
-
-  - name: tennis_total_courts
-    type: integer
-    description: Total number of tennis courts
-    nullable: true
-    search:
-      category: racquet_sports
-      keywords:
-        - tennis
-        - courts
+- name: listing_id
+  description: Foreign key to parent Listing
+  type: string
+  nullable: false
+  exclude: true
+  primary_key: true
+  foreign_key: listings.listing_id
+- name: tennis_summary
+  description: A short overall description of the tennis facilities summarising all
+    gathered data
+  type: string
+  nullable: true
+- name: tennis
+  description: Whether tennis is available at this venue
+  type: boolean
+  nullable: true
+  search:
+    category: racquet_sports
+    keywords:
+    - tennis
+    - courts
+    - indoor
+    - outdoor
+- name: tennis_total_courts
+  description: Total number of tennis courts
+  type: integer
+  nullable: true
+  search:
+    category: racquet_sports
+    keywords:
+    - tennis
+    - courts
+- name: tennis_indoor_courts
+  description: Number of indoor tennis courts
+  type: integer
+  nullable: true
+  search:
+    category: racquet_sports
+    keywords:
+    - indoor
+    - tennis
+    - courts
+- name: tennis_outdoor_courts
+  description: Number of outdoor tennis courts
+  type: integer
+  nullable: true
+  search:
+    category: racquet_sports
+    keywords:
+    - outdoor
+    - tennis
+    - courts
+- name: tennis_covered_courts
+  description: Number of covered (but not fully indoor) tennis courts
+  type: integer
+  nullable: true
+  search:
+    category: racquet_sports
+    keywords:
+    - covered
+    - tennis
+    - courts
+- name: tennis_floodlit_courts
+  description: Number of floodlit tennis courts for evening play
+  type: integer
+  nullable: true
+  search:
+    category: racquet_sports
+    keywords:
+    - floodlit
+    - tennis
+    - courts
+- name: padel_summary
+  description: A short overall description of the padel facilities summarising all
+    gathered data
+  type: string
+  nullable: true
+- name: padel
+  description: Whether padel is available at this venue
+  type: boolean
+  nullable: true
+  search:
+    category: racquet_sports
+    keywords:
+    - padel
+    - courts
+- name: padel_total_courts
+  description: Total number of padel courts
+  type: integer
+  nullable: true
+  search:
+    category: racquet_sports
+    keywords:
+    - padel
+    - courts
+- name: pickleball_summary
+  description: A short overall description of the pickleball facilities summarising
+    all gathered data
+  type: string
+  nullable: true
+- name: pickleball
+  description: Whether pickleball is available at this venue
+  type: boolean
+  nullable: true
+  search:
+    category: racquet_sports
+    keywords:
+    - pickleball
+- name: pickleball_total_courts
+  description: Total number of pickleball courts
+  type: integer
+  nullable: true
+  search:
+    category: racquet_sports
+    keywords:
+    - pickleball
+    - courts
+- name: badminton_summary
+  description: A short overall description of the badminton facilities summarising
+    all gathered data
+  type: string
+  nullable: true
+- name: badminton
+  description: Whether badminton is available at this venue
+  type: boolean
+  nullable: true
+  search:
+    category: racquet_sports
+    keywords:
+    - badminton
+- name: badminton_total_courts
+  description: Total number of badminton courts
+  type: integer
+  nullable: true
+  search:
+    category: racquet_sports
+    keywords:
+    - badminton
+    - courts
+- name: squash_summary
+  description: A short overall description of the squash facilities summarising all
+    gathered data
+  type: string
+  nullable: true
+- name: squash
+  description: Whether squash is available at this venue
+  type: boolean
+  nullable: true
+  search:
+    category: racquet_sports
+    keywords:
+    - squash
+- name: squash_total_courts
+  description: Total number of squash courts
+  type: integer
+  nullable: true
+  search:
+    category: racquet_sports
+    keywords:
+    - squash
+    - courts
+- name: squash_glass_back_courts
+  description: Number of squash courts with glass back walls
+  type: integer
+  nullable: true
+  search:
+    category: racquet_sports
+    keywords:
+    - glass
+    - back
+    - squash
+    - courts
+- name: table_tennis_summary
+  description: A short overall description of the table tennis facilities summarising
+    all gathered data
+  type: string
+  nullable: true
+- name: table_tennis
+  description: Whether table tennis is available at this venue
+  type: boolean
+  nullable: true
+  search:
+    category: racquet_sports
+    keywords:
+    - table
+    - tennis
+- name: table_tennis_total_tables
+  description: Total number of table tennis tables
+  type: integer
+  nullable: true
+  search:
+    category: racquet_sports
+    keywords:
+    - table
+    - tennis
+    - tables
+- name: football_summary
+  description: A short overall description of the football facilities summarising
+    all gathered data
+  type: string
+  nullable: true
+- name: football_5_a_side
+  description: Whether 5-a-side football is available
+  type: boolean
+  nullable: true
+  search:
+    category: football
+    keywords:
+    - football
+    - pitches
+    - 5-a-side
+- name: football_5_a_side_total_pitches
+  description: Total number of 5-a-side pitches
+  type: integer
+  nullable: true
+  search:
+    category: football
+    keywords:
+    - 5-a-side
+    - pitches
+- name: football_7_a_side
+  description: Whether 7-a-side football is available
+  type: boolean
+  nullable: true
+  search:
+    category: football
+    keywords:
+    - football
+    - pitches
+    - 7-a-side
+- name: football_7_a_side_total_pitches
+  description: Total number of 7-a-side pitches
+  type: integer
+  nullable: true
+  search:
+    category: football
+    keywords:
+    - 7-a-side
+    - pitches
+- name: football_11_a_side
+  description: Whether full-size 11-a-side football is available
+  type: boolean
+  nullable: true
+  search:
+    category: football
+    keywords:
+    - 11-a-side
+    - football
+- name: football_11_a_side_total_pitches
+  description: Total number of full-size 11-a-side pitches
+  type: integer
+  nullable: true
+  search:
+    category: football
+    keywords:
+    - 11-a-side
+    - pitches
+- name: swimming_summary
+  description: A short overall description of the swimming facilities summarising
+    all gathered data
+  type: string
+  nullable: true
+- name: indoor_pool
+  description: Whether an indoor swimming pool is available
+  type: boolean
+  nullable: true
+  search:
+    category: swimming
+    keywords:
+    - swimming
+    - pool
+    - indoor
+    - pool
+- name: outdoor_pool
+  description: Whether an outdoor swimming pool is available
+  type: boolean
+  nullable: true
+  search:
+    category: swimming
+    keywords:
+    - outdoor
+    - pool
+- name: indoor_pool_length_m
+  description: Length of the indoor pool in metres
+  type: integer
+  nullable: true
+  search:
+    category: swimming
+    keywords:
+    - pool
+    - length
+- name: outdoor_pool_length_m
+  description: Length of the outdoor pool in metres
+  type: integer
+  nullable: true
+  search:
+    category: swimming
+    keywords:
+    - outdoor
+    - pool
+    - length
+- name: family_swim
+  description: Whether family swim sessions are available
+  type: boolean
+  nullable: true
+  search:
+    category: swimming
+    keywords:
+    - family
+    - swim
+- name: adult_only_swim
+  description: Whether adult-only swim sessions are available
+  type: boolean
+  nullable: true
+  search:
+    category: swimming
+    keywords:
+    - adult
+    - swim
+- name: swimming_lessons
+  description: Whether swimming lessons are offered
+  type: boolean
+  nullable: true
+  search:
+    category: swimming
+    keywords:
+    - swimming
+    - lessons
+- name: gym_summary
+  description: A short overall description of the gym facilities summarising all gathered
+    data
+  type: string
+  nullable: true
+- name: gym_available
+  description: Whether a gym/fitness centre is available
+  type: boolean
+  nullable: true
+  search:
+    category: gym_fitness
+    keywords:
+    - gym
+    - fitness
+- name: gym_size
+  description: Size of the gym measured in number of stations
+  type: integer
+  nullable: true
+  search:
+    category: gym_fitness
+    keywords:
+    - gym
+    - size
+    - stations
+- name: classes_summary
+  description: A short overall description of the classes available summarising all
+    gathered data
+  type: string
+  nullable: true
+- name: classes_per_week
+  description: Total number of fitness classes offered per week
+  type: integer
+  nullable: true
+  search:
+    category: gym_fitness
+    keywords:
+    - fitness
+    - classes
+- name: hiit_classes
+  description: Whether HIIT (High Intensity Interval Training) classes are offered
+  type: boolean
+  nullable: true
+  search:
+    category: gym_fitness
+    keywords:
+    - HIIT
+    - classes
+- name: yoga_classes
+  description: Whether yoga classes are offered
+  type: boolean
+  nullable: true
+  search:
+    category: gym_fitness
+    keywords:
+    - yoga
+    - classes
+- name: pilates_classes
+  description: Whether pilates classes are offered
+  type: boolean
+  nullable: true
+  search:
+    category: gym_fitness
+    keywords:
+    - pilates
+    - classes
+- name: strength_classes
+  description: Whether strength/weights classes are offered
+  type: boolean
+  nullable: true
+  search:
+    category: gym_fitness
+    keywords:
+    - strength
+    - classes
+    - weights
+- name: cycling_studio
+  description: Whether an indoor cycling/spin studio is available
+  type: boolean
+  nullable: true
+  search:
+    category: gym_fitness
+    keywords:
+    - cycling
+    - studio
+    - spin
+- name: functional_training_zone
+  description: Whether a functional training zone is available
+  type: boolean
+  nullable: true
+  search:
+    category: gym_fitness
+    keywords:
+    - functional
+    - training
+    - zone
+- name: spa_summary
+  description: A short overall description of the spa and wellness facilities summarising
+    all gathered data
+  type: string
+  nullable: true
+- name: spa_available
+  description: Whether spa facilities are available
+  type: boolean
+  nullable: true
+  search:
+    category: spa_wellness
+    keywords:
+    - spa
+- name: sauna
+  description: Whether a sauna is available
+  type: boolean
+  nullable: true
+  search:
+    category: spa_wellness
+    keywords:
+    - sauna
+- name: steam_room
+  description: Whether a steam room is available
+  type: boolean
+  nullable: true
+  search:
+    category: spa_wellness
+    keywords:
+    - steam
+    - room
+- name: hydro_pool
+  description: Whether a hydrotherapy pool is available
+  type: boolean
+  nullable: true
+  search:
+    category: spa_wellness
+    keywords:
+    - hydro
+    - pool
+    - hydrotherapy
+- name: hot_tub
+  description: Whether a hot tub/jacuzzi is available
+  type: boolean
+  nullable: true
+  search:
+    category: spa_wellness
+    keywords:
+    - hot
+    - tub
+    - jacuzzi
+- name: outdoor_spa
+  description: Whether outdoor spa facilities are available
+  type: boolean
+  nullable: true
+  search:
+    category: spa_wellness
+    keywords:
+    - outdoor
+    - spa
+- name: ice_cold_plunge
+  description: Whether an ice bath or cold plunge pool is available
+  type: boolean
+  nullable: true
+  search:
+    category: spa_wellness
+    keywords:
+    - ice
+    - bath
+    - cold
+    - plunge
+- name: relaxation_area
+  description: Whether a dedicated relaxation area is available
+  type: boolean
+  nullable: true
+  search:
+    category: spa_wellness
+    keywords:
+    - relaxation
+    - area
+- name: amenities_summary
+  description: A short overall description of the amenities available (eg. bar, restaurant,
+    cafe etc) summarising all gathered data
+  type: string
+  nullable: true
+- name: restaurant
+  description: Whether an on-site restaurant is available
+  type: boolean
+  nullable: true
+  search:
+    category: dining
+    keywords:
+    - restaurant
+- name: bar
+  description: Whether an on-site bar is available
+  type: boolean
+  nullable: true
+  search:
+    category: dining
+    keywords:
+    - bar
+- name: cafe
+  description: Whether an on-site cafe is available
+  type: boolean
+  nullable: true
+  search:
+    category: dining
+    keywords:
+    - cafe
+- name: childrens_menu
+  description: Whether a children's menu is available at dining facilities
+  type: boolean
+  nullable: true
+  search:
+    category: dining
+    keywords:
+    - childrens
+    - menu
+    - kids
+    - food
+- name: wifi
+  description: Whether free WiFi is available
+  type: boolean
+  nullable: true
+  search:
+    category: dining
+    keywords:
+    - wifi
+    - internet
+- name: family_summary
+  description: A short overall description of the family and children facilities (eg.
+    creche, kids lessons, holiday club, play area etc) summarising all gathered data
+  type: string
+  nullable: true
+- name: creche_available
+  description: Whether a creche/childcare facility is available
+  type: boolean
+  nullable: true
+  search:
+    category: family_kids
+    keywords:
+    - creche
+    - childcare
+- name: creche_age_min
+  description: Minimum age accepted at the creche (in months or years depending on
+    venue)
+  type: integer
+  nullable: true
+  search:
+    category: family_kids
+    keywords:
+    - creche
+    - ages
+- name: creche_age_max
+  description: Maximum age accepted at the creche (in years)
+  type: integer
+  nullable: true
+  search:
+    category: family_kids
+    keywords:
+    - creche
+    - ages
+- name: kids_swimming_lessons
+  description: Whether swimming lessons for children are offered
+  type: boolean
+  nullable: true
+  search:
+    category: family_kids
+    keywords:
+    - kids
+    - swimming
+    - lessons
+    - children
+- name: kids_tennis_lessons
+  description: Whether tennis lessons for children are offered
+  type: boolean
+  nullable: true
+  search:
+    category: family_kids
+    keywords:
+    - kids
+    - tennis
+    - lessons
+    - children
+- name: holiday_club
+  description: Whether a holiday club/camp for children is available
+  type: boolean
+  nullable: true
+  search:
+    category: family_kids
+    keywords:
+    - holiday
+    - camp
+    - club
+- name: play_area
+  description: Whether a children's play area is available
+  type: boolean
+  nullable: true
+  search:
+    category: family_kids
+    keywords:
+    - kids
+    - play
+    - area
+    - children
+- name: parking_and_transport_summary
+  description: A short overall description of the parking and transport facilities
+    summarising all gathered data
+  type: string
+  nullable: true
+- name: parking_spaces
+  description: Total number of parking spaces available
+  type: integer
+  nullable: true
+  search:
+    category: parking
+    keywords:
+    - parking
+    - spaces
+- name: disabled_parking
+  description: Whether disabled parking spaces are available
+  type: boolean
+  nullable: true
+  search:
+    category: parking
+    keywords:
+    - disabled
+    - parking
+    - accessible
+- name: parent_child_parking
+  description: Whether parent and child parking spaces are available
+  type: boolean
+  nullable: true
+  search:
+    category: parking
+    keywords:
+    - parent
+    - child
+    - parking
+    - family
+- name: ev_charging_available
+  description: Whether electric vehicle charging points are available
+  type: boolean
+  nullable: true
+  search:
+    category: parking
+    keywords:
+    - EV
+    - charging
+    - electric
+    - vehicle
+- name: ev_charging_connectors
+  description: Number of EV charging connectors available
+  type: integer
+  nullable: true
+  search:
+    category: parking
+    keywords:
+    - EV
+    - charging
+    - connectors
+- name: public_transport_nearby
+  description: Whether public transport links are nearby
+  type: boolean
+  nullable: true
+  search:
+    category: parking
+    keywords:
+    - public
+    - transport
+    - bus
+    - train
+- name: nearest_railway_station
+  description: Name of the nearest railway station
+  type: string
+  nullable: true
+  search:
+    category: parking
+    keywords:
+    - nearest
+    - railway
+    - station
+    - train
+- name: reviews_summary
+  description: A short overall description of reviews and social proof (eg. rating,
+    review count, likes etc) summarising all gathered data
+  type: string
+  nullable: true
+- name: review_count
+  description: Total number of reviews across all platforms
+  type: integer
+  nullable: true
+  search:
+    category: general
+    keywords:
+    - reviews
+    - ratings
+- name: google_review_count
+  description: Number of Google reviews
+  type: integer
+  nullable: true
+  search:
+    category: general
+    keywords:
+    - google
+    - reviews
+- name: facebook_likes
+  description: Number of Facebook page likes
+  type: integer
+  nullable: true
+  search:
+    category: general
+    keywords:
+    - facebook
+    - likes
+    - social
