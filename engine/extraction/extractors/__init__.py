@@ -10,11 +10,13 @@ from .sport_scotland_extractor import SportScotlandExtractor
 from .edinburgh_council_extractor import EdinburghCouncilExtractor
 from .open_charge_map_extractor import OpenChargeMapExtractor
 from .serper_extractor import SerperExtractor
+from .osm_extractor import OSMExtractor
 
 __all__ = [
     'GooglePlacesExtractor',
     'SportScotlandExtractor',
     'EdinburghCouncilExtractor',
     'OpenChargeMapExtractor',
-    'SerperExtractor'
+    'SerperExtractor',
+    'OSMExtractor'
 ]
