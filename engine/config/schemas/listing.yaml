@@ -106,6 +106,8 @@ fields:
     exclude: true  # Auto-generated from categories
     python:
       sa_column: "Column(ARRAY(String))"
+    prisma:
+      skip: true  # Relation or custom handling in Prisma
 
   # ------------------------------------------------------------------
   # FLEXIBLE ATTRIBUTE BUCKET
@@ -253,22 +255,24 @@ fields:
   - name: source_info
     type: json
     description: "Provenance metadata: URLs, method (tavily/manual), timestamps, notes"
-    nullable: false
+    nullable: true
     default: dict
     exclude: true
     python:
       default: "default_factory=dict"
       sa_column: "Column(JSON)"
+      type_annotation: "Dict[str, Any]"
 
   - name: field_confidence
     type: json
     description: Per-field confidence scores used for overwrite decisions
-    nullable: false
+    nullable: true
     default: dict
     exclude: true
     python:
       default: "default_factory=dict"
       sa_column: "Column(JSON)"
+      type_annotation: "Dict[str, float]"
 
   - name: created_at
     type: datetime
