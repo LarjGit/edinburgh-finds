@@ -277,17 +277,17 @@ This plan details the phased implementation of the Data Extraction Engine. Each 
 
 ### Task 6.2: Health Dashboard
 
-- [ ] Write tests for health metrics calculation (`test_health_metrics.py`)
-- [ ] Implement `health_check.py` with metrics:
+- [x] Write tests for health metrics calculation (`test_health_metrics.py`)
+- [x] Implement `health_check.py` with metrics:
   - Unprocessed record count
   - Success rate per source
   - Field null rates
   - Recent failures
   - LLM usage and cost estimation
   - Merge conflict count
-- [ ] Implement CLI health command (`python -m engine.extraction.health`)
-- [ ] Create formatted output (table, colors for warnings)
-- [ ] Test health dashboard with sample data
+- [x] Implement CLI health command (`python -m engine.extraction.health`)
+- [x] Create formatted output (table, colors for warnings)
+- [x] Test health dashboard with sample data
 
 ### Task 6.3: Structured Logging
 
