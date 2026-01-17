@@ -1,0 +1,45 @@
+# ============================================================
+# VENUE SCHEMA - Venue-specific fields
+# ============================================================
+# This schema extends the base Listing schema.
+# Venue-specific fields for sports facilities.
+#
+# DO NOT EDIT GENERATED FILES (venue.py)
+# Edit this YAML file and regenerate instead.
+# ============================================================
+
+schema:
+  name: Venue
+  description: Venue-specific fields for sports facilities
+  extends: Listing
+
+fields:
+  # ------------------------------------------------------------------
+  # RACQUET SPORTS - Tennis
+  # ------------------------------------------------------------------
+  - name: tennis_summary
+    type: string
+    description: A short overall description of the tennis facilities summarising all gathered data
+    nullable: true
+
+  - name: tennis
+    type: boolean
+    description: Whether tennis is available at this venue
+    nullable: true
+    search:
+      category: racquet_sports
+      keywords:
+        - tennis
+        - courts
+        - indoor
+        - outdoor
+
+  - name: tennis_total_courts
+    type: integer
+    description: Total number of tennis courts
+    nullable: true
+    search:
+      category: racquet_sports
+      keywords:
+        - tennis
+        - courts
