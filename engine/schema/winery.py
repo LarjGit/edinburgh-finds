@@ -3,7 +3,7 @@
 # ============================================================
 #
 # Generated from: engine/config/schemas/winery.yaml
-# Generated at: 2026-01-17 17:49:14
+# Generated at: 2026-01-17 17:59:57
 #
 # To make changes:
 # 1. Edit engine/config/schemas/winery.yaml

@@ -3,7 +3,7 @@
 # ============================================================
 #
 # Generated from: engine/config/schemas/listing.yaml
-# Generated at: 2026-01-17 17:49:14
+# Generated at: 2026-01-17 17:59:57
 #
 # To make changes:
 # 1. Edit engine/config/schemas/listing.yaml
@@ -264,3 +264,25 @@ LISTING_FIELDS: List[FieldSpec] = [
         sa_column="Column(JSON)",
     )
 ]
+
+def get_field_by_name(name: str) -> Optional[FieldSpec]:
+    """Get field spec by name."""
+    for field_spec in LISTING_FIELDS:
+        if field_spec.name == name:
+            return field_spec
+    return None
+
+
+def get_fields_with_search_metadata() -> List[FieldSpec]:
+    """Get all Listing fields that have search metadata."""
+    return [f for f in LISTING_FIELDS if f.search_category is not None]
+
+
+def get_extraction_fields() -> List[FieldSpec]:
+    """Get all Listing fields for LLM extraction (excludes internal fields)."""
+    return [f for f in LISTING_FIELDS if not f.exclude]
+
+
+def get_database_fields() -> List[FieldSpec]:
+    """Get all Listing fields for database (includes internal/excluded fields)."""
+    return LISTING_FIELDS

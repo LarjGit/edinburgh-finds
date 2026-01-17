@@ -398,6 +398,11 @@ class TestSchemaInheritance(unittest.TestCase):
         # Should use LISTING_FIELDS name
         self.assertIn("LISTING_FIELDS", result)
 
+        # Should have helper functions (now generated for base schemas too)
+        self.assertIn("def get_field_by_name(name: str)", result)
+        self.assertIn("def get_extraction_fields()", result)
+        self.assertIn("def get_database_fields()", result)
+
 
 class TestFieldSpecGeneration(unittest.TestCase):
     """Test FieldSpec code generation from FieldDefinition."""

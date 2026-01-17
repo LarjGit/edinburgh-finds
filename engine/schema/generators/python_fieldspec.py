@@ -278,38 +278,43 @@ class PythonFieldSpecGenerator:
         lines.append("]")
         lines.append("")
 
-        # If schema extends another, add combined fields list and helper functions
+        # Determine the field list name to use in helper functions
         if schema.extends:
             parent_fields = f"{schema.extends.upper()}_FIELDS"
             combined_fields = f"{schema.name.upper()}_FIELDS"
 
-            # Add combined fields list
+            # Add combined fields list for inherited schemas
             lines.append(f"{combined_fields}: List[FieldSpec] = {parent_fields} + {field_list_name}")
             lines.append("")
             lines.append("")
 
-            # Add helper functions
-            lines.append("def get_field_by_name(name: str) -> Optional[FieldSpec]:")
-            lines.append("    \"\"\"Get field spec by name.\"\"\"")
-            lines.append(f"    for field_spec in {combined_fields}:")
-            lines.append("        if field_spec.name == name:")
-            lines.append("            return field_spec")
-            lines.append("    return None")
-            lines.append("")
-            lines.append("")
-            lines.append("def get_fields_with_search_metadata() -> List[FieldSpec]:")
-            lines.append(f"    \"\"\"Get all {schema.name} fields that have search metadata.\"\"\"")
-            lines.append(f"    return [f for f in {combined_fields} if f.search_category is not None]")
-            lines.append("")
-            lines.append("")
-            lines.append("def get_extraction_fields() -> List[FieldSpec]:")
-            lines.append(f"    \"\"\"Get all {schema.name} fields for LLM extraction (excludes internal fields).\"\"\"")
-            lines.append(f"    return [f for f in {combined_fields} if not f.exclude]")
-            lines.append("")
-            lines.append("")
-            lines.append("def get_database_fields() -> List[FieldSpec]:")
-            lines.append(f"    \"\"\"Get all {schema.name} fields for database (includes internal/excluded fields).\"\"\"")
-            lines.append(f"    return {combined_fields}")
-            lines.append("")
+            fields_var = combined_fields
+        else:
+            # For base schemas, use the field list directly
+            fields_var = field_list_name
+
+        # Add helper functions for all schemas (base and inherited)
+        lines.append("def get_field_by_name(name: str) -> Optional[FieldSpec]:")
+        lines.append("    \"\"\"Get field spec by name.\"\"\"")
+        lines.append(f"    for field_spec in {fields_var}:")
+        lines.append("        if field_spec.name == name:")
+        lines.append("            return field_spec")
+        lines.append("    return None")
+        lines.append("")
+        lines.append("")
+        lines.append("def get_fields_with_search_metadata() -> List[FieldSpec]:")
+        lines.append(f"    \"\"\"Get all {schema.name} fields that have search metadata.\"\"\"")
+        lines.append(f"    return [f for f in {fields_var} if f.search_category is not None]")
+        lines.append("")
+        lines.append("")
+        lines.append("def get_extraction_fields() -> List[FieldSpec]:")
+        lines.append(f"    \"\"\"Get all {schema.name} fields for LLM extraction (excludes internal fields).\"\"\"")
+        lines.append(f"    return [f for f in {fields_var} if not f.exclude]")
+        lines.append("")
+        lines.append("")
+        lines.append("def get_database_fields() -> List[FieldSpec]:")
+        lines.append(f"    \"\"\"Get all {schema.name} fields for database (includes internal/excluded fields).\"\"\"")
+        lines.append(f"    return {fields_var}")
+        lines.append("")
 
         return "\n".join(lines)
