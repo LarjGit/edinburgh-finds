@@ -8,10 +8,11 @@ import argparse
 import asyncio
 import json
 import time
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 from pathlib import Path
 
 from prisma import Prisma
+from tqdm import tqdm
 
 from engine.extraction.extractors import (
     GooglePlacesExtractor,
@@ -234,6 +235,167 @@ async def run_single_extraction(
         }
 
 
+async def run_source_extraction(
+    db: Prisma,
+    source: str,
+    limit: Optional[int] = None,
+) -> Dict:
+    """
+    Extract all RawIngestion records from a specific source.
+
+    Args:
+        db: Prisma database client
+        source: Source name (e.g., "google_places", "serper")
+        limit: Optional limit on number of records to process
+
+    Returns:
+        Dict: Summary report with counts, duration, and cost estimate
+    """
+    logger.info(f"Starting batch extraction for source: {source}")
+
+    # Query for unprocessed records from this source
+    query_params = {
+        "where": {
+            "source": source,
+        },
+        "order_by": {"created_at": "asc"},
+    }
+
+    if limit is not None:
+        query_params["take"] = limit
+
+    raw_records = await db.rawingestion.find_many(**query_params)
+
+    total_records = len(raw_records)
+    logger.info(f"Found {total_records} records for source: {source}")
+
+    if total_records == 0:
+        return {
+            "status": "success",
+            "source": source,
+            "total_records": 0,
+            "successful": 0,
+            "failed": 0,
+            "already_extracted": 0,
+            "duration": 0.0,
+            "cost_estimate": 0.0,
+        }
+
+    # Track metrics
+    successful = 0
+    failed = 0
+    already_extracted = 0
+    start_time = time.time()
+    llm_calls = 0
+    total_cost = 0.0
+
+    # Process each record with progress bar
+    with tqdm(total=total_records, desc=f"Extracting {source}", unit="record") as pbar:
+        for raw_record in raw_records:
+            try:
+                # Check if already extracted
+                existing = await db.extractedlisting.find_first(
+                    where={"raw_ingestion_id": raw_record.id}
+                )
+
+                if existing:
+                    already_extracted += 1
+                    pbar.update(1)
+                    pbar.set_postfix(
+                        success=successful,
+                        failed=failed,
+                        skipped=already_extracted,
+                    )
+                    continue
+
+                # Load raw data
+                raw_data_path = Path(raw_record.file_path)
+                with open(raw_data_path, "r", encoding="utf-8") as f:
+                    raw_data = json.load(f)
+
+                # Get extractor
+                extractor = get_extractor_for_source(raw_record.source)
+
+                # Extract
+                extracted = extractor.extract(raw_data)
+                validated = extractor.validate(extracted)
+                attributes, discovered_attributes = extractor.split_attributes(validated)
+
+                # Prepare external IDs
+                external_ids = {}
+                if "external_id" in validated:
+                    external_ids[f"{raw_record.source}_id"] = validated["external_id"]
+
+                # Get entity type
+                entity_type = validated.get("entity_type", "VENUE")
+
+                # Track LLM usage if model_used is present
+                model_used = validated.get("model_used")
+                if model_used:
+                    llm_calls += 1
+                    # Estimate cost (simplified - actual cost varies by model)
+                    # Haiku: ~$0.25 per 1M input tokens, ~$1.25 per 1M output tokens
+                    # Rough estimate: ~2000 tokens per call, ~$0.002 per call
+                    total_cost += 0.002
+
+                # Create ExtractedListing
+                await db.extractedlisting.create(
+                    data={
+                        "raw_ingestion_id": raw_record.id,
+                        "source": raw_record.source,
+                        "entity_type": entity_type,
+                        "attributes": json.dumps(attributes),
+                        "discovered_attributes": json.dumps(discovered_attributes),
+                        "external_ids": json.dumps(external_ids),
+                        "model_used": model_used,
+                    }
+                )
+
+                successful += 1
+
+            except Exception as e:
+                # Log error and record failed extraction
+                logger.error(f"Failed to extract {raw_record.id}: {str(e)}")
+
+                await record_failed_extraction(
+                    db,
+                    raw_ingestion_id=raw_record.id,
+                    source=raw_record.source,
+                    error_message=str(e),
+                )
+
+                failed += 1
+
+            # Update progress bar
+            pbar.update(1)
+            pbar.set_postfix(
+                success=successful,
+                failed=failed,
+                skipped=already_extracted,
+            )
+
+    duration = time.time() - start_time
+
+    logger.info(
+        f"Batch extraction complete for {source}: "
+        f"{successful} successful, {failed} failed, "
+        f"{already_extracted} already extracted, "
+        f"duration: {duration:.2f}s"
+    )
+
+    return {
+        "status": "success",
+        "source": source,
+        "total_records": total_records,
+        "successful": successful,
+        "failed": failed,
+        "already_extracted": already_extracted,
+        "duration": duration,
+        "cost_estimate": total_cost,
+        "llm_calls": llm_calls,
+    }
+
+
 def format_verbose_output(result: Dict) -> str:
     """
     Format extraction result for verbose CLI output.
@@ -299,6 +461,47 @@ def format_verbose_output(result: Dict) -> str:
     return "\n".join(lines)
 
 
+def format_summary_report(result: Dict) -> str:
+    """
+    Format extraction summary for batch mode.
+
+    Args:
+        result: Extraction summary dictionary
+
+    Returns:
+        str: Formatted summary string
+    """
+    lines = []
+    lines.append("")
+    lines.append("=" * 80)
+    lines.append("BATCH EXTRACTION SUMMARY")
+    lines.append("=" * 80)
+    lines.append(f"Source:            {result['source']}")
+    lines.append(f"Total Records:     {result['total_records']}")
+    lines.append(f"✓ Successful:      {result['successful']}")
+    lines.append(f"✗ Failed:          {result['failed']}")
+    lines.append(f"⊙ Already Extracted: {result['already_extracted']}")
+    lines.append(f"Duration:          {result['duration']:.2f}s")
+
+    if result['total_records'] > 0:
+        avg_time = result['duration'] / result['total_records']
+        lines.append(f"Avg per record:    {avg_time:.2f}s")
+
+    if result.get('llm_calls', 0) > 0:
+        lines.append(f"LLM Calls:         {result['llm_calls']}")
+        lines.append(f"Estimated Cost:    ${result['cost_estimate']:.4f}")
+
+    # Success rate
+    if result['total_records'] > 0:
+        success_rate = (result['successful'] / result['total_records']) * 100
+        lines.append(f"Success Rate:      {success_rate:.1f}%")
+
+    lines.append("=" * 80)
+    lines.append("")
+
+    return "\n".join(lines)
+
+
 async def run_cli(args) -> int:
     """
     Run the CLI with parsed arguments.
@@ -340,8 +543,22 @@ async def run_cli(args) -> int:
 
             return 0 if result["status"] in ["success", "already_extracted"] else 1
 
+        elif args.source:
+            # Per-source batch extraction mode
+            result = await run_source_extraction(
+                db,
+                source=args.source,
+                limit=args.limit,
+            )
+
+            # Always print summary report for batch mode
+            print(format_summary_report(result))
+
+            # Return 0 if at least some records were successful
+            return 0 if result["successful"] > 0 or result["total_records"] == 0 else 1
+
         else:
-            print("Error: --raw-id is required")
+            print("Error: Either --raw-id or --source is required")
             return 1
 
     finally:
@@ -361,10 +578,20 @@ def main() -> int:
         help="Extract a single RawIngestion record by ID",
     )
     parser.add_argument(
+        "--source",
+        type=str,
+        help="Extract all records from a specific source (e.g., google_places, serper)",
+    )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        help="Limit the number of records to process (for testing)",
+    )
+    parser.add_argument(
         "--verbose",
         action="store_true",
         default=True,
-        help="Display detailed field-by-field extraction results (default: True)",
+        help="Display detailed field-by-field extraction results (default: True, only for --raw-id)",
     )
     parser.add_argument(
         "--quiet",

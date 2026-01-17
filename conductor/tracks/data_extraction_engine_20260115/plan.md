@@ -331,11 +331,11 @@ This plan details the phased implementation of the Data Extraction Engine. Each 
 
 ### Task 7.2: Per-Source Batch Extraction
 
-- [ ] Write tests for CLI per-source mode (`test_cli_source.py`)
-- [ ] Implement `run.py --source=<source_name>` command
-- [ ] Implement progress bar for batch processing
-- [ ] Implement summary report (success/failure counts, time, cost)
-- [ ] Test with each source type
+- [x] Write tests for CLI per-source mode (`test_cli_source.py`)
+- [x] Implement `run.py --source=<source_name>` command
+- [x] Implement progress bar for batch processing
+- [x] Implement summary report (success/failure counts, time, cost)
+- [x] Test with each source type
 
 ### Task 7.3: Batch All Unprocessed
 
