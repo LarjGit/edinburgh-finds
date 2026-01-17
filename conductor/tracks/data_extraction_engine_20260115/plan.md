@@ -373,14 +373,14 @@ This plan details the phased implementation of the Data Extraction Engine. Each 
 
 ### Task 8.1: End-to-End Test Suite
 
-- [ ] Write end-to-end test: Ingest → Extract → Merge → Verify Listing created
-- [ ] Test scenario 1: Single source, single venue (Google Places)
-- [ ] Test scenario 2: Multi-source, same venue (Google + OSM + Serper)
-- [ ] Test scenario 3: Discovery ingestion, new venue extraction
+- [x] Write end-to-end test: Ingest → Extract → Merge → Verify Listing created (3786ea6)
+- [x] Test scenario 1: Single source, single venue (Google Places) (3786ea6)
+- [x] Test scenario 2: Multi-source, same venue (Google + OSM + Serper) (3786ea6)
+- [x] Test scenario 3: Discovery ingestion, new venue extraction (3786ea6)
 - [ ] Test scenario 4: Entity-specific ingestion, targeted extraction
-- [ ] Test scenario 5: Conflicting data from multiple sources, trust hierarchy resolves
-- [ ] Test scenario 6: Failed extraction, quarantine, retry, success
-- [ ] Verify all tests use fixtures (no real API calls in tests)
+- [x] Test scenario 5: Conflicting data from multiple sources, trust hierarchy resolves (3786ea6)
+- [x] Test scenario 6: Failed extraction, quarantine, retry, success (3786ea6)
+- [x] Verify all tests use fixtures (no real API calls in tests) (3786ea6)
 
 ### Task 8.2: Snapshot Validation
 
