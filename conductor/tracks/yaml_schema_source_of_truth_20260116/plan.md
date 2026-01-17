@@ -16,7 +16,7 @@ This plan details the phased implementation of YAML-based schema generation to e
 
 - [x] Research existing schema formats (JSON Schema, OpenAPI) for inspiration
 - [x] Design YAML schema format with all required metadata fields
-- [x] Write example `base.yaml` with 3-5 fields as proof of concept
+- [x] Write example `listing.yaml` with 3-5 fields as proof of concept
 - [x] Write tests for YAML parser (`test_schema_parser.py`)
 - [x] Implement `parser.py` - parse YAML to internal SchemaDefinition objects
 - [x] Add validation: required fields, valid types, constraint checks
@@ -35,12 +35,13 @@ This plan details the phased implementation of YAML-based schema generation to e
 **Phase 1 Status:** ✅ COMPLETE
 
 **Completion Details:**
-- Created YAML schema format in `engine/config/schemas/base.yaml`
+- Created YAML schema format in `engine/config/schemas/listing.yaml`
 - Implemented parser in `engine/schema/parser.py`
 - Created comprehensive test suite: 19 tests, all passing
 - Parser supports: field type validation, required field checks, malformed YAML handling
 - Supported types: string, integer, float, boolean, datetime, json, list[T]
 - Test coverage: 100% of parser functionality
+- **Naming convention:** listing.yaml → listing.py, venue.yaml → venue.py
 
 ---
 
@@ -89,12 +90,12 @@ This plan details the phased implementation of YAML-based schema generation to e
 ### Task 2.4: Entity-Specific Schemas
 
 - [ ] Write tests for venue-specific field generation
-- [ ] Implement schema inheritance (venue extends base)
+- [ ] Implement schema inheritance (venue extends listing)
 - [ ] Generate VENUE_SPECIFIC_FIELDS list
 - [ ] Test generated venue.py matches manual version
 
 **Success Criteria:**
-- ✅ Generate listing.py from base.yaml (exact match to manual)
+- ✅ Generate listing.py from listing.yaml (exact match to manual)
 - ✅ Generate venue.py from venue.yaml (exact match to manual)
 - ✅ Generated files are valid Python, import correctly
 - ✅ All FieldSpec attributes preserved
@@ -174,7 +175,7 @@ This plan details the phased implementation of YAML-based schema generation to e
 ### Task 4.1: Create Base YAML Schema
 
 - [ ] Audit current `listing.py` for all fields
-- [ ] Create `engine/config/schemas/base.yaml`
+- [ ] Create `engine/config/schemas/listing.yaml`
 - [ ] Convert each LISTING_FIELDS entry to YAML
 - [ ] Preserve all metadata (descriptions, search keywords, etc.)
 - [ ] Validate YAML parses correctly
@@ -186,7 +187,7 @@ This plan details the phased implementation of YAML-based schema generation to e
 - [ ] Audit current `venue.py` for all fields
 - [ ] Create `engine/config/schemas/venue.yaml`
 - [ ] Convert each VENUE_SPECIFIC_FIELDS entry to YAML
-- [ ] Set up inheritance: `extends: base`
+- [ ] Set up inheritance: `extends: listing`
 - [ ] Validate YAML parses correctly
 - [ ] Generate venue.py from YAML
 - [ ] Diff generated vs manual venue.py (should match exactly)
@@ -194,9 +195,9 @@ This plan details the phased implementation of YAML-based schema generation to e
 ### Task 4.3: Create Validation Tests
 
 - [ ] Write `test_schema_sync.py` - validates all schemas match YAML
-- [ ] Test: Parse base.yaml → Generate listing.py → Compare to manual
+- [ ] Test: Parse listing.yaml → Generate listing.py → Compare to manual
 - [ ] Test: Parse venue.yaml → Generate venue.py → Compare to manual
-- [ ] Test: Parse base.yaml → Generate schema.prisma → Compare to manual
+- [ ] Test: Parse listing.yaml → Generate schema.prisma → Compare to manual
 - [ ] Test: Detect if manual files are edited (checksum validation)
 - [ ] Run validation tests in CI
 - [ ] Document how to run validation locally
@@ -210,7 +211,7 @@ This plan details the phased implementation of YAML-based schema generation to e
 - [ ] Run all extraction tests (89 tests should pass)
 
 **Success Criteria:**
-- ✅ base.yaml and venue.yaml created
+- ✅ listing.yaml and venue.yaml created
 - ✅ Generated schemas match manual schemas exactly
 - ✅ Validation tests pass
 - ✅ All existing tests pass (89 extraction tests)
@@ -393,12 +394,12 @@ This plan details the phased implementation of YAML-based schema generation to e
 ## Checkpoints for User Verification
 
 **After Phase 2:**
-- Run: `python -m engine.schema.generate --schema=base`
+- Run: `python -m engine.schema.generate --schema=listing`
 - Verify: Generated `listing.py` matches current manual version exactly
 - Confirm: All imports work, no syntax errors
 
 **After Phase 3:**
-- Run: `python -m engine.schema.generate --schema=base`
+- Run: `python -m engine.schema.generate --schema=listing`
 - Verify: Generated `schema.prisma` matches current manual version
 - Confirm: `prisma validate` passes, `prisma format` shows no changes
 

@@ -1,5 +1,5 @@
 # ============================================================
-# BASE SCHEMA - Common fields for all entity types
+# LISTING SCHEMA - Common fields for all entity types
 # ============================================================
 # This is the single source of truth for the Listing model.
 # All entity-specific schemas (venue, retailer, etc.) extend this.

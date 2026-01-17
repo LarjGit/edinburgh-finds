@@ -29,7 +29,7 @@ def schemas_dir(tmp_path):
 
 @pytest.fixture
 def valid_base_yaml(schemas_dir):
-    """Create a valid base.yaml for testing."""
+    """Create a valid listing.yaml for testing."""
     content = """
 schema:
   name: Listing
@@ -68,19 +68,19 @@ fields:
         - categories
         - type
 """
-    file_path = schemas_dir / "base.yaml"
+    file_path = schemas_dir / "listing.yaml"
     file_path.write_text(content)
     return file_path
 
 
 @pytest.fixture
 def inherited_yaml(schemas_dir):
-    """Create a schema that extends base."""
+    """Create a schema that extends listing."""
     content = """
 schema:
   name: Venue
   description: Venue-specific schema
-  extends: base
+  extends: listing
 
 fields:
   - name: listing_id
@@ -185,7 +185,7 @@ def test_parse_inherited_schema(inherited_yaml):
     schema_def = parser.parse(inherited_yaml)
 
     assert schema_def.name == "Venue"
-    assert schema_def.extends == "base"
+    assert schema_def.extends == "listing"
     assert len(schema_def.fields) == 2
 
 
