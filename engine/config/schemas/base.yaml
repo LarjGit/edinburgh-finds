@@ -1,0 +1,88 @@
+# ============================================================
+# BASE SCHEMA - Common fields for all entity types
+# ============================================================
+# This is the single source of truth for the Listing model.
+# All entity-specific schemas (venue, retailer, etc.) extend this.
+#
+# DO NOT EDIT GENERATED FILES (listing.py, schema.prisma)
+# Edit this YAML file and regenerate instead.
+# ============================================================
+
+schema:
+  name: Listing
+  description: Base schema for all entity types (venues, retailers, coaches, etc.)
+  extends: null
+
+fields:
+  # ------------------------------------------------------------------
+  # IDENTIFICATION
+  # ------------------------------------------------------------------
+  - name: listing_id
+    type: string
+    description: Unique identifier (auto-generated)
+    nullable: false
+    required: false  # Auto-generated, so not required in input
+    primary_key: true
+    exclude: true  # Auto-generated, not for LLM extraction
+    default: cuid()
+    prisma:
+      name: id  # Different name in Prisma
+      attributes:
+        - "@id"
+        - "@default(cuid())"
+
+  - name: entity_name
+    type: string
+    description: Official name of the entity
+    nullable: false
+    required: true
+    index: true
+    search:
+      category: identity
+      keywords:
+        - name
+        - called
+        - named
+
+  - name: slug
+    type: string
+    description: URL-safe version of entity name (auto-generated)
+    nullable: false
+    required: false
+    unique: true
+    index: true
+    exclude: true  # Auto-generated
+    default: null
+
+  # ------------------------------------------------------------------
+  # SUMMARY / DESCRIPTION
+  # ------------------------------------------------------------------
+  - name: summary
+    type: string
+    description: A short overall description of the entity summarising all gathered data
+    nullable: true
+    search:
+      category: description
+      keywords:
+        - description
+        - about
+        - overview
+
+  # ------------------------------------------------------------------
+  # CLASSIFICATION
+  # ------------------------------------------------------------------
+  - name: categories
+    type: list[string]
+    description: Raw free-form categories detected by the LLM (uncontrolled labels)
+    nullable: true
+    search:
+      category: categories
+      keywords:
+        - categories
+        - type
+        - kind
+    python:
+      sa_column: "Column(ARRAY(String))"
+    prisma:
+      type: "Category[]"  # Relation in Prisma
+      skip: true  # Will be handled as a relation, not a simple field
