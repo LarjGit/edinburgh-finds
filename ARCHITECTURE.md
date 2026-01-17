@@ -168,6 +168,192 @@ erDiagram
     }
 ```
 
+### 2.4. YAML-Based Schema Generation System
+
+Edinburgh Finds uses a **YAML-first schema generation system** to maintain a single source of truth for all entity schemas. This architecture eliminates schema drift, enables rapid horizontal scaling to new entity types, and automates the generation of Python FieldSpecs, Prisma schemas, and TypeScript types.
+
+#### Philosophy: YAML as Single Source of Truth
+
+**The Problem**: Manually maintaining schemas across multiple languages (Python, Prisma, TypeScript) leads to:
+- Schema drift between languages
+- Copy-paste errors
+- Hours wasted on boilerplate
+- Difficulty adding new entity types
+
+**The Solution**: Define schemas once in YAML, generate everything else automatically.
+
+```
+engine/config/schemas/*.yaml  →  [Parser]  →  [Generators]  →  Outputs
+                                                    ↓
+                                              - Python FieldSpecs
+                                              - Prisma schemas
+                                              - TypeScript types (future)
+```
+
+#### Schema Inheritance
+
+All entity-specific schemas (Venue, Winery, etc.) **extend** the base `Listing` schema, inheriting 27 common fields:
+
+```yaml
+# winery.yaml
+schema:
+  name: Winery
+  extends: Listing  # Inherits all 27 Listing fields
+
+fields:
+  - name: grape_varieties
+    type: list[string]
+    description: Grape varieties grown
+    # ... 11 more winery-specific fields
+```
+
+**Generated Output**:
+```python
+# winery.py (auto-generated)
+WINERY_SPECIFIC_FIELDS: List[FieldSpec] = [...]  # 12 fields
+WINERY_FIELDS: List[FieldSpec] = LISTING_FIELDS + WINERY_SPECIFIC_FIELDS  # 39 total
+```
+
+#### CLI Tool
+
+Schema generation is managed via a comprehensive CLI:
+
+```bash
+# Generate all schemas
+python -m engine.schema.generate
+
+# Validate no drift
+python -m engine.schema.generate --validate
+
+# Generate specific schema
+python -m engine.schema.generate --schema winery
+```
+
+The CLI provides:
+- **Colored output** (green ✓, red ✗, yellow ⚠, blue ℹ)
+- **Dry-run mode** (`--dry-run`) for safe previews
+- **Validation mode** (`--validate`) with exit codes for CI/CD
+- **Force mode** (`--force`) for automation
+- **Format integration** (`--format`) with Black
+
+#### Supported Field Types
+
+| YAML Type | Python Type | Prisma Type | Description |
+|-----------|-------------|-------------|-------------|
+| `string` | `str` / `Optional[str]` | `String` / `String?` | Text fields |
+| `integer` | `int` / `Optional[int]` | `Int` / `Int?` | Whole numbers |
+| `float` | `float` / `Optional[float]` | `Float` / `Float?` | Decimals |
+| `boolean` | `bool` / `Optional[bool]` | `Boolean` / `Boolean?` | True/False |
+| `datetime` | `datetime` / `Optional[datetime]` | `DateTime` / `DateTime?` | Timestamps |
+| `json` | `Dict[str, Any]` | `String` (SQLite) / `Json` (PostgreSQL) | JSON data |
+| `list[string]` | `List[str]` / `Optional[List[str]]` | `prisma.skip: true` or relation | Arrays |
+
+#### Field Metadata
+
+YAML schemas support rich metadata for AI extraction, database constraints, and search:
+
+```yaml
+- name: grape_varieties
+  type: list[string]
+  description: Grape varieties grown or featured
+  nullable: true
+
+  # Search metadata (for LLM extraction)
+  search:
+    category: viticulture
+    keywords:
+      - grapes
+      - varieties
+      - cultivars
+
+  # Database constraints
+  index: true
+  unique: false
+
+  # Generator overrides
+  python:
+    sa_column: "Column(ARRAY(String))"
+  prisma:
+    skip: true  # Handle as relation
+```
+
+#### Adding New Entity Types
+
+Adding a new entity type (e.g., Restaurant, Museum, Gallery) takes **~30 minutes**:
+
+1. **Create YAML**: Define fields in `engine/config/schemas/restaurant.yaml`
+2. **Generate**: Run `python -m engine.schema.generate --schema restaurant`
+3. **Use**: Import and use in extractors: `from engine.schema.restaurant import RESTAURANT_FIELDS`
+
+**Before YAML system**: 2-4 hours of manual FieldSpec writing, Prisma schema updates, keeping in sync
+**After YAML system**: 30 minutes to write YAML, 5 seconds to generate everything
+
+#### Example: Winery Entity
+
+The system includes a **Winery** entity as a proof-of-concept for horizontal scaling:
+
+**Fields** (12 winery-specific + 27 inherited = 39 total):
+- Viticulture: `grape_varieties`, `appellation`, `vineyard_size_hectares`, `organic_certified`
+- Wine Production: `wine_types`, `annual_production_bottles`
+- Visitor Experience: `tasting_room`, `tours_available`, `reservation_required`, `event_space`
+- Summary: `winery_summary`
+
+**Usage**:
+```python
+from engine.schema.winery import WINERY_FIELDS, get_extraction_fields
+
+# Get fields for LLM extraction (excludes internal fields)
+extraction_fields = get_extraction_fields()  # 30 fields
+```
+
+#### CI/CD Integration
+
+The validation system integrates with CI/CD pipelines:
+
+```bash
+# In GitHub Actions / CI pipeline
+python -m engine.schema.generate --validate --no-color
+
+# Exit codes:
+# 0 = schemas in sync
+# 1 = schema drift detected
+```
+
+**Pre-commit hook example**:
+```bash
+#!/bin/bash
+python -m engine.schema.generate --validate --no-color
+if [ $? -ne 0 ]; then
+  echo "Schema drift detected! Run: python -m engine.schema.generate --force"
+  exit 1
+fi
+```
+
+#### Benefits
+
+**Development Speed**:
+- Add new entity types in <30 minutes vs 2-4 hours
+- Zero schema drift - YAML is always correct
+- No manual FieldSpec writing
+- Automatic helper functions generation
+
+**Code Quality**:
+- Type-safe generation
+- Consistent patterns across all entities
+- Comprehensive validation tests
+- Generated file warnings prevent manual edits
+
+**Horizontal Scaling**:
+- Already supports: Listing (base), Venue (sports facilities), Winery (proof-of-concept)
+- Easy to add: Restaurant, Hotel, Gallery, Theater, Museum, etc.
+- Each new entity inherits 27 fields + adds specific fields
+
+#### Documentation
+
+- **[Schema Management Guide](./docs/schema_management.md)** - Comprehensive CLI and YAML reference
+- **[Adding Entity Types Tutorial](./docs/adding_entity_type.md)** - Step-by-step walkthrough
+- **[Conductor Track Plan](./conductor/tracks/yaml_schema_source_of_truth_20260116/plan.md)** - Implementation details
+
 ## 3. Data Ingestion & Pipeline Architecture
 
 The platform is fueled by an autonomous Python-based data engine (`engine/`) that runs independently of the user-facing web application.

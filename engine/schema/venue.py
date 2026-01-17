@@ -3,7 +3,7 @@
 # ============================================================
 #
 # Generated from: engine/config/schemas/venue.yaml
-# Generated at: 2026-01-17 17:37:42
+# Generated at: 2026-01-17 17:49:14
 #
 # To make changes:
 # 1. Edit engine/config/schemas/venue.yaml
@@ -762,3 +762,28 @@ VENUE_SPECIFIC_FIELDS: List[FieldSpec] = [
         search_keywords=["facebook", "likes", "social"],
     )
 ]
+
+VENUE_FIELDS: List[FieldSpec] = LISTING_FIELDS + VENUE_SPECIFIC_FIELDS
+
+
+def get_field_by_name(name: str) -> Optional[FieldSpec]:
+    """Get field spec by name."""
+    for field_spec in VENUE_FIELDS:
+        if field_spec.name == name:
+            return field_spec
+    return None
+
+
+def get_fields_with_search_metadata() -> List[FieldSpec]:
+    """Get all Venue fields that have search metadata."""
+    return [f for f in VENUE_FIELDS if f.search_category is not None]
+
+
+def get_extraction_fields() -> List[FieldSpec]:
+    """Get all Venue fields for LLM extraction (excludes internal fields)."""
+    return [f for f in VENUE_FIELDS if not f.exclude]
+
+
+def get_database_fields() -> List[FieldSpec]:
+    """Get all Venue fields for database (includes internal/excluded fields)."""
+    return VENUE_FIELDS

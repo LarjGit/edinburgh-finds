@@ -359,9 +359,17 @@ class TestSchemaInheritance(unittest.TestCase):
         # Should import from parent
         self.assertIn("from .listing import LISTING_FIELDS", result)
 
-        # Should use VENUE_SPECIFIC_FIELDS name (not VENUE_FIELDS)
+        # Should use VENUE_SPECIFIC_FIELDS name for specific fields
         self.assertIn("VENUE_SPECIFIC_FIELDS", result)
-        self.assertNotIn("VENUE_FIELDS", result)
+
+        # Should also have combined VENUE_FIELDS list
+        self.assertIn("VENUE_FIELDS", result)
+        self.assertIn("VENUE_FIELDS: List[FieldSpec] = LISTING_FIELDS + VENUE_SPECIFIC_FIELDS", result)
+
+        # Should have helper functions
+        self.assertIn("def get_field_by_name(name: str)", result)
+        self.assertIn("def get_extraction_fields()", result)
+        self.assertIn("def get_database_fields()", result)
 
         # Should still have the field
         self.assertIn('name="tennis"', result)

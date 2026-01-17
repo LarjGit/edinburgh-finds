@@ -1,0 +1,142 @@
+# ============================================================
+# WINERY SCHEMA - Winery-specific fields
+# ============================================================
+# This schema extends the base Listing schema.
+# Winery-specific fields for wine venues and vineyards.
+#
+# DO NOT EDIT GENERATED FILES (winery.py)
+# Edit this YAML file and regenerate instead.
+# ============================================================
+
+schema:
+  name: Winery
+  description: Winery-specific fields for wine venues and vineyards
+  extends: Listing
+
+fields:
+  # ------------------------------------------------------------------
+  # FOREIGN KEY (for database relationship)
+  # ------------------------------------------------------------------
+  - name: listing_id
+    type: string
+    description: Foreign key to parent Listing
+    nullable: false
+    foreign_key: listings.listing_id
+    primary_key: true
+    exclude: true  # Internal relationship field
+
+  # ------------------------------------------------------------------
+  # VITICULTURE
+  # ------------------------------------------------------------------
+  - name: grape_varieties
+    type: list[string]
+    description: Grape varieties grown or featured at this winery
+    nullable: true
+    python:
+      sa_column: "Column(ARRAY(String))"
+    prisma:
+      skip: true  # Handle as relation or JSON in Prisma
+    search:
+      category: viticulture
+      keywords:
+        - grapes
+        - varieties
+        - cultivars
+
+  - name: appellation
+    type: string
+    description: Wine appellation or region (e.g., Bordeaux, Napa Valley)
+    nullable: true
+    search:
+      category: viticulture
+      keywords:
+        - appellation
+        - region
+        - AOC
+
+  - name: vineyard_size_hectares
+    type: float
+    description: Size of vineyard in hectares
+    nullable: true
+
+  - name: organic_certified
+    type: boolean
+    description: Whether the winery is certified organic
+    nullable: true
+    search:
+      category: viticulture
+      keywords:
+        - organic
+        - certified
+
+  # ------------------------------------------------------------------
+  # WINE PRODUCTION
+  # ------------------------------------------------------------------
+  - name: wine_types
+    type: list[string]
+    description: Types of wine produced (red, white, rosé, sparkling, dessert)
+    nullable: true
+    python:
+      sa_column: "Column(ARRAY(String))"
+    prisma:
+      skip: true
+    search:
+      category: wine_production
+      keywords:
+        - wine
+        - types
+        - red
+        - white
+        - sparkling
+
+  - name: annual_production_bottles
+    type: integer
+    description: Annual production volume in bottles
+    nullable: true
+
+  # ------------------------------------------------------------------
+  # VISITOR EXPERIENCE
+  # ------------------------------------------------------------------
+  - name: tasting_room
+    type: boolean
+    description: Whether a tasting room is available
+    nullable: true
+    search:
+      category: visitor_experience
+      keywords:
+        - tasting
+        - room
+
+  - name: tours_available
+    type: boolean
+    description: Whether vineyard or winery tours are offered
+    nullable: true
+    search:
+      category: visitor_experience
+      keywords:
+        - tours
+        - visits
+
+  - name: reservation_required
+    type: boolean
+    description: Whether reservations are required for tastings/tours
+    nullable: true
+
+  - name: event_space
+    type: boolean
+    description: Whether the winery has event space for weddings, corporate events, etc.
+    nullable: true
+    search:
+      category: visitor_experience
+      keywords:
+        - events
+        - weddings
+        - venue
+
+  # ------------------------------------------------------------------
+  # ADDITIONAL INFO
+  # ------------------------------------------------------------------
+  - name: winery_summary
+    type: string
+    description: A short overall description of the winery and its offerings
+    nullable: true
