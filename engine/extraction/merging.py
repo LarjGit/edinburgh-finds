@@ -252,9 +252,27 @@ class ListingMerger:
         # Combine external_ids from all sources
         merged_external_ids = self._merge_external_ids(extracted_listings)
 
+        # Determine entity_type (should be consistent across all listings)
+        # Use the entity_type from the most trusted source
+        entity_types = [
+            (listing.get("entity_type"), listing["source"])
+            for listing in extracted_listings
+            if listing.get("entity_type")
+        ]
+        entity_type = None
+        if entity_types:
+            # Sort by trust level and pick the highest
+            entity_types_sorted = sorted(
+                entity_types,
+                key=lambda x: self.trust_hierarchy.get_trust_level(x[1]),
+                reverse=True
+            )
+            entity_type = entity_types_sorted[0][0]
+
         # Build final merged listing
         merged_listing = {
             **merged_attributes,
+            "entity_type": entity_type,
             "discovered_attributes": merged_discovered,
             "external_ids": merged_external_ids,
             "source_info": source_info,
@@ -278,6 +296,7 @@ class ListingMerger:
 
         return {
             **attributes,
+            "entity_type": listing.get("entity_type"),
             "discovered_attributes": listing.get("discovered_attributes", {}),
             "external_ids": listing.get("external_ids", {}),
             "source_info": source_info,

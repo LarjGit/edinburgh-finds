@@ -387,6 +387,140 @@ class TestEndToEndPipeline:
             assert "snippet" in result["discovered"] or len(result["discovered"]) >= 0
 
     @pytest.mark.asyncio
+    async def test_entity_specific_ingestion_targeted_extraction(self):
+        """
+        Test Scenario 4: Entity-specific ingestion, targeted extraction
+
+        Flow:
+        1. RawIngestion record exists for a specific entity type (COACH)
+        2. Extract → Creates ExtractedListing with correct entity_type
+        3. Verify entity-specific fields are extracted correctly
+        4. Verify extracted data validates against entity schema
+        5. Create Listing with correct entity_type classification
+        """
+        # Setup: Create mock RawIngestion record for a COACH entity
+        mock_raw_id = "test-raw-serper-coach-001"
+        mock_raw = MagicMock()
+        mock_raw.id = mock_raw_id
+        mock_raw.source = "serper"
+        mock_raw.file_path = "engine/data/raw/serper/coach_001.json"
+        mock_raw.status = "success"
+        mock_raw.ingested_at = datetime.now()
+
+        # Mock raw data from Serper search for a coach
+        mock_raw_data = {
+            "organic": [
+                {
+                    "title": "Sarah McTavish - Professional Tennis Coach Edinburgh",
+                    "link": "https://sarahmctavish.com",
+                    "snippet": "Professional tennis coach with 15 years experience. LTA Level 4 certified. Specializing in juniors and competitive players. Based in Edinburgh, offering private and group sessions.",
+                }
+            ]
+        }
+
+        # Mock ExtractedListing for COACH entity
+        mock_extracted_attributes = {
+            "entity_name": "Sarah McTavish",
+            "phone": "+441311234567",
+            "email": "sarah@sarahmctavish.com",
+            "website_url": "https://sarahmctavish.com",
+        }
+
+        mock_extracted = MagicMock()
+        mock_extracted.id = "extracted-coach-001"
+        mock_extracted.source = "serper"
+        mock_extracted.entity_type = "COACH"  # Entity-specific type
+        mock_extracted.attributes = json.dumps(mock_extracted_attributes)
+        mock_extracted.discovered_attributes = json.dumps({
+            "qualifications": ["LTA Level 4"],
+            "specialization": "juniors and competitive players",
+            "experience_years": 15,
+        })
+        mock_extracted.external_ids = json.dumps({})
+
+        # Mock database
+        mock_db = AsyncMock()
+        mock_db.rawingestion.find_unique = AsyncMock(return_value=mock_raw)
+        mock_db.extractedlisting.find_first = AsyncMock(return_value=None)
+        mock_db.extractedlisting.create = AsyncMock(return_value=mock_extracted)
+
+        # Mock the extractor to return COACH-specific data
+        with patch("builtins.open", create=True) as mock_open:
+            mock_file = MagicMock()
+            mock_file.__enter__.return_value.read.return_value = json.dumps(mock_raw_data)
+            mock_open.return_value = mock_file
+
+            with patch("engine.extraction.run.get_extractor_for_source") as mock_get_extractor:
+                # Create a mock extractor that identifies this as a COACH
+                mock_extractor = MagicMock()
+                mock_extractor.extract.return_value = {
+                    "entity_name": "Sarah McTavish",
+                    "phone": "+441311234567",
+                    "email": "sarah@sarahmctavish.com",
+                    "website_url": "https://sarahmctavish.com",
+                    "entity_type": "COACH",
+                }
+                mock_extractor.validate.return_value = {
+                    "entity_name": "Sarah McTavish",
+                    "phone": "+441311234567",
+                    "email": "sarah@sarahmctavish.com",
+                    "website_url": "https://sarahmctavish.com",
+                    "entity_type": "COACH",
+                }
+                mock_extractor.split_attributes.return_value = (
+                    mock_extracted_attributes,  # attributes
+                    {
+                        "qualifications": ["LTA Level 4"],
+                        "specialization": "juniors and competitive players",
+                        "experience_years": 15,
+                    }  # discovered_attributes
+                )
+                mock_get_extractor.return_value = mock_extractor
+
+                # Step 1: Extract the raw data
+                result = await run_single_extraction(
+                    mock_db,
+                    raw_id=mock_raw_id,
+                    verbose=True,
+                )
+
+        # Step 2: Verify extraction succeeded
+        assert result["status"] == "success"
+        assert result["source"] == "serper"
+
+        # Step 3: Verify entity_type is correctly identified as COACH
+        assert result["entity_type"] == "COACH"
+
+        # Step 4: Verify entity-specific fields are extracted
+        assert "entity_name" in result["fields"]
+        assert result["fields"]["entity_name"] == "Sarah McTavish"
+        assert "email" in result["fields"]
+        assert "website_url" in result["fields"]
+
+        # Step 5: Verify discovered attributes contain COACH-specific data
+        if "discovered" in result and result["discovered"]:
+            # Coach-specific attributes should be in discovered_attributes
+            assert isinstance(result["discovered"], dict)
+
+        # Step 6: Verify database calls were made correctly
+        mock_db.rawingestion.find_unique.assert_called_once_with(where={"id": mock_raw_id})
+        mock_db.extractedlisting.find_first.assert_called_once()
+        mock_db.extractedlisting.create.assert_called_once()
+
+        # Step 7: Verify the created ExtractedListing has COACH entity_type
+        create_call_args = mock_db.extractedlisting.create.call_args
+        created_data = create_call_args[1]["data"]
+
+        assert created_data["source"] == "serper"
+        assert created_data["entity_type"] == "COACH"
+        assert created_data["raw_ingestion_id"] == mock_raw_id
+
+        # Step 8: Verify discovered_attributes are properly structured for COACH
+        created_discovered = json.loads(created_data["discovered_attributes"])
+        # COACH-specific attributes should be present
+        assert len(created_discovered) > 0
+
+    @pytest.mark.asyncio
     async def test_conflicting_data_trust_hierarchy_resolves(self):
         """
         Test Scenario 5: Conflicting data from multiple sources, trust hierarchy resolves

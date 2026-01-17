@@ -377,7 +377,7 @@ This plan details the phased implementation of the Data Extraction Engine. Each 
 - [x] Test scenario 1: Single source, single venue (Google Places) (3786ea6)
 - [x] Test scenario 2: Multi-source, same venue (Google + OSM + Serper) (3786ea6)
 - [x] Test scenario 3: Discovery ingestion, new venue extraction (3786ea6)
-- [ ] Test scenario 4: Entity-specific ingestion, targeted extraction
+- [x] Test scenario 4: Entity-specific ingestion, targeted extraction
 - [x] Test scenario 5: Conflicting data from multiple sources, trust hierarchy resolves (3786ea6)
 - [x] Test scenario 6: Failed extraction, quarantine, retry, success (3786ea6)
 - [x] Verify all tests use fixtures (no real API calls in tests) (3786ea6)
@@ -391,10 +391,10 @@ This plan details the phased implementation of the Data Extraction Engine. Each 
 
 ### Task 8.3: Integration with Existing Codebase
 
-- [ ] Verify extraction works with existing Prisma schema
-- [ ] Test compatibility with web app (Listing queries work)
-- [ ] Verify extracted data displays correctly in frontend
-- [ ] Test seed data generation from extracted listings
+- [x] Verify extraction works with existing Prisma schema
+- [x] Test compatibility with web app (Listing queries work)
+- [x] Verify extracted data displays correctly in frontend
+- [x] Test seed data generation from extracted listings
 
 **Success Criteria:**
 - ✅ End-to-end tests cover full pipeline

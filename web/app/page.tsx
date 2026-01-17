@@ -8,7 +8,7 @@ export default async function Home() {
       id: true,
       entity_name: true,
       summary: true,
-      entityTypeId: true,
+      entityType: true,
       attributes: true,
       discovered_attributes: true,
     },
@@ -34,7 +34,7 @@ export default async function Home() {
                   <div className="flex justify-between items-start">
                     <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">{listing.entity_name}</h3>
                     <span className="px-2 py-1 text-xs font-medium bg-zinc-100 text-zinc-600 rounded-full dark:bg-zinc-700 dark:text-zinc-300">
-                      {listing.entityTypeId}
+                      {listing.entityType}
                     </span>
                   </div>
                   {listing.summary && (
