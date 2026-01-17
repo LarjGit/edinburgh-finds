@@ -1,0 +1,7 @@
+# Generated schema files
+# These files are auto-generated from YAML - edit the YAML instead
+engine/schema/listing.py linguist-generated=true
+engine/schema/venue.py linguist-generated=true
+
+# Mark as generated for GitHub diff display
+engine/schema/*_generated.py linguist-generated=true

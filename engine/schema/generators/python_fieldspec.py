@@ -158,6 +158,9 @@ class PythonFieldSpecGenerator:
         if field.primary_key:
             params.append('primary_key=True')
 
+        if field.foreign_key:
+            params.append(f'foreign_key="{field.foreign_key}"')
+
         if field.exclude:
             params.append('exclude=True')
 

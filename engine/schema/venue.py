@@ -1,658 +1,764 @@
-from typing import Optional, List
+# ============================================================
+# GENERATED FILE - DO NOT EDIT
+# ============================================================
+#
+# Generated from: engine/config/schemas/venue.yaml
+# Generated at: 2026-01-17 17:37:42
+#
+# To make changes:
+# 1. Edit engine/config/schemas/venue.yaml
+# 2. Run: python -m engine.schema.generate
+#
+# ============================================================
+
+from typing import List, Optional
 from .core import FieldSpec
 from .listing import LISTING_FIELDS
 
 # ============================================================
-# VENUE-SPECIFIC FIELD DEFINITIONS
+# VENUE-SPECIFIC FIELDS
 # ============================================================
 #
-# These fields are specific to Venue entities.
-# They extend the base Listing fields from listing.py.
+# Venue-specific fields for sports facilities
+# Extends: Listing
+#
 # ============================================================
 
 VENUE_SPECIFIC_FIELDS: List[FieldSpec] = [
-    # ------------------------------------------------------------------
-    # FOREIGN KEY (This is actually redundant in new model but kept for spec completeness)
-    # ------------------------------------------------------------------
     FieldSpec(
         name="listing_id",
         type_annotation="str",
         description="Foreign key to parent Listing",
         nullable=False,
-        foreign_key="listings.listing_id",
+        required=False,
         primary_key=True,
-        exclude=True  # Internal relationship field
+        foreign_key="listings.listing_id",
+        exclude=True,
     ),
-
-    # ------------------------------------------------------------------
-    # RACQUET SPORTS
-    # ------------------------------------------------------------------
-    # Tennis
     FieldSpec(
         name="tennis_summary",
         type_annotation="Optional[str]",
-        description="A short overall description of the tennis facilities summarising all gathered data"
+        description="A short overall description of the tennis facilities summarising all gathered data",
+        nullable=True,
+        required=False,
     ),
     FieldSpec(
         name="tennis",
         type_annotation="Optional[bool]",
         description="Whether tennis is available at this venue",
+        nullable=True,
+        required=False,
         search_category="racquet_sports",
-        search_keywords=["tennis", "courts", "indoor", "outdoor"]
+        search_keywords=["tennis", "courts", "indoor", "outdoor"],
     ),
     FieldSpec(
         name="tennis_total_courts",
         type_annotation="Optional[int]",
         description="Total number of tennis courts",
+        nullable=True,
+        required=False,
         search_category="racquet_sports",
-        search_keywords=["tennis", "courts"]
+        search_keywords=["tennis", "courts"],
     ),
     FieldSpec(
         name="tennis_indoor_courts",
         type_annotation="Optional[int]",
         description="Number of indoor tennis courts",
+        nullable=True,
+        required=False,
         search_category="racquet_sports",
-        search_keywords=["indoor", "tennis", "courts"]
+        search_keywords=["indoor", "tennis", "courts"],
     ),
     FieldSpec(
         name="tennis_outdoor_courts",
         type_annotation="Optional[int]",
         description="Number of outdoor tennis courts",
+        nullable=True,
+        required=False,
         search_category="racquet_sports",
-        search_keywords=["outdoor", "tennis", "courts"]
+        search_keywords=["outdoor", "tennis", "courts"],
     ),
     FieldSpec(
         name="tennis_covered_courts",
         type_annotation="Optional[int]",
         description="Number of covered (but not fully indoor) tennis courts",
+        nullable=True,
+        required=False,
         search_category="racquet_sports",
-        search_keywords=["covered", "tennis", "courts"]
+        search_keywords=["covered", "tennis", "courts"],
     ),
     FieldSpec(
         name="tennis_floodlit_courts",
         type_annotation="Optional[int]",
         description="Number of floodlit tennis courts for evening play",
+        nullable=True,
+        required=False,
         search_category="racquet_sports",
-        search_keywords=["floodlit", "tennis", "courts"]
+        search_keywords=["floodlit", "tennis", "courts"],
     ),
-
-    # Padel
     FieldSpec(
         name="padel_summary",
         type_annotation="Optional[str]",
-        description="A short overall description of the padel facilities summarising all gathered data"
+        description="A short overall description of the padel facilities summarising all gathered data",
+        nullable=True,
+        required=False,
     ),
     FieldSpec(
         name="padel",
         type_annotation="Optional[bool]",
         description="Whether padel is available at this venue",
+        nullable=True,
+        required=False,
         search_category="racquet_sports",
-        search_keywords=["padel", "courts"]
+        search_keywords=["padel", "courts"],
     ),
     FieldSpec(
         name="padel_total_courts",
         type_annotation="Optional[int]",
         description="Total number of padel courts",
+        nullable=True,
+        required=False,
         search_category="racquet_sports",
-        search_keywords=["padel", "courts"]
+        search_keywords=["padel", "courts"],
     ),
-
-    # Pickleball
     FieldSpec(
         name="pickleball_summary",
         type_annotation="Optional[str]",
-        description="A short overall description of the pickleball facilities summarising all gathered data"
+        description="A short overall description of the pickleball facilities summarising all gathered data",
+        nullable=True,
+        required=False,
     ),
     FieldSpec(
         name="pickleball",
         type_annotation="Optional[bool]",
         description="Whether pickleball is available at this venue",
+        nullable=True,
+        required=False,
         search_category="racquet_sports",
-        search_keywords=["pickleball"]
+        search_keywords=["pickleball"],
     ),
     FieldSpec(
         name="pickleball_total_courts",
         type_annotation="Optional[int]",
         description="Total number of pickleball courts",
+        nullable=True,
+        required=False,
         search_category="racquet_sports",
-        search_keywords=["pickleball", "courts"]
+        search_keywords=["pickleball", "courts"],
     ),
-
-    # Badminton
     FieldSpec(
         name="badminton_summary",
         type_annotation="Optional[str]",
-        description="A short overall description of the badminton facilities summarising all gathered data"
+        description="A short overall description of the badminton facilities summarising all gathered data",
+        nullable=True,
+        required=False,
     ),
     FieldSpec(
         name="badminton",
         type_annotation="Optional[bool]",
         description="Whether badminton is available at this venue",
+        nullable=True,
+        required=False,
         search_category="racquet_sports",
-        search_keywords=["badminton"]
+        search_keywords=["badminton"],
     ),
     FieldSpec(
         name="badminton_total_courts",
         type_annotation="Optional[int]",
         description="Total number of badminton courts",
+        nullable=True,
+        required=False,
         search_category="racquet_sports",
-        search_keywords=["badminton", "courts"]
+        search_keywords=["badminton", "courts"],
     ),
-
-    # Squash
     FieldSpec(
         name="squash_summary",
         type_annotation="Optional[str]",
-        description="A short overall description of the squash facilities summarising all gathered data"
+        description="A short overall description of the squash facilities summarising all gathered data",
+        nullable=True,
+        required=False,
     ),
     FieldSpec(
         name="squash",
         type_annotation="Optional[bool]",
         description="Whether squash is available at this venue",
+        nullable=True,
+        required=False,
         search_category="racquet_sports",
-        search_keywords=["squash"]
+        search_keywords=["squash"],
     ),
     FieldSpec(
         name="squash_total_courts",
         type_annotation="Optional[int]",
         description="Total number of squash courts",
+        nullable=True,
+        required=False,
         search_category="racquet_sports",
-        search_keywords=["squash", "courts"]
+        search_keywords=["squash", "courts"],
     ),
     FieldSpec(
         name="squash_glass_back_courts",
         type_annotation="Optional[int]",
         description="Number of squash courts with glass back walls",
+        nullable=True,
+        required=False,
         search_category="racquet_sports",
-        search_keywords=["glass", "back", "squash", "courts"]
+        search_keywords=["glass", "back", "squash", "courts"],
     ),
-
-    # Table Tennis
     FieldSpec(
         name="table_tennis_summary",
         type_annotation="Optional[str]",
-        description="A short overall description of the table tennis facilities summarising all gathered data"
+        description="A short overall description of the table tennis facilities summarising all gathered data",
+        nullable=True,
+        required=False,
     ),
     FieldSpec(
         name="table_tennis",
         type_annotation="Optional[bool]",
         description="Whether table tennis is available at this venue",
+        nullable=True,
+        required=False,
         search_category="racquet_sports",
-        search_keywords=["table", "tennis"]
+        search_keywords=["table", "tennis"],
     ),
     FieldSpec(
         name="table_tennis_total_tables",
         type_annotation="Optional[int]",
         description="Total number of table tennis tables",
+        nullable=True,
+        required=False,
         search_category="racquet_sports",
-        search_keywords=["table", "tennis", "tables"]
+        search_keywords=["table", "tennis", "tables"],
     ),
-
-    # ------------------------------------------------------------------
-    # FOOTBALL
-    # ------------------------------------------------------------------
     FieldSpec(
         name="football_summary",
         type_annotation="Optional[str]",
-        description="A short overall description of the football facilities summarising all gathered data"
+        description="A short overall description of the football facilities summarising all gathered data",
+        nullable=True,
+        required=False,
     ),
     FieldSpec(
         name="football_5_a_side",
         type_annotation="Optional[bool]",
         description="Whether 5-a-side football is available",
+        nullable=True,
+        required=False,
         search_category="football",
-        search_keywords=["football", "pitches", "5-a-side"]
+        search_keywords=["football", "pitches", "5-a-side"],
     ),
     FieldSpec(
         name="football_5_a_side_total_pitches",
         type_annotation="Optional[int]",
         description="Total number of 5-a-side pitches",
+        nullable=True,
+        required=False,
         search_category="football",
-        search_keywords=["5-a-side", "pitches"]
+        search_keywords=["5-a-side", "pitches"],
     ),
     FieldSpec(
         name="football_7_a_side",
         type_annotation="Optional[bool]",
         description="Whether 7-a-side football is available",
+        nullable=True,
+        required=False,
         search_category="football",
-        search_keywords=["football", "pitches", "7-a-side"]
+        search_keywords=["football", "pitches", "7-a-side"],
     ),
     FieldSpec(
         name="football_7_a_side_total_pitches",
         type_annotation="Optional[int]",
         description="Total number of 7-a-side pitches",
+        nullable=True,
+        required=False,
         search_category="football",
-        search_keywords=["7-a-side", "pitches"]
+        search_keywords=["7-a-side", "pitches"],
     ),
     FieldSpec(
         name="football_11_a_side",
         type_annotation="Optional[bool]",
         description="Whether full-size 11-a-side football is available",
+        nullable=True,
+        required=False,
         search_category="football",
-        search_keywords=["11-a-side", "football"]
+        search_keywords=["11-a-side", "football"],
     ),
     FieldSpec(
         name="football_11_a_side_total_pitches",
         type_annotation="Optional[int]",
         description="Total number of full-size 11-a-side pitches",
+        nullable=True,
+        required=False,
         search_category="football",
-        search_keywords=["11-a-side", "pitches"]
+        search_keywords=["11-a-side", "pitches"],
     ),
-
-    # ------------------------------------------------------------------
-    # SWIMMING
-    # ------------------------------------------------------------------
     FieldSpec(
         name="swimming_summary",
         type_annotation="Optional[str]",
-        description="A short overall description of the swimming facilities summarising all gathered data"
+        description="A short overall description of the swimming facilities summarising all gathered data",
+        nullable=True,
+        required=False,
     ),
     FieldSpec(
         name="indoor_pool",
         type_annotation="Optional[bool]",
         description="Whether an indoor swimming pool is available",
+        nullable=True,
+        required=False,
         search_category="swimming",
-        search_keywords=["swimming", "pool", "indoor", "pool"]
+        search_keywords=["swimming", "pool", "indoor", "pool"],
     ),
     FieldSpec(
         name="outdoor_pool",
         type_annotation="Optional[bool]",
         description="Whether an outdoor swimming pool is available",
+        nullable=True,
+        required=False,
         search_category="swimming",
-        search_keywords=["outdoor", "pool"]
+        search_keywords=["outdoor", "pool"],
     ),
     FieldSpec(
         name="indoor_pool_length_m",
         type_annotation="Optional[int]",
         description="Length of the indoor pool in metres",
+        nullable=True,
+        required=False,
         search_category="swimming",
-        search_keywords=["pool", "length"]
+        search_keywords=["pool", "length"],
     ),
     FieldSpec(
         name="outdoor_pool_length_m",
         type_annotation="Optional[int]",
         description="Length of the outdoor pool in metres",
+        nullable=True,
+        required=False,
         search_category="swimming",
-        search_keywords=["outdoor", "pool", "length"]
+        search_keywords=["outdoor", "pool", "length"],
     ),
     FieldSpec(
         name="family_swim",
         type_annotation="Optional[bool]",
         description="Whether family swim sessions are available",
+        nullable=True,
+        required=False,
         search_category="swimming",
-        search_keywords=["family", "swim"]
+        search_keywords=["family", "swim"],
     ),
     FieldSpec(
         name="adult_only_swim",
         type_annotation="Optional[bool]",
         description="Whether adult-only swim sessions are available",
+        nullable=True,
+        required=False,
         search_category="swimming",
-        search_keywords=["adult", "swim"]
+        search_keywords=["adult", "swim"],
     ),
     FieldSpec(
         name="swimming_lessons",
         type_annotation="Optional[bool]",
         description="Whether swimming lessons are offered",
+        nullable=True,
+        required=False,
         search_category="swimming",
-        search_keywords=["swimming", "lessons"]
+        search_keywords=["swimming", "lessons"],
     ),
-
-    # ------------------------------------------------------------------
-    # GYM & FITNESS
-    # ------------------------------------------------------------------
     FieldSpec(
         name="gym_summary",
         type_annotation="Optional[str]",
-        description="A short overall description of the gym facilities summarising all gathered data"
+        description="A short overall description of the gym facilities summarising all gathered data",
+        nullable=True,
+        required=False,
     ),
     FieldSpec(
         name="gym_available",
         type_annotation="Optional[bool]",
         description="Whether a gym/fitness centre is available",
+        nullable=True,
+        required=False,
         search_category="gym_fitness",
-        search_keywords=["gym", "fitness"]
+        search_keywords=["gym", "fitness"],
     ),
     FieldSpec(
         name="gym_size",
         type_annotation="Optional[int]",
         description="Size of the gym measured in number of stations",
+        nullable=True,
+        required=False,
         search_category="gym_fitness",
-        search_keywords=["gym", "size", "stations"]
+        search_keywords=["gym", "size", "stations"],
     ),
-
-    # Classes
     FieldSpec(
         name="classes_summary",
         type_annotation="Optional[str]",
-        description="A short overall description of the classes available summarising all gathered data"
+        description="A short overall description of the classes available summarising all gathered data",
+        nullable=True,
+        required=False,
     ),
     FieldSpec(
         name="classes_per_week",
         type_annotation="Optional[int]",
         description="Total number of fitness classes offered per week",
+        nullable=True,
+        required=False,
         search_category="gym_fitness",
-        search_keywords=["fitness", "classes"]
+        search_keywords=["fitness", "classes"],
     ),
     FieldSpec(
         name="hiit_classes",
         type_annotation="Optional[bool]",
         description="Whether HIIT (High Intensity Interval Training) classes are offered",
+        nullable=True,
+        required=False,
         search_category="gym_fitness",
-        search_keywords=["HIIT", "classes"]
+        search_keywords=["HIIT", "classes"],
     ),
     FieldSpec(
         name="yoga_classes",
         type_annotation="Optional[bool]",
         description="Whether yoga classes are offered",
+        nullable=True,
+        required=False,
         search_category="gym_fitness",
-        search_keywords=["yoga", "classes"]
+        search_keywords=["yoga", "classes"],
     ),
     FieldSpec(
         name="pilates_classes",
         type_annotation="Optional[bool]",
         description="Whether pilates classes are offered",
+        nullable=True,
+        required=False,
         search_category="gym_fitness",
-        search_keywords=["pilates", "classes"]
+        search_keywords=["pilates", "classes"],
     ),
     FieldSpec(
         name="strength_classes",
         type_annotation="Optional[bool]",
         description="Whether strength/weights classes are offered",
+        nullable=True,
+        required=False,
         search_category="gym_fitness",
-        search_keywords=["strength", "classes", "weights"]
+        search_keywords=["strength", "classes", "weights"],
     ),
     FieldSpec(
         name="cycling_studio",
         type_annotation="Optional[bool]",
         description="Whether an indoor cycling/spin studio is available",
+        nullable=True,
+        required=False,
         search_category="gym_fitness",
-        search_keywords=["cycling", "studio", "spin"]
+        search_keywords=["cycling", "studio", "spin"],
     ),
     FieldSpec(
         name="functional_training_zone",
         type_annotation="Optional[bool]",
         description="Whether a functional training zone is available",
+        nullable=True,
+        required=False,
         search_category="gym_fitness",
-        search_keywords=["functional", "training", "zone"]
+        search_keywords=["functional", "training", "zone"],
     ),
-
-    # ------------------------------------------------------------------
-    # SPA & WELLNESS
-    # ------------------------------------------------------------------
     FieldSpec(
         name="spa_summary",
         type_annotation="Optional[str]",
-        description="A short overall description of the spa and wellness facilities summarising all gathered data"
+        description="A short overall description of the spa and wellness facilities summarising all gathered data",
+        nullable=True,
+        required=False,
     ),
     FieldSpec(
         name="spa_available",
         type_annotation="Optional[bool]",
         description="Whether spa facilities are available",
+        nullable=True,
+        required=False,
         search_category="spa_wellness",
-        search_keywords=["spa"]
+        search_keywords=["spa"],
     ),
     FieldSpec(
         name="sauna",
         type_annotation="Optional[bool]",
         description="Whether a sauna is available",
+        nullable=True,
+        required=False,
         search_category="spa_wellness",
-        search_keywords=["sauna"]
+        search_keywords=["sauna"],
     ),
     FieldSpec(
         name="steam_room",
         type_annotation="Optional[bool]",
         description="Whether a steam room is available",
+        nullable=True,
+        required=False,
         search_category="spa_wellness",
-        search_keywords=["steam", "room"]
+        search_keywords=["steam", "room"],
     ),
     FieldSpec(
         name="hydro_pool",
         type_annotation="Optional[bool]",
         description="Whether a hydrotherapy pool is available",
+        nullable=True,
+        required=False,
         search_category="spa_wellness",
-        search_keywords=["hydro", "pool", "hydrotherapy"]
+        search_keywords=["hydro", "pool", "hydrotherapy"],
     ),
     FieldSpec(
         name="hot_tub",
         type_annotation="Optional[bool]",
         description="Whether a hot tub/jacuzzi is available",
+        nullable=True,
+        required=False,
         search_category="spa_wellness",
-        search_keywords=["hot", "tub", "jacuzzi"]
+        search_keywords=["hot", "tub", "jacuzzi"],
     ),
     FieldSpec(
         name="outdoor_spa",
         type_annotation="Optional[bool]",
         description="Whether outdoor spa facilities are available",
+        nullable=True,
+        required=False,
         search_category="spa_wellness",
-        search_keywords=["outdoor", "spa"]
+        search_keywords=["outdoor", "spa"],
     ),
     FieldSpec(
         name="ice_cold_plunge",
         type_annotation="Optional[bool]",
         description="Whether an ice bath or cold plunge pool is available",
+        nullable=True,
+        required=False,
         search_category="spa_wellness",
-        search_keywords=["ice", "bath", "cold", "plunge"]
+        search_keywords=["ice", "bath", "cold", "plunge"],
     ),
     FieldSpec(
         name="relaxation_area",
         type_annotation="Optional[bool]",
         description="Whether a dedicated relaxation area is available",
+        nullable=True,
+        required=False,
         search_category="spa_wellness",
-        search_keywords=["relaxation", "area"]
+        search_keywords=["relaxation", "area"],
     ),
-
-    # ------------------------------------------------------------------
-    # AMENITIES (Dining & General)
-    # ------------------------------------------------------------------
     FieldSpec(
         name="amenities_summary",
         type_annotation="Optional[str]",
-        description="A short overall description of the amenities available (eg. bar, restaurant, cafe etc) summarising all gathered data"
+        description="A short overall description of the amenities available (eg. bar, restaurant, cafe etc) summarising all gathered data",
+        nullable=True,
+        required=False,
     ),
     FieldSpec(
         name="restaurant",
         type_annotation="Optional[bool]",
         description="Whether an on-site restaurant is available",
+        nullable=True,
+        required=False,
         search_category="dining",
-        search_keywords=["restaurant"]
+        search_keywords=["restaurant"],
     ),
     FieldSpec(
         name="bar",
         type_annotation="Optional[bool]",
         description="Whether an on-site bar is available",
+        nullable=True,
+        required=False,
         search_category="dining",
-        search_keywords=["bar"]
+        search_keywords=["bar"],
     ),
     FieldSpec(
         name="cafe",
         type_annotation="Optional[bool]",
         description="Whether an on-site cafe is available",
+        nullable=True,
+        required=False,
         search_category="dining",
-        search_keywords=["cafe"]
+        search_keywords=["cafe"],
     ),
     FieldSpec(
         name="childrens_menu",
         type_annotation="Optional[bool]",
         description="Whether a children's menu is available at dining facilities",
+        nullable=True,
+        required=False,
         search_category="dining",
-        search_keywords=["childrens", "menu", "kids", "food"]
+        search_keywords=["childrens", "menu", "kids", "food"],
     ),
     FieldSpec(
         name="wifi",
         type_annotation="Optional[bool]",
         description="Whether free WiFi is available",
+        nullable=True,
+        required=False,
         search_category="dining",
-        search_keywords=["wifi", "internet"]
+        search_keywords=["wifi", "internet"],
     ),
-
-    # ------------------------------------------------------------------
-    # FAMILY & CHILDREN
-    # ------------------------------------------------------------------
     FieldSpec(
         name="family_summary",
         type_annotation="Optional[str]",
-        description="A short overall description of the family and children facilities (eg. creche, kids lessons, holiday club, play area etc) summarising all gathered data"
+        description="A short overall description of the family and children facilities (eg. creche, kids lessons, holiday club, play area etc) summarising all gathered data",
+        nullable=True,
+        required=False,
     ),
     FieldSpec(
         name="creche_available",
         type_annotation="Optional[bool]",
         description="Whether a creche/childcare facility is available",
+        nullable=True,
+        required=False,
         search_category="family_kids",
-        search_keywords=["creche", "childcare"]
+        search_keywords=["creche", "childcare"],
     ),
     FieldSpec(
         name="creche_age_min",
         type_annotation="Optional[int]",
         description="Minimum age accepted at the creche (in months or years depending on venue)",
+        nullable=True,
+        required=False,
         search_category="family_kids",
-        search_keywords=["creche", "ages"]
+        search_keywords=["creche", "ages"],
     ),
     FieldSpec(
         name="creche_age_max",
         type_annotation="Optional[int]",
         description="Maximum age accepted at the creche (in years)",
+        nullable=True,
+        required=False,
         search_category="family_kids",
-        search_keywords=["creche", "ages"]
+        search_keywords=["creche", "ages"],
     ),
     FieldSpec(
         name="kids_swimming_lessons",
         type_annotation="Optional[bool]",
         description="Whether swimming lessons for children are offered",
+        nullable=True,
+        required=False,
         search_category="family_kids",
-        search_keywords=["kids", "swimming", "lessons", "children"]
+        search_keywords=["kids", "swimming", "lessons", "children"],
     ),
     FieldSpec(
         name="kids_tennis_lessons",
         type_annotation="Optional[bool]",
         description="Whether tennis lessons for children are offered",
+        nullable=True,
+        required=False,
         search_category="family_kids",
-        search_keywords=["kids", "tennis", "lessons", "children"]
+        search_keywords=["kids", "tennis", "lessons", "children"],
     ),
     FieldSpec(
         name="holiday_club",
         type_annotation="Optional[bool]",
         description="Whether a holiday club/camp for children is available",
+        nullable=True,
+        required=False,
         search_category="family_kids",
-        search_keywords=["holiday", "camp", "club"]
+        search_keywords=["holiday", "camp", "club"],
     ),
     FieldSpec(
         name="play_area",
         type_annotation="Optional[bool]",
         description="Whether a children's play area is available",
+        nullable=True,
+        required=False,
         search_category="family_kids",
-        search_keywords=["kids", "play", "area", "children"]
+        search_keywords=["kids", "play", "area", "children"],
     ),
-
-    # ------------------------------------------------------------------
-    # PARKING & TRANSPORT
-    # ------------------------------------------------------------------
     FieldSpec(
         name="parking_and_transport_summary",
         type_annotation="Optional[str]",
-        description="A short overall description of the parking and transport facilities summarising all gathered data"
+        description="A short overall description of the parking and transport facilities summarising all gathered data",
+        nullable=True,
+        required=False,
     ),
     FieldSpec(
         name="parking_spaces",
         type_annotation="Optional[int]",
         description="Total number of parking spaces available",
+        nullable=True,
+        required=False,
         search_category="parking",
-        search_keywords=["parking", "spaces"]
+        search_keywords=["parking", "spaces"],
     ),
     FieldSpec(
         name="disabled_parking",
         type_annotation="Optional[bool]",
         description="Whether disabled parking spaces are available",
+        nullable=True,
+        required=False,
         search_category="parking",
-        search_keywords=["disabled", "parking", "accessible"]
+        search_keywords=["disabled", "parking", "accessible"],
     ),
     FieldSpec(
         name="parent_child_parking",
         type_annotation="Optional[bool]",
         description="Whether parent and child parking spaces are available",
+        nullable=True,
+        required=False,
         search_category="parking",
-        search_keywords=["parent", "child", "parking", "family"]
+        search_keywords=["parent", "child", "parking", "family"],
     ),
     FieldSpec(
         name="ev_charging_available",
         type_annotation="Optional[bool]",
         description="Whether electric vehicle charging points are available",
+        nullable=True,
+        required=False,
         search_category="parking",
-        search_keywords=["EV", "charging", "electric", "vehicle"]
+        search_keywords=["EV", "charging", "electric", "vehicle"],
     ),
     FieldSpec(
         name="ev_charging_connectors",
         type_annotation="Optional[int]",
         description="Number of EV charging connectors available",
+        nullable=True,
+        required=False,
         search_category="parking",
-        search_keywords=["EV", "charging", "connectors"]
+        search_keywords=["EV", "charging", "connectors"],
     ),
     FieldSpec(
         name="public_transport_nearby",
         type_annotation="Optional[bool]",
         description="Whether public transport links are nearby",
+        nullable=True,
+        required=False,
         search_category="parking",
-        search_keywords=["public", "transport", "bus", "train"]
+        search_keywords=["public", "transport", "bus", "train"],
     ),
     FieldSpec(
         name="nearest_railway_station",
         type_annotation="Optional[str]",
         description="Name of the nearest railway station",
+        nullable=True,
+        required=False,
         search_category="parking",
-        search_keywords=["nearest", "railway", "station", "train"]
+        search_keywords=["nearest", "railway", "station", "train"],
     ),
-
-    # ------------------------------------------------------------------
-    # REVIEWS & SOCIAL PROOF
-    # ------------------------------------------------------------------
     FieldSpec(
         name="reviews_summary",
         type_annotation="Optional[str]",
-        description="A short overall description of reviews and social proof (eg. rating, review count, likes etc) summarising all gathered data"
+        description="A short overall description of reviews and social proof (eg. rating, review count, likes etc) summarising all gathered data",
+        nullable=True,
+        required=False,
     ),
     FieldSpec(
         name="review_count",
         type_annotation="Optional[int]",
         description="Total number of reviews across all platforms",
+        nullable=True,
+        required=False,
         search_category="general",
-        search_keywords=["reviews", "ratings"]
+        search_keywords=["reviews", "ratings"],
     ),
     FieldSpec(
         name="google_review_count",
         type_annotation="Optional[int]",
         description="Number of Google reviews",
+        nullable=True,
+        required=False,
         search_category="general",
-        search_keywords=["google", "reviews"]
+        search_keywords=["google", "reviews"],
     ),
     FieldSpec(
         name="facebook_likes",
         type_annotation="Optional[int]",
         description="Number of Facebook page likes",
+        nullable=True,
+        required=False,
         search_category="general",
-        search_keywords=["facebook", "likes", "social"]
-    ),
+        search_keywords=["facebook", "likes", "social"],
+    )
 ]
-
-VENUE_FIELDS: List[FieldSpec] = LISTING_FIELDS + VENUE_SPECIFIC_FIELDS
-
-
-def get_field_by_name(name: str) -> Optional[FieldSpec]:
-    """Get field spec by name."""
-    for field_spec in VENUE_FIELDS:
-        if field_spec.name == name:
-            return field_spec
-    return None
-
-
-def get_fields_with_search_metadata() -> List[FieldSpec]:
-    """Get all venue-specific fields that have search metadata."""
-    return [f for f in VENUE_FIELDS if f.search_category is not None]
-
-
-def get_extraction_fields() -> List[FieldSpec]:
-    """Get all Venue fields for LLM extraction (excludes internal fields)."""
-    return [f for f in VENUE_FIELDS if not f.exclude]
-
-
-def get_database_fields() -> List[FieldSpec]:
-    """Get all Venue fields for database (includes internal/excluded fields)."""
-    return VENUE_FIELDS

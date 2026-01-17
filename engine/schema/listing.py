@@ -1,28 +1,39 @@
-from typing import Optional, List, Dict, Any
+# ============================================================
+# GENERATED FILE - DO NOT EDIT
+# ============================================================
+#
+# Generated from: engine/config/schemas/listing.yaml
+# Generated at: 2026-01-17 17:37:42
+#
+# To make changes:
+# 1. Edit engine/config/schemas/listing.yaml
+# 2. Run: python -m engine.schema.generate
+#
+# ============================================================
+
+from typing import Any, Dict, List, Optional
+from datetime import datetime
 from .core import FieldSpec
 from .types import EntityType
 
 # ============================================================
-# LISTING FIELDS (Common to all entity types)
+# LISTING FIELDS
 # ============================================================
 #
-# These fields are shared by ALL entity types: Venue, Retailer, Club, etc.
-# They form the base Listing class in the database.
+# Base schema for all entity types (venues, retailers, coaches, etc.)
+#
 # ============================================================
 
 LISTING_FIELDS: List[FieldSpec] = [
-    # ------------------------------------------------------------------
-    # IDENTIFICATION
-    # ------------------------------------------------------------------
     FieldSpec(
         name="listing_id",
         type_annotation="str",
         description="Unique identifier (auto-generated)",
         nullable=False,
-        required=False,  # Auto-generated, so not required in input
+        required=False,
         primary_key=True,
-        exclude=True,  # Auto-generated, not for LLM extraction
-        default="None"
+        exclude=True,
+        default="None",
     ),
     FieldSpec(
         name="entity_name",
@@ -32,7 +43,7 @@ LISTING_FIELDS: List[FieldSpec] = [
         required=True,
         index=True,
         search_category="identity",
-        search_keywords=["name", "called", "named"]
+        search_keywords=["name", "called", "named"],
     ),
     FieldSpec(
         name="entity_type",
@@ -40,7 +51,7 @@ LISTING_FIELDS: List[FieldSpec] = [
         description="Type of entity (venue, retailer, cafe, event, members_club, etc)",
         nullable=False,
         required=True,
-        index=True
+        index=True,
     ),
     FieldSpec(
         name="slug",
@@ -48,227 +59,208 @@ LISTING_FIELDS: List[FieldSpec] = [
         description="URL-safe version of entity name (auto-generated)",
         nullable=False,
         required=False,
-        unique=True,
         index=True,
-        exclude=True,  # Auto-generated
-        default="None"
+        unique=True,
+        exclude=True,
     ),
-
-    # ------------------------------------------------------------------
-    # SUMMARY / DESCRIPTION
-    # ------------------------------------------------------------------
     FieldSpec(
         name="summary",
         type_annotation="Optional[str]",
         description="A short overall description of the entity summarising all gathered data",
+        nullable=True,
+        required=False,
         search_category="description",
-        search_keywords=["description", "about", "overview"]
+        search_keywords=["description", "about", "overview"],
     ),
-
-    # ------------------------------------------------------------------
-    # CLASSIFICATION
-    # ------------------------------------------------------------------
     FieldSpec(
         name="categories",
         type_annotation="Optional[List[str]]",
         description="Raw free-form categories detected by the LLM (uncontrolled labels)",
-        sa_column="Column(ARRAY(String))",
+        nullable=True,
+        required=False,
         search_category="categories",
-        search_keywords=["categories", "type", "kind"]
+        search_keywords=["categories", "type", "kind"],
+        sa_column="Column(ARRAY(String))",
     ),
     FieldSpec(
         name="canonical_categories",
         type_annotation="Optional[List[str]]",
         description="Cleaned, controlled categories used for navigation and taxonomy",
+        nullable=True,
+        required=False,
+        exclude=True,
         sa_column="Column(ARRAY(String))",
-        exclude=True  # Auto-generated from categories
     ),
-
-    # ------------------------------------------------------------------
-    # FLEXIBLE ATTRIBUTE BUCKET
-    # ------------------------------------------------------------------
     FieldSpec(
         name="discovered_attributes",
         type_annotation="Optional[Dict[str, Any]]",
         description="Dictionary containing any extra attributes not explicitly defined in Listing or Entity models",
-        sa_column="Column(JSON)"
+        nullable=True,
+        required=False,
+        sa_column="Column(JSON)",
     ),
-
-    # ------------------------------------------------------------------
-    # LOCATION
-    # ------------------------------------------------------------------
     FieldSpec(
         name="street_address",
         type_annotation="Optional[str]",
         description="Full street address including building number, street name, city and postcode",
+        nullable=True,
+        required=False,
         search_category="location",
-        search_keywords=["address", "location", "street"]
+        search_keywords=["address", "location", "street"],
     ),
     FieldSpec(
         name="city",
         type_annotation="Optional[str]",
         description="City or town",
+        nullable=True,
+        required=False,
         index=True,
         search_category="location",
-        search_keywords=["city", "town"]
+        search_keywords=["city", "town"],
     ),
     FieldSpec(
         name="postcode",
         type_annotation="Optional[str]",
         description="Full UK postcode with correct spacing (e.g., 'SW1A 0AA')",
+        nullable=True,
+        required=False,
         index=True,
         search_category="location",
-        search_keywords=["postcode", "postal code", "zip"]
+        search_keywords=["postcode", "postal code", "zip"],
     ),
     FieldSpec(
         name="country",
         type_annotation="Optional[str]",
         description="Country name",
+        nullable=True,
+        required=False,
         search_category="location",
-        search_keywords=["country"]
+        search_keywords=["country"],
     ),
     FieldSpec(
         name="latitude",
         type_annotation="Optional[float]",
-        description="WGS84 Latitude coordinate (decimal degrees)"
+        description="WGS84 Latitude coordinate (decimal degrees)",
+        nullable=True,
+        required=False,
     ),
     FieldSpec(
         name="longitude",
         type_annotation="Optional[float]",
-        description="WGS84 Longitude coordinate (decimal degrees)"
+        description="WGS84 Longitude coordinate (decimal degrees)",
+        nullable=True,
+        required=False,
     ),
-
-    # ------------------------------------------------------------------
-    # CONTACT
-    # ------------------------------------------------------------------
     FieldSpec(
         name="phone",
         type_annotation="Optional[str]",
         description="Primary contact phone number with country code. MUST be E.164 UK format (e.g. '+441315397071')",
+        nullable=True,
+        required=False,
         search_category="contact",
-        search_keywords=["phone", "telephone", "contact"]
+        search_keywords=["phone", "telephone", "contact"],
     ),
     FieldSpec(
         name="email",
         type_annotation="Optional[str]",
         description="Primary public email address",
+        nullable=True,
+        required=False,
         search_category="contact",
-        search_keywords=["email", "contact"]
+        search_keywords=["email", "contact"],
     ),
     FieldSpec(
         name="website_url",
         type_annotation="Optional[str]",
         description="Official website URL",
+        nullable=True,
+        required=False,
         search_category="contact",
-        search_keywords=["website", "url", "site"]
+        search_keywords=["website", "url", "site"],
     ),
-
-    # ------------------------------------------------------------------
-    # SOCIAL MEDIA
-    # ------------------------------------------------------------------
     FieldSpec(
         name="instagram_url",
         type_annotation="Optional[str]",
-        description="Instagram profile URL or handle"
+        description="Instagram profile URL or handle",
+        nullable=True,
+        required=False,
     ),
     FieldSpec(
         name="facebook_url",
         type_annotation="Optional[str]",
-        description="Facebook page URL"
+        description="Facebook page URL",
+        nullable=True,
+        required=False,
     ),
     FieldSpec(
         name="twitter_url",
         type_annotation="Optional[str]",
-        description="Twitter/X profile URL or handle"
+        description="Twitter/X profile URL or handle",
+        nullable=True,
+        required=False,
     ),
     FieldSpec(
         name="linkedin_url",
         type_annotation="Optional[str]",
-        description="LinkedIn company page URL"
+        description="LinkedIn company page URL",
+        nullable=True,
+        required=False,
     ),
-
-    # ------------------------------------------------------------------
-    # OPENING HOURS
-    # ------------------------------------------------------------------
     FieldSpec(
         name="opening_hours",
         type_annotation="Optional[Dict[str, Any]]",
-        description=(
-            "Opening hours per day. May contain strings or nested open/close times. "
-            "Example: {'monday': {'open': '05:30', 'close': '22:00'}, "
-            "'sunday': 'CLOSED'}"
-        ),
-        sa_column="Column(JSON)",
+        description="Opening hours per day. May contain strings or nested open/close times. Example: {'monday': {'open': '05:30', 'close': '22:00'}, 'sunday': 'CLOSED'}",
+        nullable=True,
+        required=False,
         search_category="hours",
-        search_keywords=["hours", "opening", "times"]
+        search_keywords=["hours", "opening", "times"],
+        sa_column="Column(JSON)",
     ),
-
-    # ------------------------------------------------------------------
-    # METADATA (excluded from extraction)
-    # ------------------------------------------------------------------
     FieldSpec(
         name="source_info",
-        type_annotation="Dict[str, Any]",
+        type_annotation="Optional[Dict[str, Any]]",
         description="Provenance metadata: URLs, method (tavily/manual), timestamps, notes",
+        nullable=True,
+        required=False,
+        exclude=True,
         default="default_factory=dict",
         sa_column="Column(JSON)",
-        exclude=True
     ),
     FieldSpec(
         name="field_confidence",
-        type_annotation="Dict[str, float]",
+        type_annotation="Optional[Dict[str, float]]",
         description="Per-field confidence scores used for overwrite decisions",
+        nullable=True,
+        required=False,
+        exclude=True,
         default="default_factory=dict",
         sa_column="Column(JSON)",
-        exclude=True
     ),
     FieldSpec(
         name="created_at",
         type_annotation="Optional[datetime]",
         description="Creation timestamp",
-        sa_column='Column(DateTime(timezone=True), nullable=False, server_default=func.now())',
-        exclude=True
+        nullable=True,
+        required=False,
+        exclude=True,
+        sa_column="Column(DateTime(timezone=True), nullable=False, server_default=func.now())",
     ),
     FieldSpec(
         name="updated_at",
         type_annotation="Optional[datetime]",
         description="Last update timestamp",
-        sa_column='Column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())',
-        exclude=True
+        nullable=True,
+        required=False,
+        exclude=True,
+        sa_column="Column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())",
     ),
     FieldSpec(
         name="external_ids",
         type_annotation="Optional[Dict[str, Any]]",
         description="External system IDs (e.g., {'wordpress': 123, 'google': 'abc'})",
+        nullable=True,
+        required=False,
+        exclude=True,
         sa_column="Column(JSON)",
-        exclude=True
-    ),
+    )
 ]
-
-
-def get_field_by_name(name: str) -> Optional[FieldSpec]:
-    """Get field spec by name."""
-    for field_spec in LISTING_FIELDS:
-        if field_spec.name == name:
-            return field_spec
-    return None
-
-
-def get_fields_with_search_metadata() -> List[FieldSpec]:
-    """Get all Listing fields that have search metadata."""
-    return [f for f in LISTING_FIELDS if f.search_category is not None]
-
-
-def get_required_fields() -> List[FieldSpec]:
-    """Get all required (non-optional) Listing fields."""
-    return [f for f in LISTING_FIELDS if f.required]
-
-
-def get_database_fields() -> List[FieldSpec]:
-    """Get all Listing fields for database (includes internal/excluded fields)."""
-    return LISTING_FIELDS
-
-
-def get_extraction_fields() -> List[FieldSpec]:
-    """Get all Listing fields for LLM extraction (excludes internal fields)."""
-    return [f for f in LISTING_FIELDS if not f.exclude]
