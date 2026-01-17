@@ -325,6 +325,124 @@ edinburgh_finds/
 
 ---
 
+## Schema Management
+
+### YAML-Based Single Source of Truth
+
+This project uses **YAML schemas** as the single source of truth for all database and extraction schemas. Schema files are located in `engine/config/schemas/`:
+
+```
+engine/config/schemas/
+├── listing.yaml      # Base entity schema (27 fields)
+├── venue.yaml        # Venue-specific fields (85 fields)
+└── winery.yaml       # Example: Winery vertical (12 specific fields)
+```
+
+### Generating Schemas
+
+All Python FieldSpecs and Prisma schemas are auto-generated from YAML:
+
+```bash
+# Generate all schemas from YAML
+python -m engine.schema.generate
+
+# Generate specific schema
+python -m engine.schema.generate --schema=listing
+
+# Validate schemas are in sync (exits 1 if drift detected)
+python -m engine.schema.generate --validate
+
+# Preview changes without writing files
+python -m engine.schema.generate --dry-run
+```
+
+**IMPORTANT**: Never manually edit generated files:
+- `engine/schema/listing.py` - Generated from `listing.yaml`
+- `engine/schema/venue.py` - Generated from `venue.yaml`
+- `prisma/schema.prisma` - Generated from YAML schemas
+
+All generated files include a "GENERATED FILE - DO NOT EDIT" warning.
+
+### Adding a New Field to an Entity
+
+1. Edit the YAML schema (e.g., `engine/config/schemas/venue.yaml`)
+2. Add your field with metadata:
+   ```yaml
+   - name: parking_available
+     type: boolean
+     nullable: true
+     required: false
+     description: "Whether the venue has parking facilities"
+     search_keywords:
+       - parking
+       - car park
+       - vehicle access
+   ```
+3. Regenerate schemas:
+   ```bash
+   python -m engine.schema.generate
+   ```
+4. Run tests to verify:
+   ```bash
+   pytest engine/tests/test_schema_sync.py -v
+   ```
+5. Commit both YAML and generated files
+
+### Adding a New Entity Type
+
+To add a new vertical (e.g., Restaurant, Winery, Gym):
+
+1. Create new YAML schema file: `engine/config/schemas/restaurant.yaml`
+2. Define entity with inheritance:
+   ```yaml
+   schema:
+     name: Restaurant
+     extends: listing
+     description: "Restaurant-specific fields"
+
+   fields:
+     - name: cuisine_types
+       type: list[string]
+       description: "Types of cuisine served"
+     - name: michelin_stars
+       type: integer
+       nullable: true
+       description: "Number of Michelin stars (if applicable)"
+   ```
+3. Generate schemas:
+   ```bash
+   python -m engine.schema.generate
+   ```
+4. Update extraction engine to use new entity type
+5. Add Prisma migrations if needed
+
+See **[Adding a New Entity Type Guide](./docs/adding_entity_type.md)** for detailed walkthrough.
+
+### Schema Documentation
+
+For comprehensive schema management documentation:
+
+- **[Schema Management Guide](./docs/schema_management.md)** - YAML format reference, field types, attributes
+- **[Adding a New Entity Type](./docs/adding_entity_type.md)** - Step-by-step tutorial with winery example
+- **[ARCHITECTURE.md - Section 2.4](./ARCHITECTURE.md)** - Schema generation architecture
+
+### Pre-commit Hook (Recommended)
+
+Add a pre-commit hook to prevent schema drift:
+
+```bash
+# .git/hooks/pre-commit
+#!/bin/bash
+python -m engine.schema.generate --validate --no-color
+if [ $? -ne 0 ]; then
+  echo "Error: Generated schemas are out of sync with YAML"
+  echo "Run: python -m engine.schema.generate"
+  exit 1
+fi
+```
+
+---
+
 ## Deployment
 
 ### Frontend (Vercel)
