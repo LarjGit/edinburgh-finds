@@ -287,24 +287,32 @@ def get_category_display_name(category_key: str) -> Optional[str]:
     return None
 
 
-def get_category_hierarchy(category_key: str) -> List[str]:
+def get_category_hierarchy(category_key: str, include_parents: bool = False) -> List[str]:
     """
-    Get the full hierarchy path for a category (including parents).
+    Get the hierarchy path for a category.
+
+    By default, categories are treated as flat to avoid coupling categories
+    to entity types. Parent relationships are only included when explicitly
+    requested.
 
     Args:
         category_key: Canonical category key
+        include_parents: Whether to include parent categories if defined
 
     Returns:
         List[str]: List of category keys from root to leaf
-                   e.g., ['venue', 'padel'] for 'padel'
+                   e.g., ['venue', 'sports_centre'] when include_parents=True
 
     Example:
         >>> get_category_hierarchy('padel')
-        ['venue', 'padel']
+        ['padel']
 
-        >>> get_category_hierarchy('venue')
-        ['venue']
+        >>> get_category_hierarchy('sports_centre', include_parents=True)
+        ['venue', 'sports_centre']
     """
+    if not include_parents:
+        return [category_key]
+
     taxonomy = get_taxonomy()
 
     # Build parent map

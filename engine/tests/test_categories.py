@@ -376,6 +376,18 @@ class TestCategoryMetadata:
         # Venue is root, should only contain itself
         assert hierarchy == ['venue']
 
+    def test_get_category_hierarchy_ignores_parents_by_default(self):
+        """Test that hierarchy ignores parent relationships by default"""
+        hierarchy = category_mapper.get_category_hierarchy('sports_centre')
+
+        assert hierarchy == ['sports_centre']
+
+    def test_get_category_hierarchy_includes_parents_when_requested(self):
+        """Test that hierarchy includes parents when explicitly requested"""
+        hierarchy = category_mapper.get_category_hierarchy('sports_centre', include_parents=True)
+
+        assert hierarchy == ['venue', 'sports_centre']
+
     def test_get_category_hierarchy_preserves_order(self):
         """Test that hierarchy is in parent-to-child order"""
         hierarchy = category_mapper.get_category_hierarchy('tennis')
