@@ -21,5 +21,9 @@ component interactions, data flows, entity relationships, and scaling strategies
 ## Data Engine / Scripts
 - **Language:** Python
 - **Purpose:** Data extraction, processing, and seeding (ETL).
+- **Schema Management:** YAML-based single source of truth
+  - *YAML schemas auto-generate Python FieldSpecs and Prisma schemas*
+  - *Eliminates schema drift, enables horizontal scaling*
+  - *Location: `engine/config/schemas/*.yaml`*
 - **Validation:** Pydantic (Schema-Driven)
 - **ORM:** Prisma Client Python
