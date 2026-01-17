@@ -339,30 +339,31 @@ This plan details the phased implementation of the Data Extraction Engine. Each 
 
 ### Task 7.3: Batch All Unprocessed
 
-- [ ] Write tests for CLI batch mode (`test_cli_batch.py`)
-- [ ] Implement `run_all.py` command
-- [ ] Query all unprocessed RawIngestion records
-- [ ] Process in source-grouped batches
-- [ ] Implement overall summary report
-- [ ] Test with mixed unprocessed records
+- [x] Write tests for CLI batch mode (`test_cli_batch.py`)
+- [x] Implement `run_all_extraction()` function in `run.py`
+- [x] Query all unprocessed RawIngestion records
+- [x] Process in source-grouped batches
+- [x] Implement overall summary report (`format_all_summary_report()`)
+- [x] Create `run_all.py` CLI script
+- [x] Test with mixed unprocessed records (8 tests, all passing)
 
 ### Task 7.4: Orchestration Helpers
 
-- [ ] Implement `--dry-run` flag (show what would be extracted, don't commit)
-- [ ] Implement `--limit=N` flag (process only N records, for testing)
-- [ ] Implement `--force-retry` flag (re-extract even if already processed)
-- [ ] Write tests for all CLI flags
-- [ ] Create usage documentation (`docs/extraction_cli.md`)
+- [x] Implement `--dry-run` flag (show what would be extracted, don't commit)
+- [x] Implement `--limit=N` flag (process only N records, for testing) - Note: already implemented
+- [x] Implement `--force-retry` flag (re-extract even if already processed)
+- [x] Write tests for all CLI flags (8 tests in test_cli_flags.py, all passing)
+- [x] Create usage documentation (`docs/extraction_cli.md`)
 
 **Success Criteria:**
 - ✅ CLI supports all 4 modes (single, per-source, batch all, retry)
 - ✅ Progress indicators show real-time status
 - ✅ Summary reports provide actionable data
 - ✅ Dry-run mode enables safe testing
-- ✅ Documentation complete and accurate
-- ✅ Test coverage >80% for CLI interface
+- ✅ Documentation complete and accurate (docs/extraction_cli.md created)
+- ✅ Test coverage >80% for CLI interface (31 tests total, all passing)
 
-**Phase Checkpoint:** Full CLI operational and documented
+**Phase Checkpoint:** Full CLI operational and documented [checkpoint: PENDING]
 
 ---
 
