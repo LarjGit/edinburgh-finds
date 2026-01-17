@@ -341,14 +341,33 @@ class TestCategoryMetadata:
         """Test that invalid category keys return None"""
         assert category_mapper.get_category_display_name('invalid_key') is None
 
+    def test_activity_categories_are_flat(self):
+        """Test that activity categories do not declare a parent"""
+        taxonomy = category_mapper.get_taxonomy()
+        activity_keys = {
+            'padel',
+            'tennis',
+            'squash',
+            'badminton',
+            'pickleball',
+            'table_tennis',
+            'golf',
+            'climbing',
+            'yoga',
+            'martial_arts',
+        }
+        activity_entries = [entry for entry in taxonomy if entry['category_key'] in activity_keys]
+
+        # All activity categories should omit a parent field
+        for entry in activity_entries:
+            assert 'parent' not in entry or entry['parent'] is None
+
     def test_get_category_hierarchy_for_leaf_node(self):
         """Test hierarchy retrieval for a leaf category"""
         hierarchy = category_mapper.get_category_hierarchy('padel')
 
-        # Padel should have 'venue' as parent
-        assert 'venue' in hierarchy
-        assert 'padel' in hierarchy
-        assert hierarchy.index('venue') < hierarchy.index('padel')
+        # Padel is a flat category (no parent)
+        assert hierarchy == ['padel']
 
     def test_get_category_hierarchy_for_root_node(self):
         """Test hierarchy for a root-level category"""
@@ -361,12 +380,8 @@ class TestCategoryMetadata:
         """Test that hierarchy is in parent-to-child order"""
         hierarchy = category_mapper.get_category_hierarchy('tennis')
 
-        # Should be ordered from root to leaf
         assert isinstance(hierarchy, list)
-        # tennis has venue as parent
-        if len(hierarchy) > 1:
-            assert hierarchy[0] == 'venue'
-            assert hierarchy[-1] == 'tennis'
+        assert hierarchy[-1] == 'tennis'
 
 
 class TestUnmappedCategoryLogging:

@@ -84,7 +84,6 @@ taxonomy:
   # ------------------------------------------------------------------
   - category_key: padel
     display_name: Padel
-    parent: venue
     description: Padel courts and facilities
     search_keywords:
       - padel
@@ -94,7 +93,6 @@ taxonomy:
 
   - category_key: tennis
     display_name: Tennis
-    parent: venue
     description: Tennis courts and facilities
     search_keywords:
       - tennis
@@ -103,7 +101,6 @@ taxonomy:
 
   - category_key: squash
     display_name: Squash
-    parent: venue
     description: Squash courts and facilities
     search_keywords:
       - squash
@@ -111,7 +108,6 @@ taxonomy:
 
   - category_key: badminton
     display_name: Badminton
-    parent: venue
     description: Badminton courts and facilities
     search_keywords:
       - badminton
@@ -120,7 +116,6 @@ taxonomy:
 
   - category_key: pickleball
     display_name: Pickleball
-    parent: venue
     description: Pickleball courts and facilities
     search_keywords:
       - pickleball
@@ -128,7 +123,6 @@ taxonomy:
 
   - category_key: table_tennis
     display_name: Table Tennis
-    parent: venue
     description: Table tennis facilities
     search_keywords:
       - table tennis
@@ -207,7 +201,6 @@ taxonomy:
   # ------------------------------------------------------------------
   - category_key: golf
     display_name: Golf
-    parent: venue
     description: Golf courses and facilities
     search_keywords:
       - golf
@@ -216,7 +209,6 @@ taxonomy:
 
   - category_key: climbing
     display_name: Climbing
-    parent: venue
     description: Climbing walls and facilities
     search_keywords:
       - climbing
@@ -226,7 +218,6 @@ taxonomy:
 
   - category_key: yoga
     display_name: Yoga
-    parent: venue
     description: Yoga studios and classes
     search_keywords:
       - yoga
@@ -235,7 +226,6 @@ taxonomy:
 
   - category_key: martial_arts
     display_name: Martial Arts
-    parent: venue
     description: Martial arts dojos and training facilities
     search_keywords:
       - martial arts
