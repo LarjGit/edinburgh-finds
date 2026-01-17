@@ -1,5 +1,5 @@
 """
-Pydantic models for venue extraction with LLM.
+Pydantic models for entity extraction with LLM.
 
 These models define the structured output format for LLM-based extraction.
 They align with the schema defined in engine/schema/listing.py and venue.py,
@@ -11,9 +11,9 @@ from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field, field_validator
 
 
-class VenueExtraction(BaseModel):
+class EntityExtraction(BaseModel):
     """
-    Structured output model for venue extraction from unstructured data.
+    Structured output model for entity extraction from unstructured data.
 
     This model represents the fields that should be extracted from raw data
     sources (Serper, OSM, etc.) and validated before storage in ExtractedListing.
@@ -28,7 +28,12 @@ class VenueExtraction(BaseModel):
     # IDENTIFICATION (Required)
     # ------------------------------------------------------------------
     entity_name: str = Field(
-        description="Official name of the venue. REQUIRED. Must be the actual business name, not a description."
+        description="Official name of the entity. REQUIRED. Must be the actual business name, not a description."
+    )
+
+    entity_type: Optional[str] = Field(
+        default=None,
+        description="Type of the entity. Must be one of: 'VENUE', 'RETAIL', 'COACH', 'CLUB', 'EVENT'. Default to 'VENUE' if unsure."
     )
 
     # ------------------------------------------------------------------
@@ -91,7 +96,7 @@ class VenueExtraction(BaseModel):
     # ------------------------------------------------------------------
     categories: Optional[List[str]] = Field(
         default=None,
-        description="Free-form categories that describe the venue (e.g., ['Padel Club', 'Sports Facility']). Null if not found."
+        description="Free-form categories that describe the entity (e.g., ['Padel Club', 'Sports Facility']). Null if not found."
     )
 
     # ------------------------------------------------------------------
@@ -115,7 +120,7 @@ class VenueExtraction(BaseModel):
     # ------------------------------------------------------------------
     summary: Optional[str] = Field(
         default=None,
-        description="A short overall description of the venue (100-200 characters). Null if not found or cannot be synthesized."
+        description="A short overall description of the entity (100-200 characters). Null if not found or cannot be synthesized."
     )
 
     # ------------------------------------------------------------------
@@ -128,7 +133,7 @@ class VenueExtraction(BaseModel):
 
     currently_open: Optional[bool] = Field(
         default=None,
-        description="Whether the venue is currently open. null = unknown, True = yes, False = no."
+        description="Whether the entity is currently open. null = unknown, True = yes, False = no."
     )
 
     # ------------------------------------------------------------------

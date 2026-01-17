@@ -12,7 +12,7 @@ To run real API tests:
 Test Coverage:
 - Loading prompt templates from files
 - Combining templates with context data
-- Real LLM extraction with VenueExtraction model (manual test)
+- Real LLM extraction with EntityExtraction model (manual test)
 - Verifying null semantics in LLM responses
 """
 
@@ -62,7 +62,7 @@ class TestLLMClientWithTemplates:
     def test_llm_client_accepts_custom_system_message(self, mock_anthropic):
         """Test that custom system messages (like our template) are used"""
         from engine.extraction.llm_client import InstructorClient
-        from engine.extraction.models.venue_extraction import VenueExtraction
+        from engine.extraction.models.entity_extraction import EntityExtraction
 
         # Load the base template
         template_path = Path(__file__).parent.parent / "extraction" / "prompts" / "extraction_base.txt"
@@ -71,7 +71,7 @@ class TestLLMClientWithTemplates:
 
         # Mock the response
         mock_client = Mock()
-        mock_response = VenueExtraction(
+        mock_response = EntityExtraction(
             entity_name="Test Venue",
             street_address="123 Test St",
             phone="+441234567890"
@@ -84,7 +84,7 @@ class TestLLMClientWithTemplates:
             client = InstructorClient(api_key="test-key")
             result = client.extract(
                 prompt="Extract venue information from the context.",
-                response_model=VenueExtraction,
+                response_model=EntityExtraction,
                 context="Test venue data here",
                 system_message=system_message
             )
@@ -102,11 +102,11 @@ class TestNullSemanticsInLLMResponses:
     def test_llm_response_uses_null_for_missing_fields(self, mock_anthropic):
         """Test that LLM uses null instead of empty strings or placeholders"""
         from engine.extraction.llm_client import InstructorClient
-        from engine.extraction.models.venue_extraction import VenueExtraction
+        from engine.extraction.models.entity_extraction import EntityExtraction
 
         # Mock a response with proper null usage
         mock_client = Mock()
-        mock_response = VenueExtraction(
+        mock_response = EntityExtraction(
             entity_name="Minimal Venue",
             street_address=None,  # Null, not empty string
             phone=None,  # Null, not "Unknown"
@@ -120,7 +120,7 @@ class TestNullSemanticsInLLMResponses:
             client = InstructorClient(api_key="test-key")
             result = client.extract(
                 prompt="Extract venue",
-                response_model=VenueExtraction,
+                response_model=EntityExtraction,
                 context="Minimal Venue - that's all we know"
             )
 
@@ -145,14 +145,14 @@ class TestExtractionWithRealData:
         MANUAL TEST - Requires ANTHROPIC_API_KEY environment variable.
 
         This test makes a real API call to verify end-to-end LLM extraction
-        with the base template and VenueExtraction model.
+        with the base template and EntityExtraction model.
 
         To run:
         1. Set ANTHROPIC_API_KEY environment variable
         2. pytest engine/tests/test_llm_integration.py::TestExtractionWithRealData::test_real_llm_extraction_manual -v
         """
         from engine.extraction.llm_client import InstructorClient
-        from engine.extraction.models.venue_extraction import VenueExtraction
+        from engine.extraction.models.entity_extraction import EntityExtraction
 
         # Check for API key
         api_key = os.getenv('ANTHROPIC_API_KEY')
@@ -187,7 +187,7 @@ class TestExtractionWithRealData:
         client = InstructorClient(api_key=api_key)
         result = client.extract(
             prompt="Extract structured venue information from the Google Places API response.",
-            response_model=VenueExtraction,
+            response_model=EntityExtraction,
             context=context,
             system_message=system_message
         )
@@ -238,7 +238,7 @@ class TestExtractionWithRealData:
         given incomplete data.
         """
         from engine.extraction.llm_client import InstructorClient
-        from engine.extraction.models.venue_extraction import VenueExtraction
+        from engine.extraction.models.entity_extraction import EntityExtraction
 
         api_key = os.getenv('ANTHROPIC_API_KEY')
         if not api_key:
@@ -257,7 +257,7 @@ class TestExtractionWithRealData:
         client = InstructorClient(api_key=api_key)
         result = client.extract(
             prompt="Extract venue information. Remember: use null for missing fields!",
-            response_model=VenueExtraction,
+            response_model=EntityExtraction,
             context=context,
             system_message=system_message
         )

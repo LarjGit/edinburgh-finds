@@ -96,9 +96,17 @@ OpenStreetMap provides geographic data as structured key-value tags. These tags:
 2. **Multi-lingual Name Handling**
    - Prefer `name:en` for English-speaking regions
    - Fall back to `name` if language-specific tag not available
-   - If `official_name` exists and differs significantly, note in description
+   - If official_name exists and differs significantly, note in description
 
-3. **Sport Tag Mapping**
+3. **Entity Type Extraction**
+   - Classify the entity as one of: VENUE, RETAIL, COACH, CLUB, EVENT
+   - `leisure=sports_centre`, `leisure=pitch` → VENUE
+   - `shop=sports` → RETAIL
+   - `club=sport` → CLUB
+   - `office=educational` (for coaching) → COACH
+   - Default to VENUE if it's a physical location with facilities
+
+4. **Sport Tag Mapping**
    - `sport=padel` → padel: true, padel_total_courts: null (unless capacity tag exists)
    - `sport=tennis` → tennis: true, tennis_total_courts: null
    - `sport=tennis;padel` → Both fields true
@@ -166,6 +174,7 @@ OSM supports multilingual names:
 
 Before returning extraction:
 - ✓ entity_name is present (from `name` or `name:en`)
+- ✓ entity_type is classified (VENUE, RETAIL, etc.)
 - ✓ Coordinates (lat/lon) extracted if available in element
 - ✓ Phone numbers converted to E.164 format IF PROVIDED
 - ✓ Boolean fields are true/false/null (never inferred)
@@ -175,7 +184,7 @@ Before returning extraction:
 
 ## OUTPUT FORMAT
 
-Return a JSON object matching the VenueExtraction schema.
+Return a JSON object matching the EntityExtraction schema.
 
 **Expected outcome for typical OSM elements:**
 - entity_name: Usually extractable ✓ (from name tags)

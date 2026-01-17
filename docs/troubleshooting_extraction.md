@@ -506,7 +506,7 @@ ERROR: Pydantic validation error: field required (entity_name)
 result = client.chat.completions.create(
     model="claude-haiku-20250318",
     messages=[{"role": "user", "content": prompt}],
-    response_model=VenueExtraction,  # Pydantic model enforces schema
+    response_model=EntityExtraction,  # Pydantic model enforces schema
     max_retries=2  # Retry up to 2 times with validation feedback
 )
 ```

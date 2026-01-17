@@ -461,7 +461,7 @@ If your source requires LLM extraction, see **Serper Extractor** (`engine/extrac
 2. In `extract()`, call LLM:
    ```python
    from engine.extraction.llm_client import get_instructor_client
-   from engine.extraction.models.venue_extraction import VenueExtraction
+   from engine.extraction.models.entity_extraction import EntityExtraction
 
    def extract(self, raw_data: Dict) -> Dict:
        client = get_instructor_client()
@@ -473,7 +473,7 @@ If your source requires LLM extraction, see **Serper Extractor** (`engine/extrac
        result = client.chat.completions.create(
            model="claude-haiku-20250318",
            messages=[{"role": "user", "content": prompt}],
-           response_model=VenueExtraction,
+           response_model=EntityExtraction,
            max_retries=2
        )
 
@@ -951,7 +951,7 @@ schema_fields = get_extraction_fields("coach")
 result = client.chat.completions.create(
     model="claude-haiku-20250318",
     messages=[{"role": "user", "content": prompt}],
-    response_model=VenueExtraction,
+    response_model=EntityExtraction,
     max_retries=2  # Retry on validation failures
 )
 ```

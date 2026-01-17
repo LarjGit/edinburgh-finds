@@ -127,11 +127,11 @@ class TestOSMExtraction:
     def test_extract_handles_osm_elements(self, osm_fixture):
         """Test that extract processes OSM elements correctly"""
         from engine.extraction.extractors.osm_extractor import OSMExtractor
-        from engine.extraction.models.venue_extraction import VenueExtraction
+        from engine.extraction.models.entity_extraction import EntityExtraction
 
         # Create mock LLM client with expected response
         mock_client = Mock()
-        mock_extraction = Mock(spec=VenueExtraction)
+        mock_extraction = Mock(spec=EntityExtraction)
         mock_extraction.model_dump.return_value = {
             "entity_name": "Edinburgh Padel Club",
             "entity_type": "VENUE",
@@ -167,11 +167,11 @@ class TestOSMExtraction:
     def test_extract_extracts_osm_id(self, osm_fixture):
         """Test that extract captures OSM element ID to external_ids"""
         from engine.extraction.extractors.osm_extractor import OSMExtractor
-        from engine.extraction.models.venue_extraction import VenueExtraction
+        from engine.extraction.models.entity_extraction import EntityExtraction
 
         # Create mock LLM client
         mock_client = Mock()
-        mock_extraction = Mock(spec=VenueExtraction)
+        mock_extraction = Mock(spec=EntityExtraction)
         mock_extraction.model_dump.return_value = {
             "entity_name": "Edinburgh Padel Club",
             "entity_type": "VENUE",
@@ -189,10 +189,10 @@ class TestOSMExtraction:
     def test_extract_uses_osm_specific_prompt(self, osm_fixture):
         """Test that extract uses OSM-specific system message"""
         from engine.extraction.extractors.osm_extractor import OSMExtractor
-        from engine.extraction.models.venue_extraction import VenueExtraction
+        from engine.extraction.models.entity_extraction import EntityExtraction
 
         mock_client = Mock()
-        mock_extraction = Mock(spec=VenueExtraction)
+        mock_extraction = Mock(spec=EntityExtraction)
         mock_extraction.model_dump.return_value = {
             "entity_name": "Test Venue",
             "entity_type": "VENUE"
@@ -341,7 +341,7 @@ class TestOSMErrorHandling:
     def test_extract_handles_missing_tags(self):
         """Test that extract handles OSM elements with minimal tags"""
         from engine.extraction.extractors.osm_extractor import OSMExtractor
-        from engine.extraction.models.venue_extraction import VenueExtraction
+        from engine.extraction.models.entity_extraction import EntityExtraction
 
         minimal_osm = {
             "elements": [{
@@ -356,7 +356,7 @@ class TestOSMErrorHandling:
         }
 
         mock_client = Mock()
-        mock_extraction = Mock(spec=VenueExtraction)
+        mock_extraction = Mock(spec=EntityExtraction)
         mock_extraction.model_dump.return_value = {
             "entity_name": "Unnamed Padel Facility",
             "entity_type": "VENUE",
@@ -380,10 +380,10 @@ class TestOSMCoordinateExtraction:
     def test_extract_captures_coordinates(self, osm_fixture):
         """Test that extract captures latitude and longitude"""
         from engine.extraction.extractors.osm_extractor import OSMExtractor
-        from engine.extraction.models.venue_extraction import VenueExtraction
+        from engine.extraction.models.entity_extraction import EntityExtraction
 
         mock_client = Mock()
-        mock_extraction = Mock(spec=VenueExtraction)
+        mock_extraction = Mock(spec=EntityExtraction)
         mock_extraction.model_dump.return_value = {
             "entity_name": "Edinburgh Padel Club",
             "entity_type": "VENUE",

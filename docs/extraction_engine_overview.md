@@ -201,7 +201,7 @@ extracted["entity_name"] = raw_data.get("displayName", {}).get("text")
 ```python
 # Serper: LLM extracts structured data from search snippets
 result = instructor_client.extract(
-    model=VenueExtraction,  # Pydantic schema
+    model=EntityExtraction,  # Pydantic schema
     prompt=build_prompt(search_snippets),
     retries=2
 )

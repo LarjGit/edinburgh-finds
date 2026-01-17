@@ -20,7 +20,7 @@ from pydantic import BaseModel, ValidationError, Field
 from typing import Optional, List
 
 
-class SampleVenueExtraction(BaseModel):
+class SampleEntityExtraction(BaseModel):
     """Sample Pydantic model for testing structured extraction"""
     entity_name: str
     street_address: Optional[str] = None
@@ -85,7 +85,7 @@ class TestStructuredExtraction:
 
         # Mock the Anthropic API response
         mock_client = Mock()
-        mock_response = SampleVenueExtraction(
+        mock_response = SampleEntityExtraction(
             entity_name="Test Venue",
             street_address="123 Test St",
             latitude=55.9533,
@@ -98,11 +98,11 @@ class TestStructuredExtraction:
             client = InstructorClient(api_key="test-key")
             result = client.extract(
                 prompt="Extract venue information",
-                response_model=SampleVenueExtraction,
+                response_model=SampleEntityExtraction,
                 context="Test venue data"
             )
 
-            assert isinstance(result, SampleVenueExtraction)
+            assert isinstance(result, SampleEntityExtraction)
             assert result.entity_name == "Test Venue"
 
     @patch('anthropic.Anthropic')
@@ -111,7 +111,7 @@ class TestStructuredExtraction:
         from engine.extraction.llm_client import InstructorClient
 
         mock_client = Mock()
-        mock_response = SampleVenueExtraction(entity_name="Test")
+        mock_response = SampleEntityExtraction(entity_name="Test")
         mock_client.messages.create.return_value = mock_response
         mock_anthropic.return_value = mock_client
 
@@ -119,7 +119,7 @@ class TestStructuredExtraction:
             client = InstructorClient(api_key="test-key")
             client.extract(
                 prompt="Extract info",
-                response_model=SampleVenueExtraction,
+                response_model=SampleEntityExtraction,
                 context="Data",
                 system_message="Custom system prompt"
             )
@@ -135,7 +135,7 @@ class TestStructuredExtraction:
 
         mock_client = Mock()
         # Only required field, optionals should be None
-        mock_response = SampleVenueExtraction(entity_name="Minimal Venue")
+        mock_response = SampleEntityExtraction(entity_name="Minimal Venue")
         mock_client.messages.create.return_value = mock_response
         mock_anthropic.return_value = mock_client
 
@@ -143,7 +143,7 @@ class TestStructuredExtraction:
             client = InstructorClient(api_key="test-key")
             result = client.extract(
                 prompt="Extract",
-                response_model=SampleVenueExtraction,
+                response_model=SampleEntityExtraction,
                 context="Minimal data"
             )
 
@@ -170,7 +170,7 @@ class TestRetryLogic:
                 "value_error",
                 [{"type": "missing", "loc": ("entity_name",), "msg": "Field required"}]
             ),
-            SampleVenueExtraction(entity_name="Retry Success")
+            SampleEntityExtraction(entity_name="Retry Success")
         ]
         mock_anthropic.return_value = mock_client
 
@@ -178,7 +178,7 @@ class TestRetryLogic:
             client = InstructorClient(api_key="test-key")
             result = client.extract(
                 prompt="Extract",
-                response_model=SampleVenueExtraction,
+                response_model=SampleEntityExtraction,
                 context="Data"
             )
 
@@ -212,7 +212,7 @@ class TestRetryLogic:
             with pytest.raises(ValidationError):
                 client.extract(
                     prompt="Extract",
-                    response_model=SampleVenueExtraction,
+                    response_model=SampleEntityExtraction,
                     context="Bad data"
                 )
 
@@ -234,7 +234,7 @@ class TestRetryLogic:
         # First fails, second succeeds
         mock_client.messages.create.side_effect = [
             validation_error,
-            SampleVenueExtraction(entity_name="Fixed")
+            SampleEntityExtraction(entity_name="Fixed")
         ]
         mock_anthropic.return_value = mock_client
 
@@ -242,7 +242,7 @@ class TestRetryLogic:
             client = InstructorClient(api_key="test-key")
             client.extract(
                 prompt="Extract",
-                response_model=SampleVenueExtraction,
+                response_model=SampleEntityExtraction,
                 context="Data"
             )
 
@@ -271,7 +271,7 @@ class TestErrorHandling:
             with pytest.raises(APIError):
                 client.extract(
                     prompt="Extract",
-                    response_model=SampleVenueExtraction,
+                    response_model=SampleEntityExtraction,
                     context="Data"
                 )
 
@@ -291,7 +291,7 @@ class TestErrorHandling:
             with pytest.raises(RateLimitError):
                 client.extract(
                     prompt="Extract",
-                    response_model=SampleVenueExtraction,
+                    response_model=SampleEntityExtraction,
                     context="Data"
                 )
 
@@ -305,7 +305,7 @@ class TestTokenTracking:
         from engine.extraction.llm_client import InstructorClient
 
         mock_client = Mock()
-        mock_response = SampleVenueExtraction(entity_name="Test")
+        mock_response = SampleEntityExtraction(entity_name="Test")
         # Mock usage data
         mock_response._raw_response = Mock()
         mock_response._raw_response.usage = Mock(
@@ -319,7 +319,7 @@ class TestTokenTracking:
             client = InstructorClient(api_key="test-key")
             result = client.extract(
                 prompt="Extract",
-                response_model=SampleVenueExtraction,
+                response_model=SampleEntityExtraction,
                 context="Data"
             )
 
@@ -335,7 +335,7 @@ class TestTokenTracking:
         from engine.extraction.llm_client import InstructorClient
 
         mock_client = Mock()
-        mock_response = SampleVenueExtraction(entity_name="Test")
+        mock_response = SampleEntityExtraction(entity_name="Test")
         mock_response._raw_response = Mock()
         mock_response._raw_response.usage = Mock(
             input_tokens=1000,
@@ -348,7 +348,7 @@ class TestTokenTracking:
             client = InstructorClient(api_key="test-key")
             client.extract(
                 prompt="Extract",
-                response_model=SampleVenueExtraction,
+                response_model=SampleEntityExtraction,
                 context="Data"
             )
 

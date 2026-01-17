@@ -25,10 +25,10 @@ class TestBooleanNullSemantics:
 
     def test_null_means_unknown_not_false(self):
         """Test that null is interpreted as 'unknown', not as False"""
-        from engine.extraction.models.venue_extraction import VenueExtraction
+        from engine.extraction.models.entity_extraction import EntityExtraction
 
         # Create extraction with null currently_open
-        venue = VenueExtraction(
+        venue = EntityExtraction(
             entity_name="Test Venue",
             currently_open=None
         )
@@ -39,16 +39,16 @@ class TestBooleanNullSemantics:
 
     def test_explicit_false_is_different_from_null(self):
         """Test that False explicitly means 'no', different from null ('unknown')"""
-        from engine.extraction.models.venue_extraction import VenueExtraction
+        from engine.extraction.models.entity_extraction import EntityExtraction
 
         # Create extraction with explicitly False currently_open
-        venue_closed = VenueExtraction(
+        venue_closed = EntityExtraction(
             entity_name="Closed Venue",
             currently_open=False
         )
 
         # Create extraction with null currently_open
-        venue_unknown = VenueExtraction(
+        venue_unknown = EntityExtraction(
             entity_name="Unknown Venue",
             currently_open=None
         )
@@ -60,9 +60,9 @@ class TestBooleanNullSemantics:
 
     def test_explicit_true_means_yes(self):
         """Test that True explicitly means 'yes'"""
-        from engine.extraction.models.venue_extraction import VenueExtraction
+        from engine.extraction.models.entity_extraction import EntityExtraction
 
-        venue = VenueExtraction(
+        venue = EntityExtraction(
             entity_name="Open Venue",
             currently_open=True
         )
@@ -75,9 +75,9 @@ class TestStringNullSemantics:
 
     def test_optional_string_accepts_null(self):
         """Test that optional string fields accept null values"""
-        from engine.extraction.models.venue_extraction import VenueExtraction
+        from engine.extraction.models.entity_extraction import EntityExtraction
 
-        venue = VenueExtraction(
+        venue = EntityExtraction(
             entity_name="Test Venue",
             street_address=None,
             city=None,
@@ -96,30 +96,31 @@ class TestStringNullSemantics:
         Note: Pydantic doesn't prevent empty strings by default, but our
         convention is to use null for missing data, not empty strings.
         """
-        from engine.extraction.models.venue_extraction import VenueExtraction
+        from engine.extraction.models.entity_extraction import EntityExtraction
 
         # This documents the convention - prefer null over empty string
         # If a field has no value, use None, not ""
-        venue_with_null = VenueExtraction(
+        venue_with_null = EntityExtraction(
             entity_name="Test Venue",
             phone=None  # Correct: Use None for missing data
         )
 
-        venue_with_empty_string = VenueExtraction(
-            entity_name="Test Venue",
-            phone=""  # Not recommended: Empty string suggests "no phone" vs "unknown phone"
-        )
+        # Empty string should fail validation due to E.164 check
+        with pytest.raises(ValidationError):
+            EntityExtraction(
+                entity_name="Test Venue",
+                phone=""  # Not recommended: Empty string suggests "no phone" vs "unknown phone"
+            )
 
-        # Both are valid in Pydantic, but null is preferred for "unknown"
+        # Null is preferred for "unknown"
         assert venue_with_null.phone is None
-        assert venue_with_empty_string.phone == ""
 
     def test_required_string_cannot_be_null(self):
         """Test that required string fields (like entity_name) cannot be null"""
-        from engine.extraction.models.venue_extraction import VenueExtraction
+        from engine.extraction.models.entity_extraction import EntityExtraction
 
         with pytest.raises(ValidationError) as exc_info:
-            VenueExtraction(
+            EntityExtraction(
                 entity_name=None  # Required field, cannot be null
             )
 
@@ -128,18 +129,18 @@ class TestStringNullSemantics:
 
     def test_required_string_cannot_be_empty(self):
         """Test that required string fields cannot be empty or whitespace"""
-        from engine.extraction.models.venue_extraction import VenueExtraction
+        from engine.extraction.models.entity_extraction import EntityExtraction
 
         # Empty string should fail validation
         with pytest.raises(ValidationError) as exc_info:
-            VenueExtraction(entity_name="")
+            EntityExtraction(entity_name="")
 
         errors = exc_info.value.errors()
         assert any('entity_name' in str(err) for err in errors)
 
         # Whitespace-only should fail validation
         with pytest.raises(ValidationError) as exc_info:
-            VenueExtraction(entity_name="   ")
+            EntityExtraction(entity_name="   ")
 
         errors = exc_info.value.errors()
         assert any('entity_name' in str(err) for err in errors)
@@ -150,10 +151,10 @@ class TestOptionalFieldHandling:
 
     def test_optional_fields_default_to_null(self):
         """Test that optional fields have null as default value"""
-        from engine.extraction.models.venue_extraction import VenueExtraction
+        from engine.extraction.models.entity_extraction import EntityExtraction
 
         # Create minimal extraction with only required field
-        venue = VenueExtraction(entity_name="Minimal Venue")
+        venue = EntityExtraction(entity_name="Minimal Venue")
 
         # All optional fields should be None
         assert venue.street_address is None
@@ -173,9 +174,9 @@ class TestOptionalFieldHandling:
 
     def test_optional_fields_can_be_explicitly_set_to_null(self):
         """Test that optional fields can be explicitly set to None"""
-        from engine.extraction.models.venue_extraction import VenueExtraction
+        from engine.extraction.models.entity_extraction import EntityExtraction
 
-        venue = VenueExtraction(
+        venue = EntityExtraction(
             entity_name="Test Venue",
             phone=None,  # Explicitly null
             rating=None,  # Explicitly null
@@ -196,10 +197,10 @@ class TestLLMPromptGuidance:
 
     def test_field_descriptions_mention_null_handling(self):
         """Test that field descriptions explicitly mention null behavior"""
-        from engine.extraction.models.venue_extraction import VenueExtraction
+        from engine.extraction.models.entity_extraction import EntityExtraction
 
         # Check that docstrings mention null behavior
-        schema = VenueExtraction.model_json_schema()
+        schema = EntityExtraction.model_json_schema()
 
         # Check a few key fields have null guidance in description
         properties = schema.get('properties', {})
@@ -215,12 +216,12 @@ class TestLLMPromptGuidance:
 
     def test_model_has_example_with_proper_null_usage(self):
         """Test that model includes an example showing correct null usage"""
-        from engine.extraction.models.venue_extraction import VenueExtraction
+        from engine.extraction.models.entity_extraction import EntityExtraction
 
-        schema = VenueExtraction.model_json_schema()
+        schema = EntityExtraction.model_json_schema()
 
         # Should have an example in the schema
-        assert 'examples' in schema or 'example' in schema.get('$defs', {}).get('Config', {})
+        assert 'examples' in schema or 'example' in schema or 'example' in schema.get('$defs', {}).get('Config', {})
 
 
 class TestDictionaryNullSemantics:
@@ -228,9 +229,9 @@ class TestDictionaryNullSemantics:
 
     def test_discovered_attributes_can_be_null(self):
         """Test that discovered_attributes can be null when no extra data found"""
-        from engine.extraction.models.venue_extraction import VenueExtraction
+        from engine.extraction.models.entity_extraction import EntityExtraction
 
-        venue = VenueExtraction(
+        venue = EntityExtraction(
             entity_name="Basic Venue",
             discovered_attributes=None  # No extra attributes discovered
         )
@@ -239,16 +240,16 @@ class TestDictionaryNullSemantics:
 
     def test_discovered_attributes_can_be_empty_dict(self):
         """Test that discovered_attributes can be an empty dict vs null"""
-        from engine.extraction.models.venue_extraction import VenueExtraction
+        from engine.extraction.models.entity_extraction import EntityExtraction
 
         # null = "didn't look for extra attributes"
-        venue_null = VenueExtraction(
+        venue_null = EntityExtraction(
             entity_name="Venue 1",
             discovered_attributes=None
         )
 
         # {} = "looked for extra attributes, found none"
-        venue_empty = VenueExtraction(
+        venue_empty = EntityExtraction(
             entity_name="Venue 2",
             discovered_attributes={}
         )
@@ -259,9 +260,9 @@ class TestDictionaryNullSemantics:
 
     def test_discovered_attributes_with_null_values_inside_dict(self):
         """Test that discovered_attributes dict can contain null values"""
-        from engine.extraction.models.venue_extraction import VenueExtraction
+        from engine.extraction.models.entity_extraction import EntityExtraction
 
-        venue = VenueExtraction(
+        venue = EntityExtraction(
             entity_name="Venue",
             discovered_attributes={
                 "has_parking": True,
@@ -281,9 +282,9 @@ class TestListNullSemantics:
 
     def test_categories_can_be_null(self):
         """Test that categories can be null when not found"""
-        from engine.extraction.models.venue_extraction import VenueExtraction
+        from engine.extraction.models.entity_extraction import EntityExtraction
 
-        venue = VenueExtraction(
+        venue = EntityExtraction(
             entity_name="Venue",
             categories=None  # Categories not found
         )
@@ -292,17 +293,17 @@ class TestListNullSemantics:
 
     def test_categories_can_be_empty_list(self):
         """Test difference between null list and empty list"""
-        from engine.extraction.models.venue_extraction import VenueExtraction
+        from engine.extraction.models.entity_extraction import EntityExtraction
 
         # null = "didn't find categories"
-        venue_null = VenueExtraction(
+        venue_null = EntityExtraction(
             entity_name="Venue 1",
             categories=None
         )
 
         # [] = "found categories list, but it's empty"
         # (This is unlikely in practice, but semantically different)
-        venue_empty = VenueExtraction(
+        venue_empty = EntityExtraction(
             entity_name="Venue 2",
             categories=[]
         )

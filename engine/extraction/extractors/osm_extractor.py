@@ -56,7 +56,7 @@ from pathlib import Path
 
 from engine.extraction.base import BaseExtractor
 from engine.extraction.llm_client import InstructorClient
-from engine.extraction.models.venue_extraction import VenueExtraction
+from engine.extraction.models.entity_extraction import EntityExtraction
 from engine.extraction.attribute_splitter import split_attributes as split_attrs
 from engine.extraction.schema_utils import get_extraction_fields
 from engine.extraction.utils.opening_hours import parse_opening_hours
@@ -251,7 +251,7 @@ class OSMExtractor(BaseExtractor):
                    "Map OSM tags to venue fields (e.g., sport=padel → padel: true, "
                    "addr:city → city, capacity:courts → padel_total_courts). "
                    "Use null for any information not found in the tags.",
-            response_model=VenueExtraction,
+            response_model=EntityExtraction,
             context=aggregated_context,
             system_message=self.system_message
         )
@@ -259,8 +259,8 @@ class OSMExtractor(BaseExtractor):
         # Convert Pydantic model to dictionary
         extracted_dict = extraction_result.model_dump()
 
-        # Add entity_type default
-        extracted_dict['entity_type'] = 'VENUE'
+        # entity_type should be extracted by LLM or inferred later
+
 
         # Parse and normalize opening hours if present
         if 'opening_hours' in extracted_dict and extracted_dict['opening_hours'] is not None:

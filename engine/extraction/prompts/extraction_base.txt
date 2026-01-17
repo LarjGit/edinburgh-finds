@@ -83,4 +83,4 @@ Before returning your extraction:
 
 ## OUTPUT FORMAT
 
-Return a JSON object matching the VenueExtraction schema with the extracted fields.
+Return a JSON object matching the EntityExtraction schema with the extracted fields.
