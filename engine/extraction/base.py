@@ -5,8 +5,16 @@ Defines the abstract BaseExtractor class that all extraction implementations
 must follow to ensure consistent behavior across sources.
 """
 
+import time
 from abc import ABC, abstractmethod
-from typing import Dict, Tuple, List
+from typing import Dict, Tuple, List, Optional
+
+from engine.extraction.logging_config import (
+    get_extraction_logger,
+    log_extraction_start,
+    log_extraction_success,
+    log_extraction_failure,
+)
 
 
 class BaseExtractor(ABC):
@@ -91,4 +99,72 @@ class BaseExtractor(ABC):
             >>> # Returns: ["Editorial summary...", "Review 1 text...", "Review 2 text..."]
         """
         return []
+
+    def extract_with_logging(
+        self,
+        raw_data: Dict,
+        record_id: str,
+        confidence_score: Optional[float] = None,
+    ) -> Dict:
+        """
+        Wrapper method that executes extraction with structured logging.
+
+        This method wraps the extract() call with start/success/failure logging,
+        including timing and metadata capture.
+
+        Args:
+            raw_data: Raw ingestion payload for a single record
+            record_id: RawIngestion record ID for tracking
+            confidence_score: Optional confidence score for this extraction
+
+        Returns:
+            Dict: Extracted fields mapped to schema names
+
+        Raises:
+            Exception: Re-raises any exception from extract() after logging
+        """
+        logger = get_extraction_logger()
+        extractor_name = self.__class__.__name__
+
+        log_extraction_start(
+            logger=logger,
+            source=self.source_name,
+            record_id=record_id,
+            extractor=extractor_name,
+        )
+
+        start_time = time.time()
+
+        try:
+            extracted = self.extract(raw_data)
+            duration = time.time() - start_time
+
+            # Count non-null fields
+            fields_extracted = sum(1 for v in extracted.values() if v is not None)
+
+            log_extraction_success(
+                logger=logger,
+                source=self.source_name,
+                record_id=record_id,
+                extractor=extractor_name,
+                duration_seconds=round(duration, 3),
+                fields_extracted=fields_extracted,
+                confidence_score=confidence_score,
+            )
+
+            return extracted
+
+        except Exception as e:
+            duration = time.time() - start_time
+
+            log_extraction_failure(
+                logger=logger,
+                source=self.source_name,
+                record_id=record_id,
+                extractor=extractor_name,
+                error=str(e),
+                duration_seconds=round(duration, 3),
+            )
+
+            raise
 
