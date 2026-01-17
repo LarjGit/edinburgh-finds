@@ -268,12 +268,12 @@ This plan details the phased implementation of the Data Extraction Engine. Each 
 
 ### Task 6.1: Quarantine Pattern Implementation
 
-- [ ] Write tests for quarantine logic (`test_quarantine.py`)
-- [ ] Implement error capture to FailedExtraction table
-- [ ] Implement retry counter and max retry enforcement
-- [ ] Write tests for retry workflow
-- [ ] Implement CLI retry command (`--retry-failed`)
-- [ ] Test quarantine with intentionally failing fixtures (invalid data, LLM timeout simulation)
+- [x] Write tests for quarantine logic (`test_quarantine.py`) (57888d5)
+- [x] Implement error capture to FailedExtraction table (57888d5)
+- [x] Implement retry counter and max retry enforcement (57888d5)
+- [x] Write tests for retry workflow (57888d5)
+- [x] Implement CLI retry command (`--retry-failed`) (57888d5)
+- [x] Test quarantine with intentionally failing fixtures (invalid data, LLM timeout simulation) (57888d5)
 
 ### Task 6.2: Health Dashboard
 
