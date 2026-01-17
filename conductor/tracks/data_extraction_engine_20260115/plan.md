@@ -277,8 +277,8 @@ This plan details the phased implementation of the Data Extraction Engine. Each 
 
 ### Task 6.2: Health Dashboard
 
-- [x] Write tests for health metrics calculation (`test_health_metrics.py`)
-- [x] Implement `health_check.py` with metrics:
+- [x] Write tests for health metrics calculation (`test_health_metrics.py`) (b980639)
+- [x] Implement `health_check.py` with metrics: (b980639)
   - Unprocessed record count
   - Success rate per source
   - Field null rates
