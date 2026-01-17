@@ -384,10 +384,10 @@ This plan details the phased implementation of the Data Extraction Engine. Each 
 
 ### Task 8.2: Snapshot Validation
 
-- [ ] Create "known-good" extraction snapshots for each source
-- [ ] Write snapshot comparison tests
-- [ ] Test that future extractions match snapshots (no regressions)
-- [ ] Document snapshot update workflow
+- [x] Create "known-good" extraction snapshots for each source (4cd8b27)
+- [x] Write snapshot comparison tests (4cd8b27)
+- [x] Test that future extractions match snapshots (no regressions) (4cd8b27)
+- [x] Document snapshot update workflow (a9fe866)
 
 ### Task 8.3: Integration with Existing Codebase
 
