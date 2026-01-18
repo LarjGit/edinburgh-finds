@@ -174,9 +174,9 @@ grep -E "@id|@default\((uuid|cuid)\)" schema.prisma
 # Should show consistent strategy across all models
 ```
 
-### Task 1.3: Lock Classification Rules (v2.2 Addition)
+### Task 1.3: Lock Classification Rules (v2.2 Addition) [7a37f67]
 
-**Status:** in_progress
+**Status:** completed
 
 **Description:** Document and enforce single entity_class + multi roles pattern with concrete examples
 
