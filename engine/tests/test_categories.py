@@ -341,59 +341,14 @@ class TestCategoryMetadata:
         """Test that invalid category keys return None"""
         assert category_mapper.get_category_display_name('invalid_key') is None
 
-    def test_activity_categories_are_flat(self):
-        """Test that activity categories do not declare a parent"""
+    def test_all_categories_are_flat(self):
+        """Test that NO categories declare a parent"""
         taxonomy = category_mapper.get_taxonomy()
-        activity_keys = {
-            'padel',
-            'tennis',
-            'squash',
-            'badminton',
-            'pickleball',
-            'table_tennis',
-            'golf',
-            'climbing',
-            'yoga',
-            'martial_arts',
-        }
-        activity_entries = [entry for entry in taxonomy if entry['category_key'] in activity_keys]
-
-        # All activity categories should omit a parent field
-        for entry in activity_entries:
-            assert 'parent' not in entry or entry['parent'] is None
-
-    def test_get_category_hierarchy_for_leaf_node(self):
-        """Test hierarchy retrieval for a leaf category"""
-        hierarchy = category_mapper.get_category_hierarchy('padel')
-
-        # Padel is a flat category (no parent)
-        assert hierarchy == ['padel']
-
-    def test_get_category_hierarchy_for_root_node(self):
-        """Test hierarchy for a root-level category"""
-        hierarchy = category_mapper.get_category_hierarchy('venue')
-
-        # Venue is root, should only contain itself
-        assert hierarchy == ['venue']
-
-    def test_get_category_hierarchy_ignores_parents_by_default(self):
-        """Test that hierarchy ignores parent relationships by default"""
-        hierarchy = category_mapper.get_category_hierarchy('sports_centre')
-
-        assert hierarchy == ['sports_centre']
-
-    def test_get_category_hierarchy_includes_parents_when_requested(self):
-        """Test that hierarchy includes parents when explicitly requested"""
-        hierarchy = category_mapper.get_category_hierarchy('sports_centre', include_parents=True)
-
-        assert hierarchy == ['venue', 'sports_centre']
-
-    def test_get_category_hierarchy_preserves_order(self):
-        """Test that hierarchy is in parent-to-child order"""
-        hierarchy = category_mapper.get_category_hierarchy('tennis')
-
-        assert isinstance(hierarchy, list)
-        assert hierarchy[-1] == 'tennis'
+        
+        # Check every entry in the taxonomy
+        for entry in taxonomy:
+            assert 'parent' not in entry or entry['parent'] is None, \
+                f"Category {entry['category_key']} has a parent defined"
 
 
 class TestUnmappedCategoryLogging:

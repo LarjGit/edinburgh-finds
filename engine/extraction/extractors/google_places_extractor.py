@@ -168,7 +168,7 @@ class GooglePlacesExtractor(BaseExtractor):
 
         # Required fields
         extracted["entity_name"] = raw_data.get("displayName", {}).get("text", "")
-        extracted["entity_type"] = EntityType.VENUE.value  # Default to VENUE
+        # entity_type is not assigned here; inferred from types or validated later if needed
 
         # Address and location
         if "formattedAddress" in raw_data:
@@ -249,8 +249,8 @@ class GooglePlacesExtractor(BaseExtractor):
         if "entity_name" not in validated or not validated["entity_name"]:
             raise ValueError("Missing required field: entity_name")
 
-        if "entity_type" not in validated:
-            validated["entity_type"] = EntityType.VENUE.value
+        # entity_type is optional at this stage
+
 
         # Validate phone format (should already be E.164, but double-check)
         if "phone" in validated and validated["phone"]:

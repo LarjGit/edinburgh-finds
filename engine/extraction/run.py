@@ -354,8 +354,8 @@ async def run_source_extraction(
                 if "external_id" in validated:
                     external_ids[f"{raw_record.source}_id"] = validated["external_id"]
 
-                # Get entity type
-                entity_type = validated.get("entity_type", "VENUE")
+                # Get entity_type
+                entity_type = validated.get("entity_type")
 
                 # Track LLM usage if model_used is present
                 model_used = validated.get("model_used")
@@ -553,8 +553,8 @@ async def run_all_extraction(
                     if "external_id" in validated:
                         external_ids[f"{raw_record.source}_id"] = validated["external_id"]
 
-                    # Get entity type
-                    entity_type = validated.get("entity_type", "VENUE")
+                    # Get entity_type
+                    entity_type = validated.get("entity_type")
 
                     # Track LLM usage if model_used is present
                     model_used = validated.get("model_used")

@@ -7,7 +7,7 @@
 # Philosophy:
 # - Start narrow (sports venues for Edinburgh)
 # - Expand horizontally as new verticals are added
-# - Keep taxonomy shallow (2-3 levels max) for usability
+# - Keep taxonomy flat (no hierarchy) for flexibility
 # - Prefer specificity over generality
 
 # ============================================================
@@ -17,13 +17,12 @@
 # Format:
 # - category_key: The database value (snake_case, stable identifier)
 # - display_name: User-facing label
-# - parent: Optional parent category for hierarchical navigation
 # - search_keywords: Keywords for text-based search matching
 # - description: Internal documentation
 
 taxonomy:
   # ------------------------------------------------------------------
-  # ENTITY TYPES (Top Level)
+  # ENTITY TYPES (Top Level Concepts)
   # ------------------------------------------------------------------
   - category_key: venue
     display_name: Venue
@@ -80,7 +79,7 @@ taxonomy:
       - match
 
   # ------------------------------------------------------------------
-  # SPORT TYPES (Primary Sports Focus)
+  # SPORT TYPES
   # ------------------------------------------------------------------
   - category_key: padel
     display_name: Padel
@@ -134,7 +133,6 @@ taxonomy:
   # ------------------------------------------------------------------
   - category_key: sports_centre
     display_name: Sports Centre
-    parent: venue
     description: Multi-sport facility offering various activities
     search_keywords:
       - sports centre
@@ -146,7 +144,6 @@ taxonomy:
 
   - category_key: gym
     display_name: Gym
-    parent: venue
     description: Fitness and gym facilities
     search_keywords:
       - gym
@@ -157,7 +154,6 @@ taxonomy:
 
   - category_key: swimming_pool
     display_name: Swimming Pool
-    parent: venue
     description: Swimming and aquatic facilities
     search_keywords:
       - swimming pool
@@ -167,7 +163,6 @@ taxonomy:
 
   - category_key: outdoor_pitch
     display_name: Outdoor Pitch
-    parent: venue
     description: Outdoor sports pitches and fields
     search_keywords:
       - pitch
@@ -178,7 +173,6 @@ taxonomy:
 
   - category_key: private_club
     display_name: Private Club
-    parent: venue
     description: Members-only sports clubs
     search_keywords:
       - private club
@@ -188,7 +182,6 @@ taxonomy:
 
   - category_key: public_facility
     display_name: Public Facility
-    parent: venue
     description: Publicly accessible sports facilities
     search_keywords:
       - public
@@ -249,94 +242,94 @@ taxonomy:
 
 mapping_rules:
   # Entity type mappings
-  - pattern: "(?i)\\b(venue|facility|center|centre)\\b"
+  - pattern: '(?i)\b(venue|facility|center|centre)\b'
     canonical: venue
     confidence: 0.8
 
-  - pattern: "(?i)\\b(shop|store|retail|pro shop)\\b"
+  - pattern: '(?i)\b(shop|store|retail|pro shop)\b'
     canonical: retail
     confidence: 0.9
 
-  - pattern: "(?i)\\b(coach|instructor|academy|lessons)\\b"
+  - pattern: '(?i)\b(coach|instructor|academy|lessons)\b'
     canonical: coach
     confidence: 0.9
 
-  - pattern: "(?i)\\b(club|association|society)\\b"
+  - pattern: '(?i)\b(club|association|society)\b'
     canonical: club
     confidence: 0.7  # Lower confidence as "club" can mean many things
 
-  - pattern: "(?i)\\b(event|tournament|competition|league)\\b"
+  - pattern: '(?i)\b(event|tournament|competition|league)\b'
     canonical: event
     confidence: 0.9
 
   # Sport type mappings
-  - pattern: "(?i)\\bp[aá]d[eé]l\\b"
+  - pattern: '(?i)\bp[aá]d[eé]l\b'
     canonical: padel
     confidence: 1.0
 
-  - pattern: "(?i)\\btennis\\b"
+  - pattern: '(?i)\btennis\b'
     canonical: tennis
     confidence: 1.0
 
-  - pattern: "(?i)\\bsquash\\b"
+  - pattern: '(?i)\bsquash\b'
     canonical: squash
     confidence: 1.0
 
-  - pattern: "(?i)\\bbadminton\\b"
+  - pattern: '(?i)\bbadminton\b'
     canonical: badminton
     confidence: 1.0
 
-  - pattern: "(?i)\\bpickleball\\b"
+  - pattern: '(?i)\bpickleball\b'
     canonical: pickleball
     confidence: 1.0
 
-  - pattern: "(?i)\\btable tennis\\b|\\bping[- ]?pong\\b"
+  - pattern: '(?i)\btable tennis\b|\bping[- ]?pong\b'
     canonical: table_tennis
     confidence: 1.0
 
   # Venue subtype mappings
-  - pattern: "(?i)sports\\s+(centre|center)"
+  - pattern: '(?i)sports\s+(centre|center)'
     canonical: sports_centre
     confidence: 0.95
 
-  - pattern: "(?i)leisure\\s+(centre|center)"
+  - pattern: '(?i)leisure\s+(centre|center)'
     canonical: sports_centre
     confidence: 0.85
 
-  - pattern: "(?i)\\bgym\\b|\\bfitness\\b|health club"
+  - pattern: '(?i)\bgym\b|\bfitness\b|health club'
     canonical: gym
     confidence: 0.9
 
-  - pattern: "(?i)swimming\\s+pool|aquatic"
+  - pattern: '(?i)swimming\s+pool|aquatic'
     canonical: swimming_pool
     confidence: 0.95
 
-  - pattern: "(?i)\\bpitch\\b|playing field|sports ground"
+  - pattern: '(?i)\bpitch\b|playing field|sports ground'
     canonical: outdoor_pitch
     confidence: 0.8
 
-  - pattern: "(?i)private|members.only|exclusive"
+  - pattern: '(?i)private|members.only|exclusive'
     canonical: private_club
     confidence: 0.7
 
-  - pattern: "(?i)public|council|community|municipal"
+  - pattern: '(?i)public|council|community|municipal'
     canonical: public_facility
     confidence: 0.8
 
   # Additional sports
-  - pattern: "(?i)\\bgolf\\b"
+  - pattern: '(?i)\bgolf\b'
     canonical: golf
     confidence: 1.0
 
-  - pattern: "(?i)climbing|bouldering"
+  - pattern: '(?i)climbing|bouldering'
     canonical: climbing
     confidence: 1.0
 
-  - pattern: "(?i)yoga|pilates"
+  - pattern: '(?i)yoga|pilates'
     canonical: yoga
     confidence: 0.9
 
-  - pattern: "(?i)martial arts|karate|judo|taekwondo|dojo|kickboxing"
+  - pattern: '(?i)martial arts|karate|judo|taekwondo|dojo|kickboxing'
     canonical: martial_arts
     confidence: 0.9
 
@@ -372,10 +365,6 @@ promotion_config:
 
   # Maximum canonical categories per listing
   max_categories: 5
-
-  # Whether to include parent categories automatically
-  # e.g., if "padel" is assigned, also assign "venue"
-  include_parents: false
 
   # Whether to log unmapped categories for manual review
   log_unmapped: true

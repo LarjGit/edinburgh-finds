@@ -126,14 +126,15 @@ class TestGooglePlacesExtraction:
         # Should convert "0131 539 7071" to "+441315397071"
         assert extracted["phone"] == "+441315397071"
 
-    def test_extract_entity_type_defaults_to_venue(self, google_places_single_venue):
-        """Test that entity_type defaults to VENUE for Google Places results"""
+    def test_extract_entity_type_is_not_defaulted(self, google_places_single_venue):
+        """Test that entity_type is NOT defaulted to VENUE (decoupled logic)"""
         from engine.extraction.extractors.google_places_extractor import GooglePlacesExtractor
 
         extractor = GooglePlacesExtractor()
         extracted = extractor.extract(google_places_single_venue)
 
-        assert extracted["entity_type"] == "VENUE"
+        # Entity type should not be present or should be None
+        assert extracted.get("entity_type") is None
 
     def test_extract_handles_missing_optional_fields(self, google_places_single_venue):
         """Test that extractor gracefully handles missing optional fields"""
@@ -178,7 +179,8 @@ class TestGooglePlacesValidation:
 
         # Required fields must be present
         assert "entity_name" in validated
-        assert "entity_type" in validated
+        # entity_type is no longer required at validation stage
+        # assert "entity_type" in validated
 
     def test_validate_normalizes_phone_format(self, google_places_single_venue):
         """Test that validation ensures phone is in E.164 format"""
