@@ -91,6 +91,14 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
+## [ ] Track: Engine-Lens Architecture Refactor
+*Link: [./conductor/tracks/engine_lens_architecture_20260118/](./conductor/tracks/engine_lens_architecture_20260118/)*
+**Status:** Ready for Implementation
+**Priority:** Critical
+**Description:** Refactor Edinburgh Finds to separate a universal, vertical-agnostic **Entity Engine** from vertical-specific **Lens Layer**. The engine models entities using `entity_class`, multi-valued dimensions (roles, activities, place_type, access) stored as Postgres text[] arrays with GIN indexes, and universal attribute modules. All vertical-specific modules, user-facing groupings, labels, and navigation are derived in the lens layer via YAML configuration. Key deliverables: (1) Engine purity (100% vertical-agnostic, no domain modules), (2) Postgres text[] arrays for dimensions with GIN indexes, (3) JSONB for modules, (4) Lens YAML config with facets, canonical values, mapping rules, derived groupings, domain modules, and explicit module triggers, (5) Role facet (internal-only) with universal function-style keys, (6) Lens-aware extraction pipeline with facet routing and deduplication, (7) Query layer with Prisma array filters (has, hasSome, hasEvery), (8) Second vertical validation (Wine Discovery lens with zero engine changes). Enables horizontal scaling to new verticals (wine, restaurants, gyms) by adding lens.yaml configuration only - no engine code changes required.
+
+---
+
 ## [ ] Track: Ecosystem Graph - Relationship Extraction
 **Status:** Planned (Blocked by Data Extraction Engine)
 **Dependencies:** Data Extraction Engine must complete first
