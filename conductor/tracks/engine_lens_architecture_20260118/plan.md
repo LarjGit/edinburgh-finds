@@ -1,4 +1,4 @@
-# Track: Engine-Lens Architecture Refactor - Implementation Plan (v2.2)
+	# Track: Engine-Lens Architecture Refactor - Implementation Plan (v2.2)
 
 ## Overview
 
@@ -449,13 +449,13 @@ assert 'membership_org' in entity['canonical_roles']
 
 ### Task 2.1a: Lens Contract Validation (v2.2 Addition)
 
-**Status:** in_progress
+**Status:** ✅ completed
 
 **Description:** Implement fail-fast validation to enforce lens configuration contracts
 
 **Subtasks:**
-- [ ] Create `lenses/validator.py` module:
-  - [ ] Define ALLOWED_DIMENSION_SOURCES constant:
+- [x] Create `lenses/validator.py` module:
+  - [x] Define ALLOWED_DIMENSION_SOURCES constant:
     ```python
     ALLOWED_DIMENSION_SOURCES = {
         "canonical_activities",
@@ -464,33 +464,33 @@ assert 'membership_org' in entity['canonical_roles']
         "canonical_access"
     }
     ```
-  - [ ] Implement validate_lens_config(config: dict) function:
-    - [ ] **CONTRACT 1**: Every facet.dimension_source MUST be one of the 4 allowed dimension sources
-    - [ ] **CONTRACT 2**: Every value.facet MUST exist in facets section
-    - [ ] **CONTRACT 3**: Every mapping_rules.canonical MUST exist in values section
-    - [ ] **CONTRACT 4**: No duplicate value.key across all values
-    - [ ] **CONTRACT 5**: No duplicate facet keys
-    - [ ] Raise ValidationError with clear message on contract violation
-- [ ] Update `lenses/loader.py`:
-  - [ ] Import and call validate_lens_config() in VerticalLens.__init__()
-  - [ ] **FAIL-FAST**: Validation errors must raise exception immediately (no silent failures)
-  - [ ] Add try/except to provide clear error context:
+  - [x] Implement validate_lens_config(config: dict) function:
+    - [x] **CONTRACT 1**: Every facet.dimension_source MUST be one of the 4 allowed dimension sources
+    - [x] **CONTRACT 2**: Every value.facet MUST exist in facets section
+    - [x] **CONTRACT 3**: Every mapping_rules.canonical MUST exist in values section
+    - [x] **CONTRACT 4**: No duplicate value.key across all values
+    - [x] **CONTRACT 5**: No duplicate facet keys
+    - [x] Raise ValidationError with clear message on contract violation
+- [x] Update `lenses/loader.py`:
+  - [x] Import and call validate_lens_config() in VerticalLens.__init__()
+  - [x] **FAIL-FAST**: Validation errors must raise exception immediately (no silent failures)
+  - [x] Add try/except to provide clear error context:
     ```python
     try:
         validate_lens_config(self.config)
     except ValidationError as e:
         raise LensConfigError(f"Invalid lens config in {config_path}: {e}")
     ```
-- [ ] Create validation tests in `tests/lenses/test_validator.py`:
-  - [ ] Test: Invalid dimension_source (not one of 4 allowed) → ValidationError
-  - [ ] Test: value.facet references non-existent facet → ValidationError
-  - [ ] Test: mapping_rules.canonical references non-existent value → ValidationError
-  - [ ] Test: Duplicate value.key → ValidationError
-  - [ ] Test: Duplicate facet key → ValidationError
-  - [ ] Test: Valid config passes validation
-- [ ] Add validation to lens loader tests:
-  - [ ] Test loading invalid lens.yaml fails immediately
-  - [ ] Test error message clearly identifies contract violation
+- [x] Create validation tests in `tests/lenses/test_validator.py`:
+  - [x] Test: Invalid dimension_source (not one of 4 allowed) → ValidationError
+  - [x] Test: value.facet references non-existent facet → ValidationError
+  - [x] Test: mapping_rules.canonical references non-existent value → ValidationError
+  - [x] Test: Duplicate value.key → ValidationError
+  - [x] Test: Duplicate facet key → ValidationError
+  - [x] Test: Valid config passes validation
+- [x] Add validation to lens loader tests:
+  - [x] Test loading invalid lens.yaml fails immediately
+  - [x] Test error message clearly identifies contract violation
 
 **Success Criteria:**
 - ✅ ALLOWED_DIMENSION_SOURCES defined with exactly 4 canonical_* columns
