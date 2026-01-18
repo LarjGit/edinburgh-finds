@@ -6,9 +6,9 @@
     - [x] Implement class `PydanticExtractionGenerator`.
     - [x] Implement type mapping (YAML types -> Pydantic types).
     - [x] Implement field generation with `Field(default=None)` semantics.
-- [ ] **Handle Validators**
-    - [ ] Design strategy for validators (e.g., look for `python.validator` metadata in YAML or import a mixin).
-    - [ ] Update `listing.yaml` if necessary to support validator metadata.
+- [x] **Handle Validators** [ac3d0a7]
+    - [x] Design strategy for validators (e.g., look for `python.validator` metadata in YAML or import a mixin).
+    - [x] Update `listing.yaml` if necessary to support validator metadata.
 - [ ] **CLI Integration**
     - [ ] Update `engine/schema/cli.py` to add `--pydantic-extraction` flag (or include in default generation).
 
