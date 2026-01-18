@@ -3,7 +3,7 @@
 # ============================================================
 #
 # Generated from: engine/config/schemas/listing.yaml
-# Generated at: 2026-01-18 01:20:51
+# Generated at: 2026-01-18 03:11:17
 #
 # To make changes:
 # 1. Edit engine/config/schemas/listing.yaml
@@ -12,7 +12,7 @@
 # ============================================================
 
 from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 class EntityExtraction(BaseModel):
     """Extraction model for Base schema for all entity types (venues, retailers, coaches, etc.)."""
@@ -77,7 +77,7 @@ class EntityExtraction(BaseModel):
         """Ensure postcode follows UK format if provided"""
         if v is None:
             return None
-        if " " not in v:
+        if ' ' not in v:
             raise ValueError("UK postcode should contain a space (e.g., 'EH12 9GR')")
         if v != v.upper():
             raise ValueError("Postcode should be uppercase")
@@ -89,9 +89,9 @@ class EntityExtraction(BaseModel):
         """Ensure phone is in E.164 format if provided"""
         if v is None:
             return None
-        if not v.startswith("+"):
+        if not v.startswith('+'):
             raise ValueError("Phone number must be in E.164 format (starting with +)")
-        if " " in v or "-" in v:
+        if ' ' in v or '-' in v:
             raise ValueError("Phone number must not contain spaces or dashes in E.164 format")
         return v
 
@@ -101,14 +101,14 @@ class EntityExtraction(BaseModel):
         """Ensure website is a valid URL if provided"""
         if v is None:
             return None
-        if not v.startswith(("http://", "https://")):
+        if not v.startswith(('http://', 'https://')):
             raise ValueError("Website must be a valid URL starting with http:// or https://")
         return v
 
-    class Config:
-        """Pydantic model configuration"""
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "entity_name": "Example"
             }
         }
+    )

@@ -204,9 +204,9 @@ class PydanticExtractionGenerator:
         if needs_datetime:
             lines.append("from datetime import datetime")
         if validator_specs:
-            lines.append("from pydantic import BaseModel, Field, field_validator")
+            lines.append("from pydantic import BaseModel, ConfigDict, Field, field_validator")
         else:
-            lines.append("from pydantic import BaseModel, Field")
+            lines.append("from pydantic import BaseModel, ConfigDict, Field")
 
         return lines
 
@@ -360,7 +360,7 @@ class PydanticExtractionGenerator:
 
     def _build_config_block(self, fields: List[FieldDefinition]) -> str:
         """
-        Build a Config block with a minimal example.
+        Build a model_config using ConfigDict (Pydantic V2) with a minimal example.
 
         Args:
             fields: List of fields in the model.
@@ -377,13 +377,13 @@ class PydanticExtractionGenerator:
         example_name = example_field.name if example_field else "entity_name"
 
         lines = [
-            "    class Config:",
-            '        """Pydantic model configuration"""',
-            "        json_schema_extra = {",
+            "    model_config = ConfigDict(",
+            "        json_schema_extra={",
             '            "example": {',
             f'                "{example_name}": "Example"',
             "            }",
             "        }",
+            "    )",
         ]
 
         return "\n".join(lines)
