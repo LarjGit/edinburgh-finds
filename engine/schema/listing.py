@@ -3,7 +3,7 @@
 # ============================================================
 #
 # Generated from: engine/config/schemas/listing.yaml
-# Generated at: 2026-01-18 03:11:17
+# Generated at: 2026-01-18 23:04:26
 #
 # To make changes:
 # 1. Edit engine/config/schemas/listing.yaml
@@ -89,6 +89,46 @@ LISTING_FIELDS: List[FieldSpec] = [
         nullable=True,
         required=False,
         exclude=True,
+        sa_column="Column(ARRAY(String))",
+    ),
+    FieldSpec(
+        name="canonical_activities",
+        type_annotation="Optional[List[str]]",
+        description="Activities provided/supported (opaque values, lens-interpreted)",
+        nullable=True,
+        required=False,
+        exclude=True,
+        default="default_factory=list",
+        sa_column="Column(ARRAY(String))",
+    ),
+    FieldSpec(
+        name="canonical_roles",
+        type_annotation="Optional[List[str]]",
+        description="Roles this entity plays (opaque values, universal function-style keys)",
+        nullable=True,
+        required=False,
+        exclude=True,
+        default="default_factory=list",
+        sa_column="Column(ARRAY(String))",
+    ),
+    FieldSpec(
+        name="canonical_place_types",
+        type_annotation="Optional[List[str]]",
+        description="Physical place classifications (opaque values, lens-interpreted)",
+        nullable=True,
+        required=False,
+        exclude=True,
+        default="default_factory=list",
+        sa_column="Column(ARRAY(String))",
+    ),
+    FieldSpec(
+        name="canonical_access",
+        type_annotation="Optional[List[str]]",
+        description="Access requirements (opaque values, lens-interpreted)",
+        nullable=True,
+        required=False,
+        exclude=True,
+        default="default_factory=list",
         sa_column="Column(ARRAY(String))",
     ),
     FieldSpec(

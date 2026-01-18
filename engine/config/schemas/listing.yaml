@@ -115,6 +115,78 @@ fields:
       skip: true  # Relation or custom handling in Prisma
 
   # ------------------------------------------------------------------
+  # MULTI-VALUED DIMENSIONS (Engine-Lens Architecture)
+  # ------------------------------------------------------------------
+  # Dimensions are stored as Postgres text[] arrays with GIN indexes
+  # for fast faceted filtering. Values are opaque to engine - lens
+  # provides interpretation via canonical_values and mapping rules.
+
+  - name: canonical_activities
+    type: list[string]
+    description: "Activities provided/supported (opaque values, lens-interpreted)"
+    nullable: true
+    exclude: true  # Populated by extraction engine
+    python:
+      sa_column: "Column(ARRAY(String))"
+      default: "default_factory=list"
+    prisma:
+      type: "String[]"
+      attributes:
+        - "@default([])"
+    notes:
+      - "Postgres text[] array with GIN index for faceted filtering"
+      - "Opaque to engine - lens provides interpretation"
+
+  - name: canonical_roles
+    type: list[string]
+    description: "Roles this entity plays (opaque values, universal function-style keys)"
+    nullable: true
+    exclude: true  # Populated by extraction engine
+    python:
+      sa_column: "Column(ARRAY(String))"
+      default: "default_factory=list"
+    prisma:
+      type: "String[]"
+      attributes:
+        - "@default([])"
+    notes:
+      - "Postgres text[] array with GIN index for faceted filtering"
+      - "Internal-only facet (not shown in UI by default)"
+      - "Universal function-style keys: provides_facility, sells_goods, provides_instruction, membership_org, produces_goods"
+
+  - name: canonical_place_types
+    type: list[string]
+    description: "Physical place classifications (opaque values, lens-interpreted)"
+    nullable: true
+    exclude: true  # Populated by extraction engine
+    python:
+      sa_column: "Column(ARRAY(String))"
+      default: "default_factory=list"
+    prisma:
+      type: "String[]"
+      attributes:
+        - "@default([])"
+    notes:
+      - "Postgres text[] array with GIN index for faceted filtering"
+      - "Applicable to place entity_class only"
+
+  - name: canonical_access
+    type: list[string]
+    description: "Access requirements (opaque values, lens-interpreted)"
+    nullable: true
+    exclude: true  # Populated by extraction engine
+    python:
+      sa_column: "Column(ARRAY(String))"
+      default: "default_factory=list"
+    prisma:
+      type: "String[]"
+      attributes:
+        - "@default([])"
+    notes:
+      - "Postgres text[] array with GIN index for faceted filtering"
+      - "Examples: membership, pay_and_play, free, private_club"
+
+  # ------------------------------------------------------------------
   # FLEXIBLE ATTRIBUTE BUCKET
   # ------------------------------------------------------------------
   - name: discovered_attributes
