@@ -48,7 +48,7 @@ This approach preserves the original data while providing a consistent user expe
 
 1. **Taxonomy** (`engine/config/canonical_categories.yaml`):
    - Defines all valid canonical categories
-   - Hierarchical structure (e.g., "padel" → parent: "venue")
+   - Flat structure (no hierarchy)
    - Display names, descriptions, search keywords
 
 2. **Mapping Rules** (`engine/config/canonical_categories.yaml`):
@@ -220,16 +220,7 @@ display = get_category_display_name('sports_centre')
 # 'Sports Centre'
 ```
 
-### Get Hierarchy
 
-Navigate parent-child relationships:
-
-```python
-from engine.extraction.utils.category_mapper import get_category_hierarchy
-
-hierarchy = get_category_hierarchy('padel')
-# ['venue', 'padel']  # Root to leaf
-```
 
 ## Managing the Taxonomy
 
@@ -241,7 +232,6 @@ hierarchy = get_category_hierarchy('padel')
    taxonomy:
      - category_key: new_sport
        display_name: New Sport
-       parent: venue  # Optional
        description: Description of the new sport
        search_keywords:
          - new sport

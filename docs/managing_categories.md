@@ -91,13 +91,12 @@ Listing {
 taxonomy:
   - category_key: padel
     display_name: Padel
-    parent: venue
     description: Padel courts and facilities
     search_keywords: [padel, pádel, paddle tennis]
 
 # 2. MAPPING RULES: Map raw categories to canonical
 mapping_rules:
-  - pattern: "(?i)\\bp[aá]d[eé]l\\b"  # Regex pattern
+  - pattern: '(?i)\bp[aá]d[eé]l\b'  # Regex pattern
     canonical: padel
     confidence: 1.0
 
@@ -126,7 +125,6 @@ taxonomy:
 
   - category_key: pickleball  # Unique key (snake_case)
     display_name: Pickleball  # User-facing label
-    parent: venue            # Optional parent category
     description: Pickleball courts and facilities
     search_keywords:
       - pickleball
@@ -140,7 +138,6 @@ taxonomy:
 |-------|----------|-------------|---------|
 | `category_key` | Yes | Unique identifier (snake_case, stable) | `pickleball` |
 | `display_name` | Yes | User-facing label | `Pickleball` |
-| `parent` | No | Parent category for hierarchy | `venue` |
 | `description` | Yes | Internal documentation | `Pickleball courts and facilities` |
 | `search_keywords` | Yes | Keywords for text search | `[pickleball, pickle ball]` |
 
@@ -152,7 +149,7 @@ Add a pattern to map raw categories to your new canonical category:
 mapping_rules:
   # ... existing rules
 
-  - pattern: "(?i)\\bpickleball\\b|\\bpickle.?ball\\b"
+  - pattern: '(?i)\bpickleball\b|\bpickle.?ball\b'
     canonical: pickleball
     confidence: 1.0
 ```
@@ -161,14 +158,15 @@ mapping_rules:
 
 | Field | Required | Description | Example |
 |-------|----------|-------------|---------|
-| `pattern` | Yes | Regex pattern (case-insensitive by default) | `"(?i)\\bpickleball\\b"` |
+| `pattern` | Yes | Regex pattern (case-insensitive by default) | `'(?i)\bpickleball\b'` |
 | `canonical` | Yes | Target canonical category_key | `pickleball` |
 | `confidence` | Yes | Match confidence (0-1) | `1.0` (certain), `0.7` (ambiguous) |
 
 **Pattern Tips:**
 
+- Use single quotes `'...'` to avoid YAML escaping issues
 - Use `(?i)` for case-insensitive matching
-- Use `\\b` for word boundaries (avoids partial matches)
+- Use `\b` for word boundaries (avoids partial matches)
 - Use `|` for OR (e.g., `pickleball|pickle.?ball`)
 - Use `.?` for optional characters (e.g., `pickle.?ball` matches "pickleball" and "pickle ball")
 
@@ -181,10 +179,10 @@ Create a test to verify your mapping works:
 
 def test_pickleball_mapping():
     """Test that 'Pickleball' maps to canonical 'pickleball'"""
-    from engine.extraction.utils.categories import map_categories
+    from engine.extraction.utils.category_mapper import map_to_canonical
 
     raw_categories = ["Pickleball Court", "Indoor Sports"]
-    canonical = map_categories(raw_categories)
+    canonical = map_to_canonical(raw_categories)
 
     assert "pickleball" in canonical
 ```
@@ -201,13 +199,6 @@ pytest engine/extraction/tests/test_category_mapping.py::test_pickleball_mapping
 ```bash
 # Re-extract all records to apply new mapping
 python -m engine.extraction.run_all --force-retry
-```
-
-**Option B: Run category mapping script** (faster, planned feature):
-
-```bash
-# Planned: Re-map categories without full re-extraction
-python -m engine.extraction.utils.remap_categories
 ```
 
 ---
@@ -255,24 +246,6 @@ python -m engine.extraction.utils.remap_categories
 - **Search**: More phrases map to this category
 - **No Re-extraction Needed**: Search keywords don't affect extraction, only search UI
 
-#### Changing Parent Category
-
-**Before:**
-```yaml
-- category_key: padel
-  parent: venue
-```
-
-**After:**
-```yaml
-- category_key: padel
-  parent: racket_sports  # New parent (requires adding racket_sports first)
-```
-
-**Impact:**
-- **Hierarchy**: Breadcrumbs and navigation change
-- **No Database Changes**: Parent is reference data, not stored in listings
-
 ---
 
 ## Managing Mapping Rules
@@ -302,7 +275,7 @@ mapping_rules:
   # ... existing rules
 
   # Map "Racquet Club" to tennis
-  - pattern: "(?i)racqu?et\\s+club"  # Matches "racquet club" or "racket club"
+  - pattern: '(?i)racqu?et\s+club'  # Matches "racquet club" or "racket club"
     canonical: tennis
     confidence: 0.8  # Lower confidence (could also be squash)
 ```
@@ -330,7 +303,7 @@ python -m engine.extraction.run --source=google_places --limit=5 --dry-run
 
 ### Handling Ambiguous Categories
 
-**Problem:** "Sports Club" could map to `club`, `sports_centre`, or be a parent category.
+**Problem:** "Sports Club" could map to `club` or `sports_centre`.
 
 #### Solution 1: Multiple Mappings (Recommended)
 
@@ -338,11 +311,11 @@ Map to all applicable categories:
 
 ```yaml
 # Map "Sports Club" to both club and sports_centre
-- pattern: "(?i)sports\\s+club"
+- pattern: '(?i)sports\s+club'
   canonical: club
   confidence: 0.8
 
-- pattern: "(?i)sports\\s+club"
+- pattern: '(?i)sports\s+club'
   canonical: sports_centre
   confidence: 0.75
 ```
@@ -357,7 +330,7 @@ Map to the most specific category:
 
 ```yaml
 # Prefer sports_centre over generic club
-- pattern: "(?i)sports\\s+club"
+- pattern: '(?i)sports\s+club'
   canonical: sports_centre
   confidence: 0.85
 ```
@@ -401,10 +374,10 @@ Map to the most specific category:
 **Mapping Engine Applies Rules:**
 
 ```python
-from engine.extraction.utils.categories import map_categories
+from engine.extraction.utils.category_mapper import map_to_canonical
 
 raw = ["Padel Club", "Indoor Sports Facility", "Coaching Available"]
-canonical = map_categories(raw)
+canoical = map_to_canonical(raw)
 
 # Result: ["padel", "sports_centre", "coach"]
 ```
@@ -477,10 +450,6 @@ promotion_config:
   # Maximum canonical categories per listing
   max_categories: 5  # Default: 5, Prevents category spam
 
-  # Whether to include parent categories automatically
-  # e.g., if "padel" is assigned, also assign "venue"
-  include_parents: false  # Default: false (keep it simple)
-
   # Whether to log unmapped categories for manual review
   log_unmapped: true  # Default: true (helps discover new categories)
 
@@ -506,24 +475,24 @@ promotion_config:
 
 ```python
 import pytest
-from engine.extraction.utils.categories import map_categories, load_category_config
+from engine.extraction.utils.category_mapper import map_to_canonical, load_config
 
 def test_padel_mapping():
     """Test that 'Padel' maps to canonical 'padel'"""
     raw = ["Padel Court", "Indoor Sports"]
-    canonical = map_categories(raw)
+    canonical = map_to_canonical(raw)
     assert "padel" in canonical
 
 def test_ambiguous_sports_club():
     """Test that 'Sports Club' maps to both club and sports_centre"""
     raw = ["Sports Club"]
-    canonical = map_categories(raw)
+    canonical = map_to_canonical(raw)
     assert "club" in canonical or "sports_centre" in canonical
 
 def test_unmapped_category_logged():
     """Test that unmapped categories are logged"""
     raw = ["Underwater Basket Weaving"]  # Not in taxonomy
-    canonical = map_categories(raw)
+    canonical = map_to_canonical(raw)
     assert canonical == []  # No mapping
 
     # Check log file
@@ -533,7 +502,7 @@ def test_unmapped_category_logged():
 
 def test_confidence_threshold():
     """Test that low-confidence mappings are excluded"""
-    config = load_category_config()
+    config = load_config()
     assert config["promotion_config"]["min_confidence"] == 0.7
 ```
 
@@ -624,23 +593,23 @@ python -m engine.extraction.run --raw-id=clx123 --verbose
 
 # Before (wrong order):
 mapping_rules:
-  - pattern: "(?i)\\bclub\\b"
+  - pattern: '(?i)\bclub\b'
     canonical: club
     confidence: 0.7
 
-  - pattern: "(?i)private.*club"
+  - pattern: '(?i)private.*club'
     canonical: private_club
     confidence: 0.9
 
 # After (correct order):
 mapping_rules:
   # More specific patterns first
-  - pattern: "(?i)private.*club"
+  - pattern: '(?i)private.*club'
     canonical: private_club
     confidence: 0.9
 
   # Generic patterns last
-  - pattern: "(?i)\\bclub\\b"
+  - pattern: '(?i)\bclub\b'
     canonical: club
     confidence: 0.7
 
@@ -655,27 +624,25 @@ python -m engine.extraction.run --raw-id=clx123 --verbose --force-retry
 
 ## Best Practices
 
-### 1. Keep Taxonomy Shallow
+### 1. Keep Taxonomy Flat
 
-**Good: 2-3 levels**
+**Good:**
 ```
 venue
-├── padel
-├── tennis
-└── sports_centre
+padel
+tennis
+sports_centre
 ```
 
-**Bad: 4+ levels**
+**Bad: Deep hierarchies**
 ```
 venue
 ├── racket_sports
 │   ├── padel
-│   │   ├── indoor_padel
-│   │   └── outdoor_padel
 │   └── tennis
 ```
 
-**Why:** Deep hierarchies are confusing for users and hard to maintain.
+**Why:** Deep hierarchies are hard to maintain and create complex dependencies. A flat taxonomy allows flexible tagging.
 
 ---
 
@@ -703,7 +670,7 @@ venue
 ```yaml
 # "Sports Club" is ambiguous - could be a club entity or a sports venue
 # Map to both club and sports_centre with lower confidence
-- pattern: "(?i)sports\\s+club"
+- pattern: '(?i)sports\s+club'
   canonical: club
   confidence: 0.75  # Lowered due to ambiguity
 ```
@@ -745,7 +712,7 @@ Canonical: []  # Empty!
 # Check if pattern matches
 python -c "
 import re
-pattern = r'(?i)\\bp[aá]d[eé]l\\b'
+pattern = r'(?i)\bp[aá]d[eé]l\b'
 raw = 'Padel Court'
 print('Matches:', bool(re.search(pattern, raw)))
 "
@@ -753,15 +720,15 @@ print('Matches:', bool(re.search(pattern, raw)))
 
 **Common Causes:**
 
-1. **Typo in pattern**: `\\bpadel\\b` won't match "Pádel" (with accent)
-2. **Wrong regex escaping**: `\b` vs `\\b` in YAML
+1. **Typo in pattern**: `\bpadel\b` won't match "Pádel" (with accent)
+2. **Wrong regex escaping**: `\b` vs `\\b` in YAML (use single quotes in YAML to avoid this!)
 3. **Confidence too low**: `0.6` < `min_confidence: 0.7`
 
 **Fix:**
 
 ```yaml
 # Fix pattern to handle accents
-- pattern: "(?i)\\bp[aá]d[eé]l\\b"  # Matches "Padel" and "Pádel"
+- pattern: '(?i)\bp[aá]d[eé]l\b'  # Matches "Padel" and "Pádel"
   canonical: padel
   confidence: 1.0  # Increase confidence
 ```
@@ -788,7 +755,7 @@ promotion_config:
   max_categories: 10  # Allow more categories
 
 # Option 2: Make patterns more specific
-- pattern: "(?i)\\bpadel\\b(?!.*tennis)"  # Only padel, not "padel and tennis"
+- pattern: '(?i)\bpadel\b(?!.*tennis)'  # Only padel, not "padel and tennis"
   canonical: padel
   confidence: 1.0
 ```
@@ -838,11 +805,11 @@ touch logs/unmapped_categories.log
 # Different canonical categories per field
 field_mappings:
   sport_types:
-    - pattern: "(?i)padel"
+    - pattern: '(?i)padel'
       canonical: padel
 
   amenities:
-    - pattern: "(?i)equipment rental"
+    - pattern: '(?i)equipment rental'
       canonical: equipment_rental
 ```
 
@@ -872,21 +839,22 @@ field_mappings:
 taxonomy:
   - category_key: new_sport
     display_name: New Sport
-    parent: venue
     search_keywords: [new sport, sport]
 
 # Add mapping rule
 mapping_rules:
-  - pattern: "(?i)\\bnew.?sport\\b"
+  - pattern: '(?i)\bnew.?sport\b'
     canonical: new_sport
     confidence: 1.0
 ```
 
 ---
 
-**Document Version:** 1.0
+**Document Version:** 1.1
 **Last Updated:** 2026-01-17
 **Related Docs:**
 - [Extraction Engine Overview](./extraction_engine_overview.md) - How categories fit into extraction
 - [Adding a New Extractor](./adding_new_extractor.md) - Extracting raw categories
 - [Tuning LLM Prompts](./tuning_llm_prompts.md) - Improving category extraction quality
+
+```
