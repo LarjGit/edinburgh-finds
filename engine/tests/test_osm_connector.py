@@ -52,7 +52,7 @@ class TestOSMConnectorInitialization(unittest.IsolatedAsyncioTestCase):
     async def test_osm_connector_can_be_imported(self):
         """Test that OSMConnector class can be imported"""
         try:
-            from engine.ingestion.open_street_map import OSMConnector
+            from engine.ingestion.connectors.open_street_map import OSMConnector
             self.assertIsNotNone(OSMConnector)
         except ImportError:
             self.fail("Failed to import OSMConnector - implementation not yet created")
@@ -61,7 +61,7 @@ class TestOSMConnectorInitialization(unittest.IsolatedAsyncioTestCase):
     @patch('builtins.open', new_callable=mock_open)
     async def test_osm_connector_can_be_instantiated(self, mock_file, mock_yaml):
         """Test that OSMConnector can be instantiated with valid config"""
-        from engine.ingestion.open_street_map import OSMConnector
+        from engine.ingestion.connectors.open_street_map import OSMConnector
 
         mock_yaml.return_value = self.mock_config
 
@@ -72,7 +72,7 @@ class TestOSMConnectorInitialization(unittest.IsolatedAsyncioTestCase):
     @patch('builtins.open', new_callable=mock_open)
     async def test_osm_connector_has_correct_source_name(self, mock_file, mock_yaml):
         """Test that OSMConnector provides source_name as 'openstreetmap'"""
-        from engine.ingestion.open_street_map import OSMConnector
+        from engine.ingestion.connectors.open_street_map import OSMConnector
 
         mock_yaml.return_value = self.mock_config
 
@@ -83,7 +83,7 @@ class TestOSMConnectorInitialization(unittest.IsolatedAsyncioTestCase):
     @patch('builtins.open', new_callable=mock_open)
     async def test_osm_connector_loads_config(self, mock_file, mock_yaml):
         """Test that OSMConnector loads configuration from sources.yaml"""
-        from engine.ingestion.open_street_map import OSMConnector
+        from engine.ingestion.connectors.open_street_map import OSMConnector
 
         mock_yaml.return_value = self.mock_config
 
@@ -95,7 +95,7 @@ class TestOSMConnectorInitialization(unittest.IsolatedAsyncioTestCase):
 
     async def test_osm_connector_raises_error_without_config(self):
         """Test that OSMConnector raises error if config file missing"""
-        from engine.ingestion.open_street_map import OSMConnector
+        from engine.ingestion.connectors.open_street_map import OSMConnector
 
         with patch('builtins.open', side_effect=FileNotFoundError):
             with self.assertRaises(FileNotFoundError):
@@ -105,7 +105,7 @@ class TestOSMConnectorInitialization(unittest.IsolatedAsyncioTestCase):
     @patch('builtins.open', new_callable=mock_open)
     async def test_osm_connector_raises_error_without_base_url(self, mock_file, mock_yaml):
         """Test that OSMConnector raises error if base URL not configured"""
-        from engine.ingestion.open_street_map import OSMConnector
+        from engine.ingestion.connectors.open_street_map import OSMConnector
 
         # Config without base URL
         invalid_config = {
@@ -178,7 +178,7 @@ class TestOSMConnectorFetch(unittest.IsolatedAsyncioTestCase):
     @patch('aiohttp.ClientSession')
     async def test_fetch_makes_api_request(self, mock_session_class, mock_file, mock_yaml):
         """Test that fetch method makes HTTP POST request to Overpass API"""
-        from engine.ingestion.open_street_map import OSMConnector
+        from engine.ingestion.connectors.open_street_map import OSMConnector
 
         mock_yaml.return_value = self.mock_config
 
@@ -208,7 +208,7 @@ class TestOSMConnectorFetch(unittest.IsolatedAsyncioTestCase):
     @patch('aiohttp.ClientSession')
     async def test_fetch_builds_overpass_ql_query(self, mock_session_class, mock_file, mock_yaml):
         """Test that fetch builds proper Overpass QL query"""
-        from engine.ingestion.open_street_map import OSMConnector
+        from engine.ingestion.connectors.open_street_map import OSMConnector
 
         mock_yaml.return_value = self.mock_config
 
@@ -242,7 +242,7 @@ class TestOSMConnectorFetch(unittest.IsolatedAsyncioTestCase):
     @patch('aiohttp.ClientSession')
     async def test_fetch_includes_spatial_filter(self, mock_session_class, mock_file, mock_yaml):
         """Test that fetch includes spatial filter (around) in query"""
-        from engine.ingestion.open_street_map import OSMConnector
+        from engine.ingestion.connectors.open_street_map import OSMConnector
 
         mock_yaml.return_value = self.mock_config
 
@@ -274,7 +274,7 @@ class TestOSMConnectorFetch(unittest.IsolatedAsyncioTestCase):
     @patch('aiohttp.ClientSession')
     async def test_fetch_handles_http_error(self, mock_session_class, mock_file, mock_yaml):
         """Test that fetch raises error on HTTP failure"""
-        from engine.ingestion.open_street_map import OSMConnector
+        from engine.ingestion.connectors.open_street_map import OSMConnector
 
         mock_yaml.return_value = self.mock_config
 
@@ -302,7 +302,7 @@ class TestOSMConnectorFetch(unittest.IsolatedAsyncioTestCase):
     @patch('aiohttp.ClientSession')
     async def test_fetch_handles_network_timeout(self, mock_session_class, mock_file, mock_yaml):
         """Test that fetch handles network timeout gracefully"""
-        from engine.ingestion.open_street_map import OSMConnector
+        from engine.ingestion.connectors.open_street_map import OSMConnector
         import asyncio
 
         mock_yaml.return_value = self.mock_config
@@ -329,7 +329,7 @@ class TestOSMConnectorFetch(unittest.IsolatedAsyncioTestCase):
     @patch('aiohttp.ClientSession')
     async def test_fetch_handles_empty_results(self, mock_session_class, mock_file, mock_yaml):
         """Test that fetch handles empty results (no matching facilities)"""
-        from engine.ingestion.open_street_map import OSMConnector
+        from engine.ingestion.connectors.open_street_map import OSMConnector
 
         mock_yaml.return_value = self.mock_config
 
@@ -389,11 +389,11 @@ class TestOSMConnectorSave(unittest.IsolatedAsyncioTestCase):
 
     @patch('yaml.safe_load')
     @patch('builtins.open', new_callable=mock_open)
-    @patch('engine.ingestion.open_street_map.save_json')
+    @patch('engine.ingestion.connectors.open_street_map.save_json')
     @patch('prisma.Prisma')
     async def test_save_creates_file(self, mock_prisma, mock_save_json, mock_file, mock_yaml):
         """Test that save method creates JSON file"""
-        from engine.ingestion.open_street_map import OSMConnector
+        from engine.ingestion.connectors.open_street_map import OSMConnector
 
         mock_yaml.return_value = self.mock_config
 
@@ -417,11 +417,11 @@ class TestOSMConnectorSave(unittest.IsolatedAsyncioTestCase):
 
     @patch('yaml.safe_load')
     @patch('builtins.open', new_callable=mock_open)
-    @patch('engine.ingestion.open_street_map.save_json')
+    @patch('engine.ingestion.connectors.open_street_map.save_json')
     @patch('prisma.Prisma')
     async def test_save_creates_database_record(self, mock_prisma, mock_save_json, mock_file, mock_yaml):
         """Test that save method creates RawIngestion database record"""
-        from engine.ingestion.open_street_map import OSMConnector
+        from engine.ingestion.connectors.open_street_map import OSMConnector
 
         mock_yaml.return_value = self.mock_config
 
@@ -451,11 +451,11 @@ class TestOSMConnectorSave(unittest.IsolatedAsyncioTestCase):
 
     @patch('yaml.safe_load')
     @patch('builtins.open', new_callable=mock_open)
-    @patch('engine.ingestion.open_street_map.save_json')
+    @patch('engine.ingestion.connectors.open_street_map.save_json')
     @patch('prisma.Prisma')
     async def test_save_returns_file_path(self, mock_prisma, mock_save_json, mock_file, mock_yaml):
         """Test that save method returns the file path"""
-        from engine.ingestion.open_street_map import OSMConnector
+        from engine.ingestion.connectors.open_street_map import OSMConnector
 
         mock_yaml.return_value = self.mock_config
 
@@ -477,11 +477,11 @@ class TestOSMConnectorSave(unittest.IsolatedAsyncioTestCase):
 
     @patch('yaml.safe_load')
     @patch('builtins.open', new_callable=mock_open)
-    @patch('engine.ingestion.open_street_map.save_json')
+    @patch('engine.ingestion.connectors.open_street_map.save_json')
     @patch('prisma.Prisma')
     async def test_save_includes_element_count_in_metadata(self, mock_prisma, mock_save_json, mock_file, mock_yaml):
         """Test that save includes element count in metadata_json"""
-        from engine.ingestion.open_street_map import OSMConnector
+        from engine.ingestion.connectors.open_street_map import OSMConnector
 
         mock_yaml.return_value = self.mock_config
 
@@ -521,10 +521,10 @@ class TestOSMConnectorDeduplication(unittest.IsolatedAsyncioTestCase):
 
     @patch('yaml.safe_load')
     @patch('builtins.open', new_callable=mock_open)
-    @patch('engine.ingestion.open_street_map.check_duplicate')
+    @patch('engine.ingestion.connectors.open_street_map.check_duplicate')
     async def test_is_duplicate_checks_database(self, mock_check_dup, mock_file, mock_yaml):
         """Test that is_duplicate queries the database"""
-        from engine.ingestion.open_street_map import OSMConnector
+        from engine.ingestion.connectors.open_street_map import OSMConnector
 
         mock_yaml.return_value = self.mock_config
         mock_check_dup.return_value = False
@@ -539,10 +539,10 @@ class TestOSMConnectorDeduplication(unittest.IsolatedAsyncioTestCase):
 
     @patch('yaml.safe_load')
     @patch('builtins.open', new_callable=mock_open)
-    @patch('engine.ingestion.open_street_map.check_duplicate')
+    @patch('engine.ingestion.connectors.open_street_map.check_duplicate')
     async def test_is_duplicate_returns_true_for_existing(self, mock_check_dup, mock_file, mock_yaml):
         """Test that is_duplicate returns True for existing content"""
-        from engine.ingestion.open_street_map import OSMConnector
+        from engine.ingestion.connectors.open_street_map import OSMConnector
 
         mock_yaml.return_value = self.mock_config
         mock_check_dup.return_value = True
@@ -556,10 +556,10 @@ class TestOSMConnectorDeduplication(unittest.IsolatedAsyncioTestCase):
 
     @patch('yaml.safe_load')
     @patch('builtins.open', new_callable=mock_open)
-    @patch('engine.ingestion.open_street_map.check_duplicate')
+    @patch('engine.ingestion.connectors.open_street_map.check_duplicate')
     async def test_is_duplicate_returns_false_for_new(self, mock_check_dup, mock_file, mock_yaml):
         """Test that is_duplicate returns False for new content"""
-        from engine.ingestion.open_street_map import OSMConnector
+        from engine.ingestion.connectors.open_street_map import OSMConnector
 
         mock_yaml.return_value = self.mock_config
         mock_check_dup.return_value = False
@@ -606,13 +606,13 @@ class TestOSMConnectorIntegration(unittest.IsolatedAsyncioTestCase):
     @patch('yaml.safe_load')
     @patch('builtins.open', new_callable=mock_open)
     @patch('aiohttp.ClientSession')
-    @patch('engine.ingestion.open_street_map.save_json')
-    @patch('engine.ingestion.open_street_map.check_duplicate')
+    @patch('engine.ingestion.connectors.open_street_map.save_json')
+    @patch('engine.ingestion.connectors.open_street_map.check_duplicate')
     async def test_complete_workflow_fetch_and_save(
         self, mock_check_dup, mock_save_json, mock_session_class, mock_file, mock_yaml
     ):
         """Test complete workflow: fetch data, check duplicate, save"""
-        from engine.ingestion.open_street_map import OSMConnector
+        from engine.ingestion.connectors.open_street_map import OSMConnector
 
         mock_yaml.return_value = self.mock_config
         mock_check_dup.return_value = False  # Not a duplicate

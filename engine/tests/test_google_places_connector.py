@@ -52,7 +52,7 @@ class TestGooglePlacesConnectorInitialization(unittest.IsolatedAsyncioTestCase):
     async def test_google_places_connector_can_be_imported(self):
         """Test that GooglePlacesConnector class can be imported"""
         try:
-            from engine.ingestion.google_places import GooglePlacesConnector
+            from engine.ingestion.connectors.google_places import GooglePlacesConnector
             self.assertIsNotNone(GooglePlacesConnector)
         except ImportError:
             self.fail("Failed to import GooglePlacesConnector - implementation not yet created")
@@ -61,7 +61,7 @@ class TestGooglePlacesConnectorInitialization(unittest.IsolatedAsyncioTestCase):
     @patch('builtins.open', new_callable=mock_open)
     async def test_google_places_connector_can_be_instantiated(self, mock_file, mock_yaml):
         """Test that GooglePlacesConnector can be instantiated with valid config"""
-        from engine.ingestion.google_places import GooglePlacesConnector
+        from engine.ingestion.connectors.google_places import GooglePlacesConnector
 
         mock_yaml.return_value = self.mock_config
 
@@ -72,7 +72,7 @@ class TestGooglePlacesConnectorInitialization(unittest.IsolatedAsyncioTestCase):
     @patch('builtins.open', new_callable=mock_open)
     async def test_google_places_connector_has_correct_source_name(self, mock_file, mock_yaml):
         """Test that GooglePlacesConnector provides source_name as 'google_places'"""
-        from engine.ingestion.google_places import GooglePlacesConnector
+        from engine.ingestion.connectors.google_places import GooglePlacesConnector
 
         mock_yaml.return_value = self.mock_config
 
@@ -83,7 +83,7 @@ class TestGooglePlacesConnectorInitialization(unittest.IsolatedAsyncioTestCase):
     @patch('builtins.open', new_callable=mock_open)
     async def test_google_places_connector_loads_config(self, mock_file, mock_yaml):
         """Test that GooglePlacesConnector loads configuration from sources.yaml"""
-        from engine.ingestion.google_places import GooglePlacesConnector
+        from engine.ingestion.connectors.google_places import GooglePlacesConnector
 
         mock_yaml.return_value = self.mock_config
 
@@ -95,7 +95,7 @@ class TestGooglePlacesConnectorInitialization(unittest.IsolatedAsyncioTestCase):
 
     async def test_google_places_connector_raises_error_without_config(self):
         """Test that GooglePlacesConnector raises error if config file missing"""
-        from engine.ingestion.google_places import GooglePlacesConnector
+        from engine.ingestion.connectors.google_places import GooglePlacesConnector
 
         with patch('builtins.open', side_effect=FileNotFoundError):
             with self.assertRaises(FileNotFoundError):
@@ -105,7 +105,7 @@ class TestGooglePlacesConnectorInitialization(unittest.IsolatedAsyncioTestCase):
     @patch('builtins.open', new_callable=mock_open)
     async def test_google_places_connector_raises_error_without_api_key(self, mock_file, mock_yaml):
         """Test that GooglePlacesConnector raises error if API key not configured"""
-        from engine.ingestion.google_places import GooglePlacesConnector
+        from engine.ingestion.connectors.google_places import GooglePlacesConnector
 
         # Config without API key
         invalid_config = {
@@ -128,7 +128,7 @@ class TestGooglePlacesConnectorInitialization(unittest.IsolatedAsyncioTestCase):
     @patch('builtins.open', new_callable=mock_open)
     async def test_google_places_connector_raises_error_with_placeholder_key(self, mock_file, mock_yaml):
         """Test that GooglePlacesConnector raises error if API key is placeholder"""
-        from engine.ingestion.google_places import GooglePlacesConnector
+        from engine.ingestion.connectors.google_places import GooglePlacesConnector
 
         # Config with placeholder key
         invalid_config = {
@@ -195,7 +195,7 @@ class TestGooglePlacesConnectorSearch(unittest.IsolatedAsyncioTestCase):
     @patch('aiohttp.ClientSession')
     async def test_fetch_makes_api_request(self, mock_session_class, mock_file, mock_yaml):
         """Test that fetch method makes HTTP POST request to Google Places API (New)"""
-        from engine.ingestion.google_places import GooglePlacesConnector
+        from engine.ingestion.connectors.google_places import GooglePlacesConnector
 
         mock_yaml.return_value = self.mock_config
 
@@ -225,7 +225,7 @@ class TestGooglePlacesConnectorSearch(unittest.IsolatedAsyncioTestCase):
     @patch('aiohttp.ClientSession')
     async def test_fetch_includes_api_key(self, mock_session_class, mock_file, mock_yaml):
         """Test that fetch includes API key in request parameters"""
-        from engine.ingestion.google_places import GooglePlacesConnector
+        from engine.ingestion.connectors.google_places import GooglePlacesConnector
 
         mock_yaml.return_value = self.mock_config
 
@@ -257,7 +257,7 @@ class TestGooglePlacesConnectorSearch(unittest.IsolatedAsyncioTestCase):
     @patch('aiohttp.ClientSession')
     async def test_fetch_includes_default_params(self, mock_session_class, mock_file, mock_yaml):
         """Test that fetch includes default parameters from config"""
-        from engine.ingestion.google_places import GooglePlacesConnector
+        from engine.ingestion.connectors.google_places import GooglePlacesConnector
 
         mock_yaml.return_value = self.mock_config
 
@@ -289,7 +289,7 @@ class TestGooglePlacesConnectorSearch(unittest.IsolatedAsyncioTestCase):
     @patch('aiohttp.ClientSession')
     async def test_fetch_handles_http_error(self, mock_session_class, mock_file, mock_yaml):
         """Test that fetch raises error on HTTP failure"""
-        from engine.ingestion.google_places import GooglePlacesConnector
+        from engine.ingestion.connectors.google_places import GooglePlacesConnector
 
         mock_yaml.return_value = self.mock_config
 
@@ -317,7 +317,7 @@ class TestGooglePlacesConnectorSearch(unittest.IsolatedAsyncioTestCase):
     @patch('aiohttp.ClientSession')
     async def test_fetch_handles_network_timeout(self, mock_session_class, mock_file, mock_yaml):
         """Test that fetch handles network timeout gracefully"""
-        from engine.ingestion.google_places import GooglePlacesConnector
+        from engine.ingestion.connectors.google_places import GooglePlacesConnector
         import asyncio
 
         mock_yaml.return_value = self.mock_config
@@ -344,7 +344,7 @@ class TestGooglePlacesConnectorSearch(unittest.IsolatedAsyncioTestCase):
     @patch('aiohttp.ClientSession')
     async def test_fetch_handles_api_error_status(self, mock_session_class, mock_file, mock_yaml):
         """Test that fetch handles Google Places API with no results (new API)"""
-        from engine.ingestion.google_places import GooglePlacesConnector
+        from engine.ingestion.connectors.google_places import GooglePlacesConnector
 
         mock_yaml.return_value = self.mock_config
 
@@ -397,11 +397,11 @@ class TestGooglePlacesConnectorSave(unittest.IsolatedAsyncioTestCase):
 
     @patch('yaml.safe_load')
     @patch('builtins.open', new_callable=mock_open)
-    @patch('engine.ingestion.google_places.save_json')
+    @patch('engine.ingestion.connectors.google_places.save_json')
     @patch('prisma.Prisma')
     async def test_save_creates_file(self, mock_prisma, mock_save_json, mock_file, mock_yaml):
         """Test that save method creates JSON file"""
-        from engine.ingestion.google_places import GooglePlacesConnector
+        from engine.ingestion.connectors.google_places import GooglePlacesConnector
 
         mock_yaml.return_value = self.mock_config
 
@@ -425,11 +425,11 @@ class TestGooglePlacesConnectorSave(unittest.IsolatedAsyncioTestCase):
 
     @patch('yaml.safe_load')
     @patch('builtins.open', new_callable=mock_open)
-    @patch('engine.ingestion.google_places.save_json')
+    @patch('engine.ingestion.connectors.google_places.save_json')
     @patch('prisma.Prisma')
     async def test_save_creates_database_record(self, mock_prisma, mock_save_json, mock_file, mock_yaml):
         """Test that save method creates RawIngestion database record"""
-        from engine.ingestion.google_places import GooglePlacesConnector
+        from engine.ingestion.connectors.google_places import GooglePlacesConnector
 
         mock_yaml.return_value = self.mock_config
 
@@ -459,11 +459,11 @@ class TestGooglePlacesConnectorSave(unittest.IsolatedAsyncioTestCase):
 
     @patch('yaml.safe_load')
     @patch('builtins.open', new_callable=mock_open)
-    @patch('engine.ingestion.google_places.save_json')
+    @patch('engine.ingestion.connectors.google_places.save_json')
     @patch('prisma.Prisma')
     async def test_save_returns_file_path(self, mock_prisma, mock_save_json, mock_file, mock_yaml):
         """Test that save method returns the file path"""
-        from engine.ingestion.google_places import GooglePlacesConnector
+        from engine.ingestion.connectors.google_places import GooglePlacesConnector
 
         mock_yaml.return_value = self.mock_config
 
@@ -499,10 +499,10 @@ class TestGooglePlacesConnectorDeduplication(unittest.IsolatedAsyncioTestCase):
 
     @patch('yaml.safe_load')
     @patch('builtins.open', new_callable=mock_open)
-    @patch('engine.ingestion.google_places.check_duplicate')
+    @patch('engine.ingestion.connectors.google_places.check_duplicate')
     async def test_is_duplicate_checks_database(self, mock_check_dup, mock_file, mock_yaml):
         """Test that is_duplicate queries the database"""
-        from engine.ingestion.google_places import GooglePlacesConnector
+        from engine.ingestion.connectors.google_places import GooglePlacesConnector
 
         mock_yaml.return_value = self.mock_config
         mock_check_dup.return_value = False
@@ -517,10 +517,10 @@ class TestGooglePlacesConnectorDeduplication(unittest.IsolatedAsyncioTestCase):
 
     @patch('yaml.safe_load')
     @patch('builtins.open', new_callable=mock_open)
-    @patch('engine.ingestion.google_places.check_duplicate')
+    @patch('engine.ingestion.connectors.google_places.check_duplicate')
     async def test_is_duplicate_returns_true_for_existing(self, mock_check_dup, mock_file, mock_yaml):
         """Test that is_duplicate returns True for existing content"""
-        from engine.ingestion.google_places import GooglePlacesConnector
+        from engine.ingestion.connectors.google_places import GooglePlacesConnector
 
         mock_yaml.return_value = self.mock_config
         mock_check_dup.return_value = True
@@ -534,10 +534,10 @@ class TestGooglePlacesConnectorDeduplication(unittest.IsolatedAsyncioTestCase):
 
     @patch('yaml.safe_load')
     @patch('builtins.open', new_callable=mock_open)
-    @patch('engine.ingestion.google_places.check_duplicate')
+    @patch('engine.ingestion.connectors.google_places.check_duplicate')
     async def test_is_duplicate_returns_false_for_new(self, mock_check_dup, mock_file, mock_yaml):
         """Test that is_duplicate returns False for new content"""
-        from engine.ingestion.google_places import GooglePlacesConnector
+        from engine.ingestion.connectors.google_places import GooglePlacesConnector
 
         mock_yaml.return_value = self.mock_config
         mock_check_dup.return_value = False
@@ -579,13 +579,13 @@ class TestGooglePlacesConnectorIntegration(unittest.IsolatedAsyncioTestCase):
     @patch('yaml.safe_load')
     @patch('builtins.open', new_callable=mock_open)
     @patch('aiohttp.ClientSession')
-    @patch('engine.ingestion.google_places.save_json')
-    @patch('engine.ingestion.google_places.check_duplicate')
+    @patch('engine.ingestion.connectors.google_places.save_json')
+    @patch('engine.ingestion.connectors.google_places.check_duplicate')
     async def test_complete_workflow_fetch_and_save(
         self, mock_check_dup, mock_save_json, mock_session_class, mock_file, mock_yaml
     ):
         """Test complete workflow: fetch data, check duplicate, save"""
-        from engine.ingestion.google_places import GooglePlacesConnector
+        from engine.ingestion.connectors.google_places import GooglePlacesConnector
 
         mock_yaml.return_value = self.mock_config
         mock_check_dup.return_value = False  # Not a duplicate

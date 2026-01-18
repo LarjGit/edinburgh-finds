@@ -52,7 +52,7 @@ class TestEdinburghCouncilConnectorInitialization(unittest.IsolatedAsyncioTestCa
     async def test_edinburgh_council_connector_can_be_imported(self):
         """Test that EdinburghCouncilConnector class can be imported"""
         try:
-            from engine.ingestion.edinburgh_council import EdinburghCouncilConnector
+            from engine.ingestion.connectors.edinburgh_council import EdinburghCouncilConnector
             self.assertIsNotNone(EdinburghCouncilConnector)
         except ImportError:
             self.fail("Failed to import EdinburghCouncilConnector - implementation not yet created")
@@ -61,7 +61,7 @@ class TestEdinburghCouncilConnectorInitialization(unittest.IsolatedAsyncioTestCa
     @patch('builtins.open', new_callable=mock_open)
     async def test_edinburgh_council_connector_can_be_instantiated(self, mock_file, mock_yaml):
         """Test that EdinburghCouncilConnector can be instantiated with valid config"""
-        from engine.ingestion.edinburgh_council import EdinburghCouncilConnector
+        from engine.ingestion.connectors.edinburgh_council import EdinburghCouncilConnector
 
         mock_yaml.return_value = self.mock_config
 
@@ -72,7 +72,7 @@ class TestEdinburghCouncilConnectorInitialization(unittest.IsolatedAsyncioTestCa
     @patch('builtins.open', new_callable=mock_open)
     async def test_edinburgh_council_connector_has_correct_source_name(self, mock_file, mock_yaml):
         """Test that EdinburghCouncilConnector provides source_name as 'edinburgh_council'"""
-        from engine.ingestion.edinburgh_council import EdinburghCouncilConnector
+        from engine.ingestion.connectors.edinburgh_council import EdinburghCouncilConnector
 
         mock_yaml.return_value = self.mock_config
 
@@ -83,7 +83,7 @@ class TestEdinburghCouncilConnectorInitialization(unittest.IsolatedAsyncioTestCa
     @patch('builtins.open', new_callable=mock_open)
     async def test_edinburgh_council_connector_loads_config(self, mock_file, mock_yaml):
         """Test that EdinburghCouncilConnector loads configuration from sources.yaml"""
-        from engine.ingestion.edinburgh_council import EdinburghCouncilConnector
+        from engine.ingestion.connectors.edinburgh_council import EdinburghCouncilConnector
 
         mock_yaml.return_value = self.mock_config
 
@@ -95,7 +95,7 @@ class TestEdinburghCouncilConnectorInitialization(unittest.IsolatedAsyncioTestCa
 
     async def test_edinburgh_council_connector_raises_error_without_config(self):
         """Test that EdinburghCouncilConnector raises error if config file missing"""
-        from engine.ingestion.edinburgh_council import EdinburghCouncilConnector
+        from engine.ingestion.connectors.edinburgh_council import EdinburghCouncilConnector
 
         with patch('builtins.open', side_effect=FileNotFoundError):
             with self.assertRaises(FileNotFoundError):
@@ -105,7 +105,7 @@ class TestEdinburghCouncilConnectorInitialization(unittest.IsolatedAsyncioTestCa
     @patch('builtins.open', new_callable=mock_open)
     async def test_edinburgh_council_connector_works_without_api_key(self, mock_file, mock_yaml):
         """Test that EdinburghCouncilConnector works with null API key (public data)"""
-        from engine.ingestion.edinburgh_council import EdinburghCouncilConnector
+        from engine.ingestion.connectors.edinburgh_council import EdinburghCouncilConnector
 
         mock_yaml.return_value = self.mock_config
 
@@ -176,7 +176,7 @@ class TestEdinburghCouncilConnectorFetch(unittest.IsolatedAsyncioTestCase):
     @patch('aiohttp.ClientSession')
     async def test_fetch_makes_api_request(self, mock_session_class, mock_file, mock_yaml):
         """Test that fetch method makes HTTP GET request to ArcGIS REST endpoint"""
-        from engine.ingestion.edinburgh_council import EdinburghCouncilConnector
+        from engine.ingestion.connectors.edinburgh_council import EdinburghCouncilConnector
 
         mock_yaml.return_value = self.mock_config
 
@@ -206,7 +206,7 @@ class TestEdinburghCouncilConnectorFetch(unittest.IsolatedAsyncioTestCase):
     @patch('aiohttp.ClientSession')
     async def test_fetch_includes_query_parameters(self, mock_session_class, mock_file, mock_yaml):
         """Test that fetch includes ArcGIS query parameters"""
-        from engine.ingestion.edinburgh_council import EdinburghCouncilConnector
+        from engine.ingestion.connectors.edinburgh_council import EdinburghCouncilConnector
 
         mock_yaml.return_value = self.mock_config
 
@@ -240,7 +240,7 @@ class TestEdinburghCouncilConnectorFetch(unittest.IsolatedAsyncioTestCase):
     @patch('aiohttp.ClientSession')
     async def test_fetch_includes_where_clause(self, mock_session_class, mock_file, mock_yaml):
         """Test that fetch includes where clause for filtering"""
-        from engine.ingestion.edinburgh_council import EdinburghCouncilConnector
+        from engine.ingestion.connectors.edinburgh_council import EdinburghCouncilConnector
 
         mock_yaml.return_value = self.mock_config
 
@@ -270,7 +270,7 @@ class TestEdinburghCouncilConnectorFetch(unittest.IsolatedAsyncioTestCase):
     @patch('aiohttp.ClientSession')
     async def test_fetch_builds_correct_url(self, mock_session_class, mock_file, mock_yaml):
         """Test that fetch builds correct ArcGIS Feature Service URL"""
-        from engine.ingestion.edinburgh_council import EdinburghCouncilConnector
+        from engine.ingestion.connectors.edinburgh_council import EdinburghCouncilConnector
 
         mock_yaml.return_value = self.mock_config
 
@@ -301,7 +301,7 @@ class TestEdinburghCouncilConnectorFetch(unittest.IsolatedAsyncioTestCase):
     @patch('aiohttp.ClientSession')
     async def test_fetch_handles_http_error(self, mock_session_class, mock_file, mock_yaml):
         """Test that fetch raises error on HTTP failure"""
-        from engine.ingestion.edinburgh_council import EdinburghCouncilConnector
+        from engine.ingestion.connectors.edinburgh_council import EdinburghCouncilConnector
 
         mock_yaml.return_value = self.mock_config
 
@@ -329,7 +329,7 @@ class TestEdinburghCouncilConnectorFetch(unittest.IsolatedAsyncioTestCase):
     @patch('aiohttp.ClientSession')
     async def test_fetch_handles_network_timeout(self, mock_session_class, mock_file, mock_yaml):
         """Test that fetch handles network timeout gracefully"""
-        from engine.ingestion.edinburgh_council import EdinburghCouncilConnector
+        from engine.ingestion.connectors.edinburgh_council import EdinburghCouncilConnector
         import asyncio
 
         mock_yaml.return_value = self.mock_config
@@ -356,7 +356,7 @@ class TestEdinburghCouncilConnectorFetch(unittest.IsolatedAsyncioTestCase):
     @patch('aiohttp.ClientSession')
     async def test_fetch_handles_empty_feature_collection(self, mock_session_class, mock_file, mock_yaml):
         """Test that fetch handles response with no features"""
-        from engine.ingestion.edinburgh_council import EdinburghCouncilConnector
+        from engine.ingestion.connectors.edinburgh_council import EdinburghCouncilConnector
 
         mock_yaml.return_value = self.mock_config
 
@@ -390,7 +390,7 @@ class TestEdinburghCouncilConnectorFetch(unittest.IsolatedAsyncioTestCase):
     @patch('builtins.open', new_callable=mock_open)
     async def test_fetch_raises_error_on_invalid_dataset_id(self, mock_file, mock_yaml):
         """Test that fetch validates dataset ID"""
-        from engine.ingestion.edinburgh_council import EdinburghCouncilConnector
+        from engine.ingestion.connectors.edinburgh_council import EdinburghCouncilConnector
 
         mock_yaml.return_value = self.mock_config
 
@@ -435,11 +435,11 @@ class TestEdinburghCouncilConnectorSave(unittest.IsolatedAsyncioTestCase):
 
     @patch('yaml.safe_load')
     @patch('builtins.open', new_callable=mock_open)
-    @patch('engine.ingestion.edinburgh_council.save_json')
+    @patch('engine.ingestion.connectors.edinburgh_council.save_json')
     @patch('prisma.Prisma')
     async def test_save_creates_file(self, mock_prisma, mock_save_json, mock_file, mock_yaml):
         """Test that save method creates JSON file"""
-        from engine.ingestion.edinburgh_council import EdinburghCouncilConnector
+        from engine.ingestion.connectors.edinburgh_council import EdinburghCouncilConnector
 
         mock_yaml.return_value = self.mock_config
 
@@ -463,11 +463,11 @@ class TestEdinburghCouncilConnectorSave(unittest.IsolatedAsyncioTestCase):
 
     @patch('yaml.safe_load')
     @patch('builtins.open', new_callable=mock_open)
-    @patch('engine.ingestion.edinburgh_council.save_json')
+    @patch('engine.ingestion.connectors.edinburgh_council.save_json')
     @patch('prisma.Prisma')
     async def test_save_creates_database_record(self, mock_prisma, mock_save_json, mock_file, mock_yaml):
         """Test that save method creates RawIngestion database record"""
-        from engine.ingestion.edinburgh_council import EdinburghCouncilConnector
+        from engine.ingestion.connectors.edinburgh_council import EdinburghCouncilConnector
 
         mock_yaml.return_value = self.mock_config
 
@@ -497,11 +497,11 @@ class TestEdinburghCouncilConnectorSave(unittest.IsolatedAsyncioTestCase):
 
     @patch('yaml.safe_load')
     @patch('builtins.open', new_callable=mock_open)
-    @patch('engine.ingestion.edinburgh_council.save_json')
+    @patch('engine.ingestion.connectors.edinburgh_council.save_json')
     @patch('prisma.Prisma')
     async def test_save_includes_feature_count_in_metadata(self, mock_prisma, mock_save_json, mock_file, mock_yaml):
         """Test that save includes feature count in metadata"""
-        from engine.ingestion.edinburgh_council import EdinburghCouncilConnector
+        from engine.ingestion.connectors.edinburgh_council import EdinburghCouncilConnector
 
         mock_yaml.return_value = self.mock_config
 
@@ -541,10 +541,10 @@ class TestEdinburghCouncilConnectorDeduplication(unittest.IsolatedAsyncioTestCas
 
     @patch('yaml.safe_load')
     @patch('builtins.open', new_callable=mock_open)
-    @patch('engine.ingestion.edinburgh_council.check_duplicate')
+    @patch('engine.ingestion.connectors.edinburgh_council.check_duplicate')
     async def test_is_duplicate_checks_database(self, mock_check_dup, mock_file, mock_yaml):
         """Test that is_duplicate queries the database"""
-        from engine.ingestion.edinburgh_council import EdinburghCouncilConnector
+        from engine.ingestion.connectors.edinburgh_council import EdinburghCouncilConnector
 
         mock_yaml.return_value = self.mock_config
         mock_check_dup.return_value = False
@@ -559,10 +559,10 @@ class TestEdinburghCouncilConnectorDeduplication(unittest.IsolatedAsyncioTestCas
 
     @patch('yaml.safe_load')
     @patch('builtins.open', new_callable=mock_open)
-    @patch('engine.ingestion.edinburgh_council.check_duplicate')
+    @patch('engine.ingestion.connectors.edinburgh_council.check_duplicate')
     async def test_is_duplicate_returns_true_for_existing(self, mock_check_dup, mock_file, mock_yaml):
         """Test that is_duplicate returns True for existing content"""
-        from engine.ingestion.edinburgh_council import EdinburghCouncilConnector
+        from engine.ingestion.connectors.edinburgh_council import EdinburghCouncilConnector
 
         mock_yaml.return_value = self.mock_config
         mock_check_dup.return_value = True
@@ -576,10 +576,10 @@ class TestEdinburghCouncilConnectorDeduplication(unittest.IsolatedAsyncioTestCas
 
     @patch('yaml.safe_load')
     @patch('builtins.open', new_callable=mock_open)
-    @patch('engine.ingestion.edinburgh_council.check_duplicate')
+    @patch('engine.ingestion.connectors.edinburgh_council.check_duplicate')
     async def test_is_duplicate_returns_false_for_new(self, mock_check_dup, mock_file, mock_yaml):
         """Test that is_duplicate returns False for new content"""
-        from engine.ingestion.edinburgh_council import EdinburghCouncilConnector
+        from engine.ingestion.connectors.edinburgh_council import EdinburghCouncilConnector
 
         mock_yaml.return_value = self.mock_config
         mock_check_dup.return_value = False
@@ -632,13 +632,13 @@ class TestEdinburghCouncilConnectorIntegration(unittest.IsolatedAsyncioTestCase)
     @patch('yaml.safe_load')
     @patch('builtins.open', new_callable=mock_open)
     @patch('aiohttp.ClientSession')
-    @patch('engine.ingestion.edinburgh_council.save_json')
-    @patch('engine.ingestion.edinburgh_council.check_duplicate')
+    @patch('engine.ingestion.connectors.edinburgh_council.save_json')
+    @patch('engine.ingestion.connectors.edinburgh_council.check_duplicate')
     async def test_complete_workflow_fetch_and_save(
         self, mock_check_dup, mock_save_json, mock_session_class, mock_file, mock_yaml
     ):
         """Test complete workflow: fetch data, check duplicate, save"""
-        from engine.ingestion.edinburgh_council import EdinburghCouncilConnector
+        from engine.ingestion.connectors.edinburgh_council import EdinburghCouncilConnector
 
         mock_yaml.return_value = self.mock_config
         mock_check_dup.return_value = False  # Not a duplicate

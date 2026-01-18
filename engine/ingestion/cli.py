@@ -23,9 +23,9 @@ import sys
 from datetime import datetime
 from typing import Optional
 
-from engine.ingestion.serper import SerperConnector
-from engine.ingestion.google_places import GooglePlacesConnector
-from engine.ingestion.open_street_map import OSMConnector
+from engine.ingestion.connectors.serper import SerperConnector
+from engine.ingestion.connectors.google_places import GooglePlacesConnector
+from engine.ingestion.connectors.open_street_map import OSMConnector
 from engine.ingestion.deduplication import compute_content_hash
 from prisma import Prisma
 
