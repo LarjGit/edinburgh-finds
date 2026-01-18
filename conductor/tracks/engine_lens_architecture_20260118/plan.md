@@ -276,160 +276,160 @@ assert 'membership_org' in entity['canonical_roles']
 
 ### Task 2.1: Create Lens Configuration Structure
 
-**Status:** in_progress
+**Status:** ✅ completed
 
 **Description:** Create `lenses/edinburgh_finds/lens.yaml` with complete Sports & Fitness lens definition
 
 **Subtasks:**
-- [ ] Create `lenses/edinburgh_finds/lens.yaml` file
-- [ ] Define lens metadata:
-  - [ ] id: edinburgh_finds
-  - [ ] name: "Edinburgh Finds"
-  - [ ] description: "Sports and fitness directory for Edinburgh"
-  - [ ] base_url: "https://edinburghfinds.com"
-- [ ] Define facets section (map to engine dimensions using ACTUAL DB COLUMN NAMES):
-  - [ ] activity facet:
-    - [ ] dimension_source: "canonical_activities" (MUST BE one of 4 canonical_* columns)
-    - [ ] ui_label: "What do you want to do?"
-    - [ ] display_mode: "multi_select"
-    - [ ] order: 10
-    - [ ] show_in_filters: true
-    - [ ] show_in_navigation: true
-    - [ ] icon: "activity"
-  - [ ] role facet (INTERNAL-ONLY):
-    - [ ] dimension_source: "canonical_roles" (MUST BE one of 4 canonical_* columns)
-    - [ ] ui_label: null (internal-only facet, not shown in UI)
-    - [ ] display_mode: "internal"
-    - [ ] order: 5
-    - [ ] show_in_filters: false
-    - [ ] show_in_navigation: false
-  - [ ] place_type facet:
-    - [ ] dimension_source: "canonical_place_types" (MUST BE one of 4 canonical_* columns)
-    - [ ] ui_label: "Place type"
-    - [ ] display_mode: "single_select"
-    - [ ] order: 20
-    - [ ] show_in_filters: true
-    - [ ] show_in_navigation: false
-    - [ ] icon: "building"
-  - [ ] access facet:
-    - [ ] dimension_source: "canonical_access" (MUST BE one of 4 canonical_* columns)
-    - [ ] ui_label: "Booking & access"
-    - [ ] display_mode: "multi_select"
-    - [ ] order: 30
-    - [ ] show_in_filters: true
-    - [ ] show_in_navigation: false
-    - [ ] icon: "lock"
-- [ ] Define values section (canonical values with FULL INTERPRETATION):
-  - [ ] Activity facet values:
-    - [ ] padel (facet: activity, display_name: "Padel", description, seo_slug: "padel-edinburgh", search_keywords, icon_url: "/icons/padel.svg", color: "#FF6B35")
-    - [ ] tennis (facet: activity, display_name: "Tennis", seo_slug: "tennis-edinburgh", icon_url: "/icons/tennis.svg", color: "#4ECDC4")
-    - [ ] gym (facet: activity, display_name: "Gym & Fitness", seo_slug: "gyms-edinburgh", icon_url: "/icons/gym.svg", color: "#95E1D3")
-    - [ ] swimming (facet: activity, display_name: "Swimming", seo_slug: "swimming-edinburgh")
-  - [ ] Role facet values (INTERNAL-ONLY, universal function-style keys):
-    - [ ] provides_facility (facet: role, display_name: "Venue", description: "Physical facility providing activities")
-    - [ ] sells_goods (facet: role, display_name: "Retailer", description: "Sells sports equipment/gear")
-    - [ ] provides_instruction (facet: role, display_name: "Coach / Instructor", description: "Provides coaching or instruction")
-    - [ ] membership_org (facet: role, display_name: "Club", description: "Membership-based sports club")
-    - [ ] **NOTE**: Labels like "Venue", "Club", "Retailer", "Coach" are lens display labels ONLY. Never use these as structural concepts, entity types, classes, or system concepts. They are strictly for UI presentation.
-  - [ ] Place type facet values:
-    - [ ] sports_centre (facet: place_type, display_name: "Sports Centre", description: "Multi-sport facilities", search_keywords: ["sports centre", "leisure centre"])
-    - [ ] outdoor_facility (facet: place_type, display_name: "Outdoor Facility", description: "Outdoor facilities and parks", search_keywords: ["outdoor", "park"])
-    - [ ] gym_facility (facet: place_type, display_name: "Gym Facility", description: "Dedicated gym/fitness center", search_keywords: ["gym", "fitness center"])
-    - [ ] **NOTE**: place_type represents the container place classification (sports_centre, leisure_centre, park, gym_facility). Individual facilities (padel courts, tennis courts, pitches, pools, tracks) belong in domain modules (sports_facility.inventory), NOT as place_type values. A pitch, court, pool, or rink is NOT a place_type.
-  - [ ] Access facet values:
-    - [ ] membership (facet: access, display_name: "Membership", description: "Membership required", search_keywords: ["members only", "membership"])
-    - [ ] pay_and_play (facet: access, display_name: "Pay & Play", description: "Open to public, pay per use", search_keywords: ["pay and play", "casual"])
-    - [ ] free (facet: access, display_name: "Free to Use", description: "Free access facilities", search_keywords: ["free", "no charge"])
-    - [ ] private_club (facet: access, display_name: "Private Club", description: "Private members-only club", search_keywords: ["private club", "exclusive"])
-- [ ] Add comments:
-  - [ ] "All dimension_source MUST be one of: canonical_activities, canonical_roles, canonical_place_types, canonical_access"
-  - [ ] "Every value.facet MUST reference a facet defined in facets section"
-  - [ ] "Role facet added (internal-only, not shown in UI)"
-  - [ ] "Role keys are universal function-style (provides_facility, sells_goods, provides_instruction, membership_org)"
-  - [ ] "Role display_name carries vertical/product terminology (Venue, Retailer, Coach/Instructor, Club)"
-  - [ ] "private_club moved from place_type to access facet"
-- [ ] Define mapping_rules section:
-  - [ ] Padel: '(?i)\bp[aá]d[eé]l\b' → padel (confidence: 1.0)
-  - [ ] Tennis: '(?i)\btennis\b' → tennis (confidence: 1.0)
-  - [ ] Gym: '(?i)\bgym\b|\bfitness\b' → gym (confidence: 0.9)
-  - [ ] Sports centre: '(?i)sports\s+(centre|center)' → sports_centre (confidence: 0.95)
-  - [ ] Private club: '(?i)private|members.only' → private_club (confidence: 0.8)
-  - [ ] Role mappings (emit universal function-style keys):
-    - [ ] Venue/facility: '(?i)\bvenue\b|\bfacility\b' → provides_facility (confidence: 0.85)
-    - [ ] Coach/instructor: '(?i)\bcoach\b|\binstructor\b' → provides_instruction (confidence: 0.95)
-    - [ ] Retailer/shop: '(?i)\bretailer\b|\bshop\b' → sells_goods (confidence: 0.85)
-    - [ ] Club: '(?i)\bclub\b' → membership_org (confidence: 0.8)
-  - [ ] **IMPORTANT**: Every mapping_rules.canonical value MUST exist in values section
-- [ ] Define derived_groupings section (computed from entity_class + roles with AND/OR logic):
-  - [ ] places grouping:
-    - [ ] id: places
-    - [ ] label: "Places"
-    - [ ] description: "Physical facilities and venues"
-    - [ ] rules: [entity_class: "place"]
-    - [ ] **NOTE**: Grouping is DERIVED/VIEW-ONLY, not stored in database
-  - [ ] people grouping:
-    - [ ] id: people
-    - [ ] label: "Coaches & Instructors"
-    - [ ] description: "Professional coaching services"
-    - [ ] rules: [entity_class: "person", roles: ["provides_instruction"]] (AND logic: must be person AND have provides_instruction role)
-    - [ ] **NOTE**: Grouping is DERIVED/VIEW-ONLY, not stored in database
-  - [ ] organizations grouping:
-    - [ ] id: organizations
-    - [ ] label: "Clubs & Organizations"
-    - [ ] description: "Sports clubs and membership organizations"
-    - [ ] rules: [entity_class: "organization"]
-    - [ ] **NOTE**: Grouping is DERIVED/VIEW-ONLY, not stored in database
-  - [ ] events grouping:
-    - [ ] id: events
-    - [ ] label: "Events & Activities"
-    - [ ] description: "Tournaments, classes, and events"
-    - [ ] rules: [entity_class: "event"]
-    - [ ] **NOTE**: Grouping is DERIVED/VIEW-ONLY, not stored in database
-- [ ] Define modules section (DOMAIN-SPECIFIC MODULES in lens only):
-  - [ ] sports_facility module:
-    - [ ] description: "Sports-specific facility attributes with inventory structure"
-    - [ ] fields:
-      - [ ] inventory (type: json, description: "Per-activity court/facility inventory with structure: {tennis: {total: 6, indoor: 2, outdoor: 4, surface: hard_court}, padel: {total: 4, indoor: 4, outdoor: 0, surface: artificial_turf}}")
-      - [ ] floodlit (type: boolean)
-      - [ ] general_surface_types (type: array<string>, description: "Facility-wide surface types if not per-activity")
-  - [ ] fitness_facility module:
-    - [ ] description: "Gym and fitness facility attributes"
-    - [ ] fields: gym_size_sqm, cardio_equipment_count, weight_equipment_available, free_weights, classes_per_week, yoga_classes, pilates_classes, spin_classes
-  - [ ] food_service module:
-    - [ ] description: "Food and beverage services"
-    - [ ] fields: cafe, restaurant, bar, vending_machines
-  - [ ] aquatic_facility module:
-    - [ ] description: "Swimming pool attributes"
-    - [ ] fields: indoor_pool, outdoor_pool, indoor_pool_length_m, outdoor_pool_length_m, family_swim, swimming_lessons
-- [ ] Define module_triggers section (EXPLICIT LIST FORMAT):
-  - [ ] Padel trigger:
-    - [ ] when: {facet: activity, value: padel}
-    - [ ] add_modules: ["sports_facility"]
-    - [ ] conditions: [{entity_class: "place"}]
-  - [ ] Tennis trigger:
-    - [ ] when: {facet: activity, value: tennis}
-    - [ ] add_modules: ["sports_facility"]
-    - [ ] conditions: [{entity_class: "place"}]
-  - [ ] Gym trigger:
-    - [ ] when: {facet: activity, value: gym}
-    - [ ] add_modules: ["fitness_facility", "food_service"]
-    - [ ] conditions: [{entity_class: "place"}]
-  - [ ] Swimming trigger:
-    - [ ] when: {facet: activity, value: swimming}
-    - [ ] add_modules: ["aquatic_facility"]
-    - [ ] conditions: [{entity_class: "place"}]
-  - [ ] Sports centre trigger:
-    - [ ] when: {facet: place_type, value: sports_centre}
-    - [ ] add_modules: ["amenities", "hours", "food_service"]
-- [ ] Add NOTE to module_triggers:
-  - [ ] "NOTE on facet vs dimension_source naming:"
-  - [ ] "  - facet in module_triggers refers to the lens facet key (activity, role, place_type, access, etc.) as defined in the lens.facets section"
-  - [ ] "  - dimension_source refers to the actual DB column (canonical_activities, canonical_roles, canonical_place_types, canonical_access)"
-  - [ ] "  - Example: facet='activity' maps to dimension_source='canonical_activities'"
-  - [ ] "  - This distinction avoids key collisions and enables triggers across all facets defined by the lens"
-- [ ] Define seo_templates section:
-  - [ ] activity_index: url_pattern: "/{activity_slug}", title_template, meta_description_template, h1_template
-  - [ ] activity_place_type: url_pattern: "/{activity_slug}/{place_type_slug}", title_template, meta_description_template
+- [x] Create `lenses/edinburgh_finds/lens.yaml` file
+- [x] Define lens metadata:
+  - [x] id: edinburgh_finds
+  - [x] name: "Edinburgh Finds"
+  - [x] description: "Sports and fitness directory for Edinburgh"
+  - [x] base_url: "https://edinburghfinds.com"
+- [x] Define facets section (map to engine dimensions using ACTUAL DB COLUMN NAMES):
+  - [x] activity facet:
+    - [x] dimension_source: "canonical_activities" (MUST BE one of 4 canonical_* columns)
+    - [x] ui_label: "What do you want to do?"
+    - [x] display_mode: "multi_select"
+    - [x] order: 10
+    - [x] show_in_filters: true
+    - [x] show_in_navigation: true
+    - [x] icon: "activity"
+  - [x] role facet (INTERNAL-ONLY):
+    - [x] dimension_source: "canonical_roles" (MUST BE one of 4 canonical_* columns)
+    - [x] ui_label: null (internal-only facet, not shown in UI)
+    - [x] display_mode: "internal"
+    - [x] order: 5
+    - [x] show_in_filters: false
+    - [x] show_in_navigation: false
+  - [x] place_type facet:
+    - [x] dimension_source: "canonical_place_types" (MUST BE one of 4 canonical_* columns)
+    - [x] ui_label: "Place type"
+    - [x] display_mode: "single_select"
+    - [x] order: 20
+    - [x] show_in_filters: true
+    - [x] show_in_navigation: false
+    - [x] icon: "building"
+  - [x] access facet:
+    - [x] dimension_source: "canonical_access" (MUST BE one of 4 canonical_* columns)
+    - [x] ui_label: "Booking & access"
+    - [x] display_mode: "multi_select"
+    - [x] order: 30
+    - [x] show_in_filters: true
+    - [x] show_in_navigation: false
+    - [x] icon: "lock"
+- [x] Define values section (canonical values with FULL INTERPRETATION):
+  - [x] Activity facet values:
+    - [x] padel (facet: activity, display_name: "Padel", description, seo_slug: "padel-edinburgh", search_keywords, icon_url: "/icons/padel.svg", color: "#FF6B35")
+    - [x] tennis (facet: activity, display_name: "Tennis", seo_slug: "tennis-edinburgh", icon_url: "/icons/tennis.svg", color: "#4ECDC4")
+    - [x] gym (facet: activity, display_name: "Gym & Fitness", seo_slug: "gyms-edinburgh", icon_url: "/icons/gym.svg", color: "#95E1D3")
+    - [x] swimming (facet: activity, display_name: "Swimming", seo_slug: "swimming-edinburgh")
+  - [x] Role facet values (INTERNAL-ONLY, universal function-style keys):
+    - [x] provides_facility (facet: role, display_name: "Venue", description: "Physical facility providing activities")
+    - [x] sells_goods (facet: role, display_name: "Retailer", description: "Sells sports equipment/gear")
+    - [x] provides_instruction (facet: role, display_name: "Coach / Instructor", description: "Provides coaching or instruction")
+    - [x] membership_org (facet: role, display_name: "Club", description: "Membership-based sports club")
+    - [x] **NOTE**: Labels like "Venue", "Club", "Retailer", "Coach" are lens display labels ONLY. Never use these as structural concepts, entity types, classes, or system concepts. They are strictly for UI presentation.
+  - [x] Place type facet values:
+    - [x] sports_centre (facet: place_type, display_name: "Sports Centre", description: "Multi-sport facilities", search_keywords: ["sports centre", "leisure centre"])
+    - [x] outdoor_facility (facet: place_type, display_name: "Outdoor Facility", description: "Outdoor facilities and parks", search_keywords: ["outdoor", "park"])
+    - [x] gym_facility (facet: place_type, display_name: "Gym Facility", description: "Dedicated gym/fitness center", search_keywords: ["gym", "fitness center"])
+    - [x] **NOTE**: place_type represents the container place classification (sports_centre, leisure_centre, park, gym_facility). Individual facilities (padel courts, tennis courts, pitches, pools, tracks) belong in domain modules (sports_facility.inventory), NOT as place_type values. A pitch, court, pool, or rink is NOT a place_type.
+  - [x] Access facet values:
+    - [x] membership (facet: access, display_name: "Membership", description: "Membership required", search_keywords: ["members only", "membership"])
+    - [x] pay_and_play (facet: access, display_name: "Pay & Play", description: "Open to public, pay per use", search_keywords: ["pay and play", "casual"])
+    - [x] free (facet: access, display_name: "Free to Use", description: "Free access facilities", search_keywords: ["free", "no charge"])
+    - [x] private_club (facet: access, display_name: "Private Club", description: "Private members-only club", search_keywords: ["private club", "exclusive"])
+- [x] Add comments:
+  - [x] "All dimension_source MUST be one of: canonical_activities, canonical_roles, canonical_place_types, canonical_access"
+  - [x] "Every value.facet MUST reference a facet defined in facets section"
+  - [x] "Role facet added (internal-only, not shown in UI)"
+  - [x] "Role keys are universal function-style (provides_facility, sells_goods, provides_instruction, membership_org)"
+  - [x] "Role display_name carries vertical/product terminology (Venue, Retailer, Coach/Instructor, Club)"
+  - [x] "private_club moved from place_type to access facet"
+- [x] Define mapping_rules section:
+  - [x] Padel: '(?i)\bp[aá]d[eé]l\b' → padel (confidence: 1.0)
+  - [x] Tennis: '(?i)\btennis\b' → tennis (confidence: 1.0)
+  - [x] Gym: '(?i)\bgym\b|\bfitness\b' → gym (confidence: 0.9)
+  - [x] Sports centre: '(?i)sports\s+(centre|center)' → sports_centre (confidence: 0.95)
+  - [x] Private club: '(?i)private|members.only' → private_club (confidence: 0.8)
+  - [x] Role mappings (emit universal function-style keys):
+    - [x] Venue/facility: '(?i)\bvenue\b|\bfacility\b' → provides_facility (confidence: 0.85)
+    - [x] Coach/instructor: '(?i)\bcoach\b|\binstructor\b' → provides_instruction (confidence: 0.95)
+    - [x] Retailer/shop: '(?i)\bretailer\b|\bshop\b' → sells_goods (confidence: 0.85)
+    - [x] Club: '(?i)\bclub\b' → membership_org (confidence: 0.8)
+  - [x] **IMPORTANT**: Every mapping_rules.canonical value MUST exist in values section
+- [x] Define derived_groupings section (computed from entity_class + roles with AND/OR logic):
+  - [x] places grouping:
+    - [x] id: places
+    - [x] label: "Places"
+    - [x] description: "Physical facilities and venues"
+    - [x] rules: [entity_class: "place"]
+    - [x] **NOTE**: Grouping is DERIVED/VIEW-ONLY, not stored in database
+  - [x] people grouping:
+    - [x] id: people
+    - [x] label: "Coaches & Instructors"
+    - [x] description: "Professional coaching services"
+    - [x] rules: [entity_class: "person", roles: ["provides_instruction"]] (AND logic: must be person AND have provides_instruction role)
+    - [x] **NOTE**: Grouping is DERIVED/VIEW-ONLY, not stored in database
+  - [x] organizations grouping:
+    - [x] id: organizations
+    - [x] label: "Clubs & Organizations"
+    - [x] description: "Sports clubs and membership organizations"
+    - [x] rules: [entity_class: "organization"]
+    - [x] **NOTE**: Grouping is DERIVED/VIEW-ONLY, not stored in database
+  - [x] events grouping:
+    - [x] id: events
+    - [x] label: "Events & Activities"
+    - [x] description: "Tournaments, classes, and events"
+    - [x] rules: [entity_class: "event"]
+    - [x] **NOTE**: Grouping is DERIVED/VIEW-ONLY, not stored in database
+- [x] Define modules section (DOMAIN-SPECIFIC MODULES in lens only):
+  - [x] sports_facility module:
+    - [x] description: "Sports-specific facility attributes with inventory structure"
+    - [x] fields:
+      - [x] inventory (type: json, description: "Per-activity court/facility inventory with structure: {tennis: {total: 6, indoor: 2, outdoor: 4, surface: hard_court}, padel: {total: 4, indoor: 4, outdoor: 0, surface: artificial_turf}}")
+      - [x] floodlit (type: boolean)
+      - [x] general_surface_types (type: array<string>, description: "Facility-wide surface types if not per-activity")
+  - [x] fitness_facility module:
+    - [x] description: "Gym and fitness facility attributes"
+    - [x] fields: gym_size_sqm, cardio_equipment_count, weight_equipment_available, free_weights, classes_per_week, yoga_classes, pilates_classes, spin_classes
+  - [x] food_service module:
+    - [x] description: "Food and beverage services"
+    - [x] fields: cafe, restaurant, bar, vending_machines
+  - [x] aquatic_facility module:
+    - [x] description: "Swimming pool attributes"
+    - [x] fields: indoor_pool, outdoor_pool, indoor_pool_length_m, outdoor_pool_length_m, family_swim, swimming_lessons
+- [x] Define module_triggers section (EXPLICIT LIST FORMAT):
+  - [x] Padel trigger:
+    - [x] when: {facet: activity, value: padel}
+    - [x] add_modules: ["sports_facility"]
+    - [x] conditions: [{entity_class: "place"}]
+  - [x] Tennis trigger:
+    - [x] when: {facet: activity, value: tennis}
+    - [x] add_modules: ["sports_facility"]
+    - [x] conditions: [{entity_class: "place"}]
+  - [x] Gym trigger:
+    - [x] when: {facet: activity, value: gym}
+    - [x] add_modules: ["fitness_facility", "food_service"]
+    - [x] conditions: [{entity_class: "place"}]
+  - [x] Swimming trigger:
+    - [x] when: {facet: activity, value: swimming}
+    - [x] add_modules: ["aquatic_facility"]
+    - [x] conditions: [{entity_class: "place"}]
+  - [x] Sports centre trigger:
+    - [x] when: {facet: place_type, value: sports_centre}
+    - [x] add_modules: ["amenities", "hours", "food_service"]
+- [x] Add NOTE to module_triggers:
+  - [x] "NOTE on facet vs dimension_source naming:"
+  - [x] "  - facet in module_triggers refers to the lens facet key (activity, role, place_type, access, etc.) as defined in the lens.facets section"
+  - [x] "  - dimension_source refers to the actual DB column (canonical_activities, canonical_roles, canonical_place_types, canonical_access)"
+  - [x] "  - Example: facet='activity' maps to dimension_source='canonical_activities'"
+  - [x] "  - This distinction avoids key collisions and enables triggers across all facets defined by the lens"
+- [x] Define seo_templates section:
+  - [x] activity_index: url_pattern: "/{activity_slug}", title_template, meta_description_template, h1_template
+  - [x] activity_place_type: url_pattern: "/{activity_slug}/{place_type_slug}", title_template, meta_description_template
 
 **Success Criteria:**
 - ✅ All dimension_source use actual DB column names: canonical_activities, canonical_roles, canonical_place_types, canonical_access
