@@ -1,6 +1,6 @@
 # Implementation Plan: Pydantic Extraction Generator
 
-## Phase 1: Generator Implementation
+## Phase 1: Generator Implementation [checkpoint: 4bc5ec9]
 - [x] **Create Generator Module** [32e9324]
     - [x] Create `engine/schema/generators/pydantic_extraction.py`.
     - [x] Implement class `PydanticExtractionGenerator`.
