@@ -70,11 +70,10 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-## [ ] Track: Pydantic Extraction Generator
-*Link: [./conductor/tracks/pydantic_extraction_generator_20260117/](./conductor/tracks/pydantic_extraction_generator_20260117/)*
-**Status:** Active
-**Dependencies:** YAML Schema - Single Source of Truth
-**Description:** Implement a generator that reads `listing.yaml` and auto-generates `entity_extraction.py`, ensuring the extraction model (with its specific null semantics and validators) is always in sync with the Golden Source.
+## [x] Track: Pydantic Extraction Generator
+*Link: [./conductor/archive/pydantic_extraction_generator_20260117/](./conductor/archive/pydantic_extraction_generator_20260117/)*
+**Completed:** 2026-01-18
+**Description:** Implemented generator that reads `listing.yaml` and auto-generates `entity_extraction.py`, keeping the extraction model (including null semantics and validators) in sync with the Golden Source.
 
 ---
 

@@ -23,11 +23,24 @@ class TestTypeMapping(unittest.TestCase):
             name="entity_name",
             type="string",
             description="Name",
-            nullable=False,
-            required=True,
+            nullable=True,
+            required=False,
         )
         result = self.generator._get_type_annotation(field)
         self.assertEqual(result, "Optional[str]")
+
+    def test_required_string_is_not_optional(self):
+        """extraction_required -> str (non-optional)"""
+        field = FieldDefinition(
+            name="entity_name",
+            type="string",
+            description="Name",
+            nullable=False,
+            required=True,
+            python={"extraction_required": True},
+        )
+        result = self.generator._get_type_annotation(field)
+        self.assertEqual(result, "str")
 
     def test_list_type_is_optional(self):
         """list[string] type -> Optional[List[str]]"""
@@ -69,17 +82,31 @@ class TestFieldGeneration(unittest.TestCase):
         self.generator = PydanticExtractionGenerator()
 
     def test_field_default_none(self):
-        """All fields default to None in extraction model."""
+        """Optional fields default to None in extraction model."""
+        field = FieldDefinition(
+            name="entity_name",
+            type="string",
+            description="Name",
+            nullable=True,
+            required=False,
+        )
+        result = self.generator._generate_field(field)
+        self.assertIn("entity_name: Optional[str]", result)
+        self.assertIn("Field(default=None", result)
+
+    def test_required_field_no_default(self):
+        """Required extraction fields omit default=None."""
         field = FieldDefinition(
             name="entity_name",
             type="string",
             description="Name",
             nullable=False,
             required=True,
+            python={"extraction_required": True},
         )
         result = self.generator._generate_field(field)
-        self.assertIn("entity_name: Optional[str]", result)
-        self.assertIn("Field(default=None", result)
+        self.assertIn("entity_name: str", result)
+        self.assertNotIn("default=None", result)
 
     def test_optional_description_mentions_null(self):
         """Optional field descriptions mention null semantics."""

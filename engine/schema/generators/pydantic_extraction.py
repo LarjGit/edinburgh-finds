@@ -28,7 +28,8 @@ class PydanticExtractionGenerator:
     """
     Generates Pydantic extraction models from YAML SchemaDefinition.
 
-    All fields default to None to support aggressive null semantics for LLMs.
+    Fields are optional by default to support null semantics for LLMs.
+    Use python.extraction_required in YAML to enforce required extraction fields.
     """
 
     TYPE_MAP = {
@@ -225,6 +226,9 @@ class PydanticExtractionGenerator:
 
         base_type = override or self._map_type(field)
 
+        if self._is_extraction_required(field):
+            return self._strip_optional(base_type)
+
         if base_type.startswith("Optional["):
             return base_type
         return f"Optional[{base_type}]"
@@ -262,6 +266,11 @@ class PydanticExtractionGenerator:
         field_type = self._get_type_annotation(field)
         description = self._build_description(field)
         escaped_description = self._escape_description(description)
+        if self._is_extraction_required(field):
+            return (
+                f"    {field.name}: {field_type} = "
+                f'Field(description="{escaped_description}")'
+            )
         return (
             f"    {field.name}: {field_type} = "
             f'Field(default=None, description="{escaped_description}")'
@@ -281,11 +290,14 @@ class PydanticExtractionGenerator:
         description = description.replace("\n", " ").strip()
         lower = description.lower()
 
-        if field.required and "required" not in lower:
+        if self._is_extraction_required(field) and "required" not in lower:
             if description:
                 description = f"{description} REQUIRED."
             else:
                 description = "REQUIRED."
+
+        if self._is_extraction_required(field):
+            return description
 
         if "null" not in description.lower():
             if field.type == "boolean":
@@ -294,6 +306,26 @@ class PydanticExtractionGenerator:
                 description = f"{description} Null if not found.".strip()
 
         return description
+
+    def _is_extraction_required(self, field: FieldDefinition) -> bool:
+        """
+        Determine if a field is required in extraction output.
+
+        Defaults to optional unless explicitly marked in YAML metadata.
+        """
+        if not field.python:
+            return False
+        if "extraction_required" not in field.python:
+            return False
+        return bool(field.python["extraction_required"])
+
+    def _strip_optional(self, annotation: str) -> str:
+        """
+        Strip Optional[...] wrapper from a type annotation if present.
+        """
+        if annotation.startswith("Optional[") and annotation.endswith("]"):
+            return annotation[len("Optional["):-1]
+        return annotation
 
     def _escape_description(self, description: str) -> str:
         """Escape description for use in a double-quoted string."""
@@ -440,13 +472,16 @@ class PydanticExtractionGenerator:
 
     def _render_non_empty_validator(self, field: FieldDefinition) -> List[str]:
         method_name = f"validate_{field.name}_not_empty"
+        value_type = "str" if self._is_extraction_required(field) else "Optional[str]"
         return [
             f'    @field_validator("{field.name}")',
             "    @classmethod",
-            f"    def {method_name}(cls, v: Optional[str]) -> Optional[str]:",
+            f"    def {method_name}(cls, v: {value_type}) -> {value_type}:",
             f'        """Ensure {field.name} is not empty or just whitespace"""',
-            "        if v is None:",
-            "            return None",
+            *([] if self._is_extraction_required(field) else [
+                "        if v is None:",
+                "            return None",
+            ]),
             "        if not v.strip():",
             f'            raise ValueError("{field.name} cannot be empty")',
             "        return v.strip()",

@@ -47,6 +47,14 @@ python -m engine.schema.generate --schema listing
 python -m engine.schema.generate --schema venue
 ```
 
+#### Generate Pydantic Extraction Model
+
+Generate `engine/extraction/models/entity_extraction.py` from `listing.yaml`:
+
+```bash
+python -m engine.schema.generate --pydantic-extraction
+```
+
 #### Validate Schema Sync
 
 Check if generated files match YAML (CI/CD integration):
@@ -95,6 +103,7 @@ python -m engine.schema.generate --format
 | `--dry-run` | Preview only | `--dry-run` |
 | `--format` | Format with Black | `--format` |
 | `--no-color` | Disable colored output | `--no-color` |
+| `--pydantic-extraction` | Generate Pydantic extraction model | `--pydantic-extraction` |
 
 ### Examples
 
@@ -160,6 +169,7 @@ fields:
       type_annotation: "Dict[str, Any]"
       default: "default_factory=dict"
       sa_column: "Column(JSON)"
+      extraction_required: true  # Require field in extraction model
 
     prisma:
       type: "String"

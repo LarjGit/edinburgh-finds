@@ -46,6 +46,7 @@ fields:
     python:
       validators:
         - non_empty
+      extraction_required: true
 
   - name: entity_type
     type: string

@@ -13,22 +13,22 @@
     - [x] Update `engine/schema/cli.py` to add `--pydantic-extraction` flag (or include in default generation).
 
 ## Phase 2: Testing & Validation
-- [ ] **Unit Tests**
-    - [ ] Create `engine/tests/test_pydantic_extraction_generator.py`.
-    - [ ] Test generation of basic fields.
-    - [ ] Test null semantics (all optionals).
-- [ ] **Integration Check**
-    - [ ] Generate the file locally.
-    - [ ] Compare with current manual `entity_extraction.py`.
-    - [ ] Verify `entity_type` is present.
+- [x] **Unit Tests**
+    - [x] Create `engine/tests/test_pydantic_extraction_generator.py`.
+    - [x] Test generation of basic fields.
+    - [x] Test null semantics (all optionals).
+- [x] **Integration Check**
+    - [x] Generate the file locally.
+    - [x] Compare with current manual `entity_extraction.py`.
+    - [x] Verify `entity_type` is present.
 
 ## Phase 3: Migration
-- [ ] **Replace Manual File**
-    - [ ] Overwrite `engine/extraction/models/entity_extraction.py` with generated code.
-- [ ] **Verify System**
-    - [ ] Run `pytest engine/tests/test_null_semantics.py`.
-    - [ ] Run `pytest engine/tests/test_serper_extractor.py`.
+- [x] **Replace Manual File**
+    - [x] Overwrite `engine/extraction/models/entity_extraction.py` with generated code.
+- [x] **Verify System**
+    - [x] Run `pytest engine/tests/test_null_semantics.py`.
+    - [x] Run `pytest engine/tests/test_serper_extractor.py`.
 
 ## Phase 4: Documentation
-- [ ] **Update Docs**
-    - [ ] Update `docs/schema_management.md` to include this new generator.
+- [x] **Update Docs**
+    - [x] Update `docs/schema_management.md` to include this new generator.
