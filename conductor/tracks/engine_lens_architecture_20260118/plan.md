@@ -181,61 +181,61 @@ grep -E "@id|@default\((uuid|cuid)\)" schema.prisma
 **Description:** Document and enforce single entity_class + multi roles pattern with concrete examples
 
 **Subtasks:**
-- [ ] Create `engine/docs/classification_rules.md`:
-  - [ ] **Rule**: Every entity has exactly ONE entity_class (required, single-valued)
-  - [ ] **Rule**: Every entity has ZERO OR MORE roles (optional, multi-valued)
-  - [ ] **Pattern**: entity_class represents primary classification (what it fundamentally IS)
-  - [ ] **Pattern**: roles represent functions/capabilities (what it DOES)
-- [ ] Document deterministic classification algorithm (PRIORITY ORDER):
-  - [ ] **1. Time-bounded** (has start/end times) → `event` (HIGHEST PRIORITY)
-  - [ ] **2. Physical location** (lat/lng or street address) → `place`
-  - [ ] **3. Membership/group** entity with no fixed location → `organization`
-  - [ ] **4. Named individual** → `person`
-  - [ ] **5. Tie-breaker**: Primary physical site → `place`, otherwise → `organization`
-- [ ] **CRITICAL**: Add concrete examples (with classification priority):
-  - [ ] "Padel tournament at Oriam" (time-bounded + physical location):
-    - [ ] entity_class: `event` (time-bounded takes PRIORITY over physical location)
-    - [ ] canonical_roles: `[]` (events typically have no roles)
-    - [ ] canonical_activities: `["padel"]`
-    - [ ] **RATIONALE**: Has both start/end times AND physical location, but time-bounded is higher priority
-  - [ ] "Tennis club with 6 courts":
-    - [ ] entity_class: `place` (has physical location with courts, not time-bounded)
-    - [ ] canonical_roles: `["provides_facility", "membership_org"]` (provides sports facility AND is a membership club)
-    - [ ] canonical_activities: `["tennis"]`
-    - [ ] canonical_place_types: `["sports_centre"]`
-    - [ ] **NOTE**: Courts go in sports_facility.inventory (domain module), not as place_type values
-    - [ ] **RATIONALE**: Primary classification is physical place; roles capture dual nature as both facility and club
-  - [ ] "Powerleague Portobello (football + padel venue)":
-    - [ ] entity_class: `place` (has physical location)
-    - [ ] canonical_activities: `["football", "padel"]`
-    - [ ] canonical_roles: `["provides_facility"]` (plus others if applicable)
-    - [ ] canonical_place_types: `["sports_centre"]` or `["outdoor_facility"]`
-    - [ ] **NOTE**: Courts and pitches go into sports_facility.inventory, not place_type
-  - [ ] "Freelance tennis coach":
-    - [ ] entity_class: `person` (individual)
-    - [ ] canonical_roles: `["provides_instruction"]`
-    - [ ] canonical_activities: `["tennis"]`
-  - [ ] "Sports retail chain (no courts)":
-    - [ ] entity_class: `organization` (business entity)
-    - [ ] canonical_roles: `["sells_goods"]`
-    - [ ] canonical_activities: `["tennis", "padel"]` (sells equipment for these sports)
-  - [ ] "Padel tournament":
-    - [ ] entity_class: `event` (time-bounded)
-    - [ ] canonical_roles: `[]` (events typically have no roles)
-    - [ ] canonical_activities: `["padel"]`
-- [ ] **ANTI-PATTERN**: Document what NOT to do:
-  - [ ] ❌ NEVER use entity_class to encode business type (entity_class: "club" is WRONG)
-  - [ ] ❌ NEVER use roles as primary classification (entity_class is primary, not roles)
-  - [ ] ❌ NEVER store conflicting entity_class values (single-valued field)
-- [ ] Update `engine/extraction/entity_classifier.py`:
-  - [ ] Implement resolve_entity_class(raw_data) function
-  - [ ] Add inline comments referencing classification_rules.md
-  - [ ] Add assertion: entity_class must be one of: place, person, organization, event, thing
-- [ ] Add unit tests for classification:
-  - [ ] Test "club with courts" → place + roles
-  - [ ] Test "freelance coach" → person + roles
-  - [ ] Test "retail chain" → organization + roles
-  - [ ] Test "tournament" → event + no roles
+- [x] Create `engine/docs/classification_rules.md`:
+  - [x] **Rule**: Every entity has exactly ONE entity_class (required, single-valued)
+  - [x] **Rule**: Every entity has ZERO OR MORE roles (optional, multi-valued)
+  - [x] **Pattern**: entity_class represents primary classification (what it fundamentally IS)
+  - [x] **Pattern**: roles represent functions/capabilities (what it DOES)
+- [x] Document deterministic classification algorithm (PRIORITY ORDER):
+  - [x] **1. Time-bounded** (has start/end times) → `event` (HIGHEST PRIORITY)
+  - [x] **2. Physical location** (lat/lng or street address) → `place`
+  - [x] **3. Membership/group** entity with no fixed location → `organization`
+  - [x] **4. Named individual** → `person`
+  - [x] **5. Tie-breaker**: Primary physical site → `place`, otherwise → `organization`
+- [x] **CRITICAL**: Add concrete examples (with classification priority):
+  - [x] "Padel tournament at Oriam" (time-bounded + physical location):
+    - [x] entity_class: `event` (time-bounded takes PRIORITY over physical location)
+    - [x] canonical_roles: `[]` (events typically have no roles)
+    - [x] canonical_activities: `["padel"]`
+    - [x] **RATIONALE**: Has both start/end times AND physical location, but time-bounded is higher priority
+  - [x] "Tennis club with 6 courts":
+    - [x] entity_class: `place` (has physical location with courts, not time-bounded)
+    - [x] canonical_roles: `["provides_facility", "membership_org"]` (provides sports facility AND is a membership club)
+    - [x] canonical_activities: `["tennis"]`
+    - [x] canonical_place_types: `["sports_centre"]`
+    - [x] **NOTE**: Courts go in sports_facility.inventory (domain module), not as place_type values
+    - [x] **RATIONALE**: Primary classification is physical place; roles capture dual nature as both facility and club
+  - [x] "Powerleague Portobello (football + padel venue)":
+    - [x] entity_class: `place` (has physical location)
+    - [x] canonical_activities: `["football", "padel"]`
+    - [x] canonical_roles: `["provides_facility"]` (plus others if applicable)
+    - [x] canonical_place_types: `["sports_centre"]` or `["outdoor_facility"]`
+    - [x] **NOTE**: Courts and pitches go into sports_facility.inventory, not place_type
+  - [x] "Freelance tennis coach":
+    - [x] entity_class: `person` (individual)
+    - [x] canonical_roles: `["provides_instruction"]`
+    - [x] canonical_activities: `["tennis"]`
+  - [x] "Sports retail chain (no courts)":
+    - [x] entity_class: `organization` (business entity)
+    - [x] canonical_roles: `["sells_goods"]`
+    - [x] canonical_activities: `["tennis", "padel"]` (sells equipment for these sports)
+  - [x] "Padel tournament":
+    - [x] entity_class: `event` (time-bounded)
+    - [x] canonical_roles: `[]` (events typically have no roles)
+    - [x] canonical_activities: `["padel"]`
+- [x] **ANTI-PATTERN**: Document what NOT to do:
+  - [x] ❌ NEVER use entity_class to encode business type (entity_class: "club" is WRONG)
+  - [x] ❌ NEVER use roles as primary classification (entity_class is primary, not roles)
+  - [x] ❌ NEVER store conflicting entity_class values (single-valued field)
+- [x] Update `engine/extraction/entity_classifier.py`:
+  - [x] Implement resolve_entity_class(raw_data) function
+  - [x] Add inline comments referencing classification_rules.md
+  - [x] Add assertion: entity_class must be one of: place, person, organization, event, thing
+- [x] Add unit tests for classification:
+  - [x] Test "club with courts" → place + roles
+  - [x] Test "freelance coach" → person + roles
+  - [x] Test "retail chain" → organization + roles
+  - [x] Test "tournament" → event + no roles
 
 **Success Criteria:**
 - ✅ classification_rules.md exists with deterministic algorithm
