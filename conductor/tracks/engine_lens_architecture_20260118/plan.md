@@ -39,38 +39,38 @@ This version adds explicit enforcement tasks and acceptance criteria for:
 
 ### Task 1.1: Define Entity Model Configuration
 
-**Status:** pending
+**Status:** ✅ completed
 
 **Description:** Create `engine/config/entity_model.yaml` defining universal entity classes, dimensions, and universal modules only
 
 **Subtasks:**
-- [ ] Create `engine/config/entity_model.yaml` file
-- [ ] Define entity_classes section:
-  - [ ] place (required_modules: ["core", "location"])
-  - [ ] person (required_modules: ["core", "contact"])
-  - [ ] organization (required_modules: ["core", "contact"])
-  - [ ] event (required_modules: ["core", "time_range"])
-  - [ ] thing (required_modules: ["core"])
-- [ ] Define dimensions section (all dimensions are opaque, stored as Postgres text[] arrays):
-  - [ ] canonical_activities (description: "Activities provided/supported (opaque values)", cardinality: "0..N")
-  - [ ] canonical_roles (description: "Roles this entity plays (opaque values)", cardinality: "0..N")
-  - [ ] canonical_place_types (description: "Physical place classifications (opaque values)", cardinality: "0..N", applicable_to: ["place"])
-  - [ ] canonical_access (description: "Access requirements (opaque values)", cardinality: "0..N")
-- [ ] Define modules section (UNIVERSAL MODULES ONLY):
-  - [ ] core module (entity_id, entity_name, slug, summary)
-  - [ ] location module (street_address, city, postcode, country, latitude, longitude, locality)
-  - [ ] contact module (phone, email, website_url, instagram_url, facebook_url, twitter_url, linkedin_url)
-  - [ ] hours module (opening_hours, special_hours)
-  - [ ] amenities module (UNIVERSAL AMENITIES ONLY: wifi, parking_available, disabled_access)
-  - [ ] time_range module (start_datetime, end_datetime, timezone, is_recurring, recurrence_rule)
-- [ ] Add comments to YAML:
-  - [ ] "Dimensions: Use actual DB column names (canonical_activities, canonical_roles, canonical_place_types, canonical_access)"
-  - [ ] "Dimensions: Explicitly marked as opaque, stored as Postgres text[] arrays"
-  - [ ] "NO domain modules (sports_facility, wine_production removed)"
-  - [ ] "Amenities: universal only (cafe/restaurant removed)"
-- [ ] Validate: NO references to padel, tennis, gym, coach, venue, sports, wine, etc.
-- [ ] Validate: NO domain-specific modules (sports_facility, wine_production, etc.)
-- [ ] Validate: NO food service amenities (cafe, restaurant, bar)
+- [x] Create `engine/config/entity_model.yaml` file
+- [x] Define entity_classes section:
+  - [x] place (required_modules: ["core", "location"])
+  - [x] person (required_modules: ["core", "contact"])
+  - [x] organization (required_modules: ["core", "contact"])
+  - [x] event (required_modules: ["core", "time_range"])
+  - [x] thing (required_modules: ["core"])
+- [x] Define dimensions section (all dimensions are opaque, stored as Postgres text[] arrays):
+  - [x] canonical_activities (description: "Activities provided/supported (opaque values)", cardinality: "0..N")
+  - [x] canonical_roles (description: "Roles this entity plays (opaque values)", cardinality: "0..N")
+  - [x] canonical_place_types (description: "Physical place classifications (opaque values)", cardinality: "0..N", applicable_to: ["place"])
+  - [x] canonical_access (description: "Access requirements (opaque values)", cardinality: "0..N")
+- [x] Define modules section (UNIVERSAL MODULES ONLY):
+  - [x] core module (entity_id, entity_name, slug, summary)
+  - [x] location module (street_address, city, postcode, country, latitude, longitude, locality)
+  - [x] contact module (phone, email, website_url, instagram_url, facebook_url, twitter_url, linkedin_url)
+  - [x] hours module (opening_hours, special_hours)
+  - [x] amenities module (UNIVERSAL AMENITIES ONLY: wifi, parking_available, disabled_access)
+  - [x] time_range module (start_datetime, end_datetime, timezone, is_recurring, recurrence_rule)
+- [x] Add comments to YAML:
+  - [x] "Dimensions: Use actual DB column names (canonical_activities, canonical_roles, canonical_place_types, canonical_access)"
+  - [x] "Dimensions: Explicitly marked as opaque, stored as Postgres text[] arrays"
+  - [x] "NO domain modules (sports_facility, wine_production removed)"
+  - [x] "Amenities: universal only (cafe/restaurant removed)"
+- [x] Validate: NO references to padel, tennis, gym, coach, venue, sports, wine, etc.
+- [x] Validate: NO domain-specific modules (sports_facility, wine_production, etc.)
+- [x] Validate: NO food service amenities (cafe, restaurant, bar)
 
 **Success Criteria:**
 - ✅ entity_model.yaml exists with all universal entity classes
