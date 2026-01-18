@@ -77,6 +77,20 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
+## [ ] Track: Prisma Schema Generation
+*Link: [./conductor/tracks/prisma_schema_generation_20260118/](./conductor/tracks/prisma_schema_generation_20260118/)*
+**Status:** In Progress
+**Description:** Automate the generation of `schema.prisma` files for both Engine and Web from the YAML "Single Source of Truth" to prevent schema divergence and ensure all infrastructure models are consistently maintained.
+
+---
+
+## [x] Track: Pytest Collection Conflicts
+*Link: [./conductor/tracks/pytest_collection_conflicts_20260118/](./conductor/tracks/pytest_collection_conflicts_20260118/)*
+**Completed:** 2026-01-18
+**Description:** Resolved pytest collection import mismatches by renaming manual test scripts from `test_*.py` to `run_*.py` and disambiguating logging test files. Pytest collection now passes with 1032 tests (was 834 with 15 errors).
+
+---
+
 ## [ ] Track: Ecosystem Graph - Relationship Extraction
 **Status:** Planned (Blocked by Data Extraction Engine)
 **Dependencies:** Data Extraction Engine must complete first
