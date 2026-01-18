@@ -56,6 +56,28 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
+## [x] Track: Category-Entity Decoupling
+*Link: [./conductor/tracks/category_entity_decoupling_20260117/](./conductor/tracks/category_entity_decoupling_20260117/)*
+**Completed:** 2026-01-17
+**Description:** Refactoring category taxonomy to decouple "Activity" categories (Padel, Tennis) from the "Venue" entity type. Flattening `canonical_categories.yaml` and updating extraction logic to treat categories and entity types as orthogonal concepts, allowing activities to be associated with Coaches, Clubs, and Retailers.
+
+---
+
+## [x] Track: Universal Entity Model Refactor
+*Link: [./conductor/tracks/universal_entity_model_refactor_20260117/](./conductor/tracks/universal_entity_model_refactor_20260117/)*
+**Completed:** 2026-01-17
+**Description:** Refactored extraction models to resolve "naming debt" where `VenueExtraction` is used for all entity types. Renamed to `EntityExtraction`, updated all consumers (Serper, OSM) and tests. Aligned prompts and documentation to use universal entity concepts.
+
+---
+
+## [ ] Track: Pydantic Extraction Generator
+*Link: [./conductor/tracks/pydantic_extraction_generator_20260117/](./conductor/tracks/pydantic_extraction_generator_20260117/)*
+**Status:** Active
+**Dependencies:** YAML Schema - Single Source of Truth
+**Description:** Implement a generator that reads `listing.yaml` and auto-generates `entity_extraction.py`, ensuring the extraction model (with its specific null semantics and validators) is always in sync with the Golden Source.
+
+---
+
 ## [ ] Track: Ecosystem Graph - Relationship Extraction
 **Status:** Planned (Blocked by Data Extraction Engine)
 **Dependencies:** Data Extraction Engine must complete first
