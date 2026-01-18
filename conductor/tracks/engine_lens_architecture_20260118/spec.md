@@ -700,4 +700,3 @@ transform_with_lens(entity, lens_contract)
 - Current extraction: `engine/extraction/base.py`
 - Entity model: `engine/schema/types.py`
 - Architecture: `ARCHITECTURE.md`
-- Refactor brief: `./original_brief.md` (original requirements)

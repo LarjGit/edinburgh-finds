@@ -27,33 +27,43 @@ The core value of the platform lies in its ability to turn messy web data into s
 The system maps chaotic inputs to a strict taxonomy using a "Promotion Workflow."
 
 **Taxonomy Logic:**
-Raw categories extracted from sources are mapped to "Canonical Categories" based on regex patterns and keyword matching rules.
-- **Workflow:**
-    1.  **Extraction:** Raw categories are captured (e.g., "Tennis Club").
-    2.  **Automatic Mapping:** Rules apply with confidence scores.
-    3.  **Manual Review:** Unmapped categories are logged for review.
-- **Principles:** "Fail open" (leave empty if no match), Multi-label support.
-- **Configuration:** Defined in `mapping_rules`. Minimum confidence `0.7`.
+Raw categories from extractors are mapped to canonical categories using regex-based rules defined in `mapping_rules`. Each rule has a confidence score (0.0-1.0). The system requires a minimum confidence (default 0.7) to apply a mapping. Unmapped categories are logged to `logs/unmapped_categories.log` for manual review, allowing the taxonomy to evolve. The philosophy prioritizes specificity and a flat, tag-based structure.
 
 **Current Hierarchy:**
-- **Entity Types:** Venue, Retail, Coach, Club, Event
-- **Sports:** Padel, Tennis, Squash, Badminton, Pickleball, Table Tennis
-- **Venue Subtypes:** Sports Centre, Gym, Swimming Pool, Outdoor Pitch, Private Club, Public Facility
-- **Future Expansion:** Golf, Climbing, Yoga, Martial Arts
+- **Entity Types**
+  - Venue
+  - Retail
+  - Coach
+  - Club
+  - Event
+- **Sports**
+  - Padel
+  - Tennis
+  - Squash
+  - Badminton
+  - Pickleball
+  - Table Tennis
+- **Venue Subtypes**
+  - Sports Centre
+  - Gym
+  - Swimming Pool
+  - Outdoor Pitch
+  - Private Club
+  - Public Facility
+- **Additional Sports**
+  - Golf
+  - Climbing
+  - Yoga
+  - Martial Arts
 
 ### 2.2 Deduplication & Merging
 *Source: `engine/extraction/deduplication.py`, `engine/extraction/merging.py`*
 
 **Deduplication Strategy:**
-The system uses a cascade of three strategies to identify duplicate listings:
-1.  **External ID Matching (100% Confidence):** Matches exact IDs from sources like Google Places or OSM.
-2.  **Slug Matching:**
-    -   Exact match (1.0 confidence)
-    -   Fuzzy similarity (>0.9 confidence) for typo tolerance.
-3.  **Fuzzy Matching (Name + Location):**
-    -   Combines name similarity (Token Sort Ratio) and geographic proximity (Haversine distance).
-    -   Requires both name and location.
-    -   Distance threshold: 200 meters.
+The system employs a cascade of three strategies to identify duplicates:
+1.  **External ID Matching (100% Confidence):** Matches based on shared IDs from providers like Google Place ID or OSM ID.
+2.  **Slug Matching:** Checks for exact or highly similar URL-safe identifiers (slugs).
+3.  **Fuzzy Matching:** Combines name similarity (Token Sort Ratio) and geographic proximity (Haversine distance). Matches require a combined score above a threshold (default 0.85), where name weight is 0.7 and location weight is 0.3.
 
 **Merging & Trust Levels:**
 When sources conflict, "Trust Levels" decide the winner.
@@ -73,22 +83,13 @@ When sources conflict, "Trust Levels" decide the winner.
 *Source: `engine/extraction/llm_cache.py`*
 
 Semantic caching minimizes costs and latency.
-- **Cache Key:** SHA-256 hash of `raw_data` + `prompt` + `model_name`.
-- **Storage:** `ExtractedListing` table in the database (`extraction_hash` column).
-- **Hit:** Returns existing structured data without calling the LLM.
-- **Miss:** Calls LLM, stores result with hash.
+The system calculates a deterministic cache key using SHA-256 hash of the raw data (sorted JSON), the extraction prompt, and the model name. Cache entries are stored in the `ExtractedListing` table. A cache hit returns the existing structured data immediately, bypassing the LLM.
 
 ### 2.4 Pipeline Resilience
 *Source: `engine/ingestion/retry_logic.py`, `engine/ingestion/rate_limiting.py`*
 
-- **Retry Logic:** Implements exponential backoff.
-    -   Decorator `@retry_with_backoff`.
-    -   Configurable max retries (default 3), initial delay, and backoff factor.
-    -   Raises `MaxRetriesExceeded` after exhaustion.
-- **Rate Limiting:** Sliding window enforcement.
-    -   Tracks requests per minute and per hour.
-    -   Automatically pauses execution or raises `RateLimitExceeded`.
-    -   Configured per-source in `sources.yaml`.
+- **Retry Logic:** Implements an exponential backoff strategy. If a transient error occurs, the system waits for an increasing duration (`initial_delay * backoff_factor^attempt`) before retrying, capped at `max_delay`. Default is 3 retries.
+- **Rate Limiting:** Uses a sliding window approach (tracking requests per minute and hour) to comply with external API limits. The `RateLimiter` class ensures that specific source limits defined in `sources.yaml` are not exceeded.
 
 ---
 
@@ -99,15 +100,14 @@ The user-facing application.
 **Tech Stack:**
 - **Framework:** Next.js 16.1.1 (App Router)
 - **Language:** TypeScript
-- **UI:** React 19, Tailwind CSS v4
+- **Styling:** Tailwind CSS v4, `clsx`, `tailwind-merge`
 - **Database:** Prisma 5.22.0 (SQLite)
 - **Icons:** Lucide React
 
 **Architecture:**
-- **App Router:** Next.js 15 structure.
-- **Data Access:** Direct DB access via Prisma (Server Components).
-- **Styling:** Tailwind CSS.
-- **Database:** Shared SQLite database (`dev.db`) with the Python engine.
+- **App Router:** Utilizes the modern Next.js 15+ structure.
+- **Data Access:** Server Components access the shared SQLite database (`web/dev.db`) directly via Prisma.
+- **Styling:** Utility-first CSS with Tailwind.
 
 ---
 
@@ -117,30 +117,31 @@ The user-facing application.
 *Source: `engine/config/monitoring_alerts.yaml`*
 
 **Critical Thresholds:**
-| Alert Name | Metric | Threshold | Action |
-| :--- | :--- | :--- | :--- |
-| High Extraction Failure Rate | `extraction_failure_rate` | > 10% | Check health dashboard, logs, API keys |
-| Database Connection Failures | `database_connection_errors` | > 0 | Verify DB running, connection string |
-| Disk Space Critical | `disk_space_free_percent` | < 10% | Clean up raw data/logs |
-| LLM API Authentication Failure | `llm_api_auth_errors` | 3 failures | Check API key, quota |
+
+| Alert Name | Metric | Threshold |
+| :--- | :--- | :--- |
+| High Extraction Failure Rate | `extraction_failure_rate` | > 10% |
+| Database Connection Failures | `database_connection_errors` | >= 1 |
+| Disk Space Critical | `disk_space_free_percent` | < 10% |
+| LLM API Authentication Failure | `llm_api_auth_errors` | >= 3 |
 
 **Performance Targets:**
-- **Throughput:** Target 60 records/hour, Min 20.
-- **LLM Cost:** Target £0.30/100 records, Max £0.50.
+- **Throughput:** Target 60 records/hour, Minimum 20.
+- **LLM Cost:** Target £0.30 per 100 records, Max £0.50.
 - **Success Rate:** Deterministic > 95%, LLM > 85%.
-- **Cache Hit:** Target 40%, Min 20%.
+- **Cache Hit Rate:** Target 40%, Min 20%.
 
 ### 4.2 Quality Assurance
-- **Quarantine:** Failed extractions are caught by `record_failed_extraction` and stored in the `FailedExtraction` table. They can be inspected and retried using the CLI.
-- **Cost Tracking:** The `cost_report.py` module tracks token usage and estimates costs based on model pricing. CLI available to view reports.
+- **Quarantine:** Failed extractions are caught and stored in the `FailedExtraction` table with error details. They are isolated ("quarantined") to prevent pipeline blockage. The `ExtractionRetryHandler` can re-process these records.
+- **Cost Tracking:** The `cost_report.py` module aggregates token usage from the global tracker and calculates costs based on model pricing, available via the CLI.
 
 ### 4.3 Testing Strategy
 *Source: `conftest.py`, `engine/tests/`*
 
 The project uses `pytest` for the backend.
-- **Root `conftest.py`:** Adds project root to `sys.path` for module resolution.
-- **Engine Tests:** Located in `engine/tests/`, covering connectors, extractors, and utility logic.
-- **Frontend Tests:** Configured via `package.json` (currently minimal/standard Next.js setup).
+- **Configuration:** `conftest.py` adds the project root to `sys.path` to allow module imports during tests.
+- **Scope:** Includes unit tests for utility functions (e.g., deduplication, splitters) and integration tests for connectors and extractors.
+- **Snapshots:** Snapshot testing is used for verifying extraction outputs against expected schemas.
 
 ---
 
@@ -149,28 +150,25 @@ The project uses `pytest` for the backend.
 ### 5.1 Ingestion CLI (`engine/ingestion/cli.py`)
 `python -m engine.ingestion.cli <command>`
 
-- `python -m engine.ingestion.cli <connector> "<query>"`: Run a specific connector (e.g., `serper "padel"`).
-- `python -m engine.ingestion.cli status`: Show comprehensive ingestion stats.
+- `python -m engine.ingestion.cli <connector> <query>`: Run a specific connector (e.g., `serper`, `google_places`).
+- `python -m engine.ingestion.cli status`: Show comprehensive ingestion statistics (success rates, breakdown by source).
 - `python -m engine.ingestion.cli --list`: List available connectors.
-- `python -m engine.ingestion.cli -v ...`: Enable verbose output.
 
 ### 5.2 Extraction CLI (`engine/extraction/cli.py`)
 `python -m engine.extraction.cli <command>`
 
-- `--retry-failed`: Retry failed extractions in quarantine.
-- `--max-retries <N>`: Set max retries (default 3).
-- `--limit <N>`: Limit number of items to retry.
+- `python -m engine.extraction.cli --retry-failed`: Retry failed extractions currently in quarantine.
+- `python -m engine.extraction.cli --retry-failed --max-retries N`: Retry items with fewer than N prior retries.
+- `python -m engine.extraction.cli --retry-failed --limit N`: Retry a batch of N items.
 
 ### 5.3 Schema CLI (`engine/schema/cli.py`)
-`python -m engine.schema.generate <options>`
+`python -m engine.schema.cli <command>`
 
-- No args: Generate all schemas (Python + Prisma).
-- `--validate`: Check if generated files match YAML (for CI).
-- `--schema <name>`: Generate specific schema (e.g., `listing`).
-- `--typescript`: Generate TypeScript interfaces.
-- `--pydantic-extraction`: Generate Pydantic models.
-- `--prisma` / `--no-prisma`: Control Prisma generation.
-- `--format`: Run code formatter on output.
+- `python -m engine.schema.generate`: Generate Python `FieldSpec` definitions from YAML schemas.
+- `python -m engine.schema.generate --typescript`: Generate TypeScript interfaces.
+- `python -m engine.schema.generate --typescript --zod`: Include Zod validation schemas.
+- `python -m engine.schema.generate --validate`: Verify generated code matches YAML definitions.
+- `python -m engine.schema.generate --schema <name>`: Generate for a specific schema only.
 
 ### 5.4 Utility Scripts
 - `python -m engine.run_seed`: Seed the DB with initial data.
@@ -185,22 +183,22 @@ A guide to the specialized documents in `docs/`.
 
 | File | Description |
 | :--- | :--- |
-| `architecture/` | C4 Architecture diagrams and descriptions. |
+| `architecture/` | C4 Architecture Diagrams (Context, Container, Component). |
 | `product/` | Product Requirements Documents (PRD) and design guidelines. |
-| `adding_entity_type.md` | Guide for adding new entity types to the system. |
-| `adding_new_extractor.md` | Guide for implementing new data extractors. |
-| `category_promotion_workflow.md` | Details on the taxonomy mapping process. |
-| `configuring_trust_levels.md` | How to configure source trust scores. |
-| `extraction_cli.md` | Detailed manual for the Extraction CLI. |
-| `extraction_cli_reference.md` | Quick reference for Extraction CLI commands. |
-| `extraction_engine_overview.md` | High-level overview of the extraction pipeline. |
-| `managing_categories.md` | Guide to managing the canonical taxonomy. |
-| `production_deployment_checklist.md` | Checklist for going to production. |
-| `schema_management.md` | Guide to the YAML-based schema system. |
-| `snapshot_testing_workflow.md` | Guide for snapshot testing. |
-| `SYSTEM_DESIGN_MANUAL.md` | **This file.** The authoritative system manual. |
-| `troubleshooting_extraction.md` | Common issues and solutions for extraction. |
-| `tuning_llm_prompts.md` | Guide for optimizing LLM extraction prompts. |
+| `SYSTEM_DESIGN_MANUAL.md` | This file. The central system reference. |
+| `adding_entity_type.md` | Guide for creating new entities (Schema -> Code -> DB). |
+| `adding_new_extractor.md` | How to implement a new data extractor. |
+| `category_promotion_workflow.md` | Details on the taxonomy promotion and mapping process. |
+| `configuring_trust_levels.md` | Guide to tuning source authority and merging logic. |
+| `extraction_cli.md` | Detailed manual for the extraction CLI. |
+| `extraction_cli_reference.md` | Quick reference for extraction commands. |
+| `extraction_engine_overview.md` | High-level architectural view of the engine. |
+| `managing_categories.md` | Operational guide for taxonomy management. |
+| `production_deployment_checklist.md` | Pre-flight checks for deployment. |
+| `schema_management.md` | Overview of the YAML-driven schema system. |
+| `snapshot_testing_workflow.md` | How to use and update test snapshots. |
+| `troubleshooting_extraction.md` | Debugging guide for common extraction issues. |
+| `tuning_llm_prompts.md` | Best practices for optimizing LLM performance and cost. |
 
 ---
 
@@ -214,4 +212,4 @@ A guide to the specialized documents in `docs/`.
 ### Workflow: Add a New Category
 1.  **Analyze:** Check `logs/unmapped_categories.log`.
 2.  **Edit:** `engine/config/canonical_categories.yaml`.
-3.  **Deploy:** Changes apply on next extraction.
+3.  **Deploy:** Changes apply on next extraction extraction run.
