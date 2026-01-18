@@ -276,7 +276,7 @@ assert 'membership_org' in entity['canonical_roles']
 
 ### Task 2.1: Create Lens Configuration Structure
 
-**Status:** pending
+**Status:** in_progress
 
 **Description:** Create `lenses/edinburgh_finds/lens.yaml` with complete Sports & Fitness lens definition
 
