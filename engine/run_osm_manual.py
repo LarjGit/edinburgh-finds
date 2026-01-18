@@ -10,7 +10,7 @@ Usage:
 
 import asyncio
 import json
-from engine.ingestion.open_street_map import OSMConnector
+from engine.ingestion.connectors.open_street_map import OSMConnector
 from engine.ingestion.deduplication import compute_content_hash
 
 
