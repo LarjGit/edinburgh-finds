@@ -1,0 +1,306 @@
+# Entity Model Configuration
+#
+# This file defines the UNIVERSAL, VERTICAL-AGNOSTIC entity model for the engine layer.
+# NO vertical-specific concepts (sports, wine, padel, coach, venue, etc.) are allowed.
+# All vertical-specific interpretation belongs in the lens layer.
+#
+# Key Principles:
+# - entity_class: Universal classification (place, person, organization, event, thing)
+# - Dimensions: Use actual DB column names (canonical_activities, canonical_roles, canonical_place_types, canonical_access)
+# - Dimensions: Explicitly marked as opaque, stored as Postgres text[] arrays
+# - Modules: Universal modules only (core, location, contact, hours, amenities, time_range)
+# - NO domain modules (sports_facility, wine_production removed)
+# - Amenities: universal only (cafe/restaurant removed)
+
+# ============================================================================
+# ENTITY CLASSES
+# ============================================================================
+# Every entity has exactly ONE entity_class (required, single-valued)
+# Represents what the entity fundamentally IS (not what it DOES)
+
+entity_classes:
+  place:
+    description: "Physical location with geographic coordinates or address"
+    required_modules:
+      - core
+      - location
+    examples:
+      - "Physical facility with equipment"
+      - "Commercial establishment with seating"
+      - "Public space or park"
+      - "Retail shop with storefront"
+
+  person:
+    description: "Named individual"
+    required_modules:
+      - core
+      - contact
+    examples:
+      - "Freelance professional"
+      - "Independent service provider"
+      - "Consultant"
+
+  organization:
+    description: "Membership or business entity without fixed physical location"
+    required_modules:
+      - core
+      - contact
+    examples:
+      - "Membership organization without owned facilities"
+      - "Professional association"
+      - "Business entity"
+
+  event:
+    description: "Time-bounded occurrence with start and end times"
+    required_modules:
+      - core
+      - time_range
+    examples:
+      - "Competitive event"
+      - "Series of sessions"
+      - "Workshop or seminar"
+
+  thing:
+    description: "Fallback for entities that don't fit other classes"
+    required_modules:
+      - core
+    examples:
+      - "Product"
+      - "Resource"
+
+# ============================================================================
+# DIMENSIONS (Multi-Valued, Opaque)
+# ============================================================================
+# Dimensions use actual DB column names and are stored as Postgres text[] arrays
+# Dimensions are OPAQUE to the engine - no interpretation, just storage and indexing
+# All dimensions have GIN indexes for fast faceted filtering
+# Values are lens-interpreted (engine treats as plain strings)
+
+dimensions:
+  canonical_activities:
+    description: "Activities provided/supported (opaque values)"
+    storage_type: "text[]"  # Postgres array
+    cardinality: "0..N"
+    indexed: "GIN"
+    notes:
+      - "Opaque to engine - lens provides interpretation"
+      - "Lens-interpreted values stored as plain strings (e.g., ['activity_a', 'activity_b'])"
+      - "Vertical-agnostic - same dimension used by all lenses"
+
+  canonical_roles:
+    description: "Roles this entity plays (opaque values, universal function-style keys)"
+    storage_type: "text[]"  # Postgres array
+    cardinality: "0..N"
+    indexed: "GIN"
+    notes:
+      - "Opaque to engine - lens provides interpretation and display labels"
+      - "Universal function-style keys: provides_facility, sells_goods, provides_instruction, membership_org, produces_goods"
+      - "Internal-only facet (not shown in UI by default)"
+      - "Examples: ['provides_facility', 'membership_org']"
+
+  canonical_place_types:
+    description: "Physical place classifications (opaque values)"
+    storage_type: "text[]"  # Postgres array
+    cardinality: "0..N"
+    applicable_to:
+      - place
+    indexed: "GIN"
+    notes:
+      - "Opaque to engine - lens provides interpretation"
+      - "Represents container place classification (lens-defined values like 'facility_type_a', 'facility_type_b')"
+      - "Individual equipment or sub-facilities belong in domain modules (via lens inventory structures), NOT as place_type values"
+      - "Equipment items are NOT place_type values"
+
+  canonical_access:
+    description: "Access requirements (opaque values)"
+    storage_type: "text[]"  # Postgres array
+    cardinality: "0..N"
+    indexed: "GIN"
+    notes:
+      - "Opaque to engine - lens provides interpretation"
+      - "Examples: ['membership', 'pay_and_play', 'free', 'private_club']"
+
+# ============================================================================
+# UNIVERSAL MODULES
+# ============================================================================
+# Modules stored in JSONB with namespacing: {module_key: {fields}}
+# ONLY universal modules defined here - NO domain modules
+# Domain modules (sports_facility, wine_production, etc.) belong in lens layer
+
+modules:
+  core:
+    description: "Core entity attributes (required for all entities)"
+    fields:
+      - name: entity_id
+        type: string
+        required: true
+        description: "Unique identifier"
+
+      - name: entity_name
+        type: string
+        required: true
+        description: "Display name"
+
+      - name: slug
+        type: string
+        required: true
+        description: "URL-friendly identifier"
+
+      - name: summary
+        type: string
+        required: false
+        description: "Brief description"
+
+  location:
+    description: "Physical location attributes"
+    applicable_to:
+      - place
+    fields:
+      - name: street_address
+        type: string
+        required: false
+
+      - name: city
+        type: string
+        required: false
+
+      - name: postcode
+        type: string
+        required: false
+
+      - name: country
+        type: string
+        required: false
+
+      - name: latitude
+        type: float
+        required: false
+
+      - name: longitude
+        type: float
+        required: false
+
+      - name: locality
+        type: string
+        required: false
+        description: "Neighborhood or district"
+
+  contact:
+    description: "Contact information"
+    applicable_to:
+      - person
+      - organization
+      - place
+    fields:
+      - name: phone
+        type: string
+        required: false
+
+      - name: email
+        type: string
+        required: false
+
+      - name: website_url
+        type: string
+        required: false
+
+      - name: instagram_url
+        type: string
+        required: false
+
+      - name: facebook_url
+        type: string
+        required: false
+
+      - name: twitter_url
+        type: string
+        required: false
+
+      - name: linkedin_url
+        type: string
+        required: false
+
+  hours:
+    description: "Operating hours"
+    applicable_to:
+      - place
+    fields:
+      - name: opening_hours
+        type: object
+        required: false
+        description: "Structured opening hours (e.g., {monday: {open: '09:00', close: '17:00'}})"
+
+      - name: special_hours
+        type: array
+        required: false
+        description: "Special hours for holidays or events"
+
+  amenities:
+    description: "UNIVERSAL amenities only (NO vertical-specific amenities)"
+    applicable_to:
+      - place
+    fields:
+      - name: wifi
+        type: boolean
+        required: false
+        description: "WiFi available"
+
+      - name: parking_available
+        type: boolean
+        required: false
+        description: "Parking available"
+
+      - name: disabled_access
+        type: boolean
+        required: false
+        description: "Wheelchair accessible"
+    notes:
+      - "ONLY universal amenities (wifi, parking_available, disabled_access)"
+      - "NO food service amenities (cafe, restaurant, bar) - these belong in lens layer food_service module"
+      - "NO domain-specific amenities"
+
+  time_range:
+    description: "Time-bounded occurrence attributes"
+    applicable_to:
+      - event
+    fields:
+      - name: start_datetime
+        type: datetime
+        required: false
+
+      - name: end_datetime
+        type: datetime
+        required: false
+
+      - name: timezone
+        type: string
+        required: false
+
+      - name: is_recurring
+        type: boolean
+        required: false
+
+      - name: recurrence_rule
+        type: string
+        required: false
+        description: "iCalendar RRULE format"
+
+# ============================================================================
+# VALIDATION NOTES
+# ============================================================================
+#
+# ✅ CORRECT:
+# - Universal entity classes (place, person, organization, event, thing)
+# - Opaque dimensions with actual DB column names
+# - Universal modules only (core, location, contact, hours, amenities, time_range)
+# - Universal amenities only (wifi, parking_available, disabled_access)
+#
+# ❌ FORBIDDEN (vertical-specific concepts):
+# - Domain modules: sports_facility, wine_production, fitness_facility, food_service
+# - Domain amenities: cafe, restaurant, bar
+# - Activity values: padel, tennis, gym, swimming, wine
+# - Role labels: Venue, Coach, Retailer, Club (these are display labels in lens only)
+# - Entity type labels: VENUE, COACH, CLUB (replaced by entity_class + canonical_roles)
+# - Place type values: These are opaque, lens-interpreted
+#
+# If this file contains ANY vertical-specific concepts, it violates engine purity.
