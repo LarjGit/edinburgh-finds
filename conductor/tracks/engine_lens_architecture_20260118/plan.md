@@ -176,7 +176,7 @@ grep -E "@id|@default\((uuid|cuid)\)" schema.prisma
 
 ### Task 1.3: Lock Classification Rules (v2.2 Addition)
 
-**Status:** pending
+**Status:** in_progress
 
 **Description:** Document and enforce single entity_class + multi roles pattern with concrete examples
 
