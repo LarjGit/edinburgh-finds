@@ -81,9 +81,8 @@ class PydanticExtractionGenerator:
 
         extraction_fields = extraction_fields or []
         fields = self._collect_fields(schema, extraction_fields)
-        type_annotations = [
-            self._get_type_annotation(field) for field in fields
-        ]
+        type_annotations = [self._get_type_annotation(field) for field in fields]
+        validator_specs = self._collect_validator_specs(fields)
 
         lines: List[str] = []
         lines.append("# " + "=" * 60)
@@ -100,7 +99,7 @@ class PydanticExtractionGenerator:
         lines.append("# " + "=" * 60)
         lines.append("")
 
-        lines.extend(self._generate_imports(type_annotations))
+        lines.extend(self._generate_imports(type_annotations, validator_specs))
         lines.append("")
 
         lines.append("class EntityExtraction(BaseModel):")
@@ -109,6 +108,10 @@ class PydanticExtractionGenerator:
 
         for field in fields:
             lines.append(self._generate_field(field))
+            lines.append("")
+
+        if validator_specs:
+            lines.extend(self._generate_validators(validator_specs))
             lines.append("")
 
         lines.append(self._build_config_block(fields))
@@ -169,7 +172,11 @@ class PydanticExtractionGenerator:
 
         return list(collected.values())
 
-    def _generate_imports(self, type_annotations: List[str]) -> List[str]:
+    def _generate_imports(
+        self,
+        type_annotations: List[str],
+        validator_specs: List[Dict[str, Any]],
+    ) -> List[str]:
         """
         Generate import statements based on type annotations.
 
@@ -195,7 +202,10 @@ class PydanticExtractionGenerator:
         lines = ["from typing import " + ", ".join(sorted(typing_imports))]
         if needs_datetime:
             lines.append("from datetime import datetime")
-        lines.append("from pydantic import BaseModel, Field")
+        if validator_specs:
+            lines.append("from pydantic import BaseModel, Field, field_validator")
+        else:
+            lines.append("from pydantic import BaseModel, Field")
 
         return lines
 
@@ -345,6 +355,149 @@ class PydanticExtractionGenerator:
         ]
 
         return "\n".join(lines)
+
+    def _collect_validator_specs(
+        self, fields: List[FieldDefinition]
+    ) -> List[Dict[str, Any]]:
+        """
+        Collect validator specifications from field metadata.
+
+        Args:
+            fields: List of fields in the model.
+
+        Returns:
+            List of validator spec dictionaries.
+        """
+        specs: List[Dict[str, Any]] = []
+        for field in fields:
+            validators = self._get_field_validators(field)
+            for validator in validators:
+                specs.append({"field": field, "validator": validator})
+        return specs
+
+    def _get_field_validators(self, field: FieldDefinition) -> List[str]:
+        """
+        Read validators list from field metadata.
+
+        Args:
+            field: Field definition.
+
+        Returns:
+            List of validator names.
+        """
+        if not field.python or "validators" not in field.python:
+            return []
+        validators = field.python["validators"]
+        if isinstance(validators, str):
+            return [validators]
+        if isinstance(validators, list):
+            return [str(v) for v in validators]
+        return []
+
+    def _generate_validators(self, specs: List[Dict[str, Any]]) -> List[str]:
+        """
+        Generate validator methods from specs.
+
+        Args:
+            specs: List of validator spec dictionaries.
+
+        Returns:
+            List of validator lines.
+        """
+        lines: List[str] = []
+        for spec in specs:
+            field = spec["field"]
+            validator_name = spec["validator"]
+            lines.extend(self._render_validator(field, validator_name))
+            lines.append("")
+        if lines:
+            lines.pop()
+        return lines
+
+    def _render_validator(
+        self, field: FieldDefinition, validator_name: str
+    ) -> List[str]:
+        """
+        Render a validator method for a field.
+
+        Args:
+            field: Field definition.
+            validator_name: Validator identifier.
+
+        Returns:
+            List of validator method lines.
+        """
+        if validator_name == "non_empty":
+            return self._render_non_empty_validator(field)
+        if validator_name == "e164_phone":
+            return self._render_e164_phone_validator(field)
+        if validator_name == "url_http":
+            return self._render_url_http_validator(field)
+        if validator_name == "postcode_uk":
+            return self._render_postcode_validator(field)
+
+        raise ValueError(f"Unsupported validator '{validator_name}'")
+
+    def _render_non_empty_validator(self, field: FieldDefinition) -> List[str]:
+        method_name = f"validate_{field.name}_not_empty"
+        return [
+            f'    @field_validator("{field.name}")',
+            "    @classmethod",
+            f"    def {method_name}(cls, v: Optional[str]) -> Optional[str]:",
+            f'        """Ensure {field.name} is not empty or just whitespace"""',
+            "        if v is None:",
+            "            return None",
+            "        if not v.strip():",
+            f'            raise ValueError("{field.name} cannot be empty")',
+            "        return v.strip()",
+        ]
+
+    def _render_e164_phone_validator(self, field: FieldDefinition) -> List[str]:
+        method_name = f"validate_{field.name}_e164_format"
+        return [
+            f'    @field_validator("{field.name}")',
+            "    @classmethod",
+            f"    def {method_name}(cls, v: Optional[str]) -> Optional[str]:",
+            '        """Ensure phone is in E.164 format if provided"""',
+            "        if v is None:",
+            "            return None",
+            "        if not v.startswith('+'):",
+            '            raise ValueError("Phone number must be in E.164 format (starting with +)")',
+            "        if ' ' in v or '-' in v:",
+            '            raise ValueError("Phone number must not contain spaces or dashes in E.164 format")',
+            "        return v",
+        ]
+
+    def _render_url_http_validator(self, field: FieldDefinition) -> List[str]:
+        method_name = f"validate_{field.name}_url"
+        label = field.name.replace("_", " ").title()
+        return [
+            f'    @field_validator("{field.name}")',
+            "    @classmethod",
+            f"    def {method_name}(cls, v: Optional[str]) -> Optional[str]:",
+            f'        """Ensure {field.name} is a valid URL if provided"""',
+            "        if v is None:",
+            "            return None",
+            "        if not v.startswith(('http://', 'https://')):",
+            f'            raise ValueError("{label} must be a valid URL starting with http:// or https://")',
+            "        return v",
+        ]
+
+    def _render_postcode_validator(self, field: FieldDefinition) -> List[str]:
+        method_name = f"validate_{field.name}_format"
+        return [
+            f'    @field_validator("{field.name}")',
+            "    @classmethod",
+            f"    def {method_name}(cls, v: Optional[str]) -> Optional[str]:",
+            '        """Ensure postcode follows UK format if provided"""',
+            "        if v is None:",
+            "            return None",
+            "        if ' ' not in v:",
+            "            raise ValueError(\"UK postcode should contain a space (e.g., 'EH12 9GR')\")",
+            "        if v != v.upper():",
+            '            raise ValueError("Postcode should be uppercase")',
+            "        return v",
+        ]
 
     def _load_yaml(self, yaml_file: Path) -> Dict[str, Any]:
         """

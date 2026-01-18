@@ -159,6 +159,37 @@ class TestYamlGeneration(unittest.TestCase):
         self.assertIn("website: Optional[str]", result)
         self.assertNotIn("website_url: Optional[str]", result)
 
+    def test_validators_are_generated(self):
+        """Fields with validators generate field_validator methods."""
+        yaml_content = textwrap.dedent(
+            """
+            schema:
+              name: Listing
+              description: Test schema
+
+            fields:
+              - name: entity_name
+                type: string
+                description: Entity name
+                nullable: false
+                required: true
+                python:
+                  validators:
+                    - non_empty
+              - name: phone
+                type: string
+                description: Phone number
+                nullable: true
+                python:
+                  validators:
+                    - e164_phone
+            """
+        ).strip()
+        yaml_path = self._write_yaml(yaml_content)
+        result = self.generator.generate_from_yaml(yaml_path)
+        self.assertIn('@field_validator("phone")', result)
+        self.assertIn("validate_phone_e164_format", result)
+
 
 if __name__ == "__main__":
     unittest.main()

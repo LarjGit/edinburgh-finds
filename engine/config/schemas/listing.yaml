@@ -43,6 +43,9 @@ fields:
         - name
         - called
         - named
+    python:
+      validators:
+        - non_empty
 
   - name: entity_type
     type: string
@@ -155,6 +158,9 @@ fields:
         - postcode
         - postal code
         - zip
+    python:
+      validators:
+        - postcode_uk
 
   - name: country
     type: string
@@ -188,6 +194,9 @@ fields:
         - phone
         - telephone
         - contact
+    python:
+      validators:
+        - e164_phone
 
   - name: email
     type: string
@@ -209,6 +218,10 @@ fields:
         - website
         - url
         - site
+    python:
+      validators:
+        - url_http
+      extraction_name: website
 
   # ------------------------------------------------------------------
   # SOCIAL MEDIA
@@ -303,3 +316,24 @@ fields:
     exclude: true
     python:
       sa_column: "Column(JSON)"
+
+# ------------------------------------------------------------------
+# EXTRACTION-ONLY FIELDS (LLM)
+# ------------------------------------------------------------------
+extraction_fields:
+  - name: rating
+    type: float
+    description: Average rating (typically 0-5 scale)
+    nullable: true
+  - name: user_rating_count
+    type: integer
+    description: Number of user ratings/reviews
+    nullable: true
+  - name: currently_open
+    type: boolean
+    description: Whether the entity is currently open
+    nullable: true
+  - name: external_id
+    type: string
+    description: External identifier from source system (e.g., Google Place ID, OSM ID)
+    nullable: true
