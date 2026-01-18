@@ -1,0 +1,482 @@
+# Edinburgh Finds Lens Configuration
+# Sports and Fitness Vertical for Edinburgh
+#
+# This lens defines how the universal entity engine is interpreted for the sports/fitness domain.
+# All vertical-specific concepts, taxonomy, and domain behavior live here.
+#
+# KEY RULES:
+# - All dimension_source MUST be one of: canonical_activities, canonical_roles, canonical_place_types, canonical_access
+# - Every value.facet MUST reference a facet defined in facets section
+# - Role facet is internal-only (not shown in UI)
+# - Role keys are universal function-style (provides_facility, sells_goods, provides_instruction, membership_org)
+# - Role display_name carries vertical/product terminology (Venue, Retailer, Coach/Instructor, Club)
+# - private_club moved from place_type to access facet
+# - place_type represents container classification (sports_centre, park, gym_facility), NOT individual facilities
+# - Individual facilities (courts, pitches, pools, tracks) belong in domain modules (sports_facility.inventory)
+
+# Lens Metadata
+id: edinburgh_finds
+name: "Edinburgh Finds"
+description: "Sports and fitness directory for Edinburgh"
+base_url: "https://edinburghfinds.com"
+
+# Facets
+# Maps lens-level facets to actual database columns (dimensions)
+# NOTE on naming:
+#   - facet key (activity, role, place_type, access) is the lens-level concept used in module_triggers
+#   - dimension_source (canonical_activities, etc.) is the actual DB column name
+#   - This distinction avoids key collisions and enables triggers across all facets
+facets:
+  activity:
+    dimension_source: "canonical_activities"  # MUST BE one of 4 canonical_* columns
+    ui_label: "What do you want to do?"
+    display_mode: "multi_select"
+    order: 10
+    show_in_filters: true
+    show_in_navigation: true
+    icon: "activity"
+
+  role:
+    # INTERNAL-ONLY facet - not shown in UI
+    dimension_source: "canonical_roles"  # MUST BE one of 4 canonical_* columns
+    ui_label: null  # internal-only facet, not shown in UI
+    display_mode: "internal"
+    order: 5
+    show_in_filters: false
+    show_in_navigation: false
+
+  place_type:
+    dimension_source: "canonical_place_types"  # MUST BE one of 4 canonical_* columns
+    ui_label: "Place type"
+    display_mode: "single_select"
+    order: 20
+    show_in_filters: true
+    show_in_navigation: false
+    icon: "building"
+
+  access:
+    dimension_source: "canonical_access"  # MUST BE one of 4 canonical_* columns
+    ui_label: "Booking & access"
+    display_mode: "multi_select"
+    order: 30
+    show_in_filters: true
+    show_in_navigation: false
+    icon: "lock"
+
+# Canonical Values
+# All interpretation metadata lives here: display names, descriptions, SEO, icons, colors, etc.
+values:
+  # Activity Facet Values
+  padel:
+    facet: activity
+    display_name: "Padel"
+    description: "Padel tennis - a racquet sport combining tennis and squash"
+    seo_slug: "padel-edinburgh"
+    search_keywords:
+      - "padel"
+      - "padel tennis"
+      - "pádel"
+    icon_url: "/icons/padel.svg"
+    color: "#FF6B35"
+
+  tennis:
+    facet: activity
+    display_name: "Tennis"
+    description: "Tennis courts and facilities"
+    seo_slug: "tennis-edinburgh"
+    search_keywords:
+      - "tennis"
+      - "tennis court"
+    icon_url: "/icons/tennis.svg"
+    color: "#4ECDC4"
+
+  gym:
+    facet: activity
+    display_name: "Gym & Fitness"
+    description: "Gyms, fitness centers, and training facilities"
+    seo_slug: "gyms-edinburgh"
+    search_keywords:
+      - "gym"
+      - "fitness"
+      - "fitness center"
+      - "training"
+    icon_url: "/icons/gym.svg"
+    color: "#95E1D3"
+
+  swimming:
+    facet: activity
+    display_name: "Swimming"
+    description: "Swimming pools and aquatic facilities"
+    seo_slug: "swimming-edinburgh"
+    search_keywords:
+      - "swimming"
+      - "pool"
+      - "aquatic"
+
+  # Role Facet Values (INTERNAL-ONLY)
+  # NOTE: Labels like "Venue", "Club", "Retailer", "Coach" are lens display labels ONLY.
+  # Never use these as structural concepts, entity types, classes, or system concepts.
+  # They are strictly for UI presentation.
+  provides_facility:
+    facet: role
+    display_name: "Venue"
+    description: "Physical facility providing activities"
+
+  sells_goods:
+    facet: role
+    display_name: "Retailer"
+    description: "Sells sports equipment/gear"
+
+  provides_instruction:
+    facet: role
+    display_name: "Coach / Instructor"
+    description: "Provides coaching or instruction"
+
+  membership_org:
+    facet: role
+    display_name: "Club"
+    description: "Membership-based sports club"
+
+  # Place Type Facet Values
+  # NOTE: place_type represents the container place classification (sports_centre, leisure_centre, park, gym_facility).
+  # Individual facilities (padel courts, tennis courts, pitches, pools, tracks) belong in domain modules
+  # (sports_facility.inventory), NOT as place_type values. A pitch, court, pool, or rink is NOT a place_type.
+  sports_centre:
+    facet: place_type
+    display_name: "Sports Centre"
+    description: "Multi-sport facilities"
+    search_keywords:
+      - "sports centre"
+      - "leisure centre"
+      - "sports center"
+
+  outdoor_facility:
+    facet: place_type
+    display_name: "Outdoor Facility"
+    description: "Outdoor facilities and parks"
+    search_keywords:
+      - "outdoor"
+      - "park"
+      - "outdoor facility"
+
+  gym_facility:
+    facet: place_type
+    display_name: "Gym Facility"
+    description: "Dedicated gym/fitness center"
+    search_keywords:
+      - "gym"
+      - "fitness center"
+      - "health club"
+
+  # Access Facet Values
+  membership:
+    facet: access
+    display_name: "Membership"
+    description: "Membership required"
+    search_keywords:
+      - "members only"
+      - "membership"
+
+  pay_and_play:
+    facet: access
+    display_name: "Pay & Play"
+    description: "Open to public, pay per use"
+    search_keywords:
+      - "pay and play"
+      - "casual"
+      - "drop-in"
+
+  free:
+    facet: access
+    display_name: "Free to Use"
+    description: "Free access facilities"
+    search_keywords:
+      - "free"
+      - "no charge"
+      - "public"
+
+  private_club:
+    facet: access
+    display_name: "Private Club"
+    description: "Private members-only club"
+    search_keywords:
+      - "private club"
+      - "exclusive"
+      - "members only"
+
+# Mapping Rules
+# Regex patterns to extract canonical values from raw data
+# IMPORTANT: Every mapping_rules.canonical value MUST exist in values section
+mapping_rules:
+  # Activity Mappings
+  - pattern: '(?i)\bp[aá]d[eé]l\b'
+    canonical: padel
+    confidence: 1.0
+
+  - pattern: '(?i)\btennis\b'
+    canonical: tennis
+    confidence: 1.0
+
+  - pattern: '(?i)\bgym\b|\bfitness\b'
+    canonical: gym
+    confidence: 0.9
+
+  - pattern: '(?i)\bswimming\b|\bpool\b'
+    canonical: swimming
+    confidence: 0.9
+
+  # Place Type Mappings
+  - pattern: '(?i)sports\s+(centre|center)|leisure\s+(centre|center)'
+    canonical: sports_centre
+    confidence: 0.95
+
+  - pattern: '(?i)outdoor|park\b'
+    canonical: outdoor_facility
+    confidence: 0.85
+
+  - pattern: '(?i)gym\b|fitness\s+(centre|center)|health\s+club'
+    canonical: gym_facility
+    confidence: 0.9
+
+  # Access Mappings
+  - pattern: '(?i)membership|members\s+only'
+    canonical: membership
+    confidence: 0.9
+
+  - pattern: '(?i)pay\s+and\s+play|casual|drop.?in'
+    canonical: pay_and_play
+    confidence: 0.85
+
+  - pattern: '(?i)\bfree\b|no\s+charge|public'
+    canonical: free
+    confidence: 0.8
+
+  - pattern: '(?i)private|exclusive'
+    canonical: private_club
+    confidence: 0.8
+
+  # Role Mappings (emit universal function-style keys)
+  - pattern: '(?i)\bvenue\b|\bfacility\b'
+    canonical: provides_facility
+    confidence: 0.85
+
+  - pattern: '(?i)\bcoach\b|\binstructor\b|\btrainer\b'
+    canonical: provides_instruction
+    confidence: 0.95
+
+  - pattern: '(?i)\bretailer\b|\bshop\b|\bstore\b'
+    canonical: sells_goods
+    confidence: 0.85
+
+  - pattern: '(?i)\bclub\b'
+    canonical: membership_org
+    confidence: 0.8
+
+# Derived Groupings
+# Computed from entity_class + roles with AND/OR logic
+# NOTE: Groupings are DERIVED/VIEW-ONLY, not stored in database
+derived_groupings:
+  places:
+    id: places
+    label: "Places"
+    description: "Physical facilities and venues"
+    rules:
+      - entity_class: "place"
+    # NOTE: Grouping is DERIVED/VIEW-ONLY, not stored in database
+
+  people:
+    id: people
+    label: "Coaches & Instructors"
+    description: "Professional coaching services"
+    rules:
+      - entity_class: "person"
+        roles:
+          - provides_instruction
+    # AND logic: must be person AND have provides_instruction role
+    # NOTE: Grouping is DERIVED/VIEW-ONLY, not stored in database
+
+  organizations:
+    id: organizations
+    label: "Clubs & Organizations"
+    description: "Sports clubs and membership organizations"
+    rules:
+      - entity_class: "organization"
+    # NOTE: Grouping is DERIVED/VIEW-ONLY, not stored in database
+
+  events:
+    id: events
+    label: "Events & Activities"
+    description: "Tournaments, classes, and events"
+    rules:
+      - entity_class: "event"
+    # NOTE: Grouping is DERIVED/VIEW-ONLY, not stored in database
+
+# Domain Modules
+# DOMAIN-SPECIFIC MODULES in lens only (not in universal engine)
+modules:
+  sports_facility:
+    description: "Sports-specific facility attributes with inventory structure"
+    fields:
+      inventory:
+        type: json
+        description: "Per-activity court/facility inventory with structure: {tennis: {total: 6, indoor: 2, outdoor: 4, surface: hard_court}, padel: {total: 4, indoor: 4, outdoor: 0, surface: artificial_turf}}"
+        nullable: true
+      floodlit:
+        type: boolean
+        description: "Whether facility has floodlighting"
+        nullable: true
+      general_surface_types:
+        type: array
+        item_type: string
+        description: "Facility-wide surface types if not per-activity"
+        nullable: true
+
+  fitness_facility:
+    description: "Gym and fitness facility attributes"
+    fields:
+      gym_size_sqm:
+        type: number
+        description: "Gym size in square meters"
+        nullable: true
+      cardio_equipment_count:
+        type: number
+        description: "Number of cardio machines"
+        nullable: true
+      weight_equipment_available:
+        type: boolean
+        description: "Whether weight equipment is available"
+        nullable: true
+      free_weights:
+        type: boolean
+        description: "Whether free weights are available"
+        nullable: true
+      classes_per_week:
+        type: number
+        description: "Number of classes offered per week"
+        nullable: true
+      yoga_classes:
+        type: boolean
+        description: "Whether yoga classes are offered"
+        nullable: true
+      pilates_classes:
+        type: boolean
+        description: "Whether pilates classes are offered"
+        nullable: true
+      spin_classes:
+        type: boolean
+        description: "Whether spin classes are offered"
+        nullable: true
+
+  food_service:
+    description: "Food and beverage services"
+    fields:
+      cafe:
+        type: boolean
+        description: "Whether cafe is available"
+        nullable: true
+      restaurant:
+        type: boolean
+        description: "Whether restaurant is available"
+        nullable: true
+      bar:
+        type: boolean
+        description: "Whether bar is available"
+        nullable: true
+      vending_machines:
+        type: boolean
+        description: "Whether vending machines are available"
+        nullable: true
+
+  aquatic_facility:
+    description: "Swimming pool attributes"
+    fields:
+      indoor_pool:
+        type: boolean
+        description: "Whether indoor pool is available"
+        nullable: true
+      outdoor_pool:
+        type: boolean
+        description: "Whether outdoor pool is available"
+        nullable: true
+      indoor_pool_length_m:
+        type: number
+        description: "Indoor pool length in meters"
+        nullable: true
+      outdoor_pool_length_m:
+        type: number
+        description: "Outdoor pool length in meters"
+        nullable: true
+      family_swim:
+        type: boolean
+        description: "Whether family swim sessions are offered"
+        nullable: true
+      swimming_lessons:
+        type: boolean
+        description: "Whether swimming lessons are offered"
+        nullable: true
+
+# Module Triggers
+# EXPLICIT LIST FORMAT with when: {facet, value}
+# NOTE on facet vs dimension_source naming:
+#   - facet in module_triggers refers to the lens facet key (activity, role, place_type, access, etc.)
+#     as defined in the lens.facets section
+#   - dimension_source refers to the actual DB column (canonical_activities, canonical_roles,
+#     canonical_place_types, canonical_access)
+#   - Example: facet='activity' maps to dimension_source='canonical_activities'
+#   - This distinction avoids key collisions and enables triggers across all facets defined by the lens
+module_triggers:
+  - when:
+      facet: activity
+      value: padel
+    add_modules:
+      - sports_facility
+    conditions:
+      - entity_class: "place"
+
+  - when:
+      facet: activity
+      value: tennis
+    add_modules:
+      - sports_facility
+    conditions:
+      - entity_class: "place"
+
+  - when:
+      facet: activity
+      value: gym
+    add_modules:
+      - fitness_facility
+      - food_service
+    conditions:
+      - entity_class: "place"
+
+  - when:
+      facet: activity
+      value: swimming
+    add_modules:
+      - aquatic_facility
+    conditions:
+      - entity_class: "place"
+
+  - when:
+      facet: place_type
+      value: sports_centre
+    add_modules:
+      - amenities
+      - hours
+      - food_service
+
+# SEO Templates
+# URL patterns and meta templates for SEO pages
+seo_templates:
+  activity_index:
+    url_pattern: "/{activity_slug}"
+    title_template: "{activity_display_name} in Edinburgh | Edinburgh Finds"
+    meta_description_template: "Find the best {activity_display_name} facilities in Edinburgh. Browse venues, coaches, clubs and more."
+    h1_template: "{activity_display_name} in Edinburgh"
+
+  activity_place_type:
+    url_pattern: "/{activity_slug}/{place_type_slug}"
+    title_template: "{activity_display_name} {place_type_display_name} in Edinburgh"
+    meta_description_template: "Discover {place_type_display_name} for {activity_display_name} in Edinburgh."
+    h1_template: "{place_type_display_name} for {activity_display_name}"
