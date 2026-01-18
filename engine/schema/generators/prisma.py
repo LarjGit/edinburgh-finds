@@ -27,6 +27,168 @@ class PrismaGenerator:
         "datetime": "DateTime",
     }
 
+    ENGINE_GENERATOR_BLOCK = [
+        "generator client {",
+        '  provider = "prisma-client-py"',
+        '  interface = "asyncio"',
+        "}",
+    ]
+
+    WEB_GENERATOR_BLOCK = [
+        "generator client {",
+        '  provider = "prisma-client-js"',
+        "}",
+    ]
+
+    INFRA_MODELS_BEFORE_LISTING = """model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  slug        String    @unique
+  description String?
+  image       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  listings    Listing[] @relation("CategoryToListing")
+}"""
+
+    INFRA_MODELS_AFTER_LISTING = """model ListingRelationship {
+  id              String  @id @default(cuid())
+  sourceListingId String
+  targetListingId String
+  type            String  // e.g., "teaches_at", "plays_at", "part_of"
+  confidence      Float?  // Optional confidence score (0.0 - 1.0)
+  source          String  // Which connector/source discovered this relationship
+
+  sourceListing Listing @relation("SourceListing", fields: [sourceListingId], references: [id], onDelete: Cascade)
+  targetListing Listing @relation("TargetListing", fields: [targetListingId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sourceListingId])
+  @@index([targetListingId])
+  @@index([type])
+}
+
+model ExtractedListing {
+  id                    String   @id @default(cuid())
+  raw_ingestion_id      String
+  source                String
+  entity_type           String
+  attributes            String?
+  discovered_attributes String?
+  external_ids          String?
+  extraction_hash       String?
+  model_used            String?
+
+  raw_ingestion RawIngestion @relation(fields: [raw_ingestion_id], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([raw_ingestion_id])
+  @@index([source])
+  @@index([entity_type])
+  @@index([extraction_hash])
+  @@index([source, entity_type])
+  @@index([createdAt])
+}
+
+model FailedExtraction {
+  id               String   @id @default(cuid())
+  raw_ingestion_id String
+  source           String
+  error_message    String
+  error_details    String?
+  retry_count      Int      @default(0)
+  last_attempt_at  DateTime?
+
+  raw_ingestion RawIngestion @relation(fields: [raw_ingestion_id], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([raw_ingestion_id])
+  @@index([source])
+  @@index([retry_count])
+  @@index([last_attempt_at])
+  @@index([retry_count, last_attempt_at])
+}
+
+model MergeConflict {
+  id                 String   @id @default(cuid())
+  field_name         String
+  conflicting_values String
+  winner_source      String
+  winner_value       String
+  trust_difference   Int
+  severity           Float
+  listing_id         String?
+  resolved           Boolean  @default(false)
+  resolution_notes   String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([field_name])
+  @@index([winner_source])
+  @@index([severity])
+  @@index([resolved])
+  @@index([listing_id])
+}
+
+model RawIngestion {
+  id            String   @id @default(cuid())
+  source        String   // e.g., "serper", "google_places", "osm"
+  source_url    String   // Original URL or query that generated this data
+  file_path     String   // Path to raw JSON file: engine/data/raw/<source>/<timestamp>_<id>.json
+  status        String   // e.g., "success", "failed", "pending"
+  ingested_at   DateTime @default(now())
+  hash          String   // Content hash for deduplication
+  metadata_json String?  // Additional metadata stored as JSON
+
+  extractedListings ExtractedListing[]
+  failedExtractions FailedExtraction[]
+
+  @@index([source])
+  @@index([status])
+  @@index([hash])
+  @@index([ingested_at])
+  @@index([source, status])
+  @@index([status, ingested_at])
+}"""
+
+    LISTING_EXTRA_FIELD_LINES = {
+        "categories": '  categories   Category[] @relation("CategoryToListing")',
+        "attributes": "  attributes   String?",
+        "mainImage": "  mainImage     String?",
+        "outgoingRelationships": '  outgoingRelationships ListingRelationship[] @relation("SourceListing")',
+        "incomingRelationships": '  incomingRelationships ListingRelationship[] @relation("TargetListing")',
+    }
+
+    LISTING_EXTRA_FIELDS_ORDERED = [
+        ("categories", LISTING_EXTRA_FIELD_LINES["categories"]),
+        ("attributes", LISTING_EXTRA_FIELD_LINES["attributes"]),
+        ("mainImage", LISTING_EXTRA_FIELD_LINES["mainImage"]),
+        ("outgoingRelationships", LISTING_EXTRA_FIELD_LINES["outgoingRelationships"]),
+        ("incomingRelationships", LISTING_EXTRA_FIELD_LINES["incomingRelationships"]),
+    ]
+
+    LISTING_EXTRA_FIELDS_BY_ANCHOR = {
+        "slug": [LISTING_EXTRA_FIELDS_ORDERED[0]],
+        "summary": [LISTING_EXTRA_FIELDS_ORDERED[1]],
+        "linkedin_url": [LISTING_EXTRA_FIELDS_ORDERED[2]],
+        "external_ids": [
+            LISTING_EXTRA_FIELDS_ORDERED[3],
+            LISTING_EXTRA_FIELDS_ORDERED[4],
+        ],
+    }
+
+    LISTING_EXTRA_INDEXES = [
+        "  @@index([latitude, longitude])",
+        "  @@index([createdAt])",
+        "  @@index([updatedAt])",
+    ]
+
     def __init__(self, database: str = "sqlite"):
         """
         Initialize Prisma generator.
@@ -37,6 +199,41 @@ class PrismaGenerator:
         if database not in ["sqlite", "postgresql"]:
             raise ValueError(f"Unsupported database: {database}. Use 'sqlite' or 'postgresql'")
         self.database = database
+
+    def _get_prisma_field_name(self, field: FieldDefinition) -> str:
+        """Return Prisma field name, honoring prisma.name overrides."""
+        if field.prisma and "name" in field.prisma:
+            return field.prisma["name"]
+        return field.name
+
+    def _is_field_skipped(self, field: FieldDefinition) -> bool:
+        """Return True if field is marked to skip in Prisma output."""
+        return bool(field.prisma and field.prisma.get("skip"))
+
+    def _format_default_attribute(self, field: FieldDefinition) -> Optional[str]:
+        """Format a Prisma @default(...) attribute for supported defaults."""
+        if field.default is None:
+            return None
+
+        if isinstance(field.default, bool):
+            return f"@default({str(field.default).lower()})"
+
+        if isinstance(field.default, (int, float)):
+            return f"@default({field.default})"
+
+        if isinstance(field.default, str):
+            normalized = field.default.strip()
+            if normalized.lower() in {"null", "none"}:
+                return None
+            if normalized in {"dict", "list"}:
+                return None
+            if normalized in {"cuid()", "now()", "uuid()"}:
+                return f"@default({normalized})"
+            if field.type == "string":
+                return f'@default("{normalized}")'
+            return f"@default({normalized})"
+
+        return None
 
     def _map_type(self, field: FieldDefinition) -> str:
         """
@@ -106,19 +303,9 @@ class PrismaGenerator:
             attributes.append("@unique")
 
         # Default values
-        if field.default:
-            if field.default == "cuid()":
-                attributes.append("@default(cuid())")
-            elif field.default == "now()":
-                attributes.append("@default(now())")
-            elif field.default == "uuid()":
-                attributes.append("@default(uuid())")
-            else:
-                # Handle other default values
-                if field.type == "string":
-                    attributes.append(f'@default("{field.default}")')
-                else:
-                    attributes.append(f"@default({field.default})")
+        default_attr = self._format_default_attribute(field)
+        if default_attr:
+            attributes.append(default_attr)
 
         # Auto-update timestamp
         if field.name == "updatedAt" or field.name == "updated_at":
@@ -137,13 +324,11 @@ class PrismaGenerator:
             Formatted Prisma field string, or None if field should be skipped
         """
         # Check if field should be skipped
-        if hasattr(field, 'prisma') and field.prisma and field.prisma.get('skip'):
+        if self._is_field_skipped(field):
             return None
 
         # Get field name (may be overridden by Prisma config)
-        field_name = field.name
-        if hasattr(field, 'prisma') and field.prisma and 'name' in field.prisma:
-            field_name = field.prisma['name']
+        field_name = self._get_prisma_field_name(field)
 
         # Get Prisma type
         prisma_type = self._map_type(field)
@@ -182,7 +367,7 @@ class PrismaGenerator:
 
         for field in schema.fields:
             # Skip if field should be skipped
-            if hasattr(field, 'prisma') and field.prisma and field.prisma.get('skip'):
+            if self._is_field_skipped(field):
                 continue
 
             # Skip if field is primary key or unique (automatically indexed)
@@ -191,9 +376,7 @@ class PrismaGenerator:
 
             # Add index if specified
             if field.index:
-                field_name = field.name
-                if hasattr(field, 'prisma') and field.prisma and 'name' in field.prisma:
-                    field_name = field.prisma['name']
+                field_name = self._get_prisma_field_name(field)
                 indexes.append(f"  @@index([{field_name}])")
 
         return indexes
@@ -230,6 +413,145 @@ class PrismaGenerator:
 
         return "\n".join(lines)
 
+    def _generate_listing_model(self, schema: SchemaDefinition) -> str:
+        """
+        Generate Listing model with infrastructure fields and indexes.
+
+        Args:
+            schema: SchemaDefinition for Listing
+
+        Returns:
+            Complete Prisma model as string
+        """
+        lines = []
+
+        # Model declaration
+        lines.append(f"model {schema.name} {{")
+
+        generated_names = set()
+        placed_extra = set()
+
+        # Generate fields with anchored extras
+        for field in schema.fields:
+            field_line = self._generate_field(field)
+            if not field_line:
+                continue
+
+            field_name = self._get_prisma_field_name(field)
+            generated_names.add(field_name)
+            lines.append(field_line)
+
+            anchored_extras = self.LISTING_EXTRA_FIELDS_BY_ANCHOR.get(field_name, [])
+            for extra_name, extra_line in anchored_extras:
+                if extra_name in generated_names or extra_name in placed_extra:
+                    continue
+                lines.append(extra_line)
+                placed_extra.add(extra_name)
+
+        # Append any remaining extra fields
+        for extra_name, extra_line in self.LISTING_EXTRA_FIELDS_ORDERED:
+            if extra_name in generated_names or extra_name in placed_extra:
+                continue
+            lines.append(extra_line)
+            placed_extra.add(extra_name)
+
+        # Add blank line before indexes
+        indexes = self._generate_indexes(schema)
+        extra_indexes = [idx for idx in self.LISTING_EXTRA_INDEXES if idx not in indexes]
+        if indexes or extra_indexes:
+            lines.append("")
+            lines.extend(indexes)
+            lines.extend(extra_indexes)
+
+        # Close model
+        lines.append("}")
+
+        return "\n".join(lines)
+
+    def generate_model(self, schema: SchemaDefinition) -> str:
+        """Public wrapper for generating a single model."""
+        return self._generate_model(schema)
+
+    def generate_full_schema(self, schemas: List[SchemaDefinition], target: str) -> str:
+        """
+        Generate complete schema.prisma file including infrastructure models.
+
+        Args:
+            schemas: List of SchemaDefinition objects
+            target: "engine" or "web"
+
+        Returns:
+            Complete Prisma schema file as string
+        """
+        if target not in {"engine", "web"}:
+            raise ValueError("target must be 'engine' or 'web'")
+
+        if not any(schema.name == "Listing" for schema in schemas):
+            raise ValueError("Listing schema is required for full Prisma schema generation")
+
+        lines = []
+
+        # Header comment
+        lines.append("// ============================================================")
+        lines.append("// GENERATED FILE - DO NOT EDIT")
+        lines.append("// ============================================================")
+        lines.append("// This file is automatically generated from YAML schemas.")
+        lines.append("// Source: engine/config/schemas/*.yaml")
+        lines.append(f"// Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        lines.append(f"// Target: {target}")
+        lines.append("//")
+        lines.append("// To modify the schema:")
+        lines.append("// 1. Edit the YAML files in engine/config/schemas/")
+        lines.append("// 2. Run: python -m engine.schema.generate")
+        lines.append("// 3. Run: prisma migrate dev")
+        lines.append("// ============================================================")
+        lines.append("")
+
+        # Generator block
+        generator_block = (
+            self.ENGINE_GENERATOR_BLOCK
+            if target == "engine"
+            else self.WEB_GENERATOR_BLOCK
+        )
+        lines.extend(generator_block)
+        lines.append("")
+
+        # Datasource block
+        lines.append("datasource db {")
+        lines.append(f'  provider = "{self.database}"')
+        lines.append('  url      = env("DATABASE_URL")')
+        lines.append("}")
+        lines.append("")
+
+        # Database-specific notes
+        if self.database == "sqlite":
+            lines.append("// TODO: When migrating to Supabase (PostgreSQL), replace entityType String with native enum:")
+            lines.append("//   enum EntityType { VENUE, RETAILER, COACH, INSTRUCTOR, CLUB, LEAGUE, EVENT, TOURNAMENT }")
+            lines.append("//")
+            lines.append("// TEMPORARY SQLite LIMITATION: SQLite doesn't support native Prisma enums.")
+            lines.append("// EntityType is currently stored as String but validated as Enum in application code.")
+            lines.append("// Valid values: VENUE, RETAILER, COACH, INSTRUCTOR, CLUB, LEAGUE, EVENT, TOURNAMENT")
+            lines.append("")
+
+        model_blocks = []
+
+        if self.INFRA_MODELS_BEFORE_LISTING:
+            model_blocks.append(self.INFRA_MODELS_BEFORE_LISTING.strip())
+
+        for schema in schemas:
+            if schema.name == "Listing":
+                model_blocks.append(self._generate_listing_model(schema))
+            else:
+                model_blocks.append(self._generate_model(schema))
+
+        if self.INFRA_MODELS_AFTER_LISTING:
+            model_blocks.append(self.INFRA_MODELS_AFTER_LISTING.strip())
+
+        if model_blocks:
+            lines.append("\n\n".join(model_blocks))
+
+        return "\n".join(lines).rstrip() + "\n"
+
     def generate_schema(self, schemas: List[SchemaDefinition]) -> str:
         """
         Generate complete schema.prisma file from list of schemas.
@@ -257,22 +579,15 @@ class PrismaGenerator:
         lines.append("// ============================================================")
         lines.append("")
 
-        # Generator block
-        lines.append("generator client {")
-        lines.append('  provider = "prisma-client-py"')
-        lines.append('  interface = "asyncio"')
-        lines.append("}")
+        # Generator block (engine defaults)
+        lines.extend(self.ENGINE_GENERATOR_BLOCK)
         lines.append("")
 
         # Datasource block
         lines.append("datasource db {")
         lines.append(f'  provider = "{self.database}"')
 
-        # Database-specific URL
-        if self.database == "sqlite":
-            lines.append('  url      = "file:../web/dev.db"')
-        else:  # postgresql
-            lines.append('  url      = env("DATABASE_URL")')
+        lines.append('  url      = env("DATABASE_URL")')
 
         lines.append("}")
         lines.append("")
@@ -295,15 +610,24 @@ class PrismaGenerator:
 
         return "\n".join(lines) + "\n"
 
-    def generate_to_file(self, schemas: List[SchemaDefinition], output_path: str) -> None:
+    def generate_to_file(
+        self,
+        schemas: List[SchemaDefinition],
+        output_path: str,
+        target: Optional[str] = None,
+    ) -> None:
         """
         Generate schema.prisma file and write to disk.
 
         Args:
             schemas: List of SchemaDefinition objects
             output_path: Path to write schema.prisma file
+            target: Optional target ("engine" or "web") for full schema generation
         """
-        schema_content = self.generate_schema(schemas)
+        if target:
+            schema_content = self.generate_full_schema(schemas, target=target)
+        else:
+            schema_content = self.generate_schema(schemas)
 
         with open(output_path, 'w', encoding='utf-8') as f:
             f.write(schema_content)

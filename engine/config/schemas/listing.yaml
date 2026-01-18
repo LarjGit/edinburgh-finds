@@ -57,6 +57,7 @@ fields:
     python:
       type_annotation: "EntityType"
     prisma:
+      name: entityType
       type: "String"  # String in SQLite, Enum in PostgreSQL
 
   - name: slug
@@ -296,6 +297,8 @@ fields:
     python:
       sa_column: "Column(DateTime(timezone=True), nullable=False, server_default=func.now())"
     prisma:
+      name: createdAt
+      type: "DateTime"
       attributes:
         - "@default(now())"
 
@@ -307,6 +310,8 @@ fields:
     python:
       sa_column: "Column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())"
     prisma:
+      name: updatedAt
+      type: "DateTime"
       attributes:
         - "@updatedAt"
 

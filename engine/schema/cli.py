@@ -14,7 +14,7 @@ import argparse
 import sys
 from pathlib import Path
 from typing import List, Optional, Tuple
-from engine.schema.parser import SchemaParser, SchemaValidationError
+from engine.schema.parser import SchemaParser, SchemaValidationError, SchemaDefinition
 from engine.schema.generators.python_fieldspec import PythonFieldSpecGenerator
 from engine.schema.generators.prisma import PrismaGenerator
 from engine.schema.generators.pydantic_extraction import PydanticExtractionGenerator
@@ -238,6 +238,72 @@ def generate_pydantic_extraction_model(
         return False, f"Error generating from {yaml_file.name}: {e}"
 
 
+def load_prisma_schemas(yaml_files: List[Path]) -> Tuple[List[SchemaDefinition], List[str]]:
+    """
+    Load base schemas for Prisma generation (schemas without inheritance).
+
+    Args:
+        yaml_files: List of YAML schema files to parse
+
+    Returns:
+        Tuple of (base_schemas, skipped_schema_names)
+    """
+    parser = SchemaParser()
+    base_schemas: List[SchemaDefinition] = []
+    skipped: List[str] = []
+
+    for yaml_file in yaml_files:
+        schema = parser.parse(yaml_file)
+        if schema.extends:
+            skipped.append(schema.name)
+            continue
+        base_schemas.append(schema)
+
+    return base_schemas, skipped
+
+
+def generate_prisma_schema(
+    generator: PrismaGenerator,
+    schemas: List[SchemaDefinition],
+    output_file: Path,
+    target: str,
+    dry_run: bool = False,
+    force: bool = False
+) -> Tuple[bool, str]:
+    """
+    Generate Prisma schema file for a target (engine/web).
+
+    Args:
+        generator: PrismaGenerator instance
+        schemas: List of base SchemaDefinition objects
+        output_file: Full path to output schema.prisma file
+        target: "engine" or "web"
+        dry_run: If True, don't write file
+        force: If True, overwrite without prompt
+
+    Returns:
+        Tuple of (success: bool, message: str)
+    """
+    try:
+        generated_schema = generator.generate_full_schema(schemas, target=target)
+
+        if dry_run:
+            return True, f"Would generate: {output_file}"
+
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+
+        if output_file.exists() and not force:
+            response = input(f"File {output_file} exists. Overwrite? [y/N] ")
+            if response.lower() != 'y':
+                return False, f"Skipped: {output_file}"
+
+        output_file.write_text(generated_schema, encoding='utf-8')
+        return True, f"Generated: {output_file}"
+
+    except Exception as e:
+        return False, f"Error generating Prisma schema ({target}): {e}"
+
+
 def validate_schema_sync(schema_dir: Path, python_dir: Path) -> Tuple[bool, List[str]]:
     """
     Validate that YAML schemas match generated Python schemas.
@@ -324,7 +390,7 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Generate all schemas (Python only)
+  # Generate all schemas (Python + Prisma)
   python -m engine.schema.generate
 
   # Generate Python and TypeScript schemas
@@ -332,6 +398,12 @@ Examples:
 
   # Generate TypeScript with Zod validation schemas
   python -m engine.schema.generate --typescript --zod
+
+  # Generate Prisma schemas only
+  python -m engine.schema.generate --prisma
+
+  # Generate without Prisma
+  python -m engine.schema.generate --no-prisma
 
   # Generate Pydantic extraction model (entity_extraction.py)
   python -m engine.schema.generate --pydantic-extraction
@@ -413,6 +485,18 @@ Examples:
         help='Generate Pydantic extraction model from listing.yaml'
     )
 
+    prisma_group = parser.add_mutually_exclusive_group()
+    prisma_group.add_argument(
+        '--prisma',
+        action='store_true',
+        help='Generate Prisma schemas only (skip other outputs)'
+    )
+    prisma_group.add_argument(
+        '--no-prisma',
+        action='store_true',
+        help='Skip Prisma schema generation'
+    )
+
     parser.add_argument(
         '--zod',
         action='store_true',
@@ -437,12 +521,30 @@ Examples:
     output_dir = args.output_dir or (project_root / "engine" / "schema")
     typescript_output_dir = args.typescript_output_dir or (project_root / "web" / "types")
 
-    # Validate Zod flag
-    if args.zod and not args.typescript:
-        print_error("--zod requires --typescript flag")
-        sys.exit(1)
+    # Determine which generators to run
+    generate_python = True
+    generate_typescript = args.typescript
+    generate_pydantic_extraction = args.pydantic_extraction
+    generate_prisma = not args.no_prisma
 
-    if args.pydantic_extraction and args.schema and args.schema != "listing":
+    if args.prisma:
+        generate_python = False
+        generate_typescript = False
+        generate_pydantic_extraction = False
+        generate_prisma = True
+
+        if args.typescript or args.pydantic_extraction or args.zod:
+            print_warning("--prisma ignores --typescript/--zod/--pydantic-extraction")
+
+    # Validate Zod flag
+    if args.zod and not generate_typescript:
+        if args.prisma:
+            print_warning("--zod ignored because --prisma was set")
+        else:
+            print_error("--zod requires --typescript flag")
+            sys.exit(1)
+
+    if generate_pydantic_extraction and args.schema and args.schema != "listing":
         print_error("--pydantic-extraction only supports --schema listing")
         sys.exit(1)
 
@@ -475,7 +577,7 @@ Examples:
     yaml_files = find_schema_files(schema_dir, args.schema)
     print_info(f"Found {len(yaml_files)} schema(s) to generate")
 
-    # Generate each schema
+    # Generate each schema (per-file outputs)
     generated_files = []
     success_count = 0
     error_count = 0
@@ -483,60 +585,95 @@ Examples:
         project_root / "engine" / "extraction" / "models" / "entity_extraction.py"
     )
 
-    for yaml_file in yaml_files:
-        print(f"\n{colorize('Processing:', Colors.BOLD)} {yaml_file.name}")
+    if generate_python or generate_pydantic_extraction or generate_typescript:
+        for yaml_file in yaml_files:
+            print(f"\n{colorize('Processing:', Colors.BOLD)} {yaml_file.name}")
 
-        # Generate Python schema
-        success, message = generate_python_schema(
-            yaml_file,
-            output_dir,
-            dry_run=args.dry_run,
-            force=args.force
-        )
+            # Generate Python schema
+            if generate_python:
+                success, message = generate_python_schema(
+                    yaml_file,
+                    output_dir,
+                    dry_run=args.dry_run,
+                    force=args.force
+                )
 
-        if success:
-            print_success(f"Python: {message}")
-            success_count += 1
-            if not args.dry_run:
-                generated_files.append(output_dir / f"{yaml_file.stem}.py")
+                if success:
+                    print_success(f"Python: {message}")
+                    success_count += 1
+                    if not args.dry_run:
+                        generated_files.append(output_dir / f"{yaml_file.stem}.py")
+                else:
+                    print_error(f"Python: {message}")
+                    error_count += 1
+
+            # Generate Pydantic extraction model (listing.yaml only)
+            if generate_pydantic_extraction and yaml_file.stem == "listing":
+                extraction_success, extraction_message = generate_pydantic_extraction_model(
+                    yaml_file,
+                    extraction_output,
+                    dry_run=args.dry_run,
+                    force=args.force
+                )
+
+                if extraction_success:
+                    print_success(f"Pydantic: {extraction_message}")
+                    success_count += 1
+                    if not args.dry_run:
+                        generated_files.append(extraction_output)
+                else:
+                    print_error(f"Pydantic: {extraction_message}")
+                    error_count += 1
+
+            # Generate TypeScript schema if requested
+            if generate_typescript:
+                ts_success, ts_message = generate_typescript_schema(
+                    yaml_file,
+                    typescript_output_dir,
+                    include_zod=args.zod,
+                    dry_run=args.dry_run,
+                    force=args.force
+                )
+
+                if ts_success:
+                    print_success(f"TypeScript: {ts_message}")
+                    success_count += 1
+                else:
+                    print_error(f"TypeScript: {ts_message}")
+                    error_count += 1
+
+    # Generate Prisma schemas (engine + web)
+    if generate_prisma:
+        prisma_schemas, skipped_schemas = load_prisma_schemas(yaml_files)
+
+        if not prisma_schemas:
+            print_warning("Prisma: No base schemas found; skipping Prisma generation")
         else:
-            print_error(f"Python: {message}")
-            error_count += 1
+            if skipped_schemas:
+                print_info(f"Prisma: Skipping inherited schemas: {', '.join(skipped_schemas)}")
 
-        # Generate Pydantic extraction model (listing.yaml only)
-        if args.pydantic_extraction and yaml_file.stem == "listing":
-            extraction_success, extraction_message = generate_pydantic_extraction_model(
-                yaml_file,
-                extraction_output,
-                dry_run=args.dry_run,
-                force=args.force
-            )
+            prisma_generator = PrismaGenerator(database="sqlite")
+            prisma_targets = {
+                "engine": project_root / "engine" / "schema.prisma",
+                "web": project_root / "web" / "prisma" / "schema.prisma",
+            }
 
-            if extraction_success:
-                print_success(f"Pydantic: {extraction_message}")
-                success_count += 1
-                if not args.dry_run:
-                    generated_files.append(extraction_output)
-            else:
-                print_error(f"Pydantic: {extraction_message}")
-                error_count += 1
+            for target, output_path in prisma_targets.items():
+                success, message = generate_prisma_schema(
+                    prisma_generator,
+                    prisma_schemas,
+                    output_path,
+                    target=target,
+                    dry_run=args.dry_run,
+                    force=args.force
+                )
 
-        # Generate TypeScript schema if requested
-        if args.typescript:
-            ts_success, ts_message = generate_typescript_schema(
-                yaml_file,
-                typescript_output_dir,
-                include_zod=args.zod,
-                dry_run=args.dry_run,
-                force=args.force
-            )
-
-            if ts_success:
-                print_success(f"TypeScript: {ts_message}")
-                success_count += 1
-            else:
-                print_error(f"TypeScript: {ts_message}")
-                error_count += 1
+                if success:
+                    print_success(f"Prisma ({target}): {message}")
+                    success_count += 1
+                else:
+                    print_error(f"Prisma ({target}): {message}")
+                    error_count += 1
 
     # Format files if requested
     if args.format and generated_files and not args.dry_run:
