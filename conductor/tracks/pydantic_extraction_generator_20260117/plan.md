@@ -9,8 +9,8 @@
 - [x] **Handle Validators** [ac3d0a7]
     - [x] Design strategy for validators (e.g., look for `python.validator` metadata in YAML or import a mixin).
     - [x] Update `listing.yaml` if necessary to support validator metadata.
-- [ ] **CLI Integration**
-    - [ ] Update `engine/schema/cli.py` to add `--pydantic-extraction` flag (or include in default generation).
+- [x] **CLI Integration** [6ff6756]
+    - [x] Update `engine/schema/cli.py` to add `--pydantic-extraction` flag (or include in default generation).
 
 ## Phase 2: Testing & Validation
 - [ ] **Unit Tests**
