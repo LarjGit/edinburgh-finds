@@ -10,7 +10,7 @@ Prerequisites:
 3. Ensure database is migrated (prisma generate && prisma db push)
 
 Usage:
-    python -m engine.scripts.test_serper_connector
+    python -m engine.scripts.run_serper_connector
 """
 
 import asyncio
@@ -48,7 +48,7 @@ async def test_serper_padel_query():
 
     # Import and initialize connector
     try:
-        from engine.ingestion.serper import SerperConnector
+        from engine.ingestion.connectors.serper import SerperConnector
         from engine.ingestion.deduplication import compute_content_hash
         print("✓ SerperConnector imported successfully")
     except ImportError as e:

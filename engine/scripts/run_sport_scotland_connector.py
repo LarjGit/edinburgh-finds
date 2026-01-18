@@ -1,16 +1,16 @@
 """
-Manual Test Script for OpenChargeMap Connector
+Manual Test Script for SportScotland WFS Connector
 
-This script tests the OpenChargeMapConnector with known Edinburgh venue
-coordinates to verify end-to-end functionality with the OpenChargeMap API.
+This script tests the SportScotlandConnector with the real WFS endpoint
+at Spatial Hub Scotland to verify end-to-end functionality.
 
 Prerequisites:
-1. Copy engine/config/sources.yaml.example to engine/config/sources.yaml
-2. Add your OpenChargeMap API key to sources.yaml (get key at https://openchargemap.org/site/develop/api)
+1. Register for free account at Spatial Hub Scotland (https://data.spatialhub.scot)
+2. Add your API token to engine/config/sources.yaml under sport_scotland.api_key
 3. Ensure database is migrated (prisma generate && prisma db push)
 
 Usage:
-    python -m engine.scripts.test_open_charge_map_connector
+    python -m engine.scripts.run_sport_scotland_connector
 """
 
 import asyncio
@@ -23,11 +23,11 @@ project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 
-async def test_open_charge_map_edinburgh_venues():
-    """Test OpenChargeMapConnector with Edinburgh venue coordinates"""
+async def test_sport_scotland_wfs():
+    """Test SportScotlandConnector with real WFS endpoint"""
 
     print("=" * 70)
-    print("OPENCHARGEMAP CONNECTOR MANUAL TEST")
+    print("SPORTSCOTLAND WFS CONNECTOR MANUAL TEST")
     print("=" * 70)
     print()
 
@@ -38,8 +38,8 @@ async def test_open_charge_map_edinburgh_venues():
         print()
         print("Setup Instructions:")
         print("1. Copy engine/config/sources.yaml.example to engine/config/sources.yaml")
-        print("2. Edit sources.yaml and add your OpenChargeMap API key")
-        print("3. Get a free API key at https://openchargemap.org/site/develop/api")
+        print("2. Edit sources.yaml and add your Spatial Hub Scotland API token")
+        print("3. Register at https://data.spatialhub.scot")
         print()
         return False
 
@@ -48,26 +48,25 @@ async def test_open_charge_map_edinburgh_venues():
 
     # Import and initialize connector
     try:
-        from engine.ingestion.open_charge_map import OpenChargeMapConnector
+        from engine.ingestion.connectors.sport_scotland import SportScotlandConnector
         from engine.ingestion.deduplication import compute_content_hash
-        print("✓ OpenChargeMapConnector imported successfully")
+        print("✓ SportScotlandConnector imported successfully")
     except ImportError as e:
-        print(f"❌ ERROR: Failed to import OpenChargeMapConnector: {e}")
+        print(f"❌ ERROR: Failed to import SportScotlandConnector: {e}")
         return False
 
     # Create connector instance
     try:
-        connector = OpenChargeMapConnector()
-        print(f"✓ OpenChargeMapConnector initialized (source: {connector.source_name})")
+        connector = SportScotlandConnector()
+        print(f"✓ SportScotlandConnector initialized (source: {connector.source_name})")
         print(f"  - Base URL: {connector.base_url}")
         print(f"  - Timeout: {connector.timeout}s")
-        print(f"  - Default params: {connector.default_params}")
+        print(f"  - API Key: {'Configured' if connector.api_key else 'Not configured'}")
+        print(f"  - Edinburgh BBOX: {connector._build_bbox_string()}")
         print()
     except Exception as e:
         print(f"❌ ERROR: Failed to initialize connector: {e}")
         print()
-        if "api_key" in str(e).lower():
-            print("Hint: Make sure you've set a valid OpenChargeMap API key in sources.yaml")
         return False
 
     # Connect to database
@@ -81,60 +80,60 @@ async def test_open_charge_map_edinburgh_venues():
         print("Hint: Run 'prisma generate && prisma db push' to set up the database")
         return False
 
-    # Test with known Edinburgh venue coordinates
-    # Using coordinates near Edinburgh city center (Castle/Princes Street area)
-    coordinates = "55.9533,-3.1883"
-    print(f"🔍 Fetching EV charging stations near: {coordinates}")
-    print("   (Edinburgh city center - Castle/Princes Street area)")
+    # Test with pub_sptk layer (SportScotland public facilities - combined layer)
+    layer_name = "pub_sptk"
+    print(f"🔍 Fetching sports facilities: {layer_name}")
+    print("   (Filtered to Edinburgh bbox: -3.4,55.85 to -3.0,56.0)")
     print()
 
     try:
-        data = await connector.fetch(coordinates)
-        print("✓ API request successful!")
+        data = await connector.fetch(layer_name)
+        print("✓ WFS request successful!")
         print()
         print("Response Summary:")
-        print(f"  - Charging stations found: {len(data)}")
+        print(f"  - Type: {data.get('type', 'N/A')}")
+        print(f"  - Features: {len(data.get('features', []))}")
+        print(f"  - Total Features: {data.get('totalFeatures', 'N/A')}")
+        print(f"  - Number Returned: {data.get('numberReturned', 'N/A')}")
+        if 'crs' in data:
+            crs_name = data['crs'].get('properties', {}).get('name', 'N/A')
+            print(f"  - CRS: {crs_name}")
         print()
 
-        # Show first 3 results
-        if data and len(data) > 0:
-            print("First 3 Charging Stations:")
-            for i, station in enumerate(data[:3], 1):
-                address_info = station.get('AddressInfo', {})
-                title = address_info.get('Title', 'N/A')
-                address_line1 = address_info.get('AddressLine1', 'N/A')
-                town = address_info.get('Town', 'N/A')
-                postcode = address_info.get('Postcode', 'N/A')
-                lat = address_info.get('Latitude', 'N/A')
-                lng = address_info.get('Longitude', 'N/A')
+        # Show first 3 facilities
+        features = data.get('features', [])
+        if features and len(features) > 0:
+            print("First 3 Facilities:")
+            for i, feature in enumerate(features[:3], 1):
+                props = feature.get('properties', {})
+                geom = feature.get('geometry', {})
+                coords = geom.get('coordinates', [])
 
-                print(f"  {i}. {title}")
-                print(f"     Station ID: {station.get('ID', 'N/A')}")
-                print(f"     Address: {address_line1}, {town} {postcode}")
-                print(f"     Location: {lat}, {lng}")
-                print(f"     Charging Points: {station.get('NumberOfPoints', 'N/A')}")
+                facility_name = props.get('facility_name', props.get('name', 'N/A'))
+                print(f"  {i}. {facility_name}")
+                print(f"     ID: {feature.get('id', 'N/A')}")
 
-                # Show status
-                status = station.get('StatusType', {})
-                if status:
-                    print(f"     Status: {status.get('Title', 'N/A')}")
+                if coords:
+                    print(f"     Location: {coords}")
 
-                # Show connection types
-                connections = station.get('Connections', [])
-                if connections:
-                    print(f"     Connectors:")
-                    for conn in connections[:2]:  # Show first 2 connectors
-                        conn_type = conn.get('ConnectionType', {}).get('Title', 'Unknown')
-                        power = conn.get('PowerKW', 'N/A')
-                        print(f"       - {conn_type} ({power} kW)")
+                # Show various property fields (schema varies by layer)
+                for key in ['sport_type', 'surface', 'ownership', 'postcode', 'local_authority']:
+                    if key in props and props[key]:
+                        print(f"     {key.replace('_', ' ').title()}: {props[key]}")
 
                 print()
         else:
-            print("⚠️  No charging stations found for this location")
+            print(f"⚠️  No {layer_name} found in Edinburgh area")
             print()
 
     except Exception as e:
-        print(f"❌ ERROR: API request failed: {e}")
+        print(f"❌ ERROR: WFS request failed: {e}")
+        print()
+        print("Common issues:")
+        print("  - Invalid API token (check sources.yaml)")
+        print("  - Network connectivity")
+        print("  - Invalid layer name")
+        print("  - WFS service temporarily unavailable")
         await connector.db.disconnect()
         return False
 
@@ -156,7 +155,7 @@ async def test_open_charge_map_edinburgh_venues():
         return False
 
     # Save data to filesystem and database
-    source_url = f"{connector.base_url}/poi/?latitude={coordinates.split(',')[0]}&longitude={coordinates.split(',')[1]}"
+    source_url = f"{connector.base_url}?service=WFS&version=2.0.0&request=GetFeature&typeName=sport_scotland:{layer_name}&bbox={connector._build_bbox_string()}"
     print(f"💾 Saving data to filesystem and database...")
 
     try:
@@ -209,36 +208,43 @@ async def test_open_charge_map_edinburgh_venues():
     print("=" * 70)
     print()
     print("Summary:")
-    print(f"  - Coordinates: {coordinates} (Edinburgh city center)")
-    print(f"  - Charging stations found: {len(data)}")
+    print(f"  - Layer: {layer_name}")
+    print(f"  - Features found: {len(data.get('features', []))}")
     print(f"  - Saved to: {file_path}")
     print(f"  - Hash: {content_hash}")
     print()
 
-    # Show discovered charging stations
-    if data and len(data) > 0:
-        print("Charging Stations Discovered:")
-        for station in data[:10]:  # Show up to 10
-            address_info = station.get('AddressInfo', {})
-            title = address_info.get('Title', 'Unknown')
-            town = address_info.get('Town', 'Unknown')
-            points = station.get('NumberOfPoints', 'N/A')
-            print(f"  - {title} ({town}) - {points} charging points")
+    # Show discovered facilities
+    features = data.get('features', [])
+    if features and len(features) > 0:
+        print(f"Facilities Discovered ({layer_name}):")
+        for feature in features[:15]:  # Show up to 15
+            props = feature.get('properties', {})
+            facility_name = props.get('facility_name', props.get('name', 'Unknown'))
+            local_auth = props.get('local_authority', 'Unknown')
+            print(f"  - {facility_name} ({local_auth})")
         print()
-        if len(data) > 10:
-            print(f"  ... and {len(data) - 10} more")
+        if len(features) > 15:
+            print(f"  ... and {len(features) - 15} more")
             print()
 
     print("Next steps:")
-    print("  - Check the raw data file to inspect the JSON")
+    print("  - Check the raw GeoJSON file to inspect the data structure")
     print("  - Verify the RawIngestion table in your database")
     print("  - Run the test again to verify deduplication works")
-    print("  - Test with different venue coordinates")
+    print("  - Test with different layer types:")
     print()
-    print("Example venue coordinates to try:")
-    print("  - Oriam (Heriot-Watt): 55.9108,-3.3171")
-    print("  - Edinburgh Airport: 55.9500,-3.3725")
-    print("  - Leith area: 55.9760,-3.1740")
+    print("Available layers:")
+    print("  - pitches (sports pitches)")
+    print("  - tennis_courts (indoor/outdoor tennis)")
+    print("  - swimming_pools (swimming/diving)")
+    print("  - sports_halls (gyms/halls)")
+    print("  - golf_courses")
+    print("  - athletics_tracks (tracks/velodromes)")
+    print("  - bowling_greens (bowling/croquet)")
+    print("  - fitness_suites")
+    print("  - ice_rinks (ice/curling)")
+    print("  - squash_courts")
     print()
 
     return True
@@ -247,7 +253,7 @@ async def test_open_charge_map_edinburgh_venues():
 def main():
     """Main entry point"""
     try:
-        success = asyncio.run(test_open_charge_map_edinburgh_venues())
+        success = asyncio.run(test_sport_scotland_wfs())
         sys.exit(0 if success else 1)
     except KeyboardInterrupt:
         print("\n\n⚠️  Test interrupted by user")

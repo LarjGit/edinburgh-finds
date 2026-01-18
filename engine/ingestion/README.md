@@ -91,7 +91,7 @@ python -m unittest discover engine/tests -p "test_*_connector.py" -v
 python -m unittest engine.tests.test_serper_connector -v
 
 # Manual testing with real API
-python -m engine.scripts.test_serper_connector
+python -m engine.scripts.run_serper_connector
 ```
 
 ## Configuration

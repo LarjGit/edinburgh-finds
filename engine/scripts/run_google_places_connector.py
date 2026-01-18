@@ -10,7 +10,7 @@ Prerequisites:
 3. Ensure database is migrated (prisma generate && prisma db push)
 
 Usage:
-    python -m engine.scripts.test_google_places_connector
+    python -m engine.scripts.run_google_places_connector
 """
 
 import asyncio
@@ -48,7 +48,7 @@ async def test_google_places_padel_query():
 
     # Import and initialize connector
     try:
-        from engine.ingestion.google_places import GooglePlacesConnector
+        from engine.ingestion.connectors.google_places import GooglePlacesConnector
         from engine.ingestion.deduplication import compute_content_hash
         print("✓ GooglePlacesConnector imported successfully")
     except ImportError as e:

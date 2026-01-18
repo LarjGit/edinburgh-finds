@@ -10,7 +10,7 @@ Prerequisites:
 2. No API key required (public portal)
 
 Usage:
-    python -m engine.scripts.test_edinburgh_council_connector
+    python -m engine.scripts.run_edinburgh_council_connector
 """
 
 import asyncio
@@ -46,7 +46,7 @@ async def test_edinburgh_council_dataset():
 
     # Import and initialize connector
     try:
-        from engine.ingestion.edinburgh_council import EdinburghCouncilConnector
+        from engine.ingestion.connectors.edinburgh_council import EdinburghCouncilConnector
         print("✓ EdinburghCouncilConnector imported successfully")
     except Exception as e:
         print(f"❌ ERROR: Failed to import EdinburghCouncilConnector: {e}")

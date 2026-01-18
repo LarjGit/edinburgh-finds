@@ -4,7 +4,7 @@ This directory contains manual test scripts and utilities for the data ingestion
 
 ## Test Scripts
 
-### `test_serper_connector.py`
+### `run_serper_connector.py`
 
 Manual integration test for the Serper API connector. Tests the complete workflow:
 - Configuration loading
@@ -41,7 +41,7 @@ Manual integration test for the Serper API connector. Tests the complete workflo
 **Usage:**
 
 ```bash
-python -m engine.scripts.test_serper_connector
+python -m engine.scripts.run_serper_connector
 ```
 
 **Expected Output:**
