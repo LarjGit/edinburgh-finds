@@ -135,31 +135,30 @@ This version adds explicit enforcement tasks and acceptance criteria for:
 - ✅ Comments clarify opaque values stored as Postgres text[] arrays
 - ✅ Schema follows Postgres/Supabase best practices
 
-### Task 1.2a: Standardize ID Strategy (v2.2 Addition)
+### Task 1.2a: Standardize ID Strategy (v2.2 Addition) [8613a43]
 
-**Status:** pending
+**Status:** ✅ completed
 
 **Description:** Lock in consistent ID strategy across all models - no mixing of uuid and cuid
 
 **Subtasks:**
-- [ ] Audit current schema for ID types:
-  - [ ] Check Entity model ID type
-  - [ ] Check EntityRelationship model ID types
-  - [ ] Check RawIngestion model ID type
-  - [ ] List all current ID strategies (uuid vs cuid vs autoincrement)
-- [ ] **DECISION**: Choose ONE ID strategy for the project:
-  - [ ] Option A: Use Prisma `@default(cuid())` for all models (Prisma default)
-  - [ ] Option B: Use Postgres `@default(uuid())` for all models (Supabase native)
-  - [ ] **RULE**: Once chosen, NEVER mix strategies in same database
-- [ ] Standardize all model IDs:
-  - [ ] Update Entity model: `id String @id @default([chosen_strategy])`
-  - [ ] Update EntityRelationship model: `id String @id @default([chosen_strategy])`
-  - [ ] Update all foreign key types to match (sourceEntityId, targetEntityId)
-  - [ ] Document choice in schema comments
-- [ ] Create migration for ID standardization (if needed)
-- [ ] Add validation test:
-  - [ ] Test that verifies all models use consistent ID strategy
-  - [ ] Fail build if mixed ID strategies detected
+- [x] Audit current schema for ID types:
+  - [x] Check Entity model ID type - Currently named "Listing", uses cuid()
+  - [x] Check EntityRelationship model ID types - Currently named "ListingRelationship", uses cuid()
+  - [x] Check RawIngestion model ID type - Uses cuid()
+  - [x] List all current ID strategies (uuid vs cuid vs autoincrement) - All 7 models use cuid() consistently
+- [x] **DECISION**: Choose ONE ID strategy for the project:
+  - [x] Option A: Use Prisma `@default(cuid())` for all models (Prisma default) ✅ CHOSEN
+  - [x] **RULE**: Once chosen, NEVER mix strategies in same database - Enforced by validation tests
+- [x] Standardize all model IDs:
+  - [x] Update Entity model: `id String @id @default([chosen_strategy])` - Already consistent (cuid)
+  - [x] Update EntityRelationship model: `id String @id @default([chosen_strategy])` - Already consistent (cuid)
+  - [x] Update all foreign key types to match (sourceEntityId, targetEntityId) - All use String type
+  - [x] Document choice in schema comments - Created engine/docs/id_strategy.md
+- [x] Create migration for ID standardization (if needed) - Not needed, already consistent
+- [x] Add validation test:
+  - [x] Test that verifies all models use consistent ID strategy - test_all_models_use_consistent_id_strategy()
+  - [x] Fail build if mixed ID strategies detected - Tests fail CI if mixed strategies found
 
 **Success Criteria:**
 - ✅ All models use single consistent ID strategy (either cuid or uuid, not mixed)
