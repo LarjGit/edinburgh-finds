@@ -17,6 +17,7 @@ from typing import List, Optional, Tuple
 from engine.schema.parser import SchemaParser, SchemaValidationError
 from engine.schema.generators.python_fieldspec import PythonFieldSpecGenerator
 from engine.schema.generators.prisma import PrismaGenerator
+from engine.schema.generators.pydantic_extraction import PydanticExtractionGenerator
 from engine.schema.generators.typescript import TypeScriptGenerator
 
 
@@ -196,6 +197,47 @@ def generate_typescript_schema(
         return False, f"Error generating from {yaml_file.name}: {e}"
 
 
+def generate_pydantic_extraction_model(
+    yaml_file: Path,
+    output_file: Path,
+    dry_run: bool = False,
+    force: bool = False
+) -> Tuple[bool, str]:
+    """
+    Generate Pydantic extraction model from YAML schema.
+
+    Args:
+        yaml_file: Path to YAML schema file
+        output_file: Full path to output file
+        dry_run: If True, don't write file
+        force: If True, overwrite without prompt
+
+    Returns:
+        Tuple of (success: bool, message: str)
+    """
+    try:
+        generator = PydanticExtractionGenerator()
+        generated_code = generator.generate_from_yaml(yaml_file)
+
+        if dry_run:
+            return True, f"Would generate: {output_file}"
+
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+
+        if output_file.exists() and not force:
+            response = input(f"File {output_file} exists. Overwrite? [y/N] ")
+            if response.lower() != 'y':
+                return False, f"Skipped: {output_file}"
+
+        output_file.write_text(generated_code, encoding='utf-8')
+        return True, f"Generated: {output_file}"
+
+    except SchemaValidationError as e:
+        return False, f"Validation error in {yaml_file.name}: {e}"
+    except Exception as e:
+        return False, f"Error generating from {yaml_file.name}: {e}"
+
+
 def validate_schema_sync(schema_dir: Path, python_dir: Path) -> Tuple[bool, List[str]]:
     """
     Validate that YAML schemas match generated Python schemas.
@@ -291,6 +333,9 @@ Examples:
   # Generate TypeScript with Zod validation schemas
   python -m engine.schema.generate --typescript --zod
 
+  # Generate Pydantic extraction model (entity_extraction.py)
+  python -m engine.schema.generate --pydantic-extraction
+
   # Validate schemas are in sync
   python -m engine.schema.generate --validate
 
@@ -363,6 +408,12 @@ Examples:
     )
 
     parser.add_argument(
+        '--pydantic-extraction',
+        action='store_true',
+        help='Generate Pydantic extraction model from listing.yaml'
+    )
+
+    parser.add_argument(
         '--zod',
         action='store_true',
         help='Include Zod schemas (requires --typescript)'
@@ -389,6 +440,10 @@ Examples:
     # Validate Zod flag
     if args.zod and not args.typescript:
         print_error("--zod requires --typescript flag")
+        sys.exit(1)
+
+    if args.pydantic_extraction and args.schema and args.schema != "listing":
+        print_error("--pydantic-extraction only supports --schema listing")
         sys.exit(1)
 
     # Validate mode
@@ -424,6 +479,9 @@ Examples:
     generated_files = []
     success_count = 0
     error_count = 0
+    extraction_output = (
+        project_root / "engine" / "extraction" / "models" / "entity_extraction.py"
+    )
 
     for yaml_file in yaml_files:
         print(f"\n{colorize('Processing:', Colors.BOLD)} {yaml_file.name}")
@@ -444,6 +502,24 @@ Examples:
         else:
             print_error(f"Python: {message}")
             error_count += 1
+
+        # Generate Pydantic extraction model (listing.yaml only)
+        if args.pydantic_extraction and yaml_file.stem == "listing":
+            extraction_success, extraction_message = generate_pydantic_extraction_model(
+                yaml_file,
+                extraction_output,
+                dry_run=args.dry_run,
+                force=args.force
+            )
+
+            if extraction_success:
+                print_success(f"Pydantic: {extraction_message}")
+                success_count += 1
+                if not args.dry_run:
+                    generated_files.append(extraction_output)
+            else:
+                print_error(f"Pydantic: {extraction_message}")
+                error_count += 1
 
         # Generate TypeScript schema if requested
         if args.typescript:
