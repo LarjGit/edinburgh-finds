@@ -278,6 +278,40 @@ pytest engine/extraction/tests/test_google_places_extractor.py -v
 pytest engine/extraction/tests --cov=engine.extraction --cov-report=html
 ```
 
+### Architectural Validation (Enforced in CI)
+
+The project enforces strict architectural contracts through automated validation:
+
+**Engine Purity:**
+- Engine code remains 100% vertical-agnostic
+- No lens imports (LensContract boundary enforced)
+- No value-based branching on dimension values
+- Validated via: `bash scripts/check_engine_purity.sh`
+
+**Lens Contract Validation:**
+- All facets use valid dimension sources (canonical_activities, canonical_roles, canonical_place_types, canonical_access)
+- All value.facet references exist in facets section
+- All mapping_rules.canonical references exist in values section
+- No duplicate value keys
+- Validated via: `pytest tests/lenses/test_validator.py -v`
+
+**Module Composition:**
+- Modules are properly namespaced in JSONB (no flattened structure)
+- Duplicate module keys rejected at YAML load time
+- Duplicate field names across different modules allowed (namespacing provides safety)
+- Validated via: `pytest tests/modules/test_composition.py -v`
+
+**Deduplication:**
+- Deterministic deduplication preserves insertion order
+- Validated via: `pytest tests/lenses/test_lens_processing.py::TestDedupePreserveOrder -v`
+
+**Prisma Array Filters:**
+- Array operations (has, hasSome, hasEvery) work correctly with Postgres text[] arrays
+- GIN indexes used for efficient querying
+- Validated via: `pytest tests/query/test_prisma_array_filters.py -v` (requires PostgreSQL)
+
+All validation checks run automatically in CI/CD. PRs must pass all checks before merge.
+
 ---
 
 ## Project Structure

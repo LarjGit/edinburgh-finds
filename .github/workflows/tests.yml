@@ -45,3 +45,19 @@ jobs:
     - name: Run Purity Tests
       run: |
         pytest tests/engine/test_purity.py -v
+
+    - name: Run Lens Validation Tests
+      run: |
+        pytest tests/lenses/test_validator.py -v
+
+    - name: Run Deduplication Tests
+      run: |
+        pytest tests/lenses/test_lens_processing.py::TestDedupePreserveOrder -v
+
+    - name: Run Prisma Array Filter Tests
+      run: |
+        pytest tests/query/test_prisma_array_filters.py -v
+
+    - name: Run Module Composition Tests
+      run: |
+        pytest tests/modules/test_composition.py -v
