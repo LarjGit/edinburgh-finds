@@ -1371,7 +1371,7 @@ echo "from lenses.loader import VerticalLens" >> engine/test.py
 
 ### Task 6.5: Module Composition Tests
 
-**Status:** pending
+**Status:** in_progress
 
 **Description:** Test module composition contracts: duplicate module keys rejected at YAML load, namespacing enforced, field names may duplicate across modules
 
