@@ -972,7 +972,7 @@ assert(grouping === 'people');  // Derived from entity_class + roles
 
 ### Task 4.1: Data Migration Steps
 
-**Status:** pending
+**Status:** [~] in progress
 
 **Description:** Create SQL migration scripts to transform existing data to new schema
 
