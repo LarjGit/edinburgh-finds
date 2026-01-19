@@ -1269,51 +1269,29 @@ echo "from lenses.loader import VerticalLens" >> engine/test.py
 
 ### Task 6.3: Deterministic Deduplication Tests
 
-**Status:** in_progress
+**Status:** ✅ completed
 
 **Description:** Test that deduplication is deterministic and preserves insertion order
 
+**Implementation Notes:**
+- Basic dedupe_preserve_order tests exist in `tests/lenses/test_lens_processing.py`
+- Added missing determinism and single value tests to test_lens_processing.py
+- Extraction deduplication tests added to `engine/extraction/tests/test_lens_contract_extraction.py`
+- All 18 lens contract extraction tests passing
+- All 6 dedupe_preserve_order tests passing
+
 **Subtasks:**
-- [ ] Create `tests/engine/test_deduplication.py`:
-  - [ ] Test: dedupe_preserve_order maintains insertion order
-    ```python
-    def test_dedupe_preserves_order():
-        values = ["tennis", "padel", "tennis", "gym", "padel"]
-        result = dedupe_preserve_order(values)
-        assert result == ["tennis", "padel", "gym"]
-        # Order preserved: tennis appears first, then padel, then gym
-    ```
-  - [ ] Test: dedupe_preserve_order is deterministic
-    ```python
-    def test_dedupe_is_deterministic():
-        values = ["tennis", "padel", "tennis", "gym", "padel"]
-        result1 = dedupe_preserve_order(values)
-        result2 = dedupe_preserve_order(values)
-        assert result1 == result2  # Same input → same output
-    ```
-  - [ ] Test: Empty list handling
-  - [ ] Test: Single value handling
-  - [ ] Test: No duplicates case
-- [ ] Create `tests/engine/test_extraction_deduplication.py`:
-  - [ ] Test: Canonical values deduplicated before trigger evaluation
-    ```python
-    def test_canonical_values_deduped_before_triggers():
-        # Raw categories map to duplicate canonical values
-        raw_data = {"categories": ["padel court", "pádel facility", "padel club"]}
-        # All three map to "padel"
-        entity = extract_with_lens(raw_data, lens)
-        # Trigger should only fire ONCE (not 3 times)
-        assert trigger_call_count == 1
-    ```
-  - [ ] Test: Dimension arrays deduplicated before storage
-    ```python
-    def test_dimension_arrays_deduped():
-        raw_data = {"categories": ["tennis", "tennis court", "tennis club"]}
-        entity = extract_with_lens(raw_data, lens)
-        assert entity['canonical_activities'] == ["tennis"]  # Not ["tennis", "tennis", "tennis"]
-    ```
-  - [ ] Test: canonical_values_by_facet deduplicated
-  - [ ] Test: Deduplication preserves order across pipeline
+- [x] Create `tests/engine/test_deduplication.py` (implemented in tests/lenses/test_lens_processing.py):
+  - [x] Test: dedupe_preserve_order maintains insertion order (pre-existing: test_preserves_insertion_order)
+  - [x] Test: dedupe_preserve_order is deterministic (ADDED: test_is_deterministic)
+  - [x] Test: Empty list handling (pre-existing: test_empty_list)
+  - [x] Test: Single value handling (ADDED: test_single_value)
+  - [x] Test: No duplicates case (pre-existing: test_no_duplicates)
+- [x] Create `tests/engine/test_extraction_deduplication.py` (implemented in engine/extraction/tests/test_lens_contract_extraction.py):
+  - [x] Test: Canonical values deduplicated before trigger evaluation (ADDED: test_canonical_values_deduped_before_trigger_evaluation)
+  - [x] Test: Dimension arrays deduplicated before storage (ADDED: test_dimension_arrays_deduped_before_storage)
+  - [x] Test: canonical_values_by_facet deduplicated (covered by test_deduplicates_canonical_values)
+  - [x] Test: Deduplication preserves order across pipeline (ADDED: test_deduplication_preserves_order_across_pipeline)
 
 **Success Criteria:**
 - ✅ dedupe_preserve_order maintains insertion order
