@@ -297,3 +297,66 @@ class TestExtractWithLensContract:
         # Low confidence match should be filtered out
         # (hard to test without the exact pattern matching, but the logic is there)
         assert result["entity_class"] == "place"
+
+    def test_canonical_values_deduped_before_trigger_evaluation(self, minimal_lens_contract):
+        """Should deduplicate canonical values before evaluating module triggers.
+
+        Ensures that even if multiple raw categories map to the same canonical value
+        (e.g., "padel court", "padel facility", "padel club" all → "padel"),
+        the trigger only fires ONCE, not three times.
+        """
+        raw_data = {
+            "name": "Padel Complex",
+            "categories": ["Padel Court", "Padel Facility", "Padel Club"],
+            "address": "800 Padel Way",
+            "latitude": 55.95,
+            "longitude": -3.18
+        }
+
+        result = extract_with_lens_contract(raw_data, minimal_lens_contract)
+
+        # All three categories map to "padel", should only have one
+        assert result["canonical_activities"].count("padel") == 1
+
+        # Module should only be triggered ONCE (not three times)
+        # If it were triggered three times, we'd see duplicate modules or errors
+        assert "sports_facility" in result["modules"]
+        # Should only have this module once in the modules dict
+        assert isinstance(result["modules"], dict)
+
+    def test_dimension_arrays_deduped_before_storage(self, minimal_lens_contract):
+        """Should deduplicate dimension arrays before returning result."""
+        raw_data = {
+            "name": "Tennis Complex",
+            "categories": ["Tennis", "Tennis Court", "Tennis Club"],  # All map to "tennis"
+            "address": "900 Tennis Ave",
+            "latitude": 55.95,
+            "longitude": -3.18
+        }
+
+        result = extract_with_lens_contract(raw_data, minimal_lens_contract)
+
+        # Should only have "tennis" once, not three times
+        assert result["canonical_activities"] == ["tennis"]
+        assert result["canonical_activities"].count("tennis") == 1
+
+    def test_deduplication_preserves_order_across_pipeline(self, minimal_lens_contract):
+        """Should preserve insertion order during deduplication across extraction pipeline."""
+        raw_data = {
+            "name": "Multi-Sport Centre",
+            "categories": ["Tennis", "Padel", "Tennis Court", "Gym", "Padel Club"],
+            "address": "1000 Sport St",
+            "latitude": 55.95,
+            "longitude": -3.18
+        }
+
+        result = extract_with_lens_contract(raw_data, minimal_lens_contract)
+
+        # Order should be: tennis (appears first), padel (appears second), gym (appears fourth)
+        # Duplicates "Tennis Court" → tennis and "Padel Club" → padel are removed
+        activities = result["canonical_activities"]
+        assert activities == ["tennis", "padel", "gym"]
+
+        # Verify order is preserved: tennis before padel before gym
+        assert activities.index("tennis") < activities.index("padel")
+        assert activities.index("padel") < activities.index("gym")

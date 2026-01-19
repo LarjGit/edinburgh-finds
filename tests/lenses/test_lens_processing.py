@@ -329,6 +329,18 @@ class TestDedupePreserveOrder:
         result = dedupe_preserve_order(values)
         assert result == ["a", "b", "c"]
 
+    def test_is_deterministic(self):
+        """Should produce same output for same input (deterministic)."""
+        values = ["tennis", "padel", "tennis", "gym", "padel"]
+        result1 = dedupe_preserve_order(values)
+        result2 = dedupe_preserve_order(values)
+        assert result1 == result2
+        assert result1 == ["tennis", "padel", "gym"]
+
+    def test_single_value(self):
+        """Should handle list with single value."""
+        assert dedupe_preserve_order(["a"]) == ["a"]
+
 
 class TestVerticalLensProcessingMethods:
     """Test VerticalLens processing methods."""
