@@ -20,14 +20,16 @@ This track addresses the critical blockers identified in the `next_steps_codex.m
   - Change `modules` field to native `Json` type.
   - Ensure `@default([])` is applied to array fields.
 
-- [ ] **Task 1.3: Migration & Indexing**
+- [x] **Task 1.3: Migration & Indexing** [a26ee18]
   - Create a new migration: `npx prisma migrate dev --name init_postgres_arrays`.
   - Verify migration SQL includes GIN indexes for array fields (crucial for `has`, `hasSome` performance).
   - Update `engine/schema.prisma` to match (if separate).
+  - **Note**: Migration prepared but not executed. Requires PostgreSQL database (Phase 4).
 
 - [ ] **Task 1.4: Validation**
   - Run `tests/query/test_prisma_array_filters.py` against the Postgres instance.
   - Verify that array filtering works natively without JSON parsing logic.
+  - **Blocked**: Requires PostgreSQL database setup (deferred to Phase 4).
 
 ## Phase 2: Engine Purity & Cleanup
 **Goal:** Remove all "Sports" and "Venue" concepts from the core engine, making it truly vertical-agnostic.
