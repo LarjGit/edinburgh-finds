@@ -338,3 +338,63 @@ def resolve_entity_class(raw_data: Dict[str, Any]) -> Dict[str, Any]:
         "canonical_activities": canonical_activities,
         "canonical_place_types": canonical_place_types,
     }
+
+
+def get_engine_modules(entity_class: str) -> List[str]:
+    """
+    Get required engine modules for a given entity_class.
+
+    This function loads the entity_model.yaml configuration and returns
+    the list of required universal modules for the specified entity_class.
+
+    Args:
+        entity_class: Entity classification (place, person, organization, event, thing)
+
+    Returns:
+        List of required module names (e.g., ["core", "location"])
+
+    Raises:
+        AssertionError: If entity_class is not valid
+        ValueError: If entity_class is not found in entity_model.yaml
+
+    See: engine/config/entity_model.yaml for module definitions
+
+    Examples:
+        >>> get_engine_modules("place")
+        ['core', 'location']
+
+        >>> get_engine_modules("person")
+        ['core', 'contact']
+
+        >>> get_engine_modules("event")
+        ['core', 'time_range']
+    """
+    import yaml
+    import os
+
+    # Validate entity_class
+    validate_entity_class(entity_class)
+
+    # Load entity_model.yaml
+    config_path = os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "config",
+        "entity_model.yaml"
+    )
+
+    with open(config_path, "r", encoding="utf-8") as f:
+        entity_model = yaml.safe_load(f)
+
+    # Get required modules for entity_class
+    entity_classes = entity_model.get("entity_classes", {})
+    entity_config = entity_classes.get(entity_class)
+
+    if not entity_config:
+        raise ValueError(
+            f"Entity class '{entity_class}' not found in entity_model.yaml. "
+            f"Available classes: {', '.join(sorted(entity_classes.keys()))}"
+        )
+
+    required_modules = entity_config.get("required_modules", [])
+    return required_modules
