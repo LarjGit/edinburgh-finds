@@ -1,0 +1,479 @@
+# Wine Discovery Lens Configuration
+# Wine Vertical
+#
+# This lens defines how the universal entity engine is interpreted for the wine domain.
+# All vertical-specific concepts, taxonomy, and domain behavior live here.
+#
+# KEY RULES:
+# - All dimension_source MUST be one of: canonical_activities, canonical_roles, canonical_place_types, canonical_access
+# - Every value.facet MUST reference a facet defined in facets section
+# - Role facet is internal-only (not shown in UI)
+# - Role keys are universal function-style (produces_goods, sells_goods, provides_instruction, etc.)
+# - Role display_name carries vertical/product terminology (Winery, Wine Bar, Wine Retailer, Wine Educator)
+# - NOTE: facet refers to the canonical value's facet key as defined by the lens (i.e., lens.facets keys),
+#   e.g. wine_type, role, venue_type, NOT the DB column name
+
+# Lens Metadata
+id: wine_discovery
+name: "Wine Discovery"
+description: "Discover wineries, wine bars, and wine experiences"
+base_url: "https://winediscovery.example.com"
+
+# Facets
+# Maps lens-level facets to actual database columns (dimensions)
+# NOTE on naming:
+#   - facet key (wine_type, role, venue_type) is the lens-level concept used in module_triggers
+#   - dimension_source (canonical_activities, etc.) is the actual DB column name
+#   - This distinction avoids key collisions and enables triggers across all facets
+facets:
+  wine_type:
+    dimension_source: "canonical_activities"  # MUST BE one of 4 canonical_* columns (reuses activities dimension)
+    ui_label: "Wine types"
+    display_mode: "multi_select"
+    order: 10
+    show_in_filters: true
+    show_in_navigation: true
+    icon: "wine"
+
+  role:
+    # INTERNAL-ONLY facet - not shown in UI
+    dimension_source: "canonical_roles"  # MUST BE one of 4 canonical_* columns
+    ui_label: null  # internal-only facet, not shown in UI
+    display_mode: "internal"
+    order: 5
+    show_in_filters: false
+    show_in_navigation: false
+
+  venue_type:
+    dimension_source: "canonical_place_types"  # MUST BE one of 4 canonical_* columns (reuses place_types dimension)
+    ui_label: "Venue type"
+    display_mode: "single_select"
+    order: 20
+    show_in_filters: true
+    show_in_navigation: true
+    icon: "building"
+
+  access:
+    dimension_source: "canonical_access"  # MUST BE one of 4 canonical_* columns
+    ui_label: "Visit options"
+    display_mode: "multi_select"
+    order: 30
+    show_in_filters: true
+    show_in_navigation: false
+    icon: "calendar"
+
+# Canonical Values
+# All interpretation metadata lives here: display names, descriptions, SEO, icons, colors, etc.
+values:
+  # Wine Type Facet Values (using canonical_activities dimension)
+  - key: red_wine
+    facet: wine_type
+    display_name: "Red Wine"
+    description: "Red wine varieties and experiences"
+    seo_slug: "red-wine"
+    search_keywords:
+      - "red wine"
+      - "cabernet"
+      - "merlot"
+      - "pinot noir"
+    icon_url: "/icons/red-wine.svg"
+    color: "#8B0000"
+
+  - key: white_wine
+    facet: wine_type
+    display_name: "White Wine"
+    description: "White wine varieties and experiences"
+    seo_slug: "white-wine"
+    search_keywords:
+      - "white wine"
+      - "chardonnay"
+      - "sauvignon blanc"
+      - "riesling"
+    icon_url: "/icons/white-wine.svg"
+    color: "#F5DEB3"
+
+  - key: rose_wine
+    facet: wine_type
+    display_name: "Rosé Wine"
+    description: "Rosé and blush wines"
+    seo_slug: "rose-wine"
+    search_keywords:
+      - "rosé"
+      - "rose wine"
+      - "blush wine"
+    icon_url: "/icons/rose-wine.svg"
+    color: "#FFC0CB"
+
+  - key: sparkling_wine
+    facet: wine_type
+    display_name: "Sparkling Wine"
+    description: "Champagne, Prosecco, and sparkling wines"
+    seo_slug: "sparkling-wine"
+    search_keywords:
+      - "sparkling wine"
+      - "champagne"
+      - "prosecco"
+      - "cava"
+    icon_url: "/icons/sparkling-wine.svg"
+    color: "#FFD700"
+
+  - key: dessert_wine
+    facet: wine_type
+    display_name: "Dessert Wine"
+    description: "Sweet wines and fortified wines"
+    seo_slug: "dessert-wine"
+    search_keywords:
+      - "dessert wine"
+      - "port"
+      - "sherry"
+      - "ice wine"
+    icon_url: "/icons/dessert-wine.svg"
+    color: "#800020"
+
+  # Role Facet Values (INTERNAL-ONLY)
+  # NOTE: Labels like "Winery", "Wine Bar", "Wine Retailer" are lens display labels ONLY.
+  # Never use these as structural concepts, entity types, classes, or system concepts.
+  # They are strictly for UI presentation.
+  - key: produces_goods
+    facet: role
+    display_name: "Winery"
+    description: "Wine producer/winery"
+
+  - key: sells_goods
+    facet: role
+    display_name: "Wine Retailer"
+    description: "Wine shop or retailer"
+
+  - key: provides_beverage_service
+    facet: role
+    display_name: "Wine Bar"
+    description: "Serves wine on-premises"
+
+  - key: provides_instruction
+    facet: role
+    display_name: "Wine Educator"
+    description: "Provides wine education and courses"
+
+  # Venue Type Facet Values (using canonical_place_types dimension)
+  - key: winery
+    facet: venue_type
+    display_name: "Winery"
+    description: "Wine production facility with vineyards"
+    search_keywords:
+      - "winery"
+      - "vineyard"
+      - "wine estate"
+      - "wine farm"
+    icon_url: "/icons/winery.svg"
+    color: "#6B8E23"
+
+  - key: wine_bar
+    facet: venue_type
+    display_name: "Wine Bar"
+    description: "Bar specializing in wine service"
+    search_keywords:
+      - "wine bar"
+      - "wine lounge"
+      - "enoteca"
+    icon_url: "/icons/wine-bar.svg"
+    color: "#4B0082"
+
+  - key: wine_shop
+    facet: venue_type
+    display_name: "Wine Shop"
+    description: "Wine retail store"
+    search_keywords:
+      - "wine shop"
+      - "wine store"
+      - "wine merchant"
+    icon_url: "/icons/wine-shop.svg"
+    color: "#8B4513"
+
+  - key: tasting_room
+    facet: venue_type
+    display_name: "Tasting Room"
+    description: "Wine tasting venue"
+    search_keywords:
+      - "tasting room"
+      - "wine tasting"
+      - "cellar door"
+    icon_url: "/icons/tasting-room.svg"
+    color: "#9370DB"
+
+  # Access Facet Values
+  - key: walk_in
+    facet: access
+    display_name: "Walk-in Welcome"
+    description: "Open for walk-in visitors"
+    search_keywords:
+      - "walk in"
+      - "no reservation"
+      - "drop in"
+
+  - key: reservation_required
+    facet: access
+    display_name: "Reservation Required"
+    description: "Advance booking required"
+    search_keywords:
+      - "reservation"
+      - "booking required"
+      - "by appointment"
+
+  - key: tours_available
+    facet: access
+    display_name: "Tours Available"
+    description: "Guided tours of winery/vineyard"
+    search_keywords:
+      - "tours"
+      - "guided tour"
+      - "vineyard tour"
+
+# Mapping Rules
+# Regex patterns to extract canonical values from raw data
+# IMPORTANT: Every mapping_rules.canonical value MUST exist in values section
+mapping_rules:
+  # Wine Type Mappings
+  - pattern: '(?i)\bred\s+wine\b|\bcabernet\b|\bmerlot\b|\bpinot\s+noir\b'
+    canonical: red_wine
+    confidence: 0.95
+
+  - pattern: '(?i)\bwhite\s+wine\b|\bchardonnay\b|\bsauvignon\s+blanc\b|\briesling\b'
+    canonical: white_wine
+    confidence: 0.95
+
+  - pattern: '(?i)\bros[eé]\b|\bblush\s+wine\b'
+    canonical: rose_wine
+    confidence: 0.95
+
+  - pattern: '(?i)\bsparkling\b|\bchampagne\b|\bprosecco\b|\bcava\b'
+    canonical: sparkling_wine
+    confidence: 0.95
+
+  - pattern: '(?i)\bdessert\s+wine\b|\bport\b|\bsherry\b|\bice\s+wine\b'
+    canonical: dessert_wine
+    confidence: 0.9
+
+  # Venue Type Mappings
+  - pattern: '(?i)\bwinery\b|\bvineyard\b|\bwine\s+estate\b|\bwine\s+farm\b'
+    canonical: winery
+    confidence: 0.98
+
+  - pattern: '(?i)\bwine\s+bar\b|\bwine\s+lounge\b|\benoteca\b'
+    canonical: wine_bar
+    confidence: 0.98
+
+  - pattern: '(?i)\bwine\s+shop\b|\bwine\s+store\b|\bwine\s+merchant\b'
+    canonical: wine_shop
+    confidence: 0.95
+
+  - pattern: '(?i)\btasting\s+room\b|\bcellar\s+door\b'
+    canonical: tasting_room
+    confidence: 0.95
+
+  # Access Mappings
+  - pattern: '(?i)\bwalk.?in\b|\bno\s+reservation\b|\bdrop.?in\b'
+    canonical: walk_in
+    confidence: 0.85
+
+  - pattern: '(?i)\breservation\b|\bbooking\s+required\b|\bby\s+appointment\b'
+    canonical: reservation_required
+    confidence: 0.9
+
+  - pattern: '(?i)\btour\b|\bguided\s+tour\b|\bvineyard\s+tour\b'
+    canonical: tours_available
+    confidence: 0.9
+
+  # Role Mappings (emit universal function-style keys)
+  - pattern: '(?i)\bwinery\b|\bproducer\b|\bwine\s+maker\b'
+    canonical: produces_goods
+    confidence: 0.95
+
+  - pattern: '(?i)\bwine\s+shop\b|\bwine\s+store\b|\bretailer\b'
+    canonical: sells_goods
+    confidence: 0.9
+
+  - pattern: '(?i)\bwine\s+bar\b'
+    canonical: provides_beverage_service
+    confidence: 0.95
+
+  - pattern: '(?i)\bwine\s+course\b|\bwine\s+education\b|\bsommelier\b'
+    canonical: provides_instruction
+    confidence: 0.9
+
+# Derived Groupings
+# Computed from entity_class + roles with AND/OR logic
+# NOTE: Groupings are DERIVED/VIEW-ONLY, not stored in database
+derived_groupings:
+  - id: places
+    label: "Places"
+    description: "Wineries, wine bars, and wine shops"
+    rules:
+      - entity_class: "place"
+    # NOTE: Grouping is DERIVED/VIEW-ONLY, not stored in database
+
+  - id: producers
+    label: "Producers"
+    description: "Wine producers and wineries"
+    rules:
+      - entity_class: "place"
+        roles:
+          - produces_goods
+    # AND logic: must be place AND have produces_goods role
+    # NOTE: Grouping is DERIVED/VIEW-ONLY, not stored in database
+
+  - id: retailers
+    label: "Wine Shops"
+    description: "Wine retail stores"
+    rules:
+      - entity_class: "place"
+        roles:
+          - sells_goods
+    # NOTE: Grouping is DERIVED/VIEW-ONLY, not stored in database
+
+  - id: experiences
+    label: "Wine Experiences"
+    description: "Wine bars and tasting rooms"
+    rules:
+      - entity_class: "place"
+        roles:
+          - provides_beverage_service
+    # NOTE: Grouping is DERIVED/VIEW-ONLY, not stored in database
+
+# Domain Modules
+# DOMAIN-SPECIFIC MODULES in lens only (not in universal engine)
+modules:
+  wine_production:
+    description: "Wine production attributes"
+    fields:
+      vineyard_acres:
+        type: number
+        description: "Vineyard size in acres"
+        nullable: true
+      annual_production_bottles:
+        type: number
+        description: "Annual wine production in bottles"
+        nullable: true
+      estate_grown:
+        type: boolean
+        description: "Whether grapes are estate-grown"
+        nullable: true
+      organic_certified:
+        type: boolean
+        description: "Whether winery is organic certified"
+        nullable: true
+      biodynamic:
+        type: boolean
+        description: "Whether winery practices biodynamic farming"
+        nullable: true
+      varietals:
+        type: array
+        item_type: string
+        description: "Wine varietals produced"
+        nullable: true
+
+  tasting_room:
+    description: "Wine tasting facilities"
+    fields:
+      tasting_available:
+        type: boolean
+        description: "Whether wine tasting is available"
+        nullable: true
+      tasting_fee:
+        type: number
+        description: "Cost of wine tasting experience"
+        nullable: true
+      reservation_required:
+        type: boolean
+        description: "Whether reservation is required for tasting"
+        nullable: true
+      tasting_styles:
+        type: array
+        item_type: string
+        description: "Types of tasting experiences offered (casual, seated, guided, etc.)"
+        nullable: true
+      private_tastings:
+        type: boolean
+        description: "Whether private tastings are available"
+        nullable: true
+      food_pairing:
+        type: boolean
+        description: "Whether food pairing is offered with tastings"
+        nullable: true
+
+  food_service:
+    description: "Food and dining services"
+    fields:
+      restaurant:
+        type: boolean
+        description: "Whether restaurant is available"
+        nullable: true
+      cafe:
+        type: boolean
+        description: "Whether cafe is available"
+        nullable: true
+      cheese_plates:
+        type: boolean
+        description: "Whether cheese plates are available"
+        nullable: true
+      full_menu:
+        type: boolean
+        description: "Whether full dining menu is available"
+        nullable: true
+
+# Module Triggers
+# EXPLICIT LIST FORMAT with when: {facet, value}
+# NOTE on facet vs dimension_source naming:
+#   - facet in module_triggers refers to the lens facet key (wine_type, role, venue_type, access, etc.)
+#     as defined in the lens.facets section
+#   - dimension_source refers to the actual DB column (canonical_activities, canonical_roles,
+#     canonical_place_types, canonical_access)
+#   - Example: facet='wine_type' maps to dimension_source='canonical_activities'
+#   - This distinction avoids key collisions and enables triggers across all facets defined by the lens
+module_triggers:
+  - when:
+      facet: venue_type
+      value: winery
+    add_modules:
+      - wine_production
+      - tasting_room
+    conditions:
+      - entity_class: "place"
+
+  - when:
+      facet: venue_type
+      value: wine_bar
+    add_modules:
+      - food_service
+    conditions:
+      - entity_class: "place"
+
+  - when:
+      facet: venue_type
+      value: tasting_room
+    add_modules:
+      - tasting_room
+    conditions:
+      - entity_class: "place"
+
+  - when:
+      facet: access
+      value: tours_available
+    add_modules:
+      - tasting_room
+    conditions:
+      - entity_class: "place"
+
+# SEO Templates
+# URL patterns and meta templates for SEO pages
+seo_templates:
+  wine_type_index:
+    url_pattern: "/{wine_type_slug}"
+    title_template: "{wine_type_display_name} | Wine Discovery"
+    meta_description_template: "Discover the best {wine_type_display_name} experiences. Browse wineries, wine bars, and more."
+    h1_template: "{wine_type_display_name} Experiences"
+
+  venue_type_index:
+    url_pattern: "/{venue_type_slug}"
+    title_template: "{venue_type_display_name} | Wine Discovery"
+    meta_description_template: "Find the best {venue_type_display_name} near you."
+    h1_template: "{venue_type_display_name}"

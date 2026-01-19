@@ -1075,71 +1075,79 @@ assert(grouping === 'people');  // Derived from entity_class + roles
 
 ### Task 5.1: Create Wine Discovery Lens
 
-**Status:** pending
+**Status:** ✅ completed
 
 **Description:** Create `lenses/wine_discovery/lens.yaml` to validate vertical-agnostic engine
 
 **Subtasks:**
-- [ ] Create `lenses/wine_discovery/lens.yaml` file
-- [ ] Define lens metadata:
-  - [ ] id: wine_discovery
-  - [ ] name: "Wine Discovery"
-  - [ ] description: "Discover wineries, wine bars, and wine experiences"
-- [ ] Define facets (using SAME engine dimensions):
-  - [ ] wine_type facet:
-    - [ ] dimension_source: "canonical_activities" (ACTUAL DB COLUMN NAME, reuses activities dimension)
-    - [ ] ui_label: "Wine types"
-    - [ ] display_mode: "multi_select"
-  - [ ] role facet:
-    - [ ] dimension_source: "canonical_roles" (ACTUAL DB COLUMN NAME)
-    - [ ] ui_label: null (internal-only)
-    - [ ] display_mode: "internal"
-    - [ ] show_in_filters: false
-    - [ ] show_in_navigation: false
-  - [ ] venue_type facet:
-    - [ ] dimension_source: "canonical_place_types" (ACTUAL DB COLUMN NAME, reuses place_types dimension)
-    - [ ] ui_label: "Venue type"
-- [ ] Define values:
-  - [ ] red_wine (facet: wine_type, display_name: "Red Wine", icon_url: "/icons/red-wine.svg")
-  - [ ] white_wine (facet: wine_type, display_name: "White Wine")
-  - [ ] winery (facet: venue_type, display_name: "Winery", search_keywords: ["winery", "vineyard", "wine estate"])
-  - [ ] wine_bar (facet: venue_type, display_name: "Wine Bar")
-  - [ ] Role values (universal function-style keys):
-    - [ ] produces_goods (facet: role, display_name: "Producer", description: "Wine producer/winery")
-    - [ ] sells_goods (facet: role, display_name: "Retailer", description: "Wine shop/retailer")
-- [ ] Define derived_groupings:
-  - [ ] places (entity_class: "place")
-  - [ ] **NOTE**: Grouping is DERIVED/VIEW-ONLY, not stored in database
-- [ ] Define modules (DOMAIN-SPECIFIC):
-  - [ ] wine_production module:
-    - [ ] description: "Wine production attributes"
-    - [ ] fields: vineyard_acres, annual_production_bottles, estate_grown, organic_certified
-  - [ ] tasting_room module:
-    - [ ] description: "Wine tasting facilities"
-    - [ ] fields: tasting_available, tasting_fee, reservation_required, tasting_styles
-- [ ] Define module_triggers (EXPLICIT LIST FORMAT):
-  - [ ] Winery trigger:
-    - [ ] when: {facet: venue_type, value: winery}
-    - [ ] add_modules: ["wine_production", "tasting_room"]
-    - [ ] conditions: [{entity_class: "place"}]
-  - [ ] Wine bar trigger:
-    - [ ] when: {facet: venue_type, value: wine_bar}
-    - [ ] add_modules: ["food_service"]
-- [ ] Add NOTE: "facet refers to the canonical value's facet key as defined by the lens (i.e., lens.facets keys), e.g. wine_type, role, venue_type, NOT the DB column name"
-- [ ] **CRITICAL VALIDATION**: Verify zero engine code changes needed
-- [ ] Validate: Same dimensions (stored as Postgres text[] arrays), different interpretation
-- [ ] Validate: Domain modules (wine_production) defined in lens only
-- [ ] Validate: All dimension_source values pass contract validation (one of 4 canonical_* columns)
-- [ ] **Bootstrap**: Load wine lens from lenses/loader and produce LensContract (plain dict)
-- [ ] Test extraction with wine lens:
-  - [ ] Create sample wine raw data
-  - [ ] Run extract_with_lens_contract(raw_data, wine_lens_contract)
-  - [ ] **Verify**: Engine code unchanged - uses same extract_with_lens_contract function
-  - [ ] Validate wine_type values distributed to canonical_activities dimension
-  - [ ] Validate venue_type values distributed to canonical_place_types dimension
-  - [ ] Validate wine_production module triggered for wineries
-  - [ ] Validate role values use universal function-style keys (produces_goods, sells_goods)
-  - [ ] Validate modules JSONB namespaced correctly
+- [x] Create `lenses/wine_discovery/lens.yaml` file
+- [x] Define lens metadata:
+  - [x] id: wine_discovery
+  - [x] name: "Wine Discovery"
+  - [x] description: "Discover wineries, wine bars, and wine experiences"
+- [x] Define facets (using SAME engine dimensions):
+  - [x] wine_type facet:
+    - [x] dimension_source: "canonical_activities" (ACTUAL DB COLUMN NAME, reuses activities dimension)
+    - [x] ui_label: "Wine types"
+    - [x] display_mode: "multi_select"
+  - [x] role facet:
+    - [x] dimension_source: "canonical_roles" (ACTUAL DB COLUMN NAME)
+    - [x] ui_label: null (internal-only)
+    - [x] display_mode: "internal"
+    - [x] show_in_filters: false
+    - [x] show_in_navigation: false
+  - [x] venue_type facet:
+    - [x] dimension_source: "canonical_place_types" (ACTUAL DB COLUMN NAME, reuses place_types dimension)
+    - [x] ui_label: "Venue type"
+- [x] Define values:
+  - [x] red_wine (facet: wine_type, display_name: "Red Wine", icon_url: "/icons/red-wine.svg")
+  - [x] white_wine (facet: wine_type, display_name: "White Wine")
+  - [x] rose_wine, sparkling_wine, dessert_wine (additional wine types)
+  - [x] winery (facet: venue_type, display_name: "Winery", search_keywords: ["winery", "vineyard", "wine estate"])
+  - [x] wine_bar (facet: venue_type, display_name: "Wine Bar")
+  - [x] wine_shop, tasting_room (additional venue types)
+  - [x] Role values (universal function-style keys):
+    - [x] produces_goods (facet: role, display_name: "Winery", description: "Wine producer/winery")
+    - [x] sells_goods (facet: role, display_name: "Wine Retailer", description: "Wine shop/retailer")
+    - [x] provides_beverage_service (facet: role, display_name: "Wine Bar")
+    - [x] provides_instruction (facet: role, display_name: "Wine Educator")
+- [x] Define derived_groupings:
+  - [x] places (entity_class: "place")
+  - [x] producers, retailers, experiences (additional groupings)
+  - [x] **NOTE**: Grouping is DERIVED/VIEW-ONLY, not stored in database
+- [x] Define modules (DOMAIN-SPECIFIC):
+  - [x] wine_production module:
+    - [x] description: "Wine production attributes"
+    - [x] fields: vineyard_acres, annual_production_bottles, estate_grown, organic_certified, biodynamic, varietals
+  - [x] tasting_room module:
+    - [x] description: "Wine tasting facilities"
+    - [x] fields: tasting_available, tasting_fee, reservation_required, tasting_styles, private_tastings, food_pairing
+  - [x] food_service module (shared with Edinburgh Finds)
+- [x] Define module_triggers (EXPLICIT LIST FORMAT):
+  - [x] Winery trigger:
+    - [x] when: {facet: venue_type, value: winery}
+    - [x] add_modules: ["wine_production", "tasting_room"]
+    - [x] conditions: [{entity_class: "place"}]
+  - [x] Wine bar trigger:
+    - [x] when: {facet: venue_type, value: wine_bar}
+    - [x] add_modules: ["food_service"]
+  - [x] Tasting room trigger
+  - [x] Tours available trigger
+- [x] Add NOTE: "facet refers to the canonical value's facet key as defined by the lens (i.e., lens.facets keys), e.g. wine_type, role, venue_type, NOT the DB column name"
+- [x] **CRITICAL VALIDATION**: Verify zero engine code changes needed ✓
+- [x] Validate: Same dimensions (stored as Postgres text[] arrays), different interpretation ✓
+- [x] Validate: Domain modules (wine_production) defined in lens only ✓
+- [x] Validate: All dimension_source values pass contract validation (one of 4 canonical_* columns) ✓
+- [x] **Bootstrap**: Load wine lens from lenses/loader and produce LensContract (plain dict) ✓
+- [x] Test extraction with wine lens:
+  - [x] Create sample wine raw data (winery and wine bar)
+  - [x] Run extract_with_lens_contract(raw_data, wine_lens_contract)
+  - [x] **Verify**: Engine code unchanged - uses same extract_with_lens_contract function ✓
+  - [x] Validate wine_type values distributed to canonical_activities dimension ✓
+  - [x] Validate venue_type values distributed to canonical_place_types dimension ✓
+  - [x] Validate wine_production module triggered for wineries ✓
+  - [x] Validate role values use universal function-style keys (produces_goods, provides_beverage_service) ✓
+  - [x] Validate modules JSONB namespaced correctly ✓
 
 **Success Criteria:**
 - ✅ Wine Discovery lens loads successfully
