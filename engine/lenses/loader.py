@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from engine.lenses.validator import validate_lens_config, ValidationError
+from engine.modules.validator import load_yaml_strict, validate_modules_namespacing, ModuleValidationError
 
 
 class LensConfigError(Exception):
@@ -302,7 +303,7 @@ class VerticalLens:
 
     def _load_config(self, config_path: Path) -> Dict[str, Any]:
         """
-        Load YAML configuration file.
+        Load YAML configuration file with strict duplicate key checking.
 
         Args:
             config_path: Path to lens.yaml file
@@ -311,23 +312,32 @@ class VerticalLens:
             Parsed configuration dictionary
 
         Raises:
-            LensConfigError: If file cannot be read or parsed
+            LensConfigError: If file cannot be read, parsed, or has duplicate keys
         """
         try:
-            with open(config_path, 'r', encoding='utf-8') as f:
-                config = yaml.safe_load(f)
+            # Use strict YAML loader that rejects duplicate keys
+            config = load_yaml_strict(config_path)
 
-            if not isinstance(config, dict):
-                raise LensConfigError(
-                    f"Invalid lens config in {config_path}: "
-                    f"Expected dict, got {type(config).__name__}"
-                )
+            # Validate module namespacing if modules section exists
+            if "modules" in config:
+                try:
+                    validate_modules_namespacing(config["modules"])
+                except ModuleValidationError as e:
+                    raise LensConfigError(
+                        f"Invalid module structure in {config_path}: {e}"
+                    ) from e
 
             return config
 
         except FileNotFoundError as e:
             raise LensConfigError(
                 f"Lens config file not found: {config_path}"
+            ) from e
+
+        except ModuleValidationError as e:
+            # Duplicate key errors come through as ModuleValidationError
+            raise LensConfigError(
+                f"Invalid lens config in {config_path}: {e}"
             ) from e
 
         except yaml.YAMLError as e:
