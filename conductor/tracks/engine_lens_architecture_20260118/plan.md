@@ -1177,7 +1177,7 @@ assert(grouping === 'people');  // Derived from entity_class + roles
 
 ### Task 6.1: Engine Purity Enforcement Tests
 
-**Status:** pending
+**Status:** ✅ in_progress
 
 **Description:** Add tests and CI checks to prevent engine from importing lens code or doing value-based branching
 
