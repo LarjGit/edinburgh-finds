@@ -1222,51 +1222,42 @@ echo "from lenses.loader import VerticalLens" >> engine/test.py
 
 ### Task 6.2: Lens Validation Tests
 
-**Status:** in_progress
+**Status:** ✅ completed
 
 **Description:** Comprehensive tests for lens contract validation
 
+**Implementation Notes:**
+- Contract validation tests exist in `tests/lenses/test_validator.py` (pre-existing file)
+- Added missing test for all 4 dimension sources to test_validator.py
+- Created `tests/lenses/test_edinburgh_finds_lens.py` with comprehensive lens tests
+- Created `tests/lenses/test_wine_discovery_lens.py` with comprehensive lens tests
+- Integration tests already exist in `tests/lenses/test_loader.py`
+- All 62 lens tests pass
+
 **Subtasks:**
-- [ ] Create `tests/lenses/test_contract_validation.py`:
-  - [ ] Test: Invalid dimension_source → ValidationError
-    ```python
-    def test_invalid_dimension_source():
-        config = {
-            "facets": {
-                "activity": {"dimension_source": "invalid_dimension"}
-            }
-        }
-        with pytest.raises(ValidationError, match="must be one of"):
-            validate_lens_config(config)
-    ```
-  - [ ] Test: value.facet references non-existent facet → ValidationError
-  - [ ] Test: mapping_rules.canonical references non-existent value → ValidationError
-  - [ ] Test: Duplicate value.key → ValidationError
-  - [ ] Test: Duplicate facet key → ValidationError
-  - [ ] Test: Valid config passes validation
-  - [ ] Test: All 4 dimension sources allowed:
-    ```python
-    def test_all_dimension_sources_allowed():
-        allowed = {"canonical_activities", "canonical_roles", "canonical_place_types", "canonical_access"}
-        for dim in allowed:
-            config = {"facets": {"test": {"dimension_source": dim}}}
-            validate_lens_config(config)  # Should not raise
-    ```
-- [ ] Create `tests/lenses/test_edinburgh_finds_lens.py`:
-  - [ ] Test: Edinburgh Finds lens loads successfully
-  - [ ] Test: All facets use valid dimension_source
-  - [ ] Test: All values reference existing facets
-  - [ ] Test: All mapping rules reference existing values
-  - [ ] Test: No duplicate values
-  - [ ] Test: Role facet exists and is internal-only
-- [ ] Create `tests/lenses/test_wine_discovery_lens.py`:
-  - [ ] Test: Wine Discovery lens loads successfully
-  - [ ] Test: wine_type facet maps to canonical_activities
-  - [ ] Test: venue_type facet maps to canonical_place_types
-  - [ ] Test: All contracts validated
-- [ ] Add integration test:
-  - [ ] Test: Loading invalid lens.yaml fails at startup
-  - [ ] Test: Error message clearly identifies contract violation
+- [x] Create `tests/lenses/test_contract_validation.py` (exists as test_validator.py):
+  - [x] Test: Invalid dimension_source → ValidationError
+  - [x] Test: value.facet references non-existent facet → ValidationError
+  - [x] Test: mapping_rules.canonical references non-existent value → ValidationError
+  - [x] Test: Duplicate value.key → ValidationError
+  - [x] Test: Duplicate facet key → ValidationError
+  - [x] Test: Valid config passes validation
+  - [x] Test: All 4 dimension sources allowed (ADDED in this task)
+- [x] Create `tests/lenses/test_edinburgh_finds_lens.py`:
+  - [x] Test: Edinburgh Finds lens loads successfully
+  - [x] Test: All facets use valid dimension_source
+  - [x] Test: All values reference existing facets
+  - [x] Test: All mapping rules reference existing values
+  - [x] Test: No duplicate values
+  - [x] Test: Role facet exists and is internal-only
+- [x] Create `tests/lenses/test_wine_discovery_lens.py`:
+  - [x] Test: Wine Discovery lens loads successfully
+  - [x] Test: wine_type facet maps to canonical_activities
+  - [x] Test: venue_type facet maps to canonical_place_types
+  - [x] Test: All contracts validated
+- [x] Add integration test (already existed in test_loader.py):
+  - [x] Test: Loading invalid lens.yaml fails at startup
+  - [x] Test: Error message clearly identifies contract violation
 
 **Success Criteria:**
 - ✅ All lens validation tests pass
