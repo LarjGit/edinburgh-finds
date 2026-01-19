@@ -652,7 +652,7 @@ Examples:
             if skipped_schemas:
                 print_info(f"Prisma: Skipping inherited schemas: {', '.join(skipped_schemas)}")
 
-            prisma_generator = PrismaGenerator(database="sqlite")
+            prisma_generator = PrismaGenerator(database="postgresql")
             prisma_targets = {
                 "engine": project_root / "engine" / "schema.prisma",
                 "web": project_root / "web" / "prisma" / "schema.prisma",

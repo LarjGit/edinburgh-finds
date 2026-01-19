@@ -523,5 +523,70 @@ class TestListingYAMLIntegration(unittest.TestCase):
         self.assertIn("summary", result)
 
 
+class TestPostgreSQLMigration(unittest.TestCase):
+    """Tests for PostgreSQL migration - Engine-Lens Architecture track."""
+
+    def test_postgresql_schema_has_native_arrays(self):
+        """PostgreSQL schema should use String[] for dimension fields"""
+        generator = PrismaGenerator(database="postgresql")
+        parser = SchemaParser()
+        schema_path = Path("engine/config/schemas/listing.yaml")
+
+        if not schema_path.exists():
+            self.skipTest("listing.yaml not found")
+
+        schema = parser.parse(schema_path)
+        result = generator._generate_listing_model(schema)
+
+        # Verify native array types for dimensions (from YAML prisma overrides)
+        self.assertIn("String[]", result, "Expected String[] array type for dimension fields")
+        # These specific fields should be String[] as per listing.yaml
+        self.assertIn("canonical_activities", result)
+        self.assertIn("canonical_roles", result)
+        self.assertIn("canonical_place_types", result)
+        self.assertIn("canonical_access", result)
+
+    def test_postgresql_schema_has_native_json(self):
+        """PostgreSQL schema should use Json for modules field"""
+        generator = PrismaGenerator(database="postgresql")
+        parser = SchemaParser()
+        schema_path = Path("engine/config/schemas/listing.yaml")
+
+        if not schema_path.exists():
+            self.skipTest("listing.yaml not found")
+
+        schema = parser.parse(schema_path)
+        result = generator._generate_listing_model(schema)
+
+        # Verify Json type for modules (from YAML prisma override)
+        # The modules field should be Json? not String?
+        self.assertIn("modules", result)
+        # Check that modules line contains Json (not String)
+        for line in result.split('\n'):
+            if 'modules' in line and not line.strip().startswith('//'):
+                self.assertIn("Json", line, "modules field should use Json type in PostgreSQL")
+                self.assertNotIn("String?", line, "modules should not be String? in PostgreSQL")
+                break
+
+    def test_postgresql_full_schema_generation(self):
+        """Full schema generation should produce PostgreSQL-compatible schema"""
+        generator = PrismaGenerator(database="postgresql")
+        parser = SchemaParser()
+
+        # Load listing schema
+        schema_path = Path("engine/config/schemas/listing.yaml")
+        if not schema_path.exists():
+            self.skipTest("listing.yaml not found")
+
+        schemas = [parser.parse(schema_path)]
+        result = generator.generate_full_schema(schemas, target="engine")
+
+        # Verify PostgreSQL datasource
+        self.assertIn('provider = "postgresql"', result)
+        # Verify no SQLite limitation comments
+        self.assertNotIn("TEMPORARY SQLite LIMITATION", result)
+        self.assertNotIn('provider = "sqlite"', result)
+
+
 if __name__ == "__main__":
     unittest.main()
