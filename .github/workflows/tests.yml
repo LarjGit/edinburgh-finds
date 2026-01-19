@@ -1,0 +1,47 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  engine-purity:
+    name: Engine Purity Checks
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Run Engine Purity Checks
+      run: |
+        bash scripts/check_engine_purity.sh
+      shell: bash
+
+  tests:
+    name: Run Tests
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r engine/requirements.txt
+        pip install pytest pytest-cov pytest-asyncio
+
+    - name: Run Engine Tests
+      run: |
+        cd engine
+        pytest tests/ -v --cov=. --cov-report=term-missing
+
+    - name: Run Purity Tests
+      run: |
+        pytest tests/engine/test_purity.py -v
