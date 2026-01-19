@@ -521,70 +521,70 @@ with pytest.raises(ValidationError, match="dimension_source must be one of"):
 **Description:** Create `lenses/loader.py` with lens configuration loader and processing logic
 
 **Subtasks:**
-- [ ] Create `lenses/loader.py` file
-- [ ] Implement FacetDefinition class:
-  - [ ] __init__(key, data)
-  - [ ] Store: key, dimension_source (actual DB column name), ui_label, display_mode, order, show_in_filters, show_in_navigation, icon
-- [ ] Implement CanonicalValue class:
-  - [ ] __init__(data)
-  - [ ] Store: key, facet, display_name, description, seo_slug, search_keywords, icon_url, color
-- [ ] Implement DerivedGrouping class:
-  - [ ] __init__(data)
-  - [ ] Store: id, label, description, rules
-  - [ ] Implement matches(entity) method:
-    - [ ] AND-within-rule: All conditions in a rule must match
-    - [ ] OR-across-rules: Any rule can match
-    - [ ] Check entity_class match
-    - [ ] Check roles match (entity must have at least one of required roles)
-  - [ ] Add docstring: "Grouping is DERIVED/VIEW-ONLY, not stored in database"
-- [ ] Implement ModuleTrigger class:
-  - [ ] __init__(data)
-  - [ ] Store: facet (lens-defined facet key), value, add_modules, conditions
-  - [ ] Add docstring: "NOTE: facet refers to the canonical value's facet key as defined by the lens (i.e., lens.facets keys), e.g. activity, role, wine_type, venue_type, NOT the DB column name"
-  - [ ] Implement matches(entity_class, canonical_values_by_facet) method:
-    - [ ] Check if entity has this value in the specified facet
-    - [ ] Check additional conditions (entity_class match)
-    - [ ] Return True if trigger should fire
-  - [ ] Add docstring to matches() method clarifying canonical_values_by_facet structure:
-    - [ ] "Dict mapping facet keys (as defined by the lens) to lists of canonical values"
-    - [ ] "Example: {activity: [padel, tennis], role: [provides_facility], place_type: [sports_centre]}"
-- [ ] Implement ModuleDefinition class:
-  - [ ] __init__(name, data)
-  - [ ] Store: name, description, fields
-- [ ] Implement VerticalLens class:
-  - [ ] __init__(lens_id, config_path)
-  - [ ] Load YAML config
-  - [ ] **CRITICAL**: Call validate_lens_config(config) FIRST (fail-fast validation)
-  - [ ] Parse lens info
-  - [ ] Parse facets (build FacetDefinition dict)
-  - [ ] Parse values (build CanonicalValue dict)
-  - [ ] Parse mapping_rules
-  - [ ] Parse derived_groupings (build DerivedGrouping list)
-  - [ ] Parse modules (build ModuleDefinition dict)
-  - [ ] Parse module_triggers (build ModuleTrigger list from explicit list format)
-  - [ ] Parse seo_templates
-  - [ ] Implement map_raw_category(raw_category) → List[str]:
-    - [ ] Apply regex mapping rules
-    - [ ] Filter by confidence threshold (>=0.7)
-    - [ ] Return list of canonical value keys
-  - [ ] Implement get_values_by_facet(facet_key) → List[CanonicalValue]
-  - [ ] Implement get_facets_sorted() → List[FacetDefinition]
-  - [ ] Implement compute_grouping(entity) → Optional[str]:
-    - [ ] Iterate through derived_groupings
-    - [ ] Return first matching grouping id
-    - [ ] **NOTE**: Grouping is computed at query time, not stored
-  - [ ] Implement get_required_modules(entity_class, canonical_values_by_facet) → List[str]:
-    - [ ] Accept canonical_values_by_facet dict for flexible matching
-    - [ ] Apply lens module triggers
-    - [ ] Return list of required module names
-- [ ] Implement LensRegistry class:
-  - [ ] Class variable: _lenses dict
-  - [ ] Implement register(lens_id, config_path) classmethod
-  - [ ] Implement get_lens(lens_id) classmethod
-  - [ ] Implement load_all(lenses_dir) classmethod
-- [ ] Add helper function dedupe_preserve_order(values: List[str]) → List[str]:
-  - [ ] Deduplicate list while preserving insertion order
-  - [ ] Used to avoid repeated trigger evaluation and ensure deterministic output
+- [x] Create `lenses/loader.py` file
+- [x] Implement FacetDefinition class:
+  - [x] __init__(key, data)
+  - [x] Store: key, dimension_source (actual DB column name), ui_label, display_mode, order, show_in_filters, show_in_navigation, icon
+- [x] Implement CanonicalValue class:
+  - [x] __init__(data)
+  - [x] Store: key, facet, display_name, description, seo_slug, search_keywords, icon_url, color
+- [x] Implement DerivedGrouping class:
+  - [x] __init__(data)
+  - [x] Store: id, label, description, rules
+  - [x] Implement matches(entity) method:
+    - [x] AND-within-rule: All conditions in a rule must match
+    - [x] OR-across-rules: Any rule can match
+    - [x] Check entity_class match
+    - [x] Check roles match (entity must have at least one of required roles)
+  - [x] Add docstring: "Grouping is DERIVED/VIEW-ONLY, not stored in database"
+- [x] Implement ModuleTrigger class:
+  - [x] __init__(data)
+  - [x] Store: facet (lens-defined facet key), value, add_modules, conditions
+  - [x] Add docstring: "NOTE: facet refers to the canonical value's facet key as defined by the lens (i.e., lens.facets keys), e.g. activity, role, wine_type, venue_type, NOT the DB column name"
+  - [x] Implement matches(entity_class, canonical_values_by_facet) method:
+    - [x] Check if entity has this value in the specified facet
+    - [x] Check additional conditions (entity_class match)
+    - [x] Return True if trigger should fire
+  - [x] Add docstring to matches() method clarifying canonical_values_by_facet structure:
+    - [x] "Dict mapping facet keys (as defined by the lens) to lists of canonical values"
+    - [x] "Example: {activity: [padel, tennis], role: [provides_facility], place_type: [sports_centre]}"
+- [x] Implement ModuleDefinition class:
+  - [x] __init__(name, data)
+  - [x] Store: name, description, fields
+- [x] Implement VerticalLens class:
+  - [x] __init__(lens_id, config_path)
+  - [x] Load YAML config
+  - [x] **CRITICAL**: Call validate_lens_config(config) FIRST (fail-fast validation)
+  - [x] Parse lens info
+  - [x] Parse facets (build FacetDefinition dict)
+  - [x] Parse values (build CanonicalValue dict)
+  - [x] Parse mapping_rules
+  - [x] Parse derived_groupings (build DerivedGrouping list)
+  - [x] Parse modules (build ModuleDefinition dict)
+  - [x] Parse module_triggers (build ModuleTrigger list from explicit list format)
+  - [x] Parse seo_templates
+  - [x] Implement map_raw_category(raw_category) → List[str]:
+    - [x] Apply regex mapping rules
+    - [x] Filter by confidence threshold (>=0.7)
+    - [x] Return list of canonical value keys
+  - [x] Implement get_values_by_facet(facet_key) → List[CanonicalValue]
+  - [x] Implement get_facets_sorted() → List[FacetDefinition]
+  - [x] Implement compute_grouping(entity) → Optional[str]:
+    - [x] Iterate through derived_groupings
+    - [x] Return first matching grouping id
+    - [x] **NOTE**: Grouping is computed at query time, not stored
+  - [x] Implement get_required_modules(entity_class, canonical_values_by_facet) → List[str]:
+    - [x] Accept canonical_values_by_facet dict for flexible matching
+    - [x] Apply lens module triggers
+    - [x] Return list of required module names
+- [x] Implement LensRegistry class:
+  - [x] Class variable: _lenses dict
+  - [x] Implement register(lens_id, config_path) classmethod
+  - [x] Implement get_lens(lens_id) classmethod
+  - [x] Implement load_all(lenses_dir) classmethod
+- [x] Add helper function dedupe_preserve_order(values: List[str]) → List[str]:
+  - [x] Deduplicate list while preserving insertion order
+  - [x] Used to avoid repeated trigger evaluation and ensure deterministic output
 
 **Success Criteria:**
 - ✅ ModuleTrigger class documentation specifies facet refers to facet key as defined by the lens (lens.facets keys)
@@ -605,31 +605,31 @@ with pytest.raises(ValidationError, match="dimension_source must be one of"):
 **Description:** Enforce module composition contracts: no flattened JSONB, prevent duplicate module keys at YAML load stage
 
 **Subtasks:**
-- [ ] Create `engine/modules/validator.py`:
-  - [ ] Implement validate_modules_namespacing(modules_data: dict):
-    - [ ] **CONTRACT 1**: modules JSONB MUST be namespaced by module key
-    - [ ] Check structure: {"location": {...}, "contact": {...}, "sports_facility": {...}}
-    - [ ] Raise ValidationError if flattened structure detected
-    - [ ] Error message: "modules JSONB must be namespaced by module key, not flattened"
-  - [ ] **NOTE on duplicate module keys**: Python dicts inherently prevent duplicate keys (last value wins)
-    - [ ] JSON parsers: Duplicate keys silently overwrite (last wins)
-    - [ ] PyYAML: By default allows duplicate keys (last wins), but should be configured to reject
-    - [ ] **SOLUTION**: Configure YAML loader to reject duplicate keys at parse time
-  - [ ] **NOTE**: Duplicate field names across DIFFERENT modules are ALLOWED due to namespacing
-    - [ ] Example: sports_facility.name and wine_production.name is valid
-    - [ ] Namespacing makes field name collisions safe
-- [ ] Update entity_model.yaml loader:
-  - [ ] Configure YAML loader to reject duplicate keys at parse time
-  - [ ] Use yaml.safe_load with custom constructor or strictyaml
-  - [ ] Add module namespacing validation when loading engine modules
-  - [ ] Ensure modules are properly namespaced (not flattened)
-- [ ] Update lens.yaml loader (lenses/loader.py):
-  - [ ] Configure YAML loader to reject duplicate keys at parse time
-  - [ ] Use yaml.safe_load with custom constructor or strictyaml
-  - [ ] Add module namespacing validation when loading lens modules
-  - [ ] Ensure modules are properly namespaced (not flattened)
-- [ ] Update extraction pipeline:
-  - [ ] Ensure modules are stored with JSONB namespacing:
+- [x] Create `engine/modules/validator.py`:
+  - [x] Implement validate_modules_namespacing(modules_data: dict):
+    - [x] **CONTRACT 1**: modules JSONB MUST be namespaced by module key
+    - [x] Check structure: {"location": {...}, "contact": {...}, "sports_facility": {...}}
+    - [x] Raise ValidationError if flattened structure detected
+    - [x] Error message: "modules JSONB must be namespaced by module key, not flattened"
+  - [x] **NOTE on duplicate module keys**: Python dicts inherently prevent duplicate keys (last value wins)
+    - [x] JSON parsers: Duplicate keys silently overwrite (last wins)
+    - [x] PyYAML: By default allows duplicate keys (last wins), but should be configured to reject
+    - [x] **SOLUTION**: Configure YAML loader to reject duplicate keys at parse time
+  - [x] **NOTE**: Duplicate field names across DIFFERENT modules are ALLOWED due to namespacing
+    - [x] Example: sports_facility.name and wine_production.name is valid
+    - [x] Namespacing makes field name collisions safe
+- [~] Update entity_model.yaml loader:
+  - [~] Configure YAML loader to reject duplicate keys at parse time
+  - [~] Use yaml.safe_load with custom constructor or strictyaml
+  - [~] Add module namespacing validation when loading engine modules
+  - [~] Ensure modules are properly namespaced (not flattened)
+- [x] Update lens.yaml loader (lenses/loader.py):
+  - [x] Configure YAML loader to reject duplicate keys at parse time
+  - [x] Use yaml.safe_load with custom constructor or strictyaml
+  - [x] Add module namespacing validation when loading lens modules
+  - [x] Ensure modules are properly namespaced (not flattened)
+- [~] Update extraction pipeline:
+  - [~] Ensure modules are stored with JSONB namespacing:
     ```python
     # CORRECT structure
     entity.modules = {
@@ -639,13 +639,13 @@ with pytest.raises(ValidationError, match="dimension_source must be one of"):
     # WRONG structure (flattened)
     entity.modules = {"latitude": 55.95, "longitude": -3.18, "inventory": {...}}
     ```
-  - [ ] Add assertion to verify namespacing before database write
-- [ ] Create tests in `tests/modules/test_composition.py`:
-  - [ ] Test: Duplicate module keys in YAML rejected at load time
-  - [ ] Test: Valid modules with unique keys pass validation
-  - [ ] Test: Flattened modules JSONB → ValidationError
-  - [ ] Test: Properly namespaced modules JSONB passes validation
-  - [ ] Test: Duplicate field names across DIFFERENT modules are ALLOWED (due to namespacing)
+  - [~] Add assertion to verify namespacing before database write
+- [x] Create tests in `tests/modules/test_composition.py`:
+  - [x] Test: Duplicate module keys in YAML rejected at load time
+  - [x] Test: Valid modules with unique keys pass validation
+  - [x] Test: Flattened modules JSONB → ValidationError
+  - [x] Test: Properly namespaced modules JSONB passes validation
+  - [x] Test: Duplicate field names across DIFFERENT modules are ALLOWED (due to namespacing)
 
 **Success Criteria:**
 - ✅ Duplicate module keys in YAML rejected at load time (YAML loader configured to detect duplicates)
