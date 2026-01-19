@@ -1177,77 +1177,28 @@ assert(grouping === 'people');  // Derived from entity_class + roles
 
 ### Task 6.1: Engine Purity Enforcement Tests
 
-**Status:** ✅ in_progress
+**Status:** ✅ completed
 
 **Description:** Add tests and CI checks to prevent engine from importing lens code or doing value-based branching
 
 **Subtasks:**
-- [ ] Create `tests/engine/test_purity.py`:
-  - [ ] **TEST 1**: Engine must not import lenses
-    ```python
-    def test_engine_does_not_import_lenses():
-        """Engine layer must never import from lenses/ directory."""
-        engine_files = glob.glob("engine/**/*.py", recursive=True)
-        for file_path in engine_files:
-            with open(file_path) as f:
-                content = f.read()
-                # Check for any imports from lenses/
-                assert "from lenses" not in content, f"{file_path} imports from lenses/"
-                assert "import lenses" not in content, f"{file_path} imports from lenses/"
-    ```
-  - [ ] **TEST 2**: Engine must not do literal string comparisons against dimension values
-    ```python
-    def test_engine_no_literal_string_comparisons_on_dimensions():
-        """Engine must not compare dimension values against literal strings.
-
-        Structural purity: Engine may only:
-        - Branch on entity_class (e.g., if entity_class == "place")
-        - Perform set operations on opaque strings (union, intersection, membership)
-        - Check emptiness/existence (e.g., if canonical_activities)
-        - Pass opaque strings through unchanged
-
-        FORBIDDEN: Literal comparisons like if "padel" in canonical_activities
-        """
-        engine_files = glob.glob("engine/**/*.py", recursive=True)
-        # Pattern: Detect literal string comparisons against dimension array values
-        # This catches patterns like: if "value" in canonical_*, if canonical_*[0] == "value"
-        forbidden_pattern = r'(if|elif)\s+.*(?:canonical_activities|canonical_roles|canonical_place_types|canonical_access).*(?:==|in)\s*["\']'
-
-        for file_path in engine_files:
-            with open(file_path) as f:
-                content = f.read()
-                matches = re.findall(forbidden_pattern, content, re.MULTILINE)
-                assert not matches, f"{file_path} has literal string comparison against dimension values (structural purity violation)"
-    ```
-- [ ] Create `scripts/check_engine_purity.sh`:
-  - [ ] Check for lens imports in engine/
-  - [ ] Check for literal string comparisons against dimension values (structural pattern)
-  - [ ] Exit with error code if violations found
-  - [ ] Example:
-    ```bash
-    #!/bin/bash
-    # Check engine does not import lenses
-    if grep -r "from lenses" engine/ || grep -r "import lenses" engine/; then
-        echo "ERROR: Engine imports from lenses/ (LensContract boundary violation)"
-        exit 1
-    fi
-    # Check for structural purity violations (literal string comparisons on dimension values)
-    # Pattern: if "literal" in canonical_* or if canonical_* == "literal"
-    if grep -rE '(if|elif).*canonical_(activities|roles|place_types|access).*(==|in).*["\x27]' engine/; then
-        echo "ERROR: Engine has literal string comparisons against dimension values (structural purity violation)"
-        echo "Engine may only: branch on entity_class, perform set operations, check emptiness, pass through unchanged"
-        exit 1
-    fi
-    echo "Engine purity checks passed"
-    ```
-- [ ] Add to CI pipeline (`.github/workflows/tests.yml`):
-  - [ ] Add step to run check_engine_purity.sh
-  - [ ] Fail build if purity checks fail
-  - [ ] Run on every commit to prevent regressions
-- [ ] Add pre-commit hook:
-  - [ ] Create `.git/hooks/pre-commit` that runs purity checks
-  - [ ] Prevent commits that violate engine purity
-  - [ ] Optional but recommended
+- [x] Create `tests/engine/test_purity.py`:
+  - [x] **TEST 1**: Engine must not import lenses - Uses regex pattern to match actual import statements, filters out comments
+  - [x] **TEST 2**: Engine must not do literal string comparisons against dimension values - Detects forbidden patterns like `if "value" in canonical_*`
+- [x] Create `scripts/check_engine_purity.sh`:
+  - [x] Check for lens imports in engine/ using grep with proper patterns
+  - [x] Check for literal string comparisons against dimension values using regex
+  - [x] Exit with error code if violations found
+  - [x] Added colored output and helpful error messages
+- [x] Add to CI pipeline (`.github/workflows/tests.yml`):
+  - [x] Created .github/workflows directory
+  - [x] Added engine-purity job that runs check_engine_purity.sh
+  - [x] Added tests job that runs pytest including purity tests
+  - [x] Build fails if purity checks fail
+- [x] Add pre-commit hook:
+  - [x] Created `.git/hooks/pre-commit` that runs purity checks
+  - [x] Prevents commits that violate engine purity
+  - [x] Made executable with chmod +x
 
 **Success Criteria:**
 - ✅ test_purity.py passes with both tests (no lens imports, no literal string comparisons on dimension values)
