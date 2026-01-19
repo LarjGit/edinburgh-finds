@@ -804,7 +804,7 @@ validate_modules_namespacing(namespaced)  # Should not raise
 
 ### Task 3.2: Update Query Layer
 
-**Status:** pending
+**Status:** ✅ completed
 
 **Description:** Create query layer with Prisma array filters and lens transformations
 
@@ -814,32 +814,32 @@ validate_modules_namespacing(namespaced)  # Should not raise
 - This query layer is in web/ (outside engine), so VerticalLens usage is allowed
 
 **Subtasks:**
-- [ ] Create `web/lib/lens-query.ts` file
-- [ ] Define FacetFilter interface:
-  - [ ] facet: string
-  - [ ] dimensionSource: string (actual DB column name: canonical_activities, canonical_roles, etc.)
-  - [ ] selectedValues: string[]
-  - [ ] mode: 'OR' | 'AND' (hasSome vs hasEvery)
-- [ ] Implement queryByFacet(filter: FacetFilter) function:
-  - [ ] Use dimensionSource (actual DB column name)
-  - [ ] If mode === 'AND': return {[dimensionSource]: {hasEvery: selectedValues}} (Postgres array @> operator)
-  - [ ] If mode === 'OR' (DEFAULT): return {[dimensionSource]: {hasSome: selectedValues}} (Postgres array && operator)
-  - [ ] Add comment: "Default is OR mode (entity has ANY of these values)"
-- [ ] Implement queryByValue(dimension: string, value: string) function:
-  - [ ] Return {[dimension]: {has: value}} (Postgres array ? operator)
-- [ ] Implement queryByGrouping(groupingId: string, lens: VerticalLens) function:
-  - [ ] Get grouping from lens.derived_groupings
-  - [ ] Build OR across rules, AND within each rule
-  - [ ] For each rule:
-    - [ ] Add entity_class condition if present
-    - [ ] Add canonical_roles hasSome condition if roles present
-  - [ ] Return OR of all rules
-  - [ ] Add comment: "Grouping is computed at query time, not stored in database"
-- [ ] Implement buildComplexQuery(...filters, groupingId, lens) function:
-  - [ ] **DEFAULT**: OR within facet, AND across facets
-  - [ ] Support activity, place_type, access filters (OR mode within each facet)
-  - [ ] Add grouping filter if present
-  - [ ] Example:
+- [x] Create `web/lib/lens-query.ts` file
+- [x] Define FacetFilter interface:
+  - [x] facet: string
+  - [x] dimensionSource: string (actual DB column name: canonical_activities, canonical_roles, etc.)
+  - [x] selectedValues: string[]
+  - [x] mode: 'OR' | 'AND' (hasSome vs hasEvery)
+- [x] Implement queryByFacet(filter: FacetFilter) function:
+  - [x] Use dimensionSource (actual DB column name)
+  - [x] If mode === 'AND': return {[dimensionSource]: {hasEvery: selectedValues}} (Postgres array @> operator)
+  - [x] If mode === 'OR' (DEFAULT): return {[dimensionSource]: {hasSome: selectedValues}} (Postgres array && operator)
+  - [x] Add comment: "Default is OR mode (entity has ANY of these values)"
+- [x] Implement queryByValue(dimension: string, value: string) function:
+  - [x] Return {[dimension]: {has: value}} (Postgres array ? operator)
+- [x] Implement queryByGrouping(groupingId: string, lens: VerticalLens) function:
+  - [x] Get grouping from lens.derived_groupings
+  - [x] Build OR across rules, AND within each rule
+  - [x] For each rule:
+    - [x] Add entity_class condition if present
+    - [x] Add canonical_roles hasSome condition if roles present
+  - [x] Return OR of all rules
+  - [x] Add comment: "Grouping is computed at query time, not stored in database"
+- [x] Implement buildComplexQuery(...filters, groupingId, lens) function:
+  - [x] **DEFAULT**: OR within facet, AND across facets
+  - [x] Support activity, place_type, access filters (OR mode within each facet)
+  - [x] Add grouping filter if present
+  - [x] Example:
     ```typescript
     // User selects: activities=[padel, tennis], place_type=[sports_centre]
     // Result: (activities HAS padel OR tennis) AND (place_type HAS sports_centre)
@@ -850,17 +850,17 @@ validate_modules_namespacing(namespaced)  # Should not raise
       ]
     }
     ```
-- [ ] Implement transformEntityToView(entity: Entity, lens: VerticalLens) function:
-  - [ ] Apply lens interpretation to opaque values
-  - [ ] Map activities to {key, label, icon, color}
-  - [ ] Compute grouping using lens.compute_grouping (derived, not stored)
-  - [ ] Return EntityView with rich metadata
-- [ ] Add comments:
-  - [ ] "dimensionSource uses actual DB column names (canonical_activities, canonical_roles, canonical_place_types, canonical_access)"
-  - [ ] "Use Prisma array filters: has, hasSome (OR), hasEvery (AND)"
-  - [ ] "Default query semantics: OR within facet, AND across facets"
-  - [ ] "Grouping is computed at query time from entity_class + roles, not stored in database"
-  - [ ] "Queries operate on Postgres text[] arrays (not JSON)"
+- [x] Implement transformEntityToView(entity: Entity, lens: VerticalLens) function:
+  - [x] Apply lens interpretation to opaque values
+  - [x] Map activities to {key, label, icon, color}
+  - [x] Compute grouping using lens.compute_grouping (derived, not stored)
+  - [x] Return EntityView with rich metadata
+- [x] Add comments:
+  - [x] "dimensionSource uses actual DB column names (canonical_activities, canonical_roles, canonical_place_types, canonical_access)"
+  - [x] "Use Prisma array filters: has, hasSome (OR), hasEvery (AND)"
+  - [x] "Default query semantics: OR within facet, AND across facets"
+  - [x] "Grouping is computed at query time from entity_class + roles, not stored in database"
+  - [x] "Queries operate on Postgres text[] arrays (not JSON)"
 
 **Success Criteria:**
 - ✅ dimensionSource uses actual DB column names (canonical_activities, canonical_roles, canonical_place_types, canonical_access)
@@ -872,20 +872,20 @@ validate_modules_namespacing(namespaced)  # Should not raise
 
 ### Task 3.2a: Query Semantics Documentation (v2.2 Addition)
 
-**Status:** pending
+**Status:** ✅ completed
 
 **Description:** Document and enforce default query semantics with examples
 
 **Subtasks:**
-- [ ] Create `web/docs/query_semantics.md`:
-  - [ ] **Rule**: Default is OR within facet, AND across facets
-  - [ ] **Example 1**: Activities filter [padel, tennis]
+- [x] Create `web/docs/query_semantics.md`:
+  - [x] **Rule**: Default is OR within facet, AND across facets
+  - [x] **Example 1**: Activities filter [padel, tennis]
     ```typescript
     // User selects multiple activities: "Show me places with padel OR tennis"
     { canonical_activities: { hasSome: ['padel', 'tennis'] } }
     // Entity matches if it has ANY of these activities
     ```
-  - [ ] **Example 2**: Multi-facet filter
+  - [x] **Example 2**: Multi-facet filter
     ```typescript
     // User selects: activities=[padel, tennis] AND place_type=[sports_centre]
     // Semantic: "Show me sports centres with padel OR tennis"
@@ -897,7 +897,7 @@ validate_modules_namespacing(namespaced)  # Should not raise
     }
     // Entity matches if: (has padel OR tennis) AND (is sports_centre)
     ```
-  - [ ] **Example 3**: Derived grouping (computed, not stored)
+  - [x] **Example 3**: Derived grouping (computed, not stored)
     ```typescript
     // Derived grouping "people" = entity_class:person AND roles:provides_instruction
     // This is computed at query time, never stored in database
@@ -909,26 +909,26 @@ validate_modules_namespacing(namespaced)  # Should not raise
     }
     // Grouping is a VIEW-ONLY concept, derived from entity_class + roles
     ```
-  - [ ] **Example 4**: AND mode (special case)
+  - [x] **Example 4**: AND mode (special case)
     ```typescript
     // User wants places with BOTH padel AND tennis (rare case)
     { canonical_activities: { hasEvery: ['padel', 'tennis'] } }
     // Entity matches if it has ALL of these activities
     // Note: This is NOT the default, must be explicitly requested
     ```
-  - [ ] **Anti-pattern**: Storing grouping in database
-    - [ ] ❌ NEVER add grouping_id column to entities table
-    - [ ] ❌ NEVER store computed grouping value
-    - [ ] ✅ ALWAYS compute grouping at query/view time from entity_class + roles
-- [ ] Add inline comments to query layer code:
-  - [ ] Document default OR within facet
-  - [ ] Document AND across facets
-  - [ ] Document that grouping is derived/computed, not stored
-- [ ] Add tests for query semantics:
-  - [ ] Test: OR within facet (multiple activities)
-  - [ ] Test: AND across facets (activities + place_type)
-  - [ ] Test: Derived grouping computed correctly
-  - [ ] Test: Grouping not stored in database (read-only property)
+  - [x] **Anti-pattern**: Storing grouping in database
+    - [x] ❌ NEVER add grouping_id column to entities table
+    - [x] ❌ NEVER store computed grouping value
+    - [x] ✅ ALWAYS compute grouping at query/view time from entity_class + roles
+- [x] Add inline comments to query layer code:
+  - [x] Document default OR within facet
+  - [x] Document AND across facets
+  - [x] Document that grouping is derived/computed, not stored
+- [x] Add tests for query semantics:
+  - [x] Test: OR within facet (multiple activities)
+  - [x] Test: AND across facets (activities + place_type)
+  - [x] Test: Derived grouping computed correctly
+  - [x] Test: Grouping not stored in database (read-only property)
 
 **Success Criteria:**
 - ✅ query_semantics.md exists with clear examples
