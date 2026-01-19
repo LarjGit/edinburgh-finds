@@ -49,12 +49,14 @@ model Listing {
   categories   Category[] @relation("CategoryToListing")
   summary      String?
   attributes   String?
-  canonical_activities String?  # String[] in Postgres, JSON string in SQLite
-  canonical_roles String?  # String[] in Postgres, JSON string in SQLite
-  canonical_place_types String?  # String[] in Postgres, JSON string in SQLite
-  canonical_access String?  # String[] in Postgres, JSON string in SQLite
+  // Dimension arrays: String[] in Postgres, JSON string in SQLite
+  canonical_activities String?
+  canonical_roles String?
+  canonical_place_types String?
+  canonical_access String?
   discovered_attributes String?
-  modules      String?  # Json in Postgres, JSON string in SQLite
+  // Modules: Json in Postgres, JSON string in SQLite
+  modules      String?
   street_address String?
   city         String?
   postcode     String?
