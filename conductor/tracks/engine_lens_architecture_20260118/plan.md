@@ -1301,9 +1301,9 @@ echo "from lenses.loader import VerticalLens" >> engine/test.py
 - ✅ canonical_values_by_facet deduplicated
 - ✅ All deduplication tests pass
 
-### Task 6.4: Prisma Array Filter Tests
+### Task 6.4: Prisma Array Filter Tests [baeb7f0]
 
-**Status:** pending
+**Status:** ✅ completed
 
 **Description:** Test Prisma array filters work correctly with Postgres text[] arrays
 
