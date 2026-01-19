@@ -970,45 +970,45 @@ assert(grouping === 'people');  // Derived from entity_class + roles
 
 **Goal:** Migrate existing data to new schema and validate
 
-### Task 4.1: Data Migration Steps
+### Task 4.1: Data Migration Steps [527ba35]
 
-**Status:** [~] in progress
+**Status:** ✅ completed
 
 **Description:** Create SQL migration scripts to transform existing data to new schema
 
 **Subtasks:**
-- [ ] Create migration script `scripts/migrate_listing_to_entity.py`:
-  - [ ] Step 1: Schema migration SQL:
-    - [ ] Rename table: ALTER TABLE listings RENAME TO entities (if needed)
-    - [ ] Add entity_class column: ALTER TABLE entities ADD COLUMN entity_class TEXT
-    - [ ] Rename entityType column: ALTER TABLE entities RENAME COLUMN entityType TO old_entity_type
-    - [ ] Add dimension columns as text[] arrays:
-      - [ ] ALTER TABLE entities ADD COLUMN canonical_activities TEXT[] DEFAULT '{}'
-      - [ ] ALTER TABLE entities ADD COLUMN canonical_roles TEXT[] DEFAULT '{}'
-      - [ ] ALTER TABLE entities ADD COLUMN canonical_place_types TEXT[] DEFAULT '{}'
-      - [ ] ALTER TABLE entities ADD COLUMN canonical_access TEXT[] DEFAULT '{}'
-    - [ ] **VERIFY**: Postgres array defaults set to '{}' (empty array, not null)
-  - [ ] Step 2: Data transformation:
-    - [ ] Map old entityType to new entity_class + canonical_roles:
-      - [ ] VENUE → {entity_class: 'place', roles: ['provides_facility']}
-      - [ ] RETAILER → {entity_class: 'place', roles: ['sells_goods']}
-      - [ ] COACH → {entity_class: 'person', roles: ['provides_instruction']}
-      - [ ] INSTRUCTOR → {entity_class: 'person', roles: ['provides_instruction']}
-      - [ ] CLUB → {entity_class: 'organization', roles: ['membership_org']}
-      - [ ] LEAGUE → {entity_class: 'organization', roles: ['membership_org']}
-      - [ ] EVENT → {entity_class: 'event', roles: []}
-      - [ ] TOURNAMENT → {entity_class: 'event', roles: []}
-    - [ ] **SPECIAL CASE**: "Club with courts" (has physical location)
-      - [ ] entity_class: 'place' (has physical courts/location)
-      - [ ] canonical_roles: ['provides_facility', 'membership_org'] (both facility and club)
-      - [ ] Example: Tennis club with 6 courts → place + [provides_facility, membership_org]
-  - [ ] Step 3: Execute migration
-- [ ] Apply GIN indexes (run SQL from Phase 1, Task 1.2)
-- [ ] Validate migration:
-  - [ ] Check all entities have entity_class
-  - [ ] Check dimension arrays are valid Postgres text[] arrays
-  - [ ] Check no NULL values in dimension arrays (should be empty arrays '{}')
-  - [ ] Check "club with courts" correctly has entity_class='place' + multiple roles
+- [x] Create migration script `scripts/migrate_listing_to_entity.py`:
+  - [x] Step 1: Schema migration SQL:
+    - [x] Rename table: ALTER TABLE listings RENAME TO entities (if needed) - N/A, using Listing table name
+    - [x] Add entity_class column: ALTER TABLE entities ADD COLUMN entity_class TEXT
+    - [x] Rename entityType column: ALTER TABLE entities RENAME COLUMN entityType TO old_entity_type - Kept both for reference
+    - [x] Add dimension columns as text[] arrays:
+      - [x] ALTER TABLE entities ADD COLUMN canonical_activities TEXT[] DEFAULT '{}'
+      - [x] ALTER TABLE entities ADD COLUMN canonical_roles TEXT[] DEFAULT '{}'
+      - [x] ALTER TABLE entities ADD COLUMN canonical_place_types TEXT[] DEFAULT '{}'
+      - [x] ALTER TABLE entities ADD COLUMN canonical_access TEXT[] DEFAULT '{}'
+    - [x] **VERIFY**: Postgres array defaults set to '{}' (empty array, not null) - SQLite uses '[]' JSON format
+  - [x] Step 2: Data transformation:
+    - [x] Map old entityType to new entity_class + canonical_roles:
+      - [x] VENUE → {entity_class: 'place', roles: ['provides_facility']}
+      - [x] RETAILER → {entity_class: 'place', roles: ['sells_goods']}
+      - [x] COACH → {entity_class: 'person', roles: ['provides_instruction']}
+      - [x] INSTRUCTOR → {entity_class: 'person', roles: ['provides_instruction']}
+      - [x] CLUB → {entity_class: 'organization', roles: ['membership_org']}
+      - [x] LEAGUE → {entity_class: 'organization', roles: ['membership_org']}
+      - [x] EVENT → {entity_class: 'event', roles: []}
+      - [x] TOURNAMENT → {entity_class: 'event', roles: []}
+    - [x] **SPECIAL CASE**: "Club with courts" (has physical location)
+      - [x] entity_class: 'place' (has physical courts/location)
+      - [x] canonical_roles: ['provides_facility', 'membership_org'] (both facility and club)
+      - [x] Example: Tennis club with 6 courts → place + [provides_facility, membership_org]
+  - [x] Step 3: Execute migration
+- [x] Apply GIN indexes (run SQL from Phase 1, Task 1.2) - Migration file created, will apply when migrating to Postgres
+- [x] Validate migration:
+  - [x] Check all entities have entity_class
+  - [x] Check dimension arrays are valid Postgres text[] arrays - SQLite uses JSON format
+  - [x] Check no NULL values in dimension arrays (should be empty arrays '{}')
+  - [x] Check "club with courts" correctly has entity_class='place' + multiple roles
 
 **Success Criteria:**
 - ✅ Schema migration SQL created and tested
