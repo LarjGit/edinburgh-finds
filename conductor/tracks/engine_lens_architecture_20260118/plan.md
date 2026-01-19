@@ -1035,7 +1035,7 @@ assert(grouping === 'people');  // Derived from entity_class + roles
     - [x] Validate dimensions populated as Postgres text[] arrays
     - [x] Validate lens modules extracted (sports_facility with inventory JSON, etc.)
     - [x] Validate modules JSONB namespaced correctly
-  - [ ] Store extracted entities in Listing table
+  - [x] Store extracted entities in Listing table [8323f8d]
 - [ ] Validation checks:
   - [ ] Compare old vs new entity counts
   - [ ] Check dimension arrays contain expected values
