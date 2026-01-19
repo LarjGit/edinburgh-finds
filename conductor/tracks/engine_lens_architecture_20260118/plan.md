@@ -514,9 +514,9 @@ with pytest.raises(ValidationError, match="dimension_source must be one of"):
     validate_lens_config(invalid_config)
 ```
 
-### Task 2.2: Implement Lens Loader
+### Task 2.2: Implement Lens Loader [327a58a]
 
-**Status:** in-progress
+**Status:** ✅ completed
 
 **Description:** Create `lenses/loader.py` with lens configuration loader and processing logic
 
