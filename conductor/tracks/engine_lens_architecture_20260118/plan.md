@@ -600,7 +600,7 @@ with pytest.raises(ValidationError, match="dimension_source must be one of"):
 
 ### Task 2.2a: Module Composition Hardening (v2.2 Addition)
 
-**Status:** pending
+**Status:** in-progress
 
 **Description:** Enforce module composition contracts: no flattened JSONB, prevent duplicate module keys at YAML load stage
 
