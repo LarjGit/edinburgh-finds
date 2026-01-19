@@ -61,6 +61,24 @@ class TestContract1InvalidDimensionSource:
         # Should not raise
         validate_lens_config(valid_config)
 
+    def test_all_dimension_sources_allowed(self):
+        """All 4 canonical dimension sources should be allowed."""
+        allowed = {"canonical_activities", "canonical_roles", "canonical_place_types", "canonical_access"}
+
+        for dim in allowed:
+            config = {
+                "facets": {
+                    "test_facet": {
+                        "dimension_source": dim,
+                        "display_name": "Test Facet"
+                    }
+                },
+                "values": [],
+                "mapping_rules": []
+            }
+            # Should not raise for any of the 4 allowed dimensions
+            validate_lens_config(config)
+
 
 class TestContract2ValueFacetExistence:
     """CONTRACT 2: Every value.facet MUST exist in facets section."""
