@@ -1308,29 +1308,29 @@ echo "from lenses.loader import VerticalLens" >> engine/test.py
 **Description:** Test Prisma array filters work correctly with Postgres text[] arrays
 
 **Subtasks:**
-- [ ] Create `tests/query/test_prisma_array_filters.py`:
-  - [ ] Test: `has` filter (single value)
+- [x] Create `tests/query/test_prisma_array_filters.py`:
+  - [x] Test: `has` filter (single value)
     ```typescript
     const result = await prisma.entity.findMany({
       where: { canonical_activities: { has: 'padel' } }
     });
     // Should return entities with padel in activities array
     ```
-  - [ ] Test: `hasSome` filter (OR within facet)
+  - [x] Test: `hasSome` filter (OR within facet)
     ```typescript
     const result = await prisma.entity.findMany({
       where: { canonical_activities: { hasSome: ['padel', 'tennis'] } }
     });
     // Should return entities with padel OR tennis
     ```
-  - [ ] Test: `hasEvery` filter (AND within facet)
+  - [x] Test: `hasEvery` filter (AND within facet)
     ```typescript
     const result = await prisma.entity.findMany({
       where: { canonical_activities: { hasEvery: ['padel', 'tennis'] } }
     });
     // Should return entities with BOTH padel AND tennis
     ```
-  - [ ] Test: AND across facets
+  - [x] Test: AND across facets
     ```typescript
     const result = await prisma.entity.findMany({
       where: {
@@ -1342,23 +1342,23 @@ echo "from lenses.loader import VerticalLens" >> engine/test.py
     });
     // Should return sports centres with padel OR tennis
     ```
-  - [ ] Test: Empty array handling
-  - [ ] Test: GIN index usage (EXPLAIN ANALYZE)
+  - [x] Test: Empty array handling
+  - [x] Test: GIN index usage (EXPLAIN ANALYZE)
     ```sql
     EXPLAIN ANALYZE SELECT * FROM entities
     WHERE canonical_activities && ARRAY['padel', 'tennis'];
     -- Should show "Index Scan using entities_activities_gin"
     ```
-- [ ] Create test fixtures:
-  - [ ] Entity with single activity: ["padel"]
-  - [ ] Entity with multiple activities: ["padel", "tennis"]
-  - [ ] Entity with no activities: []
-  - [ ] Entity with activities + place_type
-- [ ] Test query performance:
-  - [ ] Create 10,000 test entities
-  - [ ] Query with array filters
-  - [ ] Verify GIN index used
-  - [ ] Verify query time < 100ms
+- [x] Create test fixtures:
+  - [x] Entity with single activity: ["padel"]
+  - [x] Entity with multiple activities: ["padel", "tennis"]
+  - [x] Entity with no activities: []
+  - [x] Entity with activities + place_type
+- [x] Test query performance:
+  - [x] Create 10,000 test entities
+  - [x] Query with array filters
+  - [x] Verify GIN index used
+  - [x] Verify query time < 100ms
 
 **Success Criteria:**
 - ✅ `has` filter works correctly
