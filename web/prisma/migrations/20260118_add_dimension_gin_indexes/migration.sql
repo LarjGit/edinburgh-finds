@@ -15,13 +15,13 @@
 
 -- GIN indexes are REQUIRED for fast faceted filtering on text[] arrays
 
-CREATE INDEX IF NOT EXISTS entities_activities_gin ON entities USING GIN (canonical_activities);
+CREATE INDEX IF NOT EXISTS "Listing_activities_gin" ON "Listing" USING GIN (canonical_activities);
 
-CREATE INDEX IF NOT EXISTS entities_roles_gin ON entities USING GIN (canonical_roles);
+CREATE INDEX IF NOT EXISTS "Listing_roles_gin" ON "Listing" USING GIN (canonical_roles);
 
-CREATE INDEX IF NOT EXISTS entities_place_types_gin ON entities USING GIN (canonical_place_types);
+CREATE INDEX IF NOT EXISTS "Listing_place_types_gin" ON "Listing" USING GIN (canonical_place_types);
 
-CREATE INDEX IF NOT EXISTS entities_access_gin ON entities USING GIN (canonical_access);
+CREATE INDEX IF NOT EXISTS "Listing_access_gin" ON "Listing" USING GIN (canonical_access);
 
 -- ============================================================
 -- Index Benefits:
