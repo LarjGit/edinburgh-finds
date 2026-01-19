@@ -406,7 +406,7 @@ assert 'membership_org' in entity['canonical_roles']
     - [x] when: {facet: activity, value: padel}
     - [x] add_modules: ["sports_facility"]
     - [x] conditions: [{entity_class: "place"}]
-  - [x] Tennis trigger:
+  - [x] Tennis trigger:x
     - [x] when: {facet: activity, value: tennis}
     - [x] add_modules: ["sports_facility"]
     - [x] conditions: [{entity_class: "place"}]
@@ -497,7 +497,7 @@ assert 'membership_org' in entity['canonical_roles']
 - ✅ validate_lens_config() enforces all 5 contracts
 - ✅ Validation errors raise exception immediately (fail-fast)
 - ✅ Clear error messages identify which contract was violated
-- ✅ All validation tests pass
+- ✅ All validation tests pass (24 tests passing)
 - ✅ Loading invalid lens.yaml fails at startup (not runtime)
 
 **Acceptance Check:**
