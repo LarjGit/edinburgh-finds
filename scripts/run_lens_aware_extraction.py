@@ -182,13 +182,76 @@ async def run_extraction(
                 continue
 
             if not dry_run:
-                # TODO: Store in Listing table
-                # For now, just count as succeeded
-                # In production, this would:
-                # 1. Create or update Listing record
-                # 2. Set canonical_activities, canonical_roles, canonical_place_types, canonical_access
-                # 3. Store modules as JSONB
-                pass
+                # Store extracted entity in Listing table
+                # For SQLite: Serialize arrays and modules as JSON strings
+                # For Postgres/Supabase: These will be native types
+
+                # Extract core fields from raw_data
+                # NOTE: Full module field extraction not yet implemented (Task 3.1 deferred)
+                # For now, extract from raw_data directly
+                entity_name = raw_data.get("name") or raw_data.get("entity_name") or "Unknown Entity"
+
+                # Generate slug from entity_name
+                slug = entity_name.lower().replace(" ", "-").replace("'", "").replace('"', "")
+                # Add source prefix to avoid conflicts across sources
+                slug = f"{raw.source}-{slug}"
+
+                # Serialize dimensions as JSON strings for SQLite
+                canonical_activities_json = json.dumps(extracted["canonical_activities"])
+                canonical_roles_json = json.dumps(extracted["canonical_roles"])
+                canonical_place_types_json = json.dumps(extracted["canonical_place_types"])
+                canonical_access_json = json.dumps(extracted["canonical_access"])
+
+                # Serialize modules as JSON string for SQLite
+                modules_json = json.dumps(extracted["modules"])
+
+                # Create or update Listing
+                # Use upsert to handle duplicates (based on slug or external_id)
+                await db.listing.upsert(
+                    where={"slug": slug},
+                    data={
+                        "create": {
+                            "entity_name": entity_name,
+                            "entityType": "VENUE",  # Temporary fallback, will be removed in Supabase
+                            "entity_class": extracted["entity_class"],
+                            "slug": slug,
+                            "canonical_activities": canonical_activities_json,
+                            "canonical_roles": canonical_roles_json,
+                            "canonical_place_types": canonical_place_types_json,
+                            "canonical_access": canonical_access_json,
+                            "modules": modules_json,
+                            # Add other fields from raw_data if available
+                            "summary": raw_data.get("summary"),
+                            "street_address": raw_data.get("street_address"),
+                            "city": raw_data.get("city"),
+                            "postcode": raw_data.get("postcode"),
+                            "country": raw_data.get("country", "United Kingdom"),
+                            "latitude": raw_data.get("latitude"),
+                            "longitude": raw_data.get("longitude"),
+                            "phone": raw_data.get("phone"),
+                            "email": raw_data.get("email"),
+                            "website_url": raw_data.get("website_url"),
+                            "instagram_url": raw_data.get("instagram_url"),
+                            "facebook_url": raw_data.get("facebook_url"),
+                            "twitter_url": raw_data.get("twitter_url"),
+                        },
+                        "update": {
+                            "entity_class": extracted["entity_class"],
+                            "canonical_activities": canonical_activities_json,
+                            "canonical_roles": canonical_roles_json,
+                            "canonical_place_types": canonical_place_types_json,
+                            "canonical_access": canonical_access_json,
+                            "modules": modules_json,
+                            # Update other fields if present
+                            "summary": raw_data.get("summary"),
+                            "street_address": raw_data.get("street_address"),
+                            "city": raw_data.get("city"),
+                            "postcode": raw_data.get("postcode"),
+                            "latitude": raw_data.get("latitude"),
+                            "longitude": raw_data.get("longitude"),
+                        }
+                    }
+                )
 
             stats["succeeded"] += 1
 

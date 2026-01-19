@@ -3,7 +3,7 @@
 # ============================================================
 #
 # Generated from: engine/config/schemas/listing.yaml
-# Generated at: 2026-01-18 23:04:26
+# Generated at: 2026-01-19 15:35:52
 #
 # To make changes:
 # 1. Edit engine/config/schemas/listing.yaml
@@ -52,6 +52,15 @@ LISTING_FIELDS: List[FieldSpec] = [
         nullable=False,
         required=True,
         index=True,
+    ),
+    FieldSpec(
+        name="entity_class",
+        type_annotation="Optional[str]",
+        description="Universal entity classification (place, person, organization, event, thing)",
+        nullable=True,
+        required=False,
+        index=True,
+        exclude=True,
     ),
     FieldSpec(
         name="slug",
@@ -137,6 +146,15 @@ LISTING_FIELDS: List[FieldSpec] = [
         description="Dictionary containing any extra attributes not explicitly defined in Listing or Entity models",
         nullable=True,
         required=False,
+        sa_column="Column(JSON)",
+    ),
+    FieldSpec(
+        name="modules",
+        type_annotation="Optional[Dict[str, Any]]",
+        description="Namespaced module data (JSONB) organized by module key",
+        nullable=True,
+        required=False,
+        exclude=True,
         sa_column="Column(JSON)",
     ),
     FieldSpec(

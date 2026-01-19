@@ -60,6 +60,20 @@ fields:
       name: entityType
       type: "String"  # String in SQLite, Enum in PostgreSQL
 
+  - name: entity_class
+    type: string
+    description: "Universal entity classification (place, person, organization, event, thing)"
+    nullable: true
+    exclude: true  # Populated by extraction engine
+    index: true
+    prisma:
+      name: entity_class
+      type: "String"
+    notes:
+      - "Engine-Lens Architecture: Universal classification independent of vertical"
+      - "Valid values: place, person, organization, event, thing"
+      - "Determined by entity_classifier.py using deterministic rules"
+
   - name: slug
     type: string
     description: URL-safe version of entity name (auto-generated)
@@ -195,6 +209,21 @@ fields:
     nullable: true
     python:
       sa_column: "Column(JSON)"
+
+  - name: modules
+    type: json
+    description: "Namespaced module data (JSONB) organized by module key"
+    nullable: true
+    exclude: true  # Populated by extraction engine
+    python:
+      sa_column: "Column(JSON)"
+    prisma:
+      type: "Json"
+    notes:
+      - "Engine-Lens Architecture: Namespaced JSONB structure {module_key: {fields}}"
+      - "Example: {core: {entity_id, entity_name, slug}, location: {street_address, city}}"
+      - "Universal modules (core, location, contact, hours) + lens-specific modules (sports_facility, fitness_facility)"
+      - "Module triggers determine which modules are required based on entity_class and canonical values"
 
   # ------------------------------------------------------------------
   # LOCATION

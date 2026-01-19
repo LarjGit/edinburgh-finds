@@ -97,6 +97,11 @@ def apply_schema_migration(conn: sqlite3.Connection) -> None:
         else:
             print(f"✓ {col_name} column already exists")
 
+    # Add modules column if missing (JSONB in Postgres, TEXT with JSON in SQLite)
+    if "modules" not in columns:
+        print("Adding modules column...")
+        cursor.execute("ALTER TABLE Listing ADD COLUMN modules TEXT")
+
     # Note: We keep entityType column for reference (don't rename to avoid data loss)
     # In production, we would rename entityType to old_entity_type
 
