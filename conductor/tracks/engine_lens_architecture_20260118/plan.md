@@ -1021,7 +1021,7 @@ assert(grouping === 'people');  // Derived from entity_class + roles
 
 ### Task 4.2: Re-extraction Process [a38640a]
 
-**Status:** in-progress
+**Status:** ✅ completed
 
 **Description:** Re-run extraction with lens-aware pipeline and validate results
 
@@ -1043,10 +1043,10 @@ assert(grouping === 'people');  // Derived from entity_class + roles
   - [x] Check role values use universal function-style keys (✓ provides_facility confirmed)
   - [x] Check modules JSONB structure is namespaced (✓ core module properly namespaced)
   - [x] Spot check sample entities for correctness (✓ All validation checks passed)
-- [ ] Switch application to new Entity model:
-  - [ ] Update API routes
-  - [ ] Update frontend queries (use Prisma array filters)
-  - [ ] Update UI components (use lens transformations)
+- [x] Switch application to new Entity model:
+  - [x] Update API routes - Updated page.tsx to query new dimension and module fields
+  - [x] Update frontend queries (use Prisma array filters) - Created entity-queries.ts with Prisma array filter examples (Postgres-only)
+  - [x] Update UI components (use lens transformations) - Created entity-helpers.ts for JSON parsing, updated page.tsx to display dimensions and modules
 
 **Success Criteria:**
 - ✅ Re-extraction completes successfully

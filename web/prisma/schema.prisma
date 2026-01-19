@@ -48,12 +48,18 @@ model Listing {
   categories   Category[] @relation("CategoryToListing")
   summary      String?
   attributes   String?
-  canonical_activities String[]   @default([])
-  canonical_roles String[]   @default([])
-  canonical_place_types String[]   @default([])
-  canonical_access String[]   @default([])
+  // MULTI-VALUED DIMENSIONS (Engine-Lens Architecture)
+  // SQLite limitation: Stored as JSON strings (e.g., '["padel","tennis"]')
+  // When migrating to Postgres: Change to String[] for native arrays with GIN indexes
+  canonical_activities String?   @default("[]")
+  canonical_roles String?   @default("[]")
+  canonical_place_types String?   @default("[]")
+  canonical_access String?   @default("[]")
   discovered_attributes String?
-  modules      Json?
+  // ATTRIBUTE MODULES (JSONB keyed by module name, namespaced structure)
+  // SQLite limitation: Stored as JSON string
+  // When migrating to Postgres: Change to Json? for native JSONB type
+  modules      String?
   street_address String?
   city         String?
   postcode     String?
