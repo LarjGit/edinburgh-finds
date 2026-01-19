@@ -598,9 +598,9 @@ with pytest.raises(ValidationError, match="dimension_source must be one of"):
 - ✅ Uses actual DB column names in dimension_source
 - ✅ Calls validate_lens_config() at initialization (fail-fast)
 
-### Task 2.2a: Module Composition Hardening (v2.2 Addition)
+### Task 2.2a: Module Composition Hardening (v2.2 Addition) [25ae543]
 
-**Status:** in-progress
+**Status:** ✅ completed
 
 **Description:** Enforce module composition contracts: no flattened JSONB, prevent duplicate module keys at YAML load stage
 
