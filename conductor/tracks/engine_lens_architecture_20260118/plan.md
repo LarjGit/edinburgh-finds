@@ -1019,23 +1019,23 @@ assert(grouping === 'people');  // Derived from entity_class + roles
 - ✅ "Club with courts" edge case handled correctly
 - ✅ Validation checks pass
 
-### Task 4.2: Re-extraction Process
+### Task 4.2: Re-extraction Process [a38640a]
 
-**Status:** pending
+**Status:** in-progress
 
 **Description:** Re-run extraction with lens-aware pipeline and validate results
 
 **Subtasks:**
-- [ ] Keep RawIngestion records (provenance)
-- [ ] Run new extraction pipeline with Edinburgh Finds lens:
-  - [ ] **Bootstrap**: Load lens from lenses/loader and produce LensContract (plain dict)
-  - [ ] Inject LensContract into extraction pipeline (engine never imports lenses/)
-  - [ ] For each raw ingestion:
-    - [ ] Run extract_with_lens_contract(raw_data, lens_contract)
-    - [ ] Validate dimensions populated as Postgres text[] arrays
-    - [ ] Validate lens modules extracted (sports_facility with inventory JSON, etc.)
-    - [ ] Validate modules JSONB namespaced correctly
-  - [ ] Store extracted entities
+- [x] Keep RawIngestion records (provenance)
+- [x] Run new extraction pipeline with Edinburgh Finds lens:
+  - [x] **Bootstrap**: Load lens from lenses/loader and produce LensContract (plain dict)
+  - [x] Inject LensContract into extraction pipeline (engine never imports lenses/)
+  - [x] For each raw ingestion:
+    - [x] Run extract_with_lens_contract(raw_data, lens_contract)
+    - [x] Validate dimensions populated as Postgres text[] arrays
+    - [x] Validate lens modules extracted (sports_facility with inventory JSON, etc.)
+    - [x] Validate modules JSONB namespaced correctly
+  - [ ] Store extracted entities in Listing table
 - [ ] Validation checks:
   - [ ] Compare old vs new entity counts
   - [ ] Check dimension arrays contain expected values
