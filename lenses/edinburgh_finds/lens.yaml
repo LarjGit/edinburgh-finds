@@ -67,7 +67,7 @@ facets:
 # All interpretation metadata lives here: display names, descriptions, SEO, icons, colors, etc.
 values:
   # Activity Facet Values
-  padel:
+  - key: padel
     facet: activity
     display_name: "Padel"
     description: "Padel tennis - a racquet sport combining tennis and squash"
@@ -79,7 +79,7 @@ values:
     icon_url: "/icons/padel.svg"
     color: "#FF6B35"
 
-  tennis:
+  - key: tennis
     facet: activity
     display_name: "Tennis"
     description: "Tennis courts and facilities"
@@ -90,7 +90,7 @@ values:
     icon_url: "/icons/tennis.svg"
     color: "#4ECDC4"
 
-  gym:
+  - key: gym
     facet: activity
     display_name: "Gym & Fitness"
     description: "Gyms, fitness centers, and training facilities"
@@ -103,7 +103,7 @@ values:
     icon_url: "/icons/gym.svg"
     color: "#95E1D3"
 
-  swimming:
+  - key: swimming
     facet: activity
     display_name: "Swimming"
     description: "Swimming pools and aquatic facilities"
@@ -117,22 +117,22 @@ values:
   # NOTE: Labels like "Venue", "Club", "Retailer", "Coach" are lens display labels ONLY.
   # Never use these as structural concepts, entity types, classes, or system concepts.
   # They are strictly for UI presentation.
-  provides_facility:
+  - key: provides_facility
     facet: role
     display_name: "Venue"
     description: "Physical facility providing activities"
 
-  sells_goods:
+  - key: sells_goods
     facet: role
     display_name: "Retailer"
     description: "Sells sports equipment/gear"
 
-  provides_instruction:
+  - key: provides_instruction
     facet: role
     display_name: "Coach / Instructor"
     description: "Provides coaching or instruction"
 
-  membership_org:
+  - key: membership_org
     facet: role
     display_name: "Club"
     description: "Membership-based sports club"
@@ -141,7 +141,7 @@ values:
   # NOTE: place_type represents the container place classification (sports_centre, leisure_centre, park, gym_facility).
   # Individual facilities (padel courts, tennis courts, pitches, pools, tracks) belong in domain modules
   # (sports_facility.inventory), NOT as place_type values. A pitch, court, pool, or rink is NOT a place_type.
-  sports_centre:
+  - key: sports_centre
     facet: place_type
     display_name: "Sports Centre"
     description: "Multi-sport facilities"
@@ -150,7 +150,7 @@ values:
       - "leisure centre"
       - "sports center"
 
-  outdoor_facility:
+  - key: outdoor_facility
     facet: place_type
     display_name: "Outdoor Facility"
     description: "Outdoor facilities and parks"
@@ -159,7 +159,7 @@ values:
       - "park"
       - "outdoor facility"
 
-  gym_facility:
+  - key: gym_facility
     facet: place_type
     display_name: "Gym Facility"
     description: "Dedicated gym/fitness center"
@@ -169,7 +169,7 @@ values:
       - "health club"
 
   # Access Facet Values
-  membership:
+  - key: membership
     facet: access
     display_name: "Membership"
     description: "Membership required"
@@ -177,7 +177,7 @@ values:
       - "members only"
       - "membership"
 
-  pay_and_play:
+  - key: pay_and_play
     facet: access
     display_name: "Pay & Play"
     description: "Open to public, pay per use"
@@ -186,7 +186,7 @@ values:
       - "casual"
       - "drop-in"
 
-  free:
+  - key: free
     facet: access
     display_name: "Free to Use"
     description: "Free access facilities"
@@ -195,7 +195,7 @@ values:
       - "no charge"
       - "public"
 
-  private_club:
+  - key: private_club
     facet: access
     display_name: "Private Club"
     description: "Private members-only club"
@@ -276,16 +276,14 @@ mapping_rules:
 # Computed from entity_class + roles with AND/OR logic
 # NOTE: Groupings are DERIVED/VIEW-ONLY, not stored in database
 derived_groupings:
-  places:
-    id: places
+  - id: places
     label: "Places"
     description: "Physical facilities and venues"
     rules:
       - entity_class: "place"
     # NOTE: Grouping is DERIVED/VIEW-ONLY, not stored in database
 
-  people:
-    id: people
+  - id: people
     label: "Coaches & Instructors"
     description: "Professional coaching services"
     rules:
@@ -295,16 +293,14 @@ derived_groupings:
     # AND logic: must be person AND have provides_instruction role
     # NOTE: Grouping is DERIVED/VIEW-ONLY, not stored in database
 
-  organizations:
-    id: organizations
+  - id: organizations
     label: "Clubs & Organizations"
     description: "Sports clubs and membership organizations"
     rules:
       - entity_class: "organization"
     # NOTE: Grouping is DERIVED/VIEW-ONLY, not stored in database
 
-  events:
-    id: events
+  - id: events
     label: "Events & Activities"
     description: "Tournaments, classes, and events"
     rules:
