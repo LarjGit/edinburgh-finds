@@ -1457,17 +1457,17 @@ echo "from lenses.loader import VerticalLens" >> engine/test.py
 ## Verification Checklist (Updated for v2.2)
 
 ### Engine Purity Validation
-- [ ] **v2.2**: Engine does not import from lenses/ (receives LensContract dict only)
-- [ ] **v2.2**: LensContract boundary enforced - engine functions receive lens_contract (plain dict), never lens runtime objects
-- [ ] **v2.2**: All lens data accessed from lens_contract dict (mapping_rules, facets, values, module_triggers)
-- [ ] No domain modules (sports_facility, wine_production) in engine
-- [ ] All dimension values treated as opaque strings
-- [ ] Module triggers only entity_class-based in engine (lens triggers are value-based)
-- [ ] Roles cardinality 0..N (not required)
-- [ ] Dimensions use actual DB column names (canonical_activities, canonical_roles, canonical_place_types, canonical_access)
-- [ ] **v2.2**: Engine has NO literal string comparisons against dimension values (structural purity)
-- [ ] **v2.2**: Engine may ONLY: branch on entity_class, perform set operations, check emptiness, pass opaque strings through
-- [ ] **v2.2**: CI enforces engine purity (check_engine_purity.sh passes - checks LensContract boundary and structural purity)
+- [x] **v2.2**: Engine does not import from lenses/ (receives LensContract dict only)
+- [x] **v2.2**: LensContract boundary enforced - engine functions receive lens_contract (plain dict), never lens runtime objects
+- [x] **v2.2**: All lens data accessed from lens_contract dict (mapping_rules, facets, values, module_triggers)
+- [x] No domain modules (sports_facility, wine_production) in engine
+- [x] All dimension values treated as opaque strings
+- [x] Module triggers only entity_class-based in engine (lens triggers are value-based)
+- [x] Roles cardinality 0..N (not required)
+- [x] Dimensions use actual DB column names (canonical_activities, canonical_roles, canonical_place_types, canonical_access)
+- [x] **v2.2**: Engine has NO literal string comparisons against dimension values (structural purity)
+- [x] **v2.2**: Engine may ONLY: branch on entity_class, perform set operations, check emptiness, pass opaque strings through
+- [x] **v2.2**: CI enforces engine purity (check_engine_purity.sh passes - checks LensContract boundary and structural purity)
 
 ### Database & Supabase Best Practices
 - [ ] Dimensions use `String[]` (Postgres text[] arrays, NOT Json)
