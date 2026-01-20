@@ -291,13 +291,14 @@ def resolve_entity_class(raw_data: Dict[str, Any]) -> Dict[str, Any]:
     elif has_location(raw_data):
         entity_class = "place"
 
-    # Priority 3: Named individual → person
-    elif is_individual(raw_data):
-        entity_class = "person"
-
-    # Priority 4: Organization/group/business → organization
+    # Priority 3: Organization/group/business → organization
+    # Organizations can have addresses, so check before person
     elif is_organization_like(raw_data):
         entity_class = "organization"
+
+    # Priority 4: Named individual → person
+    elif is_individual(raw_data):
+        entity_class = "person"
 
     # Priority 5: Fallback → thing
     else:
