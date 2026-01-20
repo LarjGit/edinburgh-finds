@@ -213,9 +213,9 @@ class TestModuleTrigger:
                 "value": "padel"
             },
             "add_modules": ["sports_facility"],
-            "conditions": {
-                "entity_class": "place"
-            }
+            "conditions": [
+                {"entity_class": "place"}
+            ]
         }
 
         trigger = ModuleTrigger(data=trigger_data)
@@ -223,7 +223,7 @@ class TestModuleTrigger:
         assert trigger.facet == "activity"
         assert trigger.value == "padel"
         assert trigger.add_modules == ["sports_facility"]
-        assert trigger.conditions == {"entity_class": "place"}
+        assert trigger.conditions == [{"entity_class": "place"}]
 
     def test_matches_when_value_present(self):
         """Trigger should fire when entity has the specified value in the facet."""
@@ -259,9 +259,9 @@ class TestModuleTrigger:
                 "value": "padel"
             },
             "add_modules": ["sports_facility"],
-            "conditions": {
-                "entity_class": "place"
-            }
+            "conditions": [
+                {"entity_class": "place"}
+            ]
         }
 
         trigger = ModuleTrigger(data=trigger_data)
@@ -274,6 +274,32 @@ class TestModuleTrigger:
         assert trigger.matches("place", canonical_values_by_facet) is True
 
         # Doesn't match: has value but wrong entity_class
+        assert trigger.matches("person", canonical_values_by_facet) is False
+
+    def test_matches_with_multiple_conditions(self):
+        """Trigger should match when all conditions in list are satisfied (AND logic)."""
+        trigger_data = {
+            "when": {
+                "facet": "activity",
+                "value": "padel"
+            },
+            "add_modules": ["sports_facility"],
+            "conditions": [
+                {"entity_class": "place"},
+                {"entity_class": "place"}  # Multiple conditions (all must match)
+            ]
+        }
+
+        trigger = ModuleTrigger(data=trigger_data)
+
+        canonical_values_by_facet = {
+            "activity": ["padel"]
+        }
+
+        # Matches: has value AND all conditions match
+        assert trigger.matches("place", canonical_values_by_facet) is True
+
+        # Doesn't match: has value but conditions don't match
         assert trigger.matches("person", canonical_values_by_facet) is False
 
 

@@ -185,7 +185,7 @@ class ModuleTrigger:
         {
             "when": {"facet": "activity", "value": "padel"},
             "add_modules": ["sports_facility"],
-            "conditions": {"entity_class": "place"}
+            "conditions": [{"entity_class": "place"}]
         }
     """
 
@@ -200,7 +200,7 @@ class ModuleTrigger:
         self.facet = when.get("facet")
         self.value = when.get("value")
         self.add_modules = data.get("add_modules", [])
-        self.conditions = data.get("conditions", {})
+        self.conditions = data.get("conditions", [])
 
     def matches(self, entity_class: str, canonical_values_by_facet: Dict[str, List[str]]) -> bool:
         """
@@ -224,10 +224,11 @@ class ModuleTrigger:
         if self.value not in facet_values:
             return False
 
-        # Check additional conditions (entity_class match)
-        if "entity_class" in self.conditions:
-            if entity_class != self.conditions["entity_class"]:
-                return False
+        # Check additional conditions (all must match - AND logic)
+        for condition in self.conditions:
+            if "entity_class" in condition:
+                if entity_class != condition["entity_class"]:
+                    return False
 
         return True
 
