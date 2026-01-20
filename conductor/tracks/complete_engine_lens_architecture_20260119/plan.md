@@ -58,7 +58,7 @@ This track addresses the critical blockers identified in the `next_steps_codex.m
 ## Phase 3: Logic & Semantics (Classifier & Triggers)
 **Goal:** Correct logic errors in classification and configuration loading.
 
-- [ ] **Task 3.1: Fix Classification Priority**
+- [x] **Task 3.1: Fix Classification Priority** [f5e337b]
   - Update `engine/extraction/entity_classifier.py` logic to follow the hierarchy:
     1. **Event** (Time-bound, specific date/duration)
     2. **Place** (Physical location, address-centric)
