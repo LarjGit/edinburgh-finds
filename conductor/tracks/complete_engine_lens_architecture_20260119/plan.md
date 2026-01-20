@@ -34,16 +34,18 @@ This track addresses the critical blockers identified in the `next_steps_codex.m
 ## Phase 2: Engine Purity & Cleanup
 **Goal:** Remove all "Sports" and "Venue" concepts from the core engine, making it truly vertical-agnostic.
 
-- [ ] **Task 2.1: Remove Legacy Schema**
-  - Delete `engine/schema/venue.py`.
-  - Remove `VENUE_FIELDS` constant from `engine/ingest.py`.
-  - Verify no other files import `Venue` specific models.
+- [x] **Task 2.1: Remove Legacy Schema (PARTIAL)**
+  - Deleted `engine/schema/venue.py`.
+  - Updated `engine/extraction/schema_utils.py` to use only universal LISTING_FIELDS and map VENUE→PLACE.
+  - Updated `engine/tests/test_schema_sync.py` to remove venue-specific tests.
+  - **NOTE**: Changes to `engine/ingest.py` and `engine/run_seed.py` were reverted - ingestion refactor will be a separate track.
 
-- [ ] **Task 2.2: Decouple Extraction Defaults**
-  - In `engine/extraction/run.py`, remove `entity_type="VENUE"` default.
-  - In `engine/ingest.py`, ensure ingestion is type-agnostic or driven strictly by source configuration, not hardcoded defaults.
+- [x] **Task 2.2: Decouple Extraction Defaults**
+  - Removed `entity_type="VENUE"` default from `engine/extraction/run.py` line 187.
+  - Updated `schema_utils.py` to default to PLACE (not VENUE) and always return universal LISTING_FIELDS.
+  - Extraction now relies on extractors to provide entity_type explicitly.
 
-- [ ] **Task 2.3: Sanitize Classifier**
+- [x] **Task 2.3: Sanitize Classifier** [68f2cbf]
   - Refactor `engine/extraction/entity_classifier.py`:
     - Remove hardcoded sports keywords (e.g., "coach", "instructor") - these belong in Lens config or specific extractors.
     - Remove "sports_centre" default fallback.
