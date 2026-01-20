@@ -51,7 +51,7 @@ This track addresses the critical blockers identified in the `next_steps_codex.m
     - Remove "sports_centre" default fallback.
   - Ensure the classifier outputs only opaque, universal `EntityClass` values.
 
-- [ ] **Task 2.4: Universal Pipeline**
+- [x] **Task 2.4: Universal Pipeline** [d46fe41]
   - Audit `engine/extraction/extractors/` to ensure all extractors return `EntityExtraction` models, not `VenueExtraction`.
   - Verify that `extract_with_lens_contract` is the sole entry point for logic that might need lens specifics.
 
