@@ -301,6 +301,7 @@ class VerticalLens:
         self._groupings = self._parse_derived_groupings()
         self._modules = self._parse_modules()
         self._triggers = self._parse_module_triggers()
+        self._confidence_threshold = self.config.get("confidence_threshold", 0.7)  # Configurable, defaults to 0.7
 
     def _load_config(self, config_path: Path) -> Dict[str, Any]:
         """
@@ -381,6 +382,11 @@ class VerticalLens:
         """Get module triggers configuration."""
         return self.config.get("module_triggers", [])
 
+    @property
+    def confidence_threshold(self) -> float:
+        """Get confidence threshold for mapping rules. Defaults to 0.7."""
+        return self._confidence_threshold
+
     def _parse_facets(self) -> Dict[str, FacetDefinition]:
         """Parse facets configuration into FacetDefinition objects."""
         facets_config = self.config.get("facets", {})
@@ -433,10 +439,10 @@ class VerticalLens:
             raw_category: Raw category string from data source
 
         Returns:
-            List of canonical value keys (filtered by confidence >= 0.7)
+            List of canonical value keys (filtered by configured confidence threshold)
         """
         matching_values = []
-        confidence_threshold = 0.7
+        confidence_threshold = self._confidence_threshold
 
         for rule in self.mapping_rules:
             pattern = rule.get("pattern")

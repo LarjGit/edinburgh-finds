@@ -462,9 +462,9 @@ class TestVerticalLensProcessingMethods:
                         "value": "padel"
                     },
                     "add_modules": ["sports_facility"],
-                    "conditions": {
-                        "entity_class": "place"
-                    }
+                    "conditions": [
+                        {"entity_class": "place"}
+                    ]
                 }
             ]
         }

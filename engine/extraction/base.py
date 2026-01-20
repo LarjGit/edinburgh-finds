@@ -259,7 +259,7 @@ def extract_with_lens_contract(raw_data: Dict[str, Any], lens_contract: Dict[str
     # Step 2: Map to canonical values using LensContract mapping rules
     # Access mapping_rules from lens_contract["mapping_rules"]
     mapping_rules = lens_contract.get("mapping_rules", [])
-    confidence_threshold = 0.7
+    confidence_threshold = lens_contract.get("confidence_threshold", 0.7)  # Configurable, defaults to 0.7
     canonical_values = []
 
     for raw_category in raw_categories:
