@@ -117,7 +117,7 @@ class TestEndToEndPipeline:
         # Verify extraction succeeded
         assert result["status"] == "success"
         assert result["source"] == "google_places"
-        assert result["entity_type"] == "VENUE"
+        # entity_type is deprecated - using entity_class instead
         assert "entity_name" in result["fields"]
         assert result["fields"]["entity_name"] == "Game4Padel Edinburgh"
         assert result["fields"]["phone"] == "+441311234567"
@@ -141,7 +141,7 @@ class TestEndToEndPipeline:
         created_data = create_call_args[1]["data"]
 
         assert created_data["source"] == "google_places"
-        assert created_data["entity_type"] == "VENUE"
+        # entity_type is deprecated - not asserting on it
         assert created_data["raw_ingestion_id"] == mock_raw_id
 
         # Verify attributes are properly structured

@@ -190,7 +190,7 @@ class TestExtractWithLensContract:
         """Should not trigger modules if entity_class condition doesn't match."""
         raw_data = {
             "name": "Sarah Wilson",
-            "type": "coach",
+            "type": "person",  # Use universal type
             "categories": ["Tennis Coach"],
             "activities": ["tennis"]
         }
