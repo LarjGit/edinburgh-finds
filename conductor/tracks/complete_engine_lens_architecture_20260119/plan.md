@@ -71,7 +71,7 @@ This track addresses the critical blockers identified in the `next_steps_codex.m
   - Update `engine/lenses/loader.py` to handle `conditions` as a list of dictionaries (matching `lens.yaml` spec), not a single dictionary.
   - Add unit test for `ModuleTrigger` loading with list-based conditions.
 
-- [ ] **Task 3.3: Configurable Thresholds**
+- [x] **Task 3.3: Configurable Thresholds** [b9f02e7]
   - Remove hardcoded `0.7` confidence threshold from `engine/extraction/base.py` and `engine/lenses/loader.py`.
   - Pass threshold values from the loaded Lens Configuration into the extraction context.
 
