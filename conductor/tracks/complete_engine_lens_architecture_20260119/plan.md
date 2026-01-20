@@ -67,7 +67,7 @@ This track addresses the critical blockers identified in the `next_steps_codex.m
     5. **Thing** (Catch-all)
   - *Rationale:* An organization (e.g., a Club) might have an address, but if it has members and bylaws, it's an Org first. A Person might have an "address", but shouldn't be a Place.
 
-- [ ] **Task 3.2: Fix ModuleTrigger Shape**
+- [x] **Task 3.2: Fix ModuleTrigger Shape** [07064d3]
   - Update `engine/lenses/loader.py` to handle `conditions` as a list of dictionaries (matching `lens.yaml` spec), not a single dictionary.
   - Add unit test for `ModuleTrigger` loading with list-based conditions.
 
