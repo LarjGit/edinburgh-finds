@@ -33,6 +33,7 @@ class TestEntityClassification:
             "membership_required": True,
             "categories": ["tennis club", "sports facility"],
             "activities": ["tennis"],
+            "place_type": "sports_centre",  # Explicit place_type
         }
 
         result = resolve_entity_class(raw_data)
@@ -53,8 +54,8 @@ class TestEntityClassification:
         """
         raw_data = {
             "name": "Sarah Wilson",
-            "type": "coach",
-            "categories": ["tennis coach", "instructor"],
+            "type": "person",  # Use universal type
+            "provides_instruction": True,  # Explicit role flag
             "activities": ["tennis"],
         }
 
@@ -157,6 +158,7 @@ class TestEntityClassification:
             "activities": ["football", "padel"],
             "has_courts": True,
             "has_pitches": True,
+            "place_type": ["sports_centre", "outdoor_facility"],  # Explicit place_types
         }
 
         result = resolve_entity_class(raw_data)
@@ -259,8 +261,7 @@ class TestClassificationPriority:
         """
         raw_data = {
             "name": "John Smith",
-            "type": "instructor",
-            "categories": ["coach"],
+            "type": "person",  # Use universal type
             "activities": ["padel"],
         }
 
@@ -302,7 +303,7 @@ class TestAntiPatterns:
         raw_data = {
             "name": "Coaching Venue",
             "address": "789 Coach Street",
-            "provides_coaching": True,
+            "provides_instruction": True,  # Use universal flag
             "has_courts": True,
         }
 

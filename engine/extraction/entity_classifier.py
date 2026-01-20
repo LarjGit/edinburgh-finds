@@ -84,20 +84,14 @@ def is_individual(raw_data: Dict[str, Any]) -> bool:
 
     Priority: 3 - see classification_rules.md
     """
-    # Check type hints
+    # Check type hints - use only universal type indicator
     entity_type = raw_data.get("type", "").lower()
-    if entity_type in {"coach", "instructor", "teacher", "trainer", "person"}:
+    if entity_type == "person":
         return True
 
-    # Check categories
-    categories = raw_data.get("categories", [])
-    if isinstance(categories, list):
-        category_str = " ".join(categories).lower()
-        if any(term in category_str for term in ["coach", "instructor", "trainer"]):
-            # Could be individual or organization - need more context
-            # If no address/location, likely individual
-            if not has_location(raw_data):
-                return True
+    # Check for explicit person indicator flag
+    if raw_data.get("is_person"):
+        return True
 
     return False
 
@@ -144,26 +138,20 @@ def extract_roles(raw_data: Dict[str, Any]) -> List[str]:
     roles = []
 
     # Check for facility provision
-    if raw_data.get("has_courts") or raw_data.get("has_pitches"):
+    if raw_data.get("has_courts") or raw_data.get("has_pitches") or raw_data.get("has_facilities"):
         roles.append("provides_facility")
 
     # Check for membership organization
     if raw_data.get("membership_required"):
         roles.append("membership_org")
 
-    # Check for instruction provision
-    entity_type = raw_data.get("type", "").lower()
-    categories = raw_data.get("categories", [])
-    category_str = " ".join(categories).lower() if isinstance(categories, list) else ""
-
-    if entity_type in {"coach", "instructor", "trainer"} or \
-       any(term in category_str for term in ["coach", "instructor", "trainer"]) or \
-       raw_data.get("provides_coaching"):
+    # Check for instruction provision - use explicit flags only
+    if raw_data.get("provides_coaching") or raw_data.get("provides_instruction"):
         roles.append("provides_instruction")
 
-    # Check for retail/goods sales
-    if entity_type in {"retailer", "shop"} or \
-       any(term in category_str for term in ["retail", "shop"]):
+    # Check for retail/goods sales - use type hints only
+    entity_type = raw_data.get("type", "").lower()
+    if entity_type in {"retailer", "shop"} or raw_data.get("sells_goods"):
         roles.append("sells_goods")
 
     # Deduplicate
@@ -196,23 +184,22 @@ def extract_place_types(raw_data: Dict[str, Any]) -> List[str]:
         raw_data: Raw entity data dictionary
 
     Returns:
-        List of place_type strings (e.g., ["sports_centre"])
+        List of place_type strings. Returns empty list if no place types can be determined.
 
     Note: Only applicable to entities with entity_class='place'
     """
     place_types = []
 
-    # Check categories for place type hints
-    categories = raw_data.get("categories", [])
-    if isinstance(categories, list):
-        category_str = " ".join(categories).lower()
+    # Use explicit place_type field if provided
+    explicit_place_type = raw_data.get("place_type")
+    if explicit_place_type:
+        if isinstance(explicit_place_type, list):
+            place_types.extend(explicit_place_type)
+        else:
+            place_types.append(explicit_place_type)
 
-        if any(term in category_str for term in ["sports centre", "sports center", "sports facility"]):
-            place_types.append("sports_centre")
-        elif any(term in category_str for term in ["outdoor", "field", "pitch"]):
-            place_types.append("outdoor_facility")
-
-    return place_types if place_types else ["sports_centre"]  # Default for sports entities
+    # Deduplicate and return (no default fallback)
+    return list(set(place_types))
 
 
 def resolve_entity_class(raw_data: Dict[str, Any]) -> Dict[str, Any]:
