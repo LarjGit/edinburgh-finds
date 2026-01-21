@@ -62,7 +62,7 @@
 ### Phase 2 — Code Refactors
 **Goal:** Update the codebase to match the new schema and remove vertical logic.
 
-- [ ] **Task 2.1:** Update Imports & Type Definitions (Cross-Repo).
+- [x] **Task 2.1:** Update Imports & Type Definitions (Cross-Repo).
     -   **Files:** `engine/**/*.py`, `web/src/**/*.ts`, `web/src/**/*.tsx`, `tests/**/*.py`.
     -   **Action:**
         -   Search `Listing` -> Replace `Entity`.

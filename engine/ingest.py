@@ -6,7 +6,7 @@ from prisma import Prisma
 from pydantic import ValidationError
 
 from engine.schema.venue import VENUE_FIELDS
-from engine.schema.listing import LISTING_FIELDS
+from engine.schema.entity import ENTITY_FIELDS
 from engine.schema.generator import create_pydantic_model
 
 # 1. Generate Validators
@@ -51,7 +51,7 @@ async def ingest_venue(data: Dict[str, Any]):
         for key, value in validated_data.items():
             if key in CORE_COLUMNS:
                 core_data[key] = value
-            elif key == "listing_id":
+            elif key == "entity_id":
                 continue
             elif key == "entity_type":
                 # Store EntityType Enum value for Prisma

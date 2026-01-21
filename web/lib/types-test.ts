@@ -3,11 +3,11 @@
  * This file verifies that the generated TypeScript types and Zod schemas work correctly.
  */
 
-import { Listing, ListingSchema, Venue } from "../types";
+import { Entity, EntitySchema, Venue } from "../types";
 
 // Test 1: TypeScript interface type checking
-const testListing: Listing = {
-  listing_id: "test-123",
+const testListing: Entity = {
+  entity_id: "test-123",
   entity_name: "Test Venue",
   entity_type: "venue",
   slug: "test-venue",
@@ -37,10 +37,10 @@ const testListing: Listing = {
 };
 
 // Test 2: Zod schema runtime validation (valid data)
-const validationResult = ListingSchema.safeParse(testListing);
+const validationResult = EntitySchema.safeParse(testListing);
 if (!validationResult.success) {
   console.error("Zod validation failed:", validationResult.error);
-  throw new Error("Type test failed: Valid listing did not pass Zod validation");
+  throw new Error("Type test failed: Valid entity did not pass Zod validation");
 }
 
 // Test 3: Partial Venue (more realistic for actual usage)
@@ -58,20 +58,20 @@ const partialVenue: Partial<Venue> = {
 };
 
 // Test 4: Verify type narrowing works
-function processListing(listing: Listing | Venue) {
+function processEntity(entity: Entity | Venue) {
   // Should work for both types
-  console.log(listing.entity_name);
+  console.log(entity.entity_name);
 
   // Type narrowing
-  if ("tennis" in listing) {
-    const venue = listing as Venue;
+  if ("tennis" in entity) {
+    const venue = entity as Venue;
     console.log(venue.tennis_total_courts);
   }
 }
 
-processListing(testListing);
+processEntity(testListing);
 if (partialVenue.entity_name) {
-  processListing(partialVenue as Venue);
+  processEntity(partialVenue as Venue);
 }
 
 // Test 5: Verify Record types work correctly
