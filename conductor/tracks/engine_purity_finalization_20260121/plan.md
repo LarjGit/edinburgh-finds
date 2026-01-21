@@ -50,7 +50,7 @@
         -   Add relation field to `Entity`: `lensMemberships LensEntity[]`.
     -   **Verification:** Run `npx prisma format` on both schemas.
 
-- [ ] **Task 1.4:** Database Reset & Clean Migration.
+- [x] **Task 1.4:** Database Reset & Clean Migration.
     -   **Commands:**
         1.  `export DATABASE_URL=<YOUR_DEV_DB_URL>` (User to verify).
         2.  `npx prisma migrate reset --force --schema=engine/schema.prisma` (Drops all data).
