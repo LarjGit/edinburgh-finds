@@ -60,6 +60,7 @@ class TestPrismaArrayFilters(unittest.IsolatedAsyncioTestCase):
         fixture1 = await self.db.listing.create(data={
             "entity_name": "TEST_ARRAY_FILTER - Padel Centre",
             "entityType": "VENUE",
+            "entity_class": "place",
             "slug": "test-array-filter-padel-centre",
             "canonical_activities": ["padel"],
             "canonical_place_types": ["sports_centre"],
@@ -72,6 +73,7 @@ class TestPrismaArrayFilters(unittest.IsolatedAsyncioTestCase):
         fixture2 = await self.db.listing.create(data={
             "entity_name": "TEST_ARRAY_FILTER - Multi Sport Complex",
             "entityType": "VENUE",
+            "entity_class": "place",
             "slug": "test-array-filter-multi-sport",
             "canonical_activities": ["padel", "tennis"],
             "canonical_place_types": ["sports_centre"],
@@ -84,6 +86,7 @@ class TestPrismaArrayFilters(unittest.IsolatedAsyncioTestCase):
         fixture3 = await self.db.listing.create(data={
             "entity_name": "TEST_ARRAY_FILTER - Empty Activities",
             "entityType": "VENUE",
+            "entity_class": "place",
             "slug": "test-array-filter-empty",
             "canonical_activities": [],
             "canonical_place_types": ["community_centre"],
@@ -96,6 +99,7 @@ class TestPrismaArrayFilters(unittest.IsolatedAsyncioTestCase):
         fixture4 = await self.db.listing.create(data={
             "entity_name": "TEST_ARRAY_FILTER - Tennis Club",
             "entityType": "VENUE",
+            "entity_class": "place",
             "slug": "test-array-filter-tennis",
             "canonical_activities": ["tennis"],
             "canonical_place_types": ["sports_centre"],
@@ -108,6 +112,7 @@ class TestPrismaArrayFilters(unittest.IsolatedAsyncioTestCase):
         fixture5 = await self.db.listing.create(data={
             "entity_name": "TEST_ARRAY_FILTER - Park Tennis",
             "entityType": "VENUE",
+            "entity_class": "place",
             "slug": "test-array-filter-park-tennis",
             "canonical_activities": ["tennis"],
             "canonical_place_types": ["park"],
@@ -265,12 +270,13 @@ class TestPrismaArrayFiltersPerformance(unittest.IsolatedAsyncioTestCase):
                 batch_data.append({
                     "entity_name": f"PERF_TEST Entity {entity_num}",
                     "entityType": "VENUE",
+                    "entity_class": "place",
                     "slug": f"perf-test-entity-{entity_num}",
                     "canonical_activities": activities,
                     "canonical_place_types": ["sports_centre"],
                     "canonical_roles": [],
-                    "canonical_access": ["public"]
-                })
+                    "canonical_access": ["public"],
+                        })
 
             # Create batch
             await self.db.listing.create_many(data=batch_data, skip_duplicates=True)
@@ -317,6 +323,7 @@ class TestPrismaArrayFiltersPerformance(unittest.IsolatedAsyncioTestCase):
         await self.db.listing.create(data={
             "entity_name": "PERF_TEST GIN Index Test 1",
             "entityType": "VENUE",
+            "entity_class": "place",
             "slug": "perf-test-gin-1",
             "canonical_activities": ["padel", "tennis"],
             "canonical_place_types": ["sports_centre"],
@@ -327,6 +334,7 @@ class TestPrismaArrayFiltersPerformance(unittest.IsolatedAsyncioTestCase):
         await self.db.listing.create(data={
             "entity_name": "PERF_TEST GIN Index Test 2",
             "entityType": "VENUE",
+            "entity_class": "place",
             "slug": "perf-test-gin-2",
             "canonical_activities": ["tennis"],
             "canonical_place_types": ["sports_centre"],

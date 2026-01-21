@@ -47,7 +47,7 @@ model Listing {
   canonical_place_types String[]   @default([])
   canonical_access String[]   @default([])
   discovered_attributes Json?
-  modules      Json
+  modules      Json?
   street_address String?
   city         String?
   postcode     String?
