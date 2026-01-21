@@ -112,8 +112,10 @@
     -   **Files:** `engine/lenses/loader.py`.
     -   **Action:** Verify lens loading logic does not depend on `Category` model.
 
-### Phase 4 — Tests + Validation + Docs
+### Phase 4 — Tests + Validation + Docs ✅ COMPLETE
 **Goal:** Verify the system is stable, pure, and documented.
+
+**Checkpoint:** `ca1bf80` - Phase 4 Complete - Tests + Validation + Docs
 
 - [x] **Task 4.1:** Update Tests.
     -   **Files:** `tests/engine/`, `tests/web/`.
@@ -139,19 +141,19 @@
 
 The track is complete only when:
 
-- [ ] ✅ No `entityType` column exists in DB or Prisma schema.
-- [ ] ✅ No `EntityType` enum exists or is referenced in engine code.
-- [ ] ✅ Primary persisted model is named `Entity`, not `Listing`.
-- [ ] ✅ No `Category` model or relations exist anywhere.
-- [ ] ✅ **Entity has `raw_categories` String[] field for discovery signals.**
-- [ ] ✅ **`raw_categories` is not indexed, queried for filtering, or used in UI paths.**
-- [ ] ✅ **No category taxonomy or canonical category table exists.**
-- [ ] ✅ Lens membership table (`LensEntity`) exists and works.
-- [ ] ✅ `entity_class` is required and universal.
-- [ ] ✅ Canonical dimension arrays remain unchanged.
-- [ ] ✅ **modules JSON structure remains unchanged and continues to be treated as opaque engine data interpreted only by lenses.**
-- [ ] ✅ Adding a new lens requires zero engine code changes.
-- [ ] ✅ All tests pass.
+- [x] ✅ No `entityType` column exists in DB or Prisma schema.
+- [x] ✅ No `EntityType` enum exists or is referenced in engine code.
+- [x] ✅ Primary persisted model is named `Entity`, not `Listing`.
+- [x] ✅ No `Category` model or relations exist anywhere.
+- [x] ✅ **Entity has `raw_categories` String[] field for discovery signals.**
+- [x] ✅ **`raw_categories` is not indexed, queried for filtering, or used in UI paths.**
+- [x] ✅ **No category taxonomy or canonical category table exists.**
+- [x] ✅ Lens membership table (`LensEntity`) exists and works.
+- [x] ✅ `entity_class` is required and universal.
+- [x] ✅ Canonical dimension arrays remain unchanged.
+- [x] ✅ **modules JSON structure remains unchanged and continues to be treated as opaque engine data interpreted only by lenses.**
+- [x] ✅ Adding a new lens requires zero engine code changes.
+- [x] ✅ All tests pass.
 
 ## ⚡ Fast Reset Checklist
 
