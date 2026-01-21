@@ -108,7 +108,7 @@
         -   `def detach_entity_from_lens(entity_id: str, lens_id: str): ...`
     -   **Constraint:** Ensure these methods perform direct DB writes to `LensEntity`.
 
-- [ ] **Task 3.3:** Update Lens Loader.
+- [x] **Task 3.3:** Update Lens Loader.
     -   **Files:** `engine/lenses/loader.py`.
     -   **Action:** Verify lens loading logic does not depend on `Category` model.
 
