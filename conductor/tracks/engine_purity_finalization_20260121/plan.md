@@ -84,7 +84,7 @@
         -   Remove usage in extractors.
     -   **Verification:** `grep -r "EntityType" engine/` should return nothing.
 
-- [ ] **Task 2.4:** Update Extractors.
+- [x] **Task 2.4:** Update Extractors.
     -   **Files:** `engine/extraction/base.py`, `engine/extraction/extractors/*.py`.
     -   **Action:**
         -   Update return type hints to `Entity`.
@@ -95,7 +95,7 @@
 ### Phase 3 — Lens + Category Cleanup
 **Goal:** Completely excise Category logic and implement explicit Lens membership.
 
-- [ ] **Task 3.1:** Remove Category Logic from Engine.
+- [x] **Task 3.1:** Remove Category Logic from Engine.
     -   **Files:**
         -   Delete `engine/config/canonical_categories.yaml`.
         -   Update `engine/classification_rules.md` (remove category rules).
