@@ -100,11 +100,7 @@ class PythonFieldSpecGenerator:
             if field.type == "datetime":
                 needs_datetime = True
 
-            # Check for custom type annotations
-            if field.python and "type_annotation" in field.python:
-                type_annotation = field.python["type_annotation"]
-                if "EntityType" in type_annotation:
-                    needs_entity_type = True
+            # Check for custom type annotations (EntityType removed)
 
         # Build import lines
         import_lines = []
@@ -120,10 +116,6 @@ class PythonFieldSpecGenerator:
 
         # Add core import
         import_lines.append("from .core import FieldSpec")
-
-        # Add EntityType import if needed
-        if needs_entity_type:
-            import_lines.append("from .types import EntityType")
 
         return "\n".join(import_lines)
 

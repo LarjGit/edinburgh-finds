@@ -12,7 +12,6 @@ from typing import Dict, Tuple, Optional, List
 from engine.extraction.base import BaseExtractor
 from engine.extraction.schema_utils import is_field_in_schema
 from engine.extraction.extractors.google_places_extractor import format_phone_uk, format_postcode_uk
-from engine.schema.types import EntityType
 
 
 class OpenChargeMapExtractor(BaseExtractor):
@@ -69,7 +68,6 @@ class OpenChargeMapExtractor(BaseExtractor):
 
         # Required fields
         extracted["entity_name"] = address_info.get("Title", "")
-        extracted["entity_type"] = EntityType.VENUE.value  # Default to VENUE
 
         # Build street address from components
         address_parts = []
@@ -220,7 +218,6 @@ class OpenChargeMapExtractor(BaseExtractor):
             raise ValueError("Missing required field: entity_name")
 
         if "entity_type" not in validated:
-            validated["entity_type"] = EntityType.VENUE.value
 
         # Validate phone format (should already be E.164, but double-check)
         if "phone" in validated and validated["phone"]:
@@ -263,7 +260,7 @@ class OpenChargeMapExtractor(BaseExtractor):
         discovered = {}
 
         for key, value in extracted.items():
-            if is_field_in_schema(key, entity_type=EntityType.VENUE):
+            if is_field_in_schema(key):
                 attributes[key] = value
             else:
                 discovered[key] = value

@@ -13,7 +13,6 @@ from phonenumbers import NumberParseException
 from engine.extraction.base import BaseExtractor
 from engine.extraction.schema_utils import get_extraction_fields, is_field_in_schema
 from engine.extraction.utils.opening_hours import parse_opening_hours
-from engine.schema.types import EntityType
 
 
 def format_phone_uk(phone: Optional[str]) -> Optional[str]:
@@ -293,7 +292,7 @@ class GooglePlacesExtractor(BaseExtractor):
         discovered = {}
 
         for key, value in extracted.items():
-            if is_field_in_schema(key, entity_type=EntityType.VENUE):
+            if is_field_in_schema(key):
                 attributes[key] = value
             else:
                 discovered[key] = value

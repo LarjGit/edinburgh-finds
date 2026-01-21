@@ -138,7 +138,7 @@ class TestYamlGeneration(unittest.TestCase):
         yaml_content = textwrap.dedent(
             """
             schema:
-              name: Listing
+              name: Entity
               description: Test schema
 
             fields:
@@ -164,7 +164,7 @@ class TestYamlGeneration(unittest.TestCase):
         yaml_content = textwrap.dedent(
             """
             schema:
-              name: Listing
+              name: Entity
               description: Test schema
 
             fields:
@@ -191,7 +191,7 @@ class TestYamlGeneration(unittest.TestCase):
         yaml_content = textwrap.dedent(
             """
             schema:
-              name: Listing
+              name: Entity
               description: Test schema
 
             fields:

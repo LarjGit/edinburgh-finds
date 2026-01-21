@@ -93,7 +93,6 @@ class TestSchemaSync(unittest.TestCase):
 
         # Check for required imports
         self.assertIn("from .core import FieldSpec", generated_code)
-        self.assertIn("from .types import EntityType", generated_code)
         self.assertIn("ENTITY_FIELDS", generated_code)
 
 

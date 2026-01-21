@@ -1,7 +1,7 @@
 """
 End-to-end tests for the full extraction pipeline.
 
-Tests the complete flow: Ingest → Extract → Merge → Create Listing
+Tests the complete flow: Ingest → Extract → Merge → Create Entity
 This verifies that the entire extraction engine works correctly when all components
 are integrated together.
 """
@@ -21,7 +21,7 @@ from engine.extraction.deduplication import (
     FuzzyMatcher,
     MatchResult,
 )
-from engine.extraction.merging import ListingMerger, TrustHierarchy
+from engine.extraction.merging import EntityMerger, TrustHierarchy
 
 
 class TestEndToEndPipeline:
@@ -34,10 +34,10 @@ class TestEndToEndPipeline:
 
         Flow:
         1. RawIngestion record exists for Google Places venue
-        2. Extract → Creates ExtractedListing with structured data
+        2. Extract → Creates ExtractedEntity with structured data
         3. No deduplication needed (single source)
-        4. Create Listing record from extracted data
-        5. Verify Listing exists with correct fields
+        4. Create Entity record from extracted data
+        5. Verify Entity exists with correct fields
         """
         # Setup: Create mock RawIngestion record
         mock_raw_id = "test-raw-google-001"
@@ -72,7 +72,7 @@ class TestEndToEndPipeline:
             "editorialSummary": {"text": "Modern padel facility in Edinburgh with 4 courts."},
         }
 
-        # Mock ExtractedListing that would be created
+        # Mock ExtractedEntity that would be created
         mock_extracted_attributes = {
             "entity_name": "Game4Padel Edinburgh",
             "street_address": "123 Leith Walk, Edinburgh, EH6 8NP, UK",
@@ -123,10 +123,10 @@ class TestEndToEndPipeline:
         assert result["fields"]["phone"] == "+441311234567"
 
         # Step 2: Verify no deduplication needed (single source)
-        # In a real scenario, we would query for duplicate ExtractedListings
+        # In a real scenario, we would query for duplicate ExtractedEntitys
         # For this test, we're verifying the extraction worked correctly
 
-        # Step 3: Create Listing from ExtractedListing
+        # Step 3: Create Entity from ExtractedEntity
         # In production, this would be done by a separate process
         # For now, we verify the extraction data is correct and ready for listing creation
         assert result["extracted_id"] == "extracted-001"
@@ -136,7 +136,7 @@ class TestEndToEndPipeline:
         mock_db.extractedlisting.find_first.assert_called_once()
         mock_db.extractedlisting.create.assert_called_once()
 
-        # Verify the created ExtractedListing has all required fields for Listing creation
+        # Verify the created ExtractedEntity has all required fields for Entity creation
         create_call_args = mock_db.extractedlisting.create.call_args
         created_data = create_call_args[1]["data"]
 
@@ -158,13 +158,13 @@ class TestEndToEndPipeline:
 
         Flow:
         1. Three RawIngestion records exist for same venue (different sources)
-        2. Extract all three → Creates 3 ExtractedListings
+        2. Extract all three → Creates 3 ExtractedEntitys
         3. Deduplication detects they're the same venue
         4. Merge combines data using trust hierarchy
         5. Create single Listing with best data from all sources
         """
         # This test will verify the deduplication and merging logic
-        # We'll create 3 ExtractedListing records and verify they're properly deduplicated and merged
+        # We'll create 3 ExtractedEntity records and verify they're properly deduplicated and merged
 
         # Setup: Create 3 extracted listings for the same venue
         extracted_listings = [
@@ -257,7 +257,7 @@ class TestEndToEndPipeline:
         assert not match_result.is_match
 
         # Step 3: Test merging with trust hierarchy
-        merger = ListingMerger()
+        merger = EntityMerger()
         merged = merger.merge_listings(extracted_listings)
 
         # Verify merged result has best data from all sources
@@ -290,9 +290,9 @@ class TestEndToEndPipeline:
 
         Flow:
         1. Serper discovery finds new venue (not in DB)
-        2. Extract → Creates ExtractedListing from unstructured data
+        2. Extract → Creates ExtractedEntity from unstructured data
         3. Verify LLM extraction handles missing/sparse data correctly
-        4. Create Listing with available data (many nulls expected)
+        4. Create Entity with available data (many nulls expected)
         """
         # This test verifies that discovery ingestion (Serper) can create listings
         # even with sparse, unstructured data
@@ -393,10 +393,10 @@ class TestEndToEndPipeline:
 
         Flow:
         1. RawIngestion record exists for a specific entity type (COACH)
-        2. Extract → Creates ExtractedListing with correct entity_type
+        2. Extract → Creates ExtractedEntity with correct entity_type
         3. Verify entity-specific fields are extracted correctly
         4. Verify extracted data validates against entity schema
-        5. Create Listing with correct entity_type classification
+        5. Create Entity with correct entity_type classification
         """
         # Setup: Create mock RawIngestion record for a COACH entity
         mock_raw_id = "test-raw-serper-coach-001"
@@ -418,7 +418,7 @@ class TestEndToEndPipeline:
             ]
         }
 
-        # Mock ExtractedListing for COACH entity
+        # Mock ExtractedEntity for COACH entity
         mock_extracted_attributes = {
             "entity_name": "Sarah McTavish",
             "phone": "+441311234567",
@@ -507,7 +507,7 @@ class TestEndToEndPipeline:
         mock_db.extractedlisting.find_first.assert_called_once()
         mock_db.extractedlisting.create.assert_called_once()
 
-        # Step 7: Verify the created ExtractedListing has COACH entity_type
+        # Step 7: Verify the created ExtractedEntity has COACH entity_type
         create_call_args = mock_db.extractedlisting.create.call_args
         created_data = create_call_args[1]["data"]
 
@@ -571,7 +571,7 @@ class TestEndToEndPipeline:
         ]
 
         # Test merging with trust hierarchy
-        merger = ListingMerger()
+        merger = EntityMerger()
         merged = merger.merge_listings(extracted_listings)
 
         # Verify Sport Scotland wins due to highest trust level
@@ -669,7 +669,7 @@ class TestPipelineEdgeCases:
             }
         ]
 
-        merger = ListingMerger()
+        merger = EntityMerger()
         merged = merger.merge_listings(extracted_listings)
 
         # Verify minimal listing can still be created

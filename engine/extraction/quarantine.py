@@ -2,7 +2,7 @@
 Extraction quarantine and retry utilities.
 
 Records failed extractions, retries them with max retry enforcement, and stores
-successful ExtractedListing records.
+successful ExtractedEntity records.
 """
 
 import json

@@ -183,11 +183,11 @@ async def run_single_extraction(
         if "external_id" in validated:
             external_ids[f"{raw.source}_id"] = validated["external_id"]
 
-        # Get entity type (default to VENUE if not specified)
-        entity_type = validated.get("entity_type", "VENUE")
+        # Get entity type from extractor (no defaults - extractors must provide this)
+        entity_type = validated.get("entity_type")
 
-        # Create ExtractedListing record (unless dry_run)
-        extracted_listing_id = None
+        # Create ExtractedEntity record (unless dry_run)
+        extracted_entity_id = None
         if not dry_run:
             extracted_listing = await db.extractedlisting.create(
                 data={
@@ -200,10 +200,10 @@ async def run_single_extraction(
                     "model_used": validated.get("model_used"),
                 }
             )
-            extracted_listing_id = extracted_listing.id
+            extracted_entity_id = extracted_listing.id
         else:
-            logger.info(f"[DRY RUN] Would create ExtractedListing for raw_id: {raw_id}")
-            extracted_listing_id = "dry-run-simulation"
+            logger.info(f"[DRY RUN] Would create ExtractedEntity for raw_id: {raw_id}")
+            extracted_entity_id = "dry-run-simulation"
 
         duration = time.time() - start_time
         log_extraction_success(
@@ -219,7 +219,7 @@ async def run_single_extraction(
             "status": "success",
             "raw_id": raw_id,
             "source": raw.source,
-            "extracted_id": extracted_listing_id,
+            "extracted_id": extracted_entity_id,
             "entity_type": entity_type,
             "dry_run": dry_run,
         }
@@ -366,7 +366,7 @@ async def run_source_extraction(
                     # Rough estimate: ~2000 tokens per call, ~$0.002 per call
                     total_cost += 0.002
 
-                # Create ExtractedListing (unless dry_run)
+                # Create ExtractedEntity (unless dry_run)
                 if not dry_run:
                     await db.extractedlisting.create(
                         data={
@@ -563,7 +563,7 @@ async def run_all_extraction(
                         # Estimate cost (simplified)
                         source_cost += 0.002
 
-                    # Create ExtractedListing (unless dry_run)
+                    # Create ExtractedEntity (unless dry_run)
                     if not dry_run:
                         await db.extractedlisting.create(
                             data={

@@ -91,6 +91,18 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
+## [ ] Track: Engine Purity Finalization
+*Link: [./conductor/tracks/engine_purity_finalization_20260121/](./conductor/tracks/engine_purity_finalization_20260121/)*
+**Status:** Active
+**Priority:** Critical
+**Description:** Finalize engine purity and schema naming cleanup for a vertical-agnostic Entity Engine. Renaming Listing -> Entity, removing EntityType and Category, and adding persisted Lens membership.
+
+## [ ] Track: Complete Engine-Lens Architecture
+*Link: [./conductor/tracks/complete_engine_lens_architecture_20260119/](./conductor/tracks/complete_engine_lens_architecture_20260119/)*
+**Status:** Active
+**Priority:** Critical
+**Description:** Finalize the Engine-Lens separation by migrating to Supabase (Postgres) and removing all remaining legacy/vertical-specific code. Addresses blockers: SQLite limitations, Engine Purity violations, and Classification logic errors.
+
 ## [ ] Track: Engine-Lens Architecture Refactor
 *Link: [./conductor/tracks/engine_lens_architecture_20260118/](./conductor/tracks/engine_lens_architecture_20260118/)*
 **Status:** Ready for Implementation

@@ -1470,7 +1470,7 @@ echo "from lenses.loader import VerticalLens" >> engine/test.py
 - [x] **v2.2**: CI enforces engine purity (check_engine_purity.sh passes - checks LensContract boundary and structural purity)
 
 ### Database & Supabase Best Practices
-- [ ] Dimensions use `String[]` (Postgres text[] arrays, NOT Json)
+- [ ] Dimensions use `String[]` (Postgres text[] arrays, NOT Json) — **Pending Supabase/Postgres migration; current generated Prisma schemas are SQLite `String?` JSON strings**
 - [ ] Default to empty arrays `@default([])` verified (Postgres '{}')
 - [ ] **v2.2**: GIN indexes REQUIRED on all 4 dimension arrays
 - [ ] Modules use `Json` (JSONB) type

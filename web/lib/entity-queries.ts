@@ -83,13 +83,13 @@ export interface FacetFilters {
  * - hasEvery: Array contains all specified values
  *
  * @param filters - Facet filters to apply
- * @returns Prisma where clause for Listing.findMany()
+ * @returns Prisma where clause for Entity.findMany()
  */
-export function buildFacetedWhere(filters: FacetFilters): Prisma.ListingWhereInput {
-  const where: Prisma.ListingWhereInput = {};
+export function buildFacetedWhere(filters: FacetFilters): Prisma.EntityWhereInput {
+  const where: Prisma.EntityWhereInput = {};
 
   // AND logic across facets - all conditions must match
-  const conditions: Prisma.ListingWhereInput[] = [];
+  const conditions: Prisma.EntityWhereInput[] = [];
 
   // Activity facet - OR within facet (hasSome)
   if (filters.activities && filters.activities.length > 0) {
@@ -156,7 +156,7 @@ export const EXAMPLE_QUERIES = {
    * - roles: provides_facility (venues that provide facilities)
    * - entity_class: place (physical locations only)
    */
-  padelVenues: (): Prisma.ListingWhereInput => buildFacetedWhere({
+  padelVenues: (): Prisma.EntityWhereInput => buildFacetedWhere({
     activities: ["padel"],
     roles: ["provides_facility"],
     entity_class: "place",
@@ -168,7 +168,7 @@ export const EXAMPLE_QUERIES = {
    * - place_types: sports_centre
    * - entity_class: place
    */
-  sportsCentres: (): Prisma.ListingWhereInput => buildFacetedWhere({
+  sportsCentres: (): Prisma.EntityWhereInput => buildFacetedWhere({
     place_types: ["sports_centre"],
     entity_class: "place",
   }),
@@ -179,7 +179,7 @@ export const EXAMPLE_QUERIES = {
    * - roles: provides_instruction
    * - entity_class: person
    */
-  coaches: (): Prisma.ListingWhereInput => buildFacetedWhere({
+  coaches: (): Prisma.EntityWhereInput => buildFacetedWhere({
     roles: ["provides_instruction"],
     entity_class: "person",
   }),
@@ -191,7 +191,7 @@ export const EXAMPLE_QUERIES = {
    * - roles: provides_instruction
    * - entity_class: person
    */
-  racquetCoaches: (): Prisma.ListingWhereInput => buildFacetedWhere({
+  racquetCoaches: (): Prisma.EntityWhereInput => buildFacetedWhere({
     activities: ["tennis", "padel"],
     roles: ["provides_instruction"],
     entity_class: "person",
@@ -204,7 +204,7 @@ export const EXAMPLE_QUERIES = {
    * - roles: provides_facility
    * - entity_class: place
    */
-  payAndPlayVenues: (): Prisma.ListingWhereInput => buildFacetedWhere({
+  payAndPlayVenues: (): Prisma.EntityWhereInput => buildFacetedWhere({
     access: ["pay_and_play"],
     roles: ["provides_facility"],
     entity_class: "place",
@@ -217,7 +217,7 @@ export const EXAMPLE_QUERIES = {
    * - place_types: sports_centre (AND must be)
    * - access: pay_and_play (AND must have)
    */
-  payAndPlayPadelSportsCentres: (): Prisma.ListingWhereInput => buildFacetedWhere({
+  payAndPlayPadelSportsCentres: (): Prisma.EntityWhereInput => buildFacetedWhere({
     activities: ["padel"],
     place_types: ["sports_centre"],
     access: ["pay_and_play"],
@@ -250,13 +250,13 @@ export async function queryEntitiesByFacets(
   options?: {
     take?: number;
     skip?: number;
-    orderBy?: Prisma.ListingOrderByWithRelationInput;
-    select?: Prisma.ListingSelect;
+    orderBy?: Prisma.EntityOrderByWithRelationInput;
+    select?: Prisma.EntitySelect;
   }
 ) {
   const where = buildFacetedWhere(filters);
 
-  return prisma.listing.findMany({
+  return prisma.entity.findMany({
     where,
     ...options,
   });
@@ -277,7 +277,7 @@ export async function countEntitiesByFacets(
 ): Promise<number> {
   const where = buildFacetedWhere(filters);
 
-  return prisma.listing.count({
+  return prisma.entity.count({
     where,
   });
 }

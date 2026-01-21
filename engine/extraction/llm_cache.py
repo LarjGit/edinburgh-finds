@@ -2,13 +2,13 @@
 LLM Extraction Caching System
 
 This module provides caching for LLM extraction results to reduce API costs
-and improve performance. Caches are stored in the ExtractedListing table using
+and improve performance. Caches are stored in the ExtractedEntity table using
 extraction_hash as the cache key.
 
 Cache Strategy:
 - Cache key = SHA-256(raw_data + prompt + model_name)
-- Cache storage = ExtractedListing table (extraction_hash field)
-- Cache hit = Return existing ExtractedListing without LLM call
+- Cache storage = ExtractedEntity table (extraction_hash field)
+- Cache hit = Return existing ExtractedEntity without LLM call
 - Cache miss = Make LLM call and store result
 
 Benefits:
@@ -88,7 +88,7 @@ async def check_llm_cache(cache_key: str) -> Optional[Dict[str, Any]]:
     await db.connect()
 
     try:
-        # Look for ExtractedListing with matching extraction_hash
+        # Look for ExtractedEntity with matching extraction_hash
         record = await db.extractedlisting.find_first(
             where={"extraction_hash": cache_key}
         )
@@ -151,7 +151,7 @@ async def store_llm_cache(
         external_ids: Optional external ID mappings
 
     Returns:
-        Created ExtractedListing record ID
+        Created ExtractedEntity record ID
 
     Example:
         >>> cache_key = compute_cache_key(raw_data, prompt, model)
@@ -181,7 +181,7 @@ async def store_llm_cache(
             else None
         )
 
-        # Create ExtractedListing record with extraction_hash for caching
+        # Create ExtractedEntity record with extraction_hash for caching
         record = await db.extractedlisting.create(
             data={
                 "extraction_hash": cache_key,

@@ -172,8 +172,8 @@ class FieldMerger:
         return result
 
 
-class ListingMerger:
-    """Merges multiple ExtractedListing records into a single Listing."""
+class EntityMerger:
+    """Merges multiple ExtractedEntity records into a single Listing."""
 
     def __init__(
         self,
@@ -195,7 +195,7 @@ class ListingMerger:
         Merge multiple extracted listings into a single listing.
 
         Args:
-            extracted_listings: List of ExtractedListing records (as dicts)
+            extracted_listings: List of ExtractedEntity records (as dicts)
 
         Returns:
             Merged listing dict with optimal field values and provenance tracking

@@ -7,7 +7,6 @@ from engine.extraction.schema_utils import (
     get_llm_config,
     is_field_in_schema,
 )
-from engine.schema.types import EntityType
 
 
 def test_get_extraction_fields_includes_venue_fields():
@@ -17,11 +16,12 @@ def test_get_extraction_fields_includes_venue_fields():
     assert "tennis" in field_names
 
 
-def test_get_extraction_fields_for_listing_excludes_venue_fields():
-    fields = get_extraction_fields(EntityType.RETAILER)
+def test_get_extraction_fields_returns_universal_fields():
+    """Test that get_extraction_fields returns universal entity fields (no entity type discrimination)"""
+    fields = get_extraction_fields()
     field_names = {field.name for field in fields}
     assert "entity_name" in field_names
-    assert "tennis" not in field_names
+    # Note: Vertical-specific fields like "tennis" are now stored in modules JSON, not as direct fields
 
 
 def test_is_field_in_schema_true_false():
@@ -30,7 +30,7 @@ def test_is_field_in_schema_true_false():
 
 
 def test_is_field_in_schema_excludes_internal_fields():
-    assert is_field_in_schema("listing_id") is False
+    assert is_field_in_schema("entity_id") is False
 
 
 def test_get_llm_config_contains_expected_metadata():
@@ -50,7 +50,7 @@ def test_get_llm_config_contains_expected_metadata():
 def test_get_llm_config_excludes_internal_fields():
     config = get_llm_config()
     names = {item["name"] for item in config}
-    assert "listing_id" not in names
+    assert "entity_id" not in names
 
 
 def test_get_llm_config_defaults_search_keywords():

@@ -40,41 +40,32 @@ class PrismaGenerator:
         "}",
     ]
 
-    INFRA_MODELS_BEFORE_LISTING = """model Category {
-  id          String    @id @default(cuid())
-  name        String    @unique
-  slug        String    @unique
-  description String?
-  image       String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  listings    Listing[] @relation("CategoryToListing")
-}"""
+    INFRA_MODELS_BEFORE_ENTITY = ""
 
-    INFRA_MODELS_AFTER_LISTING = """model ListingRelationship {
-  id              String  @id @default(cuid())
-  sourceListingId String
-  targetListingId String
-  type            String  // e.g., "teaches_at", "plays_at", "part_of"
-  confidence      Float?  // Optional confidence score (0.0 - 1.0)
-  source          String  // Which connector/source discovered this relationship
+    INFRA_MODELS_AFTER_ENTITY = """model EntityRelationship {
+  id             String  @id @default(cuid())
+  sourceEntityId String
+  targetEntityId String
+  type           String  // e.g., "teaches_at", "plays_at", "part_of"
+  confidence     Float?  // Optional confidence score (0.0 - 1.0)
+  source         String  // Which connector/source discovered this relationship
 
-  sourceListing Listing @relation("SourceListing", fields: [sourceListingId], references: [id], onDelete: Cascade)
-  targetListing Listing @relation("TargetListing", fields: [targetListingId], references: [id], onDelete: Cascade)
+  sourceEntity Entity @relation("SourceEntity", fields: [sourceEntityId], references: [id], onDelete: Cascade)
+  targetEntity Entity @relation("TargetEntity", fields: [targetEntityId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([sourceListingId])
-  @@index([targetListingId])
+  @@index([sourceEntityId])
+  @@index([targetEntityId])
   @@index([type])
 }
 
-model ExtractedListing {
+model ExtractedEntity {
   id                    String   @id @default(cuid())
   raw_ingestion_id      String
   source                String
-  entity_type           String
+  entity_class          String
   attributes            String?
   discovered_attributes String?
   external_ids          String?
@@ -88,9 +79,9 @@ model ExtractedListing {
 
   @@index([raw_ingestion_id])
   @@index([source])
-  @@index([entity_type])
+  @@index([entity_class])
   @@index([extraction_hash])
-  @@index([source, entity_type])
+  @@index([source, entity_class])
   @@index([createdAt])
 }
 
@@ -123,7 +114,7 @@ model MergeConflict {
   winner_value       String
   trust_difference   Int
   severity           Float
-  listing_id         String?
+  entity_id          String?
   resolved           Boolean  @default(false)
   resolution_notes   String?
   createdAt          DateTime @default(now())
@@ -133,7 +124,18 @@ model MergeConflict {
   @@index([winner_source])
   @@index([severity])
   @@index([resolved])
-  @@index([listing_id])
+  @@index([entity_id])
+}
+
+model LensEntity {
+  lensId    String
+  entityId  String
+  entity    Entity   @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([lensId, entityId])
+  @@index([lensId])
+  @@index([entityId])
 }
 
 model RawIngestion {
@@ -146,7 +148,7 @@ model RawIngestion {
   hash          String   // Content hash for deduplication
   metadata_json String?  // Additional metadata stored as JSON
 
-  extractedListings ExtractedListing[]
+  extractedEntities ExtractedEntity[]
   failedExtractions FailedExtraction[]
 
   @@index([source])
@@ -157,33 +159,33 @@ model RawIngestion {
   @@index([status, ingested_at])
 }"""
 
-    LISTING_EXTRA_FIELD_LINES = {
-        "categories": '  categories   Category[] @relation("CategoryToListing")',
+    ENTITY_EXTRA_FIELD_LINES = {
         "attributes": "  attributes   String?",
         "mainImage": "  mainImage     String?",
-        "outgoingRelationships": '  outgoingRelationships ListingRelationship[] @relation("SourceListing")',
-        "incomingRelationships": '  incomingRelationships ListingRelationship[] @relation("TargetListing")',
+        "outgoingRelationships": '  outgoingRelationships EntityRelationship[] @relation("SourceEntity")',
+        "incomingRelationships": '  incomingRelationships EntityRelationship[] @relation("TargetEntity")',
+        "lensMemberships": "  lensMemberships LensEntity[]",
     }
 
-    LISTING_EXTRA_FIELDS_ORDERED = [
-        ("categories", LISTING_EXTRA_FIELD_LINES["categories"]),
-        ("attributes", LISTING_EXTRA_FIELD_LINES["attributes"]),
-        ("mainImage", LISTING_EXTRA_FIELD_LINES["mainImage"]),
-        ("outgoingRelationships", LISTING_EXTRA_FIELD_LINES["outgoingRelationships"]),
-        ("incomingRelationships", LISTING_EXTRA_FIELD_LINES["incomingRelationships"]),
+    ENTITY_EXTRA_FIELDS_ORDERED = [
+        ("attributes", ENTITY_EXTRA_FIELD_LINES["attributes"]),
+        ("mainImage", ENTITY_EXTRA_FIELD_LINES["mainImage"]),
+        ("outgoingRelationships", ENTITY_EXTRA_FIELD_LINES["outgoingRelationships"]),
+        ("incomingRelationships", ENTITY_EXTRA_FIELD_LINES["incomingRelationships"]),
+        ("lensMemberships", ENTITY_EXTRA_FIELD_LINES["lensMemberships"]),
     ]
 
-    LISTING_EXTRA_FIELDS_BY_ANCHOR = {
-        "slug": [LISTING_EXTRA_FIELDS_ORDERED[0]],
-        "summary": [LISTING_EXTRA_FIELDS_ORDERED[1]],
-        "linkedin_url": [LISTING_EXTRA_FIELDS_ORDERED[2]],
+    ENTITY_EXTRA_FIELDS_BY_ANCHOR = {
+        "summary": [ENTITY_EXTRA_FIELDS_ORDERED[0]],
+        "linkedin_url": [ENTITY_EXTRA_FIELDS_ORDERED[1]],
         "external_ids": [
-            LISTING_EXTRA_FIELDS_ORDERED[3],
-            LISTING_EXTRA_FIELDS_ORDERED[4],
+            ENTITY_EXTRA_FIELDS_ORDERED[2],
+            ENTITY_EXTRA_FIELDS_ORDERED[3],
+            ENTITY_EXTRA_FIELDS_ORDERED[4],
         ],
     }
 
-    LISTING_EXTRA_INDEXES = [
+    ENTITY_EXTRA_INDEXES = [
         "  @@index([latitude, longitude])",
         "  @@index([createdAt])",
         "  @@index([updatedAt])",
@@ -413,12 +415,12 @@ model RawIngestion {
 
         return "\n".join(lines)
 
-    def _generate_listing_model(self, schema: SchemaDefinition) -> str:
+    def _generate_entity_model(self, schema: SchemaDefinition) -> str:
         """
-        Generate Listing model with infrastructure fields and indexes.
+        Generate Entity model with infrastructure fields and indexes.
 
         Args:
-            schema: SchemaDefinition for Listing
+            schema: SchemaDefinition for Entity
 
         Returns:
             Complete Prisma model as string
@@ -441,7 +443,7 @@ model RawIngestion {
             generated_names.add(field_name)
             lines.append(field_line)
 
-            anchored_extras = self.LISTING_EXTRA_FIELDS_BY_ANCHOR.get(field_name, [])
+            anchored_extras = self.ENTITY_EXTRA_FIELDS_BY_ANCHOR.get(field_name, [])
             for extra_name, extra_line in anchored_extras:
                 if extra_name in generated_names or extra_name in placed_extra:
                     continue
@@ -449,7 +451,7 @@ model RawIngestion {
                 placed_extra.add(extra_name)
 
         # Append any remaining extra fields
-        for extra_name, extra_line in self.LISTING_EXTRA_FIELDS_ORDERED:
+        for extra_name, extra_line in self.ENTITY_EXTRA_FIELDS_ORDERED:
             if extra_name in generated_names or extra_name in placed_extra:
                 continue
             lines.append(extra_line)
@@ -457,7 +459,7 @@ model RawIngestion {
 
         # Add blank line before indexes
         indexes = self._generate_indexes(schema)
-        extra_indexes = [idx for idx in self.LISTING_EXTRA_INDEXES if idx not in indexes]
+        extra_indexes = [idx for idx in self.ENTITY_EXTRA_INDEXES if idx not in indexes]
         if indexes or extra_indexes:
             lines.append("")
             lines.extend(indexes)
@@ -486,8 +488,8 @@ model RawIngestion {
         if target not in {"engine", "web"}:
             raise ValueError("target must be 'engine' or 'web'")
 
-        if not any(schema.name == "Listing" for schema in schemas):
-            raise ValueError("Listing schema is required for full Prisma schema generation")
+        if not any(schema.name == "Entity" for schema in schemas):
+            raise ValueError("Entity schema is required for full Prisma schema generation")
 
         lines = []
 
@@ -523,29 +525,19 @@ model RawIngestion {
         lines.append("}")
         lines.append("")
 
-        # Database-specific notes
-        if self.database == "sqlite":
-            lines.append("// TODO: When migrating to Supabase (PostgreSQL), replace entityType String with native enum:")
-            lines.append("//   enum EntityType { VENUE, RETAILER, COACH, INSTRUCTOR, CLUB, LEAGUE, EVENT, TOURNAMENT }")
-            lines.append("//")
-            lines.append("// TEMPORARY SQLite LIMITATION: SQLite doesn't support native Prisma enums.")
-            lines.append("// EntityType is currently stored as String but validated as Enum in application code.")
-            lines.append("// Valid values: VENUE, RETAILER, COACH, INSTRUCTOR, CLUB, LEAGUE, EVENT, TOURNAMENT")
-            lines.append("")
-
         model_blocks = []
 
-        if self.INFRA_MODELS_BEFORE_LISTING:
-            model_blocks.append(self.INFRA_MODELS_BEFORE_LISTING.strip())
+        if self.INFRA_MODELS_BEFORE_ENTITY:
+            model_blocks.append(self.INFRA_MODELS_BEFORE_ENTITY.strip())
 
         for schema in schemas:
-            if schema.name == "Listing":
-                model_blocks.append(self._generate_listing_model(schema))
+            if schema.name == "Entity":
+                model_blocks.append(self._generate_entity_model(schema))
             else:
                 model_blocks.append(self._generate_model(schema))
 
-        if self.INFRA_MODELS_AFTER_LISTING:
-            model_blocks.append(self.INFRA_MODELS_AFTER_LISTING.strip())
+        if self.INFRA_MODELS_AFTER_ENTITY:
+            model_blocks.append(self.INFRA_MODELS_AFTER_ENTITY.strip())
 
         if model_blocks:
             lines.append("\n\n".join(model_blocks))
@@ -591,16 +583,6 @@ model RawIngestion {
 
         lines.append("}")
         lines.append("")
-
-        # Database-specific notes
-        if self.database == "sqlite":
-            lines.append("// TODO: When migrating to Supabase (PostgreSQL), replace entityType String with native enum:")
-            lines.append("//   enum EntityType { VENUE, RETAILER, COACH, INSTRUCTOR, CLUB, LEAGUE, EVENT, TOURNAMENT }")
-            lines.append("//")
-            lines.append("// TEMPORARY SQLite LIMITATION: SQLite doesn't support native Prisma enums.")
-            lines.append("// EntityType is currently stored as String but validated as Enum in application code.")
-            lines.append("// Valid values: VENUE, RETAILER, COACH, INSTRUCTOR, CLUB, LEAGUE, EVENT, TOURNAMENT")
-            lines.append("")
 
         # Generate models
         for i, schema in enumerate(schemas):

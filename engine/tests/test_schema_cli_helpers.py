@@ -15,7 +15,7 @@ def _write_schema(path: Path) -> None:
         "\n".join(
             [
                 "schema:",
-                "  name: Listing",
+                "  name: Entity",
                 "  description: Test schema",
                 "",
                 "fields:",

@@ -1,7 +1,7 @@
 """
-Test that extraction output is compatible with the Listing Prisma schema.
+Test that extraction output is compatible with the Entity Prisma schema.
 
-Verifies that ExtractedListing data can be properly transformed into Listing records
+Verifies that ExtractedEntity data can be properly transformed into Entity records
 without schema mismatches or missing required fields.
 """
 
@@ -9,7 +9,7 @@ import json
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 
-from engine.extraction.merging import ListingMerger
+from engine.extraction.merging import EntityMerger
 
 
 class TestSchemaCompatibility:
@@ -17,12 +17,12 @@ class TestSchemaCompatibility:
 
     def test_extracted_listing_fields_match_listing_schema(self):
         """
-        Verify that ExtractedListing attributes align with Listing schema fields.
+        Verify that ExtractedEntity attributes align with Listing schema fields.
 
         This test ensures that the fields extracted from sources match the
         expected Listing model structure in Prisma.
         """
-        # Create sample ExtractedListing data
+        # Create sample ExtractedEntity data
         extracted_listings = [
             {
                 "id": "ext-001",
@@ -54,7 +54,7 @@ class TestSchemaCompatibility:
         ]
 
         # Merge to create Listing-ready data
-        merger = ListingMerger()
+        merger = EntityMerger()
         merged = merger.merge_listings(extracted_listings)
 
         # Verify all required Listing fields are present
@@ -82,42 +82,7 @@ class TestSchemaCompatibility:
         assert "source_info" in merged
         assert isinstance(merged["source_info"], dict)
 
-    def test_entity_type_values_are_valid(self):
-        """
-        Verify that entity_type values match the valid EntityType enum values.
-
-        Prisma schema validates entity_type in application layer, so we need
-        to ensure extracted values match the allowed enum values.
-        """
-        from engine.schema.types import EntityType
-
-        # Test each valid entity type
-        valid_types = [
-            "VENUE", "RETAILER", "COACH", "INSTRUCTOR",
-            "CLUB", "LEAGUE", "EVENT", "TOURNAMENT"
-        ]
-
-        for entity_type in valid_types:
-            extracted_listings = [
-                {
-                    "id": f"ext-{entity_type.lower()}-001",
-                    "source": "serper",
-                    "entity_type": entity_type,
-                    "attributes": {
-                        "entity_name": f"Test {entity_type}",
-                    },
-                    "discovered_attributes": {},
-                    "external_ids": {},
-                }
-            ]
-
-            merger = ListingMerger()
-            merged = merger.merge_listings(extracted_listings)
-
-            # Verify entity_type is preserved and valid
-            assert merged["entity_type"] == entity_type
-            # Verify it matches an EntityType enum value
-            assert merged["entity_type"] in [e.value for e in EntityType]
+    # Note: test_entity_type_values_are_valid removed as entity_type field no longer exists
 
     def test_json_fields_are_serializable(self):
         """
@@ -151,7 +116,7 @@ class TestSchemaCompatibility:
             }
         ]
 
-        merger = ListingMerger()
+        merger = EntityMerger()
         merged = merger.merge_listings(extracted_listings)
 
         # Verify all JSON fields can be serialized
@@ -191,7 +156,7 @@ class TestSchemaCompatibility:
             }
         ]
 
-        merger = ListingMerger()
+        merger = EntityMerger()
         merged = merger.merge_listings(extracted_listings)
 
         # Verify opening_hours is present and serializable
@@ -208,11 +173,11 @@ class TestSchemaCompatibility:
     @pytest.mark.asyncio
     async def test_create_listing_from_extracted_data(self):
         """
-        Integration test: Create a Listing record from ExtractedListing data.
+        Integration test: Create a Entity record from ExtractedEntity data.
 
         This test simulates the full flow of:
-        1. Merge ExtractedListings
-        2. Create Listing record in database
+        1. Merge ExtractedEntitys
+        2. Create Entity record in database
         3. Verify Listing is stored correctly
         """
         extracted_listings = [
@@ -242,7 +207,7 @@ class TestSchemaCompatibility:
         ]
 
         # Merge the extracted data
-        merger = ListingMerger()
+        merger = EntityMerger()
         merged = merger.merge_listings(extracted_listings)
 
         # Mock database
@@ -255,7 +220,7 @@ class TestSchemaCompatibility:
 
         mock_db.listing.create = AsyncMock(return_value=mock_listing)
 
-        # Prepare data for Listing creation
+        # Prepare data for Entity creation
         listing_data = {
             "entity_name": merged["entity_name"],
             "slug": merged.get("slug", "game4padel-edinburgh"),
@@ -274,7 +239,7 @@ class TestSchemaCompatibility:
             "source_info": json.dumps(merged.get("source_info", {})),
         }
 
-        # Create Listing
+        # Create Entity
         listing = await mock_db.listing.create(data=listing_data)
 
         # Verify Listing was created
@@ -304,7 +269,7 @@ class TestSchemaCompatibility:
         Many Listing fields are optional (nullable), so we need to ensure
         extraction handles missing data correctly.
         """
-        # Create minimal ExtractedListing with only required fields
+        # Create minimal ExtractedEntity with only required fields
         extracted_listings = [
             {
                 "id": "ext-minimal-001",
@@ -319,7 +284,7 @@ class TestSchemaCompatibility:
             }
         ]
 
-        merger = ListingMerger()
+        merger = EntityMerger()
         merged = merger.merge_listings(extracted_listings)
 
         # Verify required fields are present

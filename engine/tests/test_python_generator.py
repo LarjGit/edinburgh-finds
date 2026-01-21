@@ -249,7 +249,7 @@ class TestFileGeneration(unittest.TestCase):
             description="Base schema for all entity types",
             fields=[
                 FieldDefinition(
-                    name="listing_id",
+                    name="entity_id",
                     type="string",
                     description="Unique identifier",
                     nullable=False,
@@ -291,7 +291,7 @@ class TestFileGeneration(unittest.TestCase):
         self.assertIn("LISTING_FIELDS: List[FieldSpec] = [", result)
 
         # Check for field generation
-        self.assertIn('name="listing_id"', result)
+        self.assertIn('name="entity_id"', result)
         self.assertIn('name="entity_name"', result)
         self.assertIn('name="summary"', result)
 
@@ -463,7 +463,7 @@ class TestFieldSpecGeneration(unittest.TestCase):
     def test_field_with_primary_key(self):
         """Generate FieldSpec for primary key field"""
         field = FieldDefinition(
-            name="listing_id",
+            name="entity_id",
             type="string",
             description="Unique identifier",
             nullable=False,

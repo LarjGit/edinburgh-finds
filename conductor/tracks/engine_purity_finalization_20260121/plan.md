@@ -77,7 +77,7 @@
         3.  `cd web && npx prisma generate` (Updates JS Prisma client).
     -   **Verification:** Check `engine/schema.py` defines `class Entity`.
 
-- [ ] **Task 2.3:** Remove EntityType Usage.
+- [x] **Task 2.3:** Remove EntityType Usage.
     -   **Files:** `engine/extraction/models.py`, `engine/schema.prisma` (already done), `engine/config/entity_model.yaml`.
     -   **Action:**
         -   Delete `EntityType` enum definition in code.

@@ -1,7 +1,7 @@
 """
 Tests for full listing merging.
 
-Listing merging combines multiple ExtractedListing records (from different sources)
+Listing merging combines multiple ExtractedEntity records (from different sources)
 into a single Listing record with optimal field values based on trust hierarchy.
 """
 

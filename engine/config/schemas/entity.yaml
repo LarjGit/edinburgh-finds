@@ -1,15 +1,15 @@
 # ============================================================
-# LISTING SCHEMA - Common fields for all entity types
+# ENTITY SCHEMA - Common fields for all entity types
 # ============================================================
-# This is the single source of truth for the Listing model.
-# All entity-specific schemas (venue, retailer, etc.) extend this.
+# This is the single source of truth for the Entity model.
+# All entity-specific schemas (if any) extend this.
 #
-# DO NOT EDIT GENERATED FILES (listing.py, schema.prisma)
+# DO NOT EDIT GENERATED FILES (entity.py, schema.prisma)
 # Edit this YAML file and regenerate instead.
 # ============================================================
 
 schema:
-  name: Listing
+  name: Entity
   description: Base schema for all entity types (venues, retailers, coaches, etc.)
   extends: null
 
@@ -17,7 +17,7 @@ fields:
   # ------------------------------------------------------------------
   # IDENTIFICATION
   # ------------------------------------------------------------------
-  - name: listing_id
+  - name: entity_id
     type: string
     description: Unique identifier (auto-generated)
     nullable: false
@@ -47,18 +47,6 @@ fields:
       validators:
         - non_empty
       extraction_required: true
-
-  - name: entity_type
-    type: string
-    description: Type of entity (venue, retailer, cafe, event, members_club, etc)
-    nullable: false
-    required: true
-    index: true
-    python:
-      type_annotation: "EntityType"
-    prisma:
-      name: entityType
-      type: "String"  # String in SQLite, Enum in PostgreSQL
 
   - name: entity_class
     type: string
@@ -102,31 +90,22 @@ fields:
   # CLASSIFICATION
   # ------------------------------------------------------------------
 
-  - name: categories
+  - name: raw_categories
     type: list[string]
-    description: Raw free-form categories detected by the LLM (uncontrolled labels)
+    description: Raw free-form categories detected by the LLM (uncontrolled observational labels - NOT indexed, NOT used for filtering)
     nullable: true
-    search:
-      category: categories
-      keywords:
-        - categories
-        - type
-        - kind
+    exclude: true  # Populated by extraction engine
     python:
       sa_column: "Column(ARRAY(String))"
+      default: "default_factory=list"
     prisma:
-      type: "Category[]"  # Relation in Prisma
-      skip: true  # Will be handled as a relation, not a simple field
-
-  - name: canonical_categories
-    type: list[string]
-    description: Cleaned, controlled categories used for navigation and taxonomy
-    nullable: true
-    exclude: true  # Auto-generated from categories
-    python:
-      sa_column: "Column(ARRAY(String))"
-    prisma:
-      skip: true  # Relation or custom handling in Prisma
+      type: "String[]"
+      attributes:
+        - "@default([])"
+    notes:
+      - "Engine Purity: Opaque discovery signals only, NOT taxonomy"
+      - "NO index, NO filtering, NO interpretation by engine"
+      - "Used by lenses for mapping rules only"
 
   # ------------------------------------------------------------------
   # MULTI-VALUED DIMENSIONS (Engine-Lens Architecture)

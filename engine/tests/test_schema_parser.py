@@ -32,12 +32,12 @@ def valid_base_yaml(schemas_dir):
     """Create a valid listing.yaml for testing."""
     content = """
 schema:
-  name: Listing
+  name: Entity
   description: Base schema for all entity types
   extends: null
 
 fields:
-  - name: listing_id
+  - name: entity_id
     type: string
     description: Unique identifier
     nullable: false
@@ -83,11 +83,11 @@ schema:
   extends: listing
 
 fields:
-  - name: listing_id
+  - name: entity_id
     type: string
     description: Foreign key to parent Listing
     nullable: false
-    foreign_key: listings.listing_id
+    foreign_key: listings.entity_id
     primary_key: true
     exclude: true
 
@@ -145,16 +145,16 @@ def test_parse_field_attributes(valid_base_yaml):
     parser = SchemaParser()
     schema_def = parser.parse(valid_base_yaml)
 
-    # Check first field (listing_id)
-    listing_id = schema_def.fields[0]
-    assert listing_id.name == "listing_id"
-    assert listing_id.type == "string"
-    assert listing_id.description == "Unique identifier"
-    assert listing_id.nullable is False
-    assert listing_id.required is False
-    assert listing_id.primary_key is True
-    assert listing_id.exclude is True
-    assert listing_id.default == "cuid()"
+    # Check first field (entity_id)
+    entity_id = schema_def.fields[0]
+    assert entity_id.name == "entity_id"
+    assert entity_id.type == "string"
+    assert entity_id.description == "Unique identifier"
+    assert entity_id.nullable is False
+    assert entity_id.required is False
+    assert entity_id.primary_key is True
+    assert entity_id.exclude is True
+    assert entity_id.default == "cuid()"
 
 
 def test_parse_field_search_metadata(valid_base_yaml):

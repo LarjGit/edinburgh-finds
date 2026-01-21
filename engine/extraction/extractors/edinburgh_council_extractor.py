@@ -13,7 +13,6 @@ from engine.extraction.base import BaseExtractor
 from engine.extraction.schema_utils import get_extraction_fields, is_field_in_schema
 from engine.extraction.extractors.google_places_extractor import format_phone_uk, format_postcode_uk
 from engine.extraction.utils.opening_hours import parse_opening_hours
-from engine.schema.types import EntityType
 
 
 class EdinburghCouncilExtractor(BaseExtractor):
@@ -99,7 +98,6 @@ class EdinburghCouncilExtractor(BaseExtractor):
             "Unknown"
         )
         extracted["entity_name"] = entity_name
-        extracted["entity_type"] = EntityType.VENUE.value  # Default to VENUE
 
         # Address - Edinburgh Council defaults
         street_address = properties.get("ADDRESS") or properties.get("STREET_ADDRESS")
@@ -239,7 +237,6 @@ class EdinburghCouncilExtractor(BaseExtractor):
             raise ValueError("Missing required field: entity_name")
 
         if "entity_type" not in validated:
-            validated["entity_type"] = EntityType.VENUE.value
 
         # Validate phone format (should already be E.164, but double-check)
         if "phone" in validated and validated["phone"]:
@@ -285,7 +282,7 @@ class EdinburghCouncilExtractor(BaseExtractor):
         discovered = {}
 
         for key, value in extracted.items():
-            if is_field_in_schema(key, entity_type=EntityType.VENUE):
+            if is_field_in_schema(key):
                 attributes[key] = value
             else:
                 discovered[key] = value

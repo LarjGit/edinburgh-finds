@@ -4,7 +4,7 @@ import { parseDimensionArray, parseModules } from "@/lib/entity-helpers";
 
 export default async function Home() {
   // Example 1: Get all listings (unfiltered)
-  const listings = await prisma.listing.findMany({
+  const listings = await prisma.entity.findMany({
     take: 5,
     select: {
       id: true,
@@ -26,7 +26,7 @@ export default async function Home() {
   // NOTE: Prisma array filters (hasSome, has, hasEvery) only work with native PostgreSQL arrays.
   // SQLite stores dimensions as JSON strings, so array filters are not supported.
   // This will be fully functional when migrating to Postgres/Supabase.
-  const filteredListings = await prisma.listing.findMany({
+  const filteredListings = await prisma.entity.findMany({
     where: {
       entity_class: "place", // Basic filtering still works
     },

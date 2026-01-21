@@ -54,6 +54,8 @@ The current architecture mixes vertical-specific concepts (padel, tennis, gym, c
 
 We are separating a universal, vertical-agnostic entity engine from a lens layer that owns all interpretation, taxonomy, and domain behavior, with strict contracts and zero leakage between layers.
 
+**Database Contract (Non-Negotiable):** SQLite is temporary and dev-only. Supabase (Postgres) is the production target and the authoritative schema environment. All engine architecture guarantees around `String[]` dimensions, GIN indexes, and JSONB modules are defined against Postgres and must be validated there.
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │ LENS LAYER (Vertical-Specific)                                 │

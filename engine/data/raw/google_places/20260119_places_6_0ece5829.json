@@ -1,0 +1,1044 @@
+{
+  "places": [
+    {
+      "id": "ChIJbZOmsJu4h0gR2SNLani8iCA",
+      "types": [
+        "athletic_field",
+        "sports_club",
+        "sports_activity_location",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Cameron Toll Shopping Centre, Lady Rd, Edinburgh EH16 5TZ, UK",
+      "location": {
+        "latitude": 55.924946,
+        "longitude": -3.1642340000000004
+      },
+      "rating": 4.6,
+      "googleMapsUri": "https://maps.google.com/?cid=2344330831411749849&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA",
+      "regularOpeningHours": {
+        "openNow": true,
+        "periods": [
+          {
+            "open": {
+              "day": 0,
+              "hour": 7,
+              "minute": 0
+            },
+            "close": {
+              "day": 0,
+              "hour": 22,
+              "minute": 30
+            }
+          },
+          {
+            "open": {
+              "day": 1,
+              "hour": 7,
+              "minute": 0
+            },
+            "close": {
+              "day": 1,
+              "hour": 22,
+              "minute": 30
+            }
+          },
+          {
+            "open": {
+              "day": 2,
+              "hour": 7,
+              "minute": 0
+            },
+            "close": {
+              "day": 2,
+              "hour": 22,
+              "minute": 30
+            }
+          },
+          {
+            "open": {
+              "day": 3,
+              "hour": 7,
+              "minute": 0
+            },
+            "close": {
+              "day": 3,
+              "hour": 22,
+              "minute": 30
+            }
+          },
+          {
+            "open": {
+              "day": 4,
+              "hour": 7,
+              "minute": 0
+            },
+            "close": {
+              "day": 4,
+              "hour": 22,
+              "minute": 30
+            }
+          },
+          {
+            "open": {
+              "day": 5,
+              "hour": 7,
+              "minute": 0
+            },
+            "close": {
+              "day": 5,
+              "hour": 22,
+              "minute": 30
+            }
+          },
+          {
+            "open": {
+              "day": 6,
+              "hour": 7,
+              "minute": 0
+            },
+            "close": {
+              "day": 6,
+              "hour": 22,
+              "minute": 30
+            }
+          }
+        ],
+        "weekdayDescriptions": [
+          "Monday: 7:00 AM – 10:30 PM",
+          "Tuesday: 7:00 AM – 10:30 PM",
+          "Wednesday: 7:00 AM – 10:30 PM",
+          "Thursday: 7:00 AM – 10:30 PM",
+          "Friday: 7:00 AM – 10:30 PM",
+          "Saturday: 7:00 AM – 10:30 PM",
+          "Sunday: 7:00 AM – 10:30 PM"
+        ],
+        "nextCloseTime": "2026-01-19T22:30:00Z"
+      },
+      "userRatingCount": 36,
+      "displayName": {
+        "text": "Craigmillar Park Tennis & Padel Club, Edinburgh",
+        "languageCode": "en"
+      },
+      "reviews": [
+        {
+          "name": "places/ChIJbZOmsJu4h0gR2SNLani8iCA/reviews/ChZDSUhNMG9nS0VJQ0FnSUR1a3FQWkVnEAE",
+          "relativePublishTimeDescription": "3 years ago",
+          "rating": 5,
+          "text": {
+            "text": "Very nice courts which play well and very friendly. Highly recommended.",
+            "languageCode": "en"
+          },
+          "originalText": {
+            "text": "Very nice courts which play well and very friendly. Highly recommended.",
+            "languageCode": "en"
+          },
+          "authorAttribution": {
+            "displayName": "Alison Savage",
+            "uri": "https://www.google.com/maps/contrib/112094953902635235070/reviews",
+            "photoUri": "https://lh3.googleusercontent.com/a-/ALV-UjWgeEPSZ-fqaQxTlKTP3SjzKxkIx5w_soPaNyiP2Do1dhp5qlqV=s128-c0x00000000-cc-rp-mo-ba4"
+          },
+          "publishTime": "2022-08-17T07:41:42.477268Z",
+          "flagContentUri": "https://www.google.com/local/content/rap/report?postId=ChZDSUhNMG9nS0VJQ0FnSUR1a3FQWkVnEAE&d=17924085&t=1",
+          "googleMapsUri": "https://www.google.com/maps/reviews/data=!4m6!14m5!1m4!2m3!1sChZDSUhNMG9nS0VJQ0FnSUR1a3FQWkVnEAE!2m1!1s0x4887b89bb0a6936d:0x2088bc786a4b23d9"
+        },
+        {
+          "name": "places/ChIJbZOmsJu4h0gR2SNLani8iCA/reviews/ChZDSUhNMG9nS0VJQ0FnSUNVeEtUU2N3EAE",
+          "relativePublishTimeDescription": "6 years ago",
+          "rating": 5,
+          "text": {
+            "text": "A well organised, friendly club with four excellent, well maintained courts and a nice little club house.\n\nWith team matches, social play and club tournaments, there is always plenty going on. I joined without knowing anyone and was made to feel very welcome, right from the start.",
+            "languageCode": "en"
+          },
+          "originalText": {
+            "text": "A well organised, friendly club with four excellent, well maintained courts and a nice little club house.\n\nWith team matches, social play and club tournaments, there is always plenty going on. I joined without knowing anyone and was made to feel very welcome, right from the start.",
+            "languageCode": "en"
+          },
+          "authorAttribution": {
+            "displayName": "Stephen Keppie",
+            "uri": "https://www.google.com/maps/contrib/100975229604949055510/reviews",
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJsiR9DqnI0mdXfN7AQFonn3Pft8t7aVVShASVr-DNUIUcjUA=s128-c0x00000000-cc-rp-mo-ba2"
+          },
+          "publishTime": "2019-07-17T19:35:27.630617Z",
+          "flagContentUri": "https://www.google.com/local/content/rap/report?postId=ChZDSUhNMG9nS0VJQ0FnSUNVeEtUU2N3EAE&d=17924085&t=1",
+          "googleMapsUri": "https://www.google.com/maps/reviews/data=!4m6!14m5!1m4!2m3!1sChZDSUhNMG9nS0VJQ0FnSUNVeEtUU2N3EAE!2m1!1s0x4887b89bb0a6936d:0x2088bc786a4b23d9"
+        },
+        {
+          "name": "places/ChIJbZOmsJu4h0gR2SNLani8iCA/reviews/ChZDSUhNMG9nS0VJQ0FnSUROdjZmVGZBEAE",
+          "relativePublishTimeDescription": "a year ago",
+          "rating": 5,
+          "text": {
+            "text": "Great, friendly club which well kept facilities. Plenty of booking opportunities across 4 floodlit tennis courts. The clubhouse is fab",
+            "languageCode": "en"
+          },
+          "originalText": {
+            "text": "Great, friendly club which well kept facilities. Plenty of booking opportunities across 4 floodlit tennis courts. The clubhouse is fab",
+            "languageCode": "en"
+          },
+          "authorAttribution": {
+            "displayName": "Apple Chew",
+            "uri": "https://www.google.com/maps/contrib/109026774561657446610/reviews",
+            "photoUri": "https://lh3.googleusercontent.com/a-/ALV-UjWnO90lJ4I6KO9G0e9WiXPwBECUiue4YjXBwPn4D3TcC40Bt4Ft=s128-c0x00000000-cc-rp-mo-ba4"
+          },
+          "publishTime": "2024-01-27T17:24:31.491725Z",
+          "flagContentUri": "https://www.google.com/local/content/rap/report?postId=ChZDSUhNMG9nS0VJQ0FnSUROdjZmVGZBEAE&d=17924085&t=1",
+          "googleMapsUri": "https://www.google.com/maps/reviews/data=!4m6!14m5!1m4!2m3!1sChZDSUhNMG9nS0VJQ0FnSUROdjZmVGZBEAE!2m1!1s0x4887b89bb0a6936d:0x2088bc786a4b23d9"
+        },
+        {
+          "name": "places/ChIJbZOmsJu4h0gR2SNLani8iCA/reviews/ChZDSUhNMG9nS0VJQ0FnSUNKN09TZGRREAE",
+          "relativePublishTimeDescription": "9 months ago",
+          "rating": 5,
+          "text": {
+            "text": "Very friendly and well organised tennis an d padel club",
+            "languageCode": "en"
+          },
+          "originalText": {
+            "text": "Very friendly and well organised tennis an d padel club",
+            "languageCode": "en"
+          },
+          "authorAttribution": {
+            "displayName": "Laurence Smythe",
+            "uri": "https://www.google.com/maps/contrib/110008502075911160751/reviews",
+            "photoUri": "https://lh3.googleusercontent.com/a-/ALV-UjVRT5YMtN14ueHegE9eg0MBz1jjHL9WSMAtIKIwFZypvt1u35mA=s128-c0x00000000-cc-rp-mo-ba5"
+          },
+          "publishTime": "2025-04-11T20:37:11.490994Z",
+          "flagContentUri": "https://www.google.com/local/content/rap/report?postId=ChZDSUhNMG9nS0VJQ0FnSUNKN09TZGRREAE&d=17924085&t=1",
+          "googleMapsUri": "https://www.google.com/maps/reviews/data=!4m6!14m5!1m4!2m3!1sChZDSUhNMG9nS0VJQ0FnSUNKN09TZGRREAE!2m1!1s0x4887b89bb0a6936d:0x2088bc786a4b23d9"
+        },
+        {
+          "name": "places/ChIJbZOmsJu4h0gR2SNLani8iCA/reviews/ChdDSUhNMG9nS0VJQ0FnSURjOWItLXpBRRAB",
+          "relativePublishTimeDescription": "5 years ago",
+          "rating": 5,
+          "text": {
+            "text": "Great tennis club - friendly people and nice setting!",
+            "languageCode": "en"
+          },
+          "originalText": {
+            "text": "Great tennis club - friendly people and nice setting!",
+            "languageCode": "en"
+          },
+          "authorAttribution": {
+            "displayName": "Mary Davidson",
+            "uri": "https://www.google.com/maps/contrib/114630723737689893081/reviews",
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJh-c0meGh7Fzgbipb8lOa7WK8rSeUSNA_YKPPtjb8S-OQAzQ=s128-c0x00000000-cc-rp-mo"
+          },
+          "publishTime": "2020-06-16T18:37:08.773078Z",
+          "flagContentUri": "https://www.google.com/local/content/rap/report?postId=ChdDSUhNMG9nS0VJQ0FnSURjOWItLXpBRRAB&d=17924085&t=1",
+          "googleMapsUri": "https://www.google.com/maps/reviews/data=!4m6!14m5!1m4!2m3!1sChdDSUhNMG9nS0VJQ0FnSURjOWItLXpBRRAB!2m1!1s0x4887b89bb0a6936d:0x2088bc786a4b23d9"
+        }
+      ]
+    },
+    {
+      "id": "ChIJhwNDsAjFh0gRDARGLR5vtdI",
+      "types": [
+        "sports_activity_location",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "1, New Park Square, Edinburgh Park, Edinburgh EH12 9GR, UK",
+      "location": {
+        "latitude": 55.930189299999995,
+        "longitude": -3.3153414999999997
+      },
+      "rating": 4.4,
+      "googleMapsUri": "https://maps.google.com/?cid=15183163894148760588&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA",
+      "regularOpeningHours": {
+        "openNow": true,
+        "periods": [
+          {
+            "open": {
+              "day": 0,
+              "hour": 7,
+              "minute": 0
+            },
+            "close": {
+              "day": 0,
+              "hour": 22,
+              "minute": 0
+            }
+          },
+          {
+            "open": {
+              "day": 1,
+              "hour": 7,
+              "minute": 0
+            },
+            "close": {
+              "day": 1,
+              "hour": 22,
+              "minute": 0
+            }
+          },
+          {
+            "open": {
+              "day": 2,
+              "hour": 7,
+              "minute": 0
+            },
+            "close": {
+              "day": 2,
+              "hour": 22,
+              "minute": 0
+            }
+          },
+          {
+            "open": {
+              "day": 3,
+              "hour": 7,
+              "minute": 0
+            },
+            "close": {
+              "day": 3,
+              "hour": 22,
+              "minute": 0
+            }
+          },
+          {
+            "open": {
+              "day": 4,
+              "hour": 7,
+              "minute": 0
+            },
+            "close": {
+              "day": 4,
+              "hour": 22,
+              "minute": 0
+            }
+          },
+          {
+            "open": {
+              "day": 5,
+              "hour": 7,
+              "minute": 0
+            },
+            "close": {
+              "day": 5,
+              "hour": 22,
+              "minute": 0
+            }
+          },
+          {
+            "open": {
+              "day": 6,
+              "hour": 7,
+              "minute": 0
+            },
+            "close": {
+              "day": 6,
+              "hour": 22,
+              "minute": 0
+            }
+          }
+        ],
+        "weekdayDescriptions": [
+          "Monday: 7:00 AM – 10:00 PM",
+          "Tuesday: 7:00 AM – 10:00 PM",
+          "Wednesday: 7:00 AM – 10:00 PM",
+          "Thursday: 7:00 AM – 10:00 PM",
+          "Friday: 7:00 AM – 10:00 PM",
+          "Saturday: 7:00 AM – 10:00 PM",
+          "Sunday: 7:00 AM – 10:00 PM"
+        ],
+        "nextCloseTime": "2026-01-19T22:00:00Z"
+      },
+      "userRatingCount": 15,
+      "displayName": {
+        "text": "Game4Padel | Edinburgh Park",
+        "languageCode": "en"
+      },
+      "reviews": [
+        {
+          "name": "places/ChIJhwNDsAjFh0gRDARGLR5vtdI/reviews/ChdDSUhNMG9nS0VJQ0FnSUNCcS1QenhBRRAB",
+          "relativePublishTimeDescription": "3 years ago",
+          "rating": 4,
+          "text": {
+            "text": "Great concept and set up, fab court and facility, padel rackets and balls available to use once inside the courts (not rent from restaurant as stated on website). Only issue is floodlights didn’t turn on and couldn’t figure out how to turn on, so was challenging to play and no contact details to get in touch with anyone to see how to rectify.",
+            "languageCode": "en"
+          },
+          "originalText": {
+            "text": "Great concept and set up, fab court and facility, padel rackets and balls available to use once inside the courts (not rent from restaurant as stated on website). Only issue is floodlights didn’t turn on and couldn’t figure out how to turn on, so was challenging to play and no contact details to get in touch with anyone to see how to rectify.",
+            "languageCode": "en"
+          },
+          "authorAttribution": {
+            "displayName": "Natasha Misbah",
+            "uri": "https://www.google.com/maps/contrib/102866450021433813220/reviews",
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocK21QquAtlC1rdY_mLmYj6aouzCs8nV3f6Lfkk4N_P9ViDqiw=s128-c0x00000000-cc-rp-mo"
+          },
+          "publishTime": "2023-01-04T18:14:30.176892Z",
+          "flagContentUri": "https://www.google.com/local/content/rap/report?postId=ChdDSUhNMG9nS0VJQ0FnSUNCcS1QenhBRRAB&d=17924085&t=1",
+          "googleMapsUri": "https://www.google.com/maps/reviews/data=!4m6!14m5!1m4!2m3!1sChdDSUhNMG9nS0VJQ0FnSUNCcS1QenhBRRAB!2m1!1s0x4887c508b0430387:0xd2b56f1e2d46040c"
+        },
+        {
+          "name": "places/ChIJhwNDsAjFh0gRDARGLR5vtdI/reviews/Ci9DQUlRQUNvZENodHljRjlvT25SSE5qVlhTWGhPUW1OaU1FRkZXRzlxUjA5S1puYxAB",
+          "relativePublishTimeDescription": "6 months ago",
+          "rating": 4,
+          "text": {
+            "text": "Nice space but needs a water fountain nearby for it and the pickle ball courts",
+            "languageCode": "en"
+          },
+          "originalText": {
+            "text": "Nice space but needs a water fountain nearby for it and the pickle ball courts",
+            "languageCode": "en"
+          },
+          "authorAttribution": {
+            "displayName": "Kyle Cooke",
+            "uri": "https://www.google.com/maps/contrib/113003210581998565654/reviews",
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocI4AmWh4COP8VjMeo-dYVu34j_DaiSb4fUBKhKab24O64Zeqw=s128-c0x00000000-cc-rp-mo-ba3"
+          },
+          "publishTime": "2025-07-01T23:06:21.618514679Z",
+          "flagContentUri": "https://www.google.com/local/content/rap/report?postId=Ci9DQUlRQUNvZENodHljRjlvT25SSE5qVlhTWGhPUW1OaU1FRkZXRzlxUjA5S1puYxAB&d=17924085&t=1",
+          "googleMapsUri": "https://www.google.com/maps/reviews/data=!4m6!14m5!1m4!2m3!1sCi9DQUlRQUNvZENodHljRjlvT25SSE5qVlhTWGhPUW1OaU1FRkZXRzlxUjA5S1puYxAB!2m1!1s0x4887c508b0430387:0xd2b56f1e2d46040c"
+        },
+        {
+          "name": "places/ChIJhwNDsAjFh0gRDARGLR5vtdI/reviews/ChZDSUhNMG9nS0VJQ0FnSUREOHZiV1lnEAE",
+          "relativePublishTimeDescription": "a year ago",
+          "rating": 4,
+          "text": {
+            "text": "There are some troubles with illumination... not the best when sun hits  the crystal walls, also not well protected to wind... can interfering in the game and makes players uncomfortable",
+            "languageCode": "en"
+          },
+          "originalText": {
+            "text": "There are some troubles with illumination... not the best when sun hits  the crystal walls, also not well protected to wind... can interfering in the game and makes players uncomfortable",
+            "languageCode": "en"
+          },
+          "authorAttribution": {
+            "displayName": "Eduardo Orleans",
+            "uri": "https://www.google.com/maps/contrib/112663617702653601428/reviews",
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocK5WNn8XLBgNayXmE5dTjv_ehFywfgYTDqenfv3YufKaFSF5A=s128-c0x00000000-cc-rp-mo-ba2"
+          },
+          "publishTime": "2024-04-07T18:25:46.724306Z",
+          "flagContentUri": "https://www.google.com/local/content/rap/report?postId=ChZDSUhNMG9nS0VJQ0FnSUREOHZiV1lnEAE&d=17924085&t=1",
+          "googleMapsUri": "https://www.google.com/maps/reviews/data=!4m6!14m5!1m4!2m3!1sChZDSUhNMG9nS0VJQ0FnSUREOHZiV1lnEAE!2m1!1s0x4887c508b0430387:0xd2b56f1e2d46040c"
+        },
+        {
+          "name": "places/ChIJhwNDsAjFh0gRDARGLR5vtdI/reviews/ChdDSUhNMG9nS0VJQ0FnSURadnA2d29nRRAB",
+          "relativePublishTimeDescription": "2 years ago",
+          "rating": 4,
+          "text": {
+            "text": "Good 5’s pitch and especially the goal post its wider but the pitch is suitable for tennis. So when we dribbles the ball it cannot be controlled. Cheap to play",
+            "languageCode": "en"
+          },
+          "originalText": {
+            "text": "Good 5’s pitch and especially the goal post its wider but the pitch is suitable for tennis. So when we dribbles the ball it cannot be controlled. Cheap to play",
+            "languageCode": "en"
+          },
+          "authorAttribution": {
+            "displayName": "Tinkle John",
+            "uri": "https://www.google.com/maps/contrib/111952520930005165465/reviews",
+            "photoUri": "https://lh3.googleusercontent.com/a-/ALV-UjU_zLqfoBoOg3AnIdTyIFkBqUuwyInVQJ9dqEX3_P01pUXW8av6=s128-c0x00000000-cc-rp-mo-ba2"
+          },
+          "publishTime": "2023-10-01T22:41:26.105747Z",
+          "flagContentUri": "https://www.google.com/local/content/rap/report?postId=ChdDSUhNMG9nS0VJQ0FnSURadnA2d29nRRAB&d=17924085&t=1",
+          "googleMapsUri": "https://www.google.com/maps/reviews/data=!4m6!14m5!1m4!2m3!1sChdDSUhNMG9nS0VJQ0FnSURadnA2d29nRRAB!2m1!1s0x4887c508b0430387:0xd2b56f1e2d46040c"
+        },
+        {
+          "name": "places/ChIJhwNDsAjFh0gRDARGLR5vtdI/reviews/ChZDSUhNMG9nS0VJQ0FnSUNYLU5PM0t3EAE",
+          "relativePublishTimeDescription": "a year ago",
+          "rating": 4,
+          "text": {
+            "text": "Generally a great setup, but needs some maintenance on the netting to stop balls being hit out of the building.",
+            "languageCode": "en"
+          },
+          "originalText": {
+            "text": "Generally a great setup, but needs some maintenance on the netting to stop balls being hit out of the building.",
+            "languageCode": "en"
+          },
+          "authorAttribution": {
+            "displayName": "Graeme Harkness",
+            "uri": "https://www.google.com/maps/contrib/102359144587293692582/reviews",
+            "photoUri": "https://lh3.googleusercontent.com/a-/ALV-UjUjpT3FztSifJZojmLqBX2BglbDlbfTE38qJhp270Dqf6YQwbQFDg=s128-c0x00000000-cc-rp-mo-ba4"
+          },
+          "publishTime": "2024-10-13T06:28:45.939995Z",
+          "flagContentUri": "https://www.google.com/local/content/rap/report?postId=ChZDSUhNMG9nS0VJQ0FnSUNYLU5PM0t3EAE&d=17924085&t=1",
+          "googleMapsUri": "https://www.google.com/maps/reviews/data=!4m6!14m5!1m4!2m3!1sChZDSUhNMG9nS0VJQ0FnSUNYLU5PM0t3EAE!2m1!1s0x4887c508b0430387:0xd2b56f1e2d46040c"
+        }
+      ]
+    },
+    {
+      "id": "ChIJA0LhewDHh0gRAZdhXx3bZEg",
+      "types": [
+        "sports_club",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Bankhead, Edinburgh EH11 4EQ, UK",
+      "location": {
+        "latitude": 55.9278638,
+        "longitude": -3.2879343
+      },
+      "rating": 5,
+      "googleMapsUri": "https://maps.google.com/?cid=5216535187602642689&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA",
+      "userRatingCount": 1,
+      "displayName": {
+        "text": "Powerleague Padel - Sighthill",
+        "languageCode": "en"
+      },
+      "reviews": [
+        {
+          "name": "places/ChIJA0LhewDHh0gRAZdhXx3bZEg/reviews/Ci9DQUlRQUNvZENodHljRjlvT25FdGEyNVhXVFkzUVY5dVJuaEdWa290ZFUxSU4xRRAB",
+          "relativePublishTimeDescription": "2 weeks ago",
+          "rating": 5,
+          "authorAttribution": {
+            "displayName": "Richard F",
+            "uri": "https://www.google.com/maps/contrib/113100781897437562101/reviews",
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocJkMeHzpakVsbPByo1ggkoef7HLjMWCm-Bl-2nAMiuuX-LPdPU=s128-c0x00000000-cc-rp-mo"
+          },
+          "publishTime": "2026-01-04T12:38:35.288047142Z",
+          "flagContentUri": "https://www.google.com/local/content/rap/report?postId=Ci9DQUlRQUNvZENodHljRjlvT25FdGEyNVhXVFkzUVY5dVJuaEdWa290ZFUxSU4xRRAB&d=17924085&t=1",
+          "googleMapsUri": "https://www.google.com/maps/reviews/data=!4m6!14m5!1m4!2m3!1sCi9DQUlRQUNvZENodHljRjlvT25FdGEyNVhXVFkzUVY5dVJuaEdWa290ZFUxSU4xRRAB!2m1!1s0x4887c7007be14203:0x4864db1d5f619701"
+        }
+      ]
+    },
+    {
+      "id": "ChIJxR2sperHh0gR3qC_AqYQxLo",
+      "types": [
+        "sports_club",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "12 Barnton Park, Edinburgh EH4 6JF, UK",
+      "location": {
+        "latitude": 55.9679631,
+        "longitude": -3.2790334
+      },
+      "rating": 5,
+      "googleMapsUri": "https://maps.google.com/?cid=13457899891686613214&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA",
+      "regularOpeningHours": {
+        "openNow": true,
+        "periods": [
+          {
+            "open": {
+              "day": 0,
+              "hour": 8,
+              "minute": 0
+            },
+            "close": {
+              "day": 0,
+              "hour": 22,
+              "minute": 0
+            }
+          },
+          {
+            "open": {
+              "day": 1,
+              "hour": 8,
+              "minute": 0
+            },
+            "close": {
+              "day": 1,
+              "hour": 22,
+              "minute": 0
+            }
+          },
+          {
+            "open": {
+              "day": 2,
+              "hour": 8,
+              "minute": 0
+            },
+            "close": {
+              "day": 2,
+              "hour": 22,
+              "minute": 0
+            }
+          },
+          {
+            "open": {
+              "day": 3,
+              "hour": 8,
+              "minute": 0
+            },
+            "close": {
+              "day": 3,
+              "hour": 22,
+              "minute": 0
+            }
+          },
+          {
+            "open": {
+              "day": 4,
+              "hour": 8,
+              "minute": 0
+            },
+            "close": {
+              "day": 4,
+              "hour": 22,
+              "minute": 0
+            }
+          },
+          {
+            "open": {
+              "day": 5,
+              "hour": 8,
+              "minute": 0
+            },
+            "close": {
+              "day": 5,
+              "hour": 22,
+              "minute": 0
+            }
+          },
+          {
+            "open": {
+              "day": 6,
+              "hour": 8,
+              "minute": 0
+            },
+            "close": {
+              "day": 6,
+              "hour": 22,
+              "minute": 0
+            }
+          }
+        ],
+        "weekdayDescriptions": [
+          "Monday: 8:00 AM – 10:00 PM",
+          "Tuesday: 8:00 AM – 10:00 PM",
+          "Wednesday: 8:00 AM – 10:00 PM",
+          "Thursday: 8:00 AM – 10:00 PM",
+          "Friday: 8:00 AM – 10:00 PM",
+          "Saturday: 8:00 AM – 10:00 PM",
+          "Sunday: 8:00 AM – 10:00 PM"
+        ],
+        "nextCloseTime": "2026-01-19T22:00:00Z"
+      },
+      "userRatingCount": 1,
+      "displayName": {
+        "text": "Game4Padel | Barnton Park Padel",
+        "languageCode": "en"
+      },
+      "reviews": [
+        {
+          "name": "places/ChIJxR2sperHh0gR3qC_AqYQxLo/reviews/ChZDSUhNMG9nS0VJQ0FnTUNJLW9fSE1BEAE",
+          "relativePublishTimeDescription": "9 months ago",
+          "rating": 5,
+          "authorAttribution": {
+            "displayName": "Osama Waqar",
+            "uri": "https://www.google.com/maps/contrib/117114466009331261260/reviews",
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocKLIgacAynjKmBB7b3YxQrYBBgrM7EIbhsN4msfOz4dchOib90=s128-c0x00000000-cc-rp-mo-ba3"
+          },
+          "publishTime": "2025-04-01T11:57:05.398178Z",
+          "flagContentUri": "https://www.google.com/local/content/rap/report?postId=ChZDSUhNMG9nS0VJQ0FnTUNJLW9fSE1BEAE&d=17924085&t=1",
+          "googleMapsUri": "https://www.google.com/maps/reviews/data=!4m6!14m5!1m4!2m3!1sChZDSUhNMG9nS0VJQ0FnTUNJLW9fSE1BEAE!2m1!1s0x4887c7eaa5ac1dc5:0xbac410a602bfa0de"
+        }
+      ]
+    },
+    {
+      "id": "ChIJY1wx0bHHh0gRPdw9Tp2NMSU",
+      "types": [
+        "sports_club",
+        "sports_complex",
+        "sports_activity_location",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "7 Belford Pl, Edinburgh EH4 3DH, UK",
+      "location": {
+        "latitude": 55.949394399999996,
+        "longitude": -3.2251667
+      },
+      "rating": 4.5,
+      "googleMapsUri": "https://maps.google.com/?cid=2680078960024214589&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA",
+      "regularOpeningHours": {
+        "openNow": true,
+        "periods": [
+          {
+            "open": {
+              "day": 0,
+              "hour": 9,
+              "minute": 0
+            },
+            "close": {
+              "day": 0,
+              "hour": 22,
+              "minute": 0
+            }
+          },
+          {
+            "open": {
+              "day": 1,
+              "hour": 9,
+              "minute": 0
+            },
+            "close": {
+              "day": 1,
+              "hour": 22,
+              "minute": 0
+            }
+          },
+          {
+            "open": {
+              "day": 2,
+              "hour": 9,
+              "minute": 0
+            },
+            "close": {
+              "day": 2,
+              "hour": 22,
+              "minute": 0
+            }
+          },
+          {
+            "open": {
+              "day": 3,
+              "hour": 9,
+              "minute": 0
+            },
+            "close": {
+              "day": 3,
+              "hour": 22,
+              "minute": 0
+            }
+          },
+          {
+            "open": {
+              "day": 4,
+              "hour": 9,
+              "minute": 0
+            },
+            "close": {
+              "day": 4,
+              "hour": 22,
+              "minute": 0
+            }
+          },
+          {
+            "open": {
+              "day": 5,
+              "hour": 9,
+              "minute": 0
+            },
+            "close": {
+              "day": 5,
+              "hour": 22,
+              "minute": 0
+            }
+          },
+          {
+            "open": {
+              "day": 6,
+              "hour": 9,
+              "minute": 0
+            },
+            "close": {
+              "day": 6,
+              "hour": 22,
+              "minute": 0
+            }
+          }
+        ],
+        "weekdayDescriptions": [
+          "Monday: 9:00 AM – 10:00 PM",
+          "Tuesday: 9:00 AM – 10:00 PM",
+          "Wednesday: 9:00 AM – 10:00 PM",
+          "Thursday: 9:00 AM – 10:00 PM",
+          "Friday: 9:00 AM – 10:00 PM",
+          "Saturday: 9:00 AM – 10:00 PM",
+          "Sunday: 9:00 AM – 10:00 PM"
+        ],
+        "nextCloseTime": "2026-01-19T22:00:00Z"
+      },
+      "userRatingCount": 109,
+      "displayName": {
+        "text": "Edinburgh Sports Club",
+        "languageCode": "en"
+      },
+      "reviews": [
+        {
+          "name": "places/ChIJY1wx0bHHh0gRPdw9Tp2NMSU/reviews/Ci9DQUlRQUNvZENodHljRjlvT2xGRGIwZE1hV0UzUkdKVloxWk5kMnQ0YVVoSGRIYxAB",
+          "relativePublishTimeDescription": "3 months ago",
+          "rating": 4,
+          "text": {
+            "text": "£35 for a one hour booking, with additional money to hire rackets (£3 per person). And for balls (£3). The padel court was good, but we being novice players, the ball did land outside (in the open, as the padel courts aren’t completely closed)",
+            "languageCode": "en"
+          },
+          "originalText": {
+            "text": "£35 for a one hour booking, with additional money to hire rackets (£3 per person). And for balls (£3). The padel court was good, but we being novice players, the ball did land outside (in the open, as the padel courts aren’t completely closed)",
+            "languageCode": "en"
+          },
+          "authorAttribution": {
+            "displayName": "Rubana Aafreen",
+            "uri": "https://www.google.com/maps/contrib/100665224755788940990/reviews",
+            "photoUri": "https://lh3.googleusercontent.com/a-/ALV-UjVD38qRdhDdmWth7VpksCroYCEV3xPjpUvSeCW1dH3Rki-psTT0KQ=s128-c0x00000000-cc-rp-mo-ba3"
+          },
+          "publishTime": "2025-10-12T22:02:54.367058632Z",
+          "flagContentUri": "https://www.google.com/local/content/rap/report?postId=Ci9DQUlRQUNvZENodHljRjlvT2xGRGIwZE1hV0UzUkdKVloxWk5kMnQ0YVVoSGRIYxAB&d=17924085&t=1",
+          "googleMapsUri": "https://www.google.com/maps/reviews/data=!4m6!14m5!1m4!2m3!1sCi9DQUlRQUNvZENodHljRjlvT2xGRGIwZE1hV0UzUkdKVloxWk5kMnQ0YVVoSGRIYxAB!2m1!1s0x4887c7b1d1315c63:0x25318d9d4e3ddc3d"
+        },
+        {
+          "name": "places/ChIJY1wx0bHHh0gRPdw9Tp2NMSU/reviews/Ci9DQUlRQUNvZENodHljRjlvT25CTFV6bHZNbVl5V25SUlpscG5RbGN3U2pReWNXYxAB",
+          "relativePublishTimeDescription": "2 months ago",
+          "rating": 2,
+          "text": {
+            "text": "Why do you need 3 month advance on monthly membership +\n\n1 month notice (that's 4 in total, not one)??? Why annual members are tied until 30 June of the following year. If on annual contract, why won't you just take money for that month instead asking for advance. How can you justify asking 55 a month to play in paddle in the outdoor area ?",
+            "languageCode": "en"
+          },
+          "originalText": {
+            "text": "Why do you need 3 month advance on monthly membership +\n\n1 month notice (that's 4 in total, not one)??? Why annual members are tied until 30 June of the following year. If on annual contract, why won't you just take money for that month instead asking for advance. How can you justify asking 55 a month to play in paddle in the outdoor area ?",
+            "languageCode": "en"
+          },
+          "authorAttribution": {
+            "displayName": "firstname",
+            "uri": "https://www.google.com/maps/contrib/102356295036105315238/reviews",
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocLLU_cIxZCh6SF6Y5BkoM88OoriLMFimFqAzDzkQVi59kpGRVo=s128-c0x00000000-cc-rp-mo-ba5"
+          },
+          "publishTime": "2025-10-26T23:05:24.529497385Z",
+          "flagContentUri": "https://www.google.com/local/content/rap/report?postId=Ci9DQUlRQUNvZENodHljRjlvT25CTFV6bHZNbVl5V25SUlpscG5RbGN3U2pReWNXYxAB&d=17924085&t=1",
+          "googleMapsUri": "https://www.google.com/maps/reviews/data=!4m6!14m5!1m4!2m3!1sCi9DQUlRQUNvZENodHljRjlvT25CTFV6bHZNbVl5V25SUlpscG5RbGN3U2pReWNXYxAB!2m1!1s0x4887c7b1d1315c63:0x25318d9d4e3ddc3d"
+        },
+        {
+          "name": "places/ChIJY1wx0bHHh0gRPdw9Tp2NMSU/reviews/ChdDSUhNMG9nS0VJQ0FnSURReV9xdTNnRRAB",
+          "relativePublishTimeDescription": "8 years ago",
+          "rating": 5,
+          "text": {
+            "text": "Great racquets club with bar, restaurant and other facilities too. There are 6 squash courts, a hardball court, a table tennis room, a snooker room, tennis courts and padel courts. There's a thriving squash scene with mini leagues and plenty of tournaments throughout the year, including the BSPA men's event and the PSA women's event. There's also a really good social scene.",
+            "languageCode": "en"
+          },
+          "originalText": {
+            "text": "Great racquets club with bar, restaurant and other facilities too. There are 6 squash courts, a hardball court, a table tennis room, a snooker room, tennis courts and padel courts. There's a thriving squash scene with mini leagues and plenty of tournaments throughout the year, including the BSPA men's event and the PSA women's event. There's also a really good social scene.",
+            "languageCode": "en"
+          },
+          "authorAttribution": {
+            "displayName": "Matthew Hunter",
+            "uri": "https://www.google.com/maps/contrib/116305077937574264452/reviews",
+            "photoUri": "https://lh3.googleusercontent.com/a-/ALV-UjWxlKjpW9UHdzpqiTX6NVagivV86YmxJQIT09CcQM-JPB7bVo2nUw=s128-c0x00000000-cc-rp-mo-ba5"
+          },
+          "publishTime": "2017-05-26T07:17:30.693Z",
+          "flagContentUri": "https://www.google.com/local/content/rap/report?postId=ChdDSUhNMG9nS0VJQ0FnSURReV9xdTNnRRAB&d=17924085&t=1",
+          "googleMapsUri": "https://www.google.com/maps/reviews/data=!4m6!14m5!1m4!2m3!1sChdDSUhNMG9nS0VJQ0FnSURReV9xdTNnRRAB!2m1!1s0x4887c7b1d1315c63:0x25318d9d4e3ddc3d"
+        },
+        {
+          "name": "places/ChIJY1wx0bHHh0gRPdw9Tp2NMSU/reviews/ChdDSUhNMG9nS0VJQ0FnSUNuOUpHRTZBRRAB",
+          "relativePublishTimeDescription": "a year ago",
+          "rating": 5,
+          "text": {
+            "text": "I visited the centre as the last stop on a long cycle tour. I didn't use equipment but had lunch, had a good chat with staff and was so impressed with the centre and all it's facilities. Also had a very good home cooked lasagne but I can't be sure who made this !.\nLater I caught a transfer to Newcastle to find that my cycle tour staff had omitted to put my luggage on the bus for my onward drive to Somerset. It was quite stressful arranging a courier from home and not really believing I'd ever see my luggage again. However the Edinburgh Sports Centre staff were fantastic., stored my luggage safely, put correct labels on it from Send my Bag couriers and handed it over to courier. Two days on, I received my luggage, all intact. Thank you Edinburgh SC for all your help",
+            "languageCode": "en"
+          },
+          "originalText": {
+            "text": "I visited the centre as the last stop on a long cycle tour. I didn't use equipment but had lunch, had a good chat with staff and was so impressed with the centre and all it's facilities. Also had a very good home cooked lasagne but I can't be sure who made this !.\nLater I caught a transfer to Newcastle to find that my cycle tour staff had omitted to put my luggage on the bus for my onward drive to Somerset. It was quite stressful arranging a courier from home and not really believing I'd ever see my luggage again. However the Edinburgh Sports Centre staff were fantastic., stored my luggage safely, put correct labels on it from Send my Bag couriers and handed it over to courier. Two days on, I received my luggage, all intact. Thank you Edinburgh SC for all your help",
+            "languageCode": "en"
+          },
+          "authorAttribution": {
+            "displayName": "Marion Body",
+            "uri": "https://www.google.com/maps/contrib/102049369702093202682/reviews",
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocIltKGp7wgDmO9d0faREkDKDQLDH6A788fMZgmZ0Zh-ee2IiA=s128-c0x00000000-cc-rp-mo"
+          },
+          "publishTime": "2024-09-23T10:00:34.622896Z",
+          "flagContentUri": "https://www.google.com/local/content/rap/report?postId=ChdDSUhNMG9nS0VJQ0FnSUNuOUpHRTZBRRAB&d=17924085&t=1",
+          "googleMapsUri": "https://www.google.com/maps/reviews/data=!4m6!14m5!1m4!2m3!1sChdDSUhNMG9nS0VJQ0FnSUNuOUpHRTZBRRAB!2m1!1s0x4887c7b1d1315c63:0x25318d9d4e3ddc3d"
+        },
+        {
+          "name": "places/ChIJY1wx0bHHh0gRPdw9Tp2NMSU/reviews/ChZDSUhNMG9nS0VJQ0FnSURCMHREZGVREAE",
+          "relativePublishTimeDescription": "3 years ago",
+          "rating": 4,
+          "text": {
+            "text": "easily some of the best squash courts I've played on, (although the ceilings are very low). great temperature on the courts and a lovely club in general! comfortable walk from our hotel in the center of Edinburgh as well.",
+            "languageCode": "en"
+          },
+          "originalText": {
+            "text": "easily some of the best squash courts I've played on, (although the ceilings are very low). great temperature on the courts and a lovely club in general! comfortable walk from our hotel in the center of Edinburgh as well.",
+            "languageCode": "en"
+          },
+          "authorAttribution": {
+            "displayName": "Liv Stephens",
+            "uri": "https://www.google.com/maps/contrib/100290587294958025069/reviews",
+            "photoUri": "https://lh3.googleusercontent.com/a-/ALV-UjWdHi3cXyUU3BSQUQ4Z3K9aYrSmppdeflxhriSVyHVLpHdPHDUSmA=s128-c0x00000000-cc-rp-mo-ba3"
+          },
+          "publishTime": "2023-01-15T16:36:46.936296Z",
+          "flagContentUri": "https://www.google.com/local/content/rap/report?postId=ChZDSUhNMG9nS0VJQ0FnSURCMHREZGVREAE&d=17924085&t=1",
+          "googleMapsUri": "https://www.google.com/maps/reviews/data=!4m6!14m5!1m4!2m3!1sChZDSUhNMG9nS0VJQ0FnSURCMHREZGVREAE!2m1!1s0x4887c7b1d1315c63:0x25318d9d4e3ddc3d"
+        }
+      ]
+    },
+    {
+      "id": "ChIJJ1wsKEzHh0gRXAPDQl3Xrjs",
+      "types": [
+        "sports_activity_location",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Thistle Padel, Paties Rd, Katesmill Rd, Edinburgh EH14 1JF, UK",
+      "location": {
+        "latitude": 55.9143751,
+        "longitude": -3.251317
+      },
+      "rating": 3.8,
+      "googleMapsUri": "https://maps.google.com/?cid=4300611489737409372&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA",
+      "regularOpeningHours": {
+        "openNow": true,
+        "periods": [
+          {
+            "open": {
+              "day": 0,
+              "hour": 8,
+              "minute": 0
+            },
+            "close": {
+              "day": 0,
+              "hour": 22,
+              "minute": 0
+            }
+          },
+          {
+            "open": {
+              "day": 1,
+              "hour": 8,
+              "minute": 0
+            },
+            "close": {
+              "day": 1,
+              "hour": 22,
+              "minute": 0
+            }
+          },
+          {
+            "open": {
+              "day": 2,
+              "hour": 8,
+              "minute": 0
+            },
+            "close": {
+              "day": 2,
+              "hour": 22,
+              "minute": 0
+            }
+          },
+          {
+            "open": {
+              "day": 3,
+              "hour": 8,
+              "minute": 0
+            },
+            "close": {
+              "day": 3,
+              "hour": 22,
+              "minute": 0
+            }
+          },
+          {
+            "open": {
+              "day": 4,
+              "hour": 8,
+              "minute": 0
+            },
+            "close": {
+              "day": 4,
+              "hour": 22,
+              "minute": 0
+            }
+          },
+          {
+            "open": {
+              "day": 5,
+              "hour": 8,
+              "minute": 0
+            },
+            "close": {
+              "day": 5,
+              "hour": 22,
+              "minute": 0
+            }
+          },
+          {
+            "open": {
+              "day": 6,
+              "hour": 8,
+              "minute": 0
+            },
+            "close": {
+              "day": 6,
+              "hour": 22,
+              "minute": 0
+            }
+          }
+        ],
+        "weekdayDescriptions": [
+          "Monday: 8:00 AM – 10:00 PM",
+          "Tuesday: 8:00 AM – 10:00 PM",
+          "Wednesday: 8:00 AM – 10:00 PM",
+          "Thursday: 8:00 AM – 10:00 PM",
+          "Friday: 8:00 AM – 10:00 PM",
+          "Saturday: 8:00 AM – 10:00 PM",
+          "Sunday: 8:00 AM – 10:00 PM"
+        ],
+        "nextCloseTime": "2026-01-19T22:00:00Z"
+      },
+      "userRatingCount": 4,
+      "displayName": {
+        "text": "Thistle Padel | Game4Padel",
+        "languageCode": "en"
+      },
+      "reviews": [
+        {
+          "name": "places/ChIJJ1wsKEzHh0gRXAPDQl3Xrjs/reviews/ChdDSUhNMG9nS0VJQ0FnSUR4Z0t2RHpnRRAB",
+          "relativePublishTimeDescription": "2 years ago",
+          "rating": 3,
+          "text": {
+            "text": "Love paddle, we like going just for fun, so don't really have our own equipment, they mentioned that there are rackets and balls there to use, every single racket was broken, and I mean properly snapped and unusable. The court itself was nice even though very very slippery.  I'll have to find another place next time we want to play some paddle.",
+            "languageCode": "en"
+          },
+          "originalText": {
+            "text": "Love paddle, we like going just for fun, so don't really have our own equipment, they mentioned that there are rackets and balls there to use, every single racket was broken, and I mean properly snapped and unusable. The court itself was nice even though very very slippery.  I'll have to find another place next time we want to play some paddle.",
+            "languageCode": "en"
+          },
+          "authorAttribution": {
+            "displayName": "Kenshi Mugiwara",
+            "uri": "https://www.google.com/maps/contrib/106273995436690127615/reviews",
+            "photoUri": "https://lh3.googleusercontent.com/a-/ALV-UjUzoMWullWwSiLRKF1Yyo2u93-PU2X5XBmu_kn-kM1E9b5dQGS4=s128-c0x00000000-cc-rp-mo-ba3"
+          },
+          "publishTime": "2023-05-30T07:04:06.556542Z",
+          "flagContentUri": "https://www.google.com/local/content/rap/report?postId=ChdDSUhNMG9nS0VJQ0FnSUR4Z0t2RHpnRRAB&d=17924085&t=1",
+          "googleMapsUri": "https://www.google.com/maps/reviews/data=!4m6!14m5!1m4!2m3!1sChdDSUhNMG9nS0VJQ0FnSUR4Z0t2RHpnRRAB!2m1!1s0x4887c74c282c5c27:0x3baed75d42c3035c"
+        },
+        {
+          "name": "places/ChIJJ1wsKEzHh0gRXAPDQl3Xrjs/reviews/ChZDSUhNMG9nS0VJQ0FnSURwODZubE1nEAE",
+          "relativePublishTimeDescription": "2 years ago",
+          "rating": 3,
+          "text": {
+            "text": "Courts weren't great and racquets were in pretty bad nick.",
+            "languageCode": "en"
+          },
+          "originalText": {
+            "text": "Courts weren't great and racquets were in pretty bad nick.",
+            "languageCode": "en"
+          },
+          "authorAttribution": {
+            "displayName": "S H",
+            "uri": "https://www.google.com/maps/contrib/108568825758941934860/reviews",
+            "photoUri": "https://lh3.googleusercontent.com/a/ACg8ocI3Nzuttx67UIHisYsPPzG0orkd9yNKXduVhck7mBdnE6RqtA=s128-c0x00000000-cc-rp-mo-ba3"
+          },
+          "publishTime": "2023-08-28T22:04:55.075764Z",
+          "flagContentUri": "https://www.google.com/local/content/rap/report?postId=ChZDSUhNMG9nS0VJQ0FnSURwODZubE1nEAE&d=17924085&t=1",
+          "googleMapsUri": "https://www.google.com/maps/reviews/data=!4m6!14m5!1m4!2m3!1sChZDSUhNMG9nS0VJQ0FnSURwODZubE1nEAE!2m1!1s0x4887c74c282c5c27:0x3baed75d42c3035c"
+        },
+        {
+          "name": "places/ChIJJ1wsKEzHh0gRXAPDQl3Xrjs/reviews/ChZDSUhNMG9nS0VJQ0FnSURKdTlpWVZBEAE",
+          "relativePublishTimeDescription": "2 years ago",
+          "rating": 5,
+          "authorAttribution": {
+            "displayName": "Andrea Pavan",
+            "uri": "https://www.google.com/maps/contrib/114482706998731252272/reviews",
+            "photoUri": "https://lh3.googleusercontent.com/a-/ALV-UjV0JFSOvYPaH3YnTqw7-Sjl1dWeb2OJBOZOnVgskRErE-oL5SRt=s128-c0x00000000-cc-rp-mo"
+          },
+          "publishTime": "2023-07-23T14:58:48.656250Z",
+          "flagContentUri": "https://www.google.com/local/content/rap/report?postId=ChZDSUhNMG9nS0VJQ0FnSURKdTlpWVZBEAE&d=17924085&t=1",
+          "googleMapsUri": "https://www.google.com/maps/reviews/data=!4m6!14m5!1m4!2m3!1sChZDSUhNMG9nS0VJQ0FnSURKdTlpWVZBEAE!2m1!1s0x4887c74c282c5c27:0x3baed75d42c3035c"
+        },
+        {
+          "name": "places/ChIJJ1wsKEzHh0gRXAPDQl3Xrjs/reviews/ChZDSUhNMG9nS0VJQ0FnSUNoOF8yYmFnEAE",
+          "relativePublishTimeDescription": "2 years ago",
+          "rating": 4,
+          "authorAttribution": {
+            "displayName": "Ramy Makari",
+            "uri": "https://www.google.com/maps/contrib/111852329013548333141/reviews",
+            "photoUri": "https://lh3.googleusercontent.com/a-/ALV-UjWlCcfO8V9LeXyDSeeh-s4bZmyhH1r66rW0fAPaAA_dkCOl7g5H=s128-c0x00000000-cc-rp-mo"
+          },
+          "publishTime": "2023-02-21T22:28:36.269350Z",
+          "flagContentUri": "https://www.google.com/local/content/rap/report?postId=ChZDSUhNMG9nS0VJQ0FnSUNoOF8yYmFnEAE&d=17924085&t=1",
+          "googleMapsUri": "https://www.google.com/maps/reviews/data=!4m6!14m5!1m4!2m3!1sChZDSUhNMG9nS0VJQ0FnSUNoOF8yYmFnEAE!2m1!1s0x4887c74c282c5c27:0x3baed75d42c3035c"
+        }
+      ]
+    }
+  ]
+}

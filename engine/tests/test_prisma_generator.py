@@ -292,7 +292,7 @@ class TestFieldGeneration(unittest.TestCase):
     def test_field_with_prisma_override(self):
         """Field with prisma.name override should use that name"""
         field = FieldDefinition(
-            name="listing_id",
+            name="entity_id",
             type="string",
             description="Primary key",
             nullable=False,
@@ -301,7 +301,7 @@ class TestFieldGeneration(unittest.TestCase):
         field.prisma = {"name": "id", "attributes": ["@id", "@default(cuid())"]}
         result = self.generator._generate_field(field)
         self.assertIn("id", result)
-        self.assertNotIn("listing_id", result)
+        self.assertNotIn("entity_id", result)
 
     def test_field_with_prisma_skip(self):
         """Field with prisma.skip should return None"""

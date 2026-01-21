@@ -230,11 +230,11 @@ def seed_data():
     row = cursor.fetchone()
     
     if row:
-        listing_id = row['id']
+        entity_id = row['id']
         print(f"Listing '{listing_slug}' already exists. Updating...")
         # (Update logic could go here, for now we skip)
     else:
-        listing_id = str(uuid.uuid4())
+        entity_id = str(uuid.uuid4())
         
         # Serialize JSON fields
         opening_hours_json = json.dumps(data.get('opening_hours'))
@@ -363,7 +363,7 @@ def seed_data():
                 entityType, updatedAt
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
-            listing_id,
+            entity_id,
             data['entity_name'],
             listing_slug,
             data['summary'],
@@ -405,7 +405,7 @@ def seed_data():
                 try:
                     cursor.execute(
                         "INSERT OR IGNORE INTO _CategoryToListing (A, B) VALUES (?, ?)",
-                        (matched_id, listing_id)
+                        (matched_id, entity_id)
                     )
                 except sqlite3.OperationalError:
                     print("Warning: Could not link Category to Listing. Prisma implicit table issue.")
