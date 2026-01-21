@@ -101,7 +101,7 @@
         -   Update `engine/classification_rules.md` (remove category rules).
     -   **Verification:** `ls engine/config/canonical_categories.yaml` should fail.
 
-- [ ] **Task 3.2:** Implement Explicit Lens Membership API.
+- [x] **Task 3.2:** Implement Explicit Lens Membership API.
     -   **Files:** Create/Update `engine/lenses/ops.py` (or similar utility).
     -   **Action:** Implement:
         -   `def attach_entity_to_lens(entity_id: str, lens_id: str): ...`
