@@ -7,11 +7,13 @@
 
 ## 🧭 Implementation Phases
 
-### Phase 1 — Schema & DB Migration (Clean Slate)
+### Phase 1 — Schema & DB Migration (Clean Slate) ✅ COMPLETE
 **Goal:** Establish the correct database schema (Entity, Lens, LensEntity) and remove legacy artifacts (Category, EntityType) by resetting the database.
 
 **Clean Slate Rule:**
 *We accept destructive changes. We will reset the DB and run fresh migrations.*
+
+**Checkpoint:** `6b6eb2e` - Phase 1 Complete - Schema & DB Migration
 
 - [x] **Task 1.1:** Update Prisma Schemas (Rename Listing -> Entity).
     -   **Files:** `engine/schema.prisma`, `web/prisma/schema.prisma`
