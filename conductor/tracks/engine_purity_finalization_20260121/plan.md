@@ -115,7 +115,7 @@
 ### Phase 4 — Tests + Validation + Docs
 **Goal:** Verify the system is stable, pure, and documented.
 
-- [ ] **Task 4.1:** Update Tests.
+- [x] **Task 4.1:** Update Tests.
     -   **Files:** `tests/engine/`, `tests/web/`.
     -   **Action:**
         -   Fix import errors in existing tests.
