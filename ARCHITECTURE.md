@@ -33,60 +33,57 @@ The system categorizes the world through five fundamental conceptual "Pillars". 
 5.  **Momentum:** Time-bound occurrences (mapped to Enum: `EVENT`, `TOURNAMENT`, etc.).
 
 ### 2.2. Schema Implementation
-To support this flexibility, the `Listing` model uses a "Flexible Attribute Bucket" strategy combined with a strict Enum for categorization:
+To support this flexibility, the `Entity` model uses a "Flexible Attribute Bucket" strategy with a universal classification system:
 
--   **Categorization:** An `EntityType` Enum on the `Listing` model defines the specific type (e.g., `VENUE`, `CLUB`). This replaces the need for a separate `EntityType` lookup table.
-    -   **Current (SQLite):** Stored as String, validated as Enum at application layer (Python: `engine/schema/types.py`)
-    -   **Future (Supabase/PostgreSQL):** Will be migrated to native Prisma Enum for database-level validation
+-   **Classification:** The `entity_class` field defines the fundamental type (e.g., `place`, `person`, `organization`, `event`, `thing`). This is a universal, vertical-agnostic classification.
+-   **Dimensions:** Multi-valued dimension arrays (`canonical_activities`, `canonical_roles`, `canonical_place_types`, `canonical_access`) store facet values that are interpreted by lens configurations.
 -   **Core Fields:** Structured columns for universal data (Name, Location, Contact Info).
 -   **Flexible Attributes:** Two JSON columns store niche-specific details:
-    -   `attributes`: validated data conforming to the official schema.
+    -   `modules`: vertical-specific data structures (e.g., sports_facility, wine_production) managed by lenses.
     -   `discovered_attributes`: raw AI-extracted properties waiting for validation.
+-   **Raw Categories:** The `raw_categories` String[] field stores unprocessed category strings from data sources as discovery signals (not indexed, not queried).
 
 ### 2.3. The Ecosystem Graph (Relationships)
-*Implementation Status: The `ListingRelationship` table schema is implemented and migrated (migration `20260114223935_add_listing_relationship`), but extraction and population functionality is not yet built. Relationship extraction is planned as a future track dependent on the Data Extraction Engine completion.*
+*Implementation Status: The `EntityRelationship` table schema is implemented and migrated, but extraction and population functionality is not yet built. Relationship extraction is planned as a future track dependent on the Data Extraction Engine completion.*
 
-To capture the interconnected nature of local hobbies (e.g., "John Smith teaches at Powerleague Portobello"), the system models relationships between listings using a `ListingRelationship` table.
+To capture the interconnected nature of local entities (e.g., "John Smith teaches at Powerleague Portobello"), the system models relationships between entities using an `EntityRelationship` table.
 
--   **Structure:** Connects a `sourceListingId` (Coach) to a `targetListingId` (Venue) with a `type` (e.g., `teaches_at`, `plays_at`, `sells_at`).
--   **Trust:** Relationships have their own `confidenceScore` and `dataSource`. A relationship claimed by a verified owner overrides one inferred by AI.
+-   **Structure:** Connects a `sourceEntityId` (Coach) to a `targetEntityId` (Venue) with a `type` (e.g., `teaches_at`, `plays_at`, `sells_at`).
+-   **Trust:** Relationships have their own `confidence` score and `source`. A relationship claimed by a verified owner overrides one inferred by AI.
 -   **SEO Value:** Enables hyper-specific pages like "Coaches at [Venue]" or "Clubs based in [Area]".
 
 ```mermaid
 erDiagram
-    %% Core Schema (Implemented)
-    Category ||--o{ Listing : "categorizes"
+    %% Lens Membership (Implemented)
+    Entity ||--o{ LensEntity : "belongs_to"
 
     %% Ecosystem Graph (Schema Implemented, Population Logic Future)
-    Listing ||--o{ ListingRelationship : "is_source"
-    Listing ||--o{ ListingRelationship : "is_target"
+    Entity ||--o{ EntityRelationship : "is_source"
+    Entity ||--o{ EntityRelationship : "is_target"
 
     %% Extraction Pipeline (Implemented)
-    RawIngestion ||--o{ ExtractedListing : "produces"
+    RawIngestion ||--o{ ExtractedEntity : "produces"
     RawIngestion ||--o{ FailedExtraction : "records_failures"
 
-    %% Enum Definition (Conceptual)
-    %% EntityType Enum: VENUE, RETAILER, COACH, INSTRUCTOR, CLUB, LEAGUE, EVENT, TOURNAMENT
+    %% Universal Classification
+    %% entity_class: place, person, organization, event, thing
 
-    Category {
-        string id PK "id"
-        string name UK "Indoor, Outdoor, Sale, etc."
-        string slug UK "slug"
-        string description "description"
-        string image "image"
-        datetime createdAt "createdAt"
-        datetime updatedAt "updatedAt"
-    }
-
-    Listing {
+    Entity {
         string id PK "id"
         string entity_name "entity_name"
         string slug UK "slug"
-        string entityType "VENUE, CLUB, etc."
+        string entity_class "place, person, organization, event, thing"
         string summary "summary"
 
-        %% Flexible Attribute Buckets
-        json attributes "Validated Niche Data"
+        %% Dimension Arrays (interpreted by lenses)
+        string[] canonical_activities "padel, tennis, football"
+        string[] canonical_roles "provides_facility, teaches"
+        string[] canonical_place_types "sports_centre, park"
+        string[] canonical_access "public, members_only"
+        string[] raw_categories "Discovery signals (not indexed)"
+
+        %% Flexible Modules (lens-specific data structures)
+        json modules "sports_facility, wine_production"
         json discovered_attributes "Raw Scraped Data"
 
         %% Core Structured Data
@@ -119,10 +116,16 @@ erDiagram
         datetime updatedAt "updatedAt"
     }
 
-    ListingRelationship {
+    LensEntity {
+        string lensId PK,FK "sports, wine, restaurants"
+        string entityId PK,FK "Entity ID"
+        datetime createdAt "createdAt"
+    }
+
+    EntityRelationship {
         string id PK "id"
-        string sourceListingId FK "sourceListingId"
-        string targetListingId FK "targetListingId"
+        string sourceEntityId FK "sourceEntityId"
+        string targetEntityId FK "targetEntityId"
         string type "teaches_at, plays_at, based_at"
         float confidence "confidence"
         string source "source"
@@ -141,11 +144,11 @@ erDiagram
         json metadata_json "metadata_json"
     }
 
-    ExtractedListing {
+    ExtractedEntity {
         string id PK "id"
         string raw_ingestion_id FK "raw_ingestion_id"
         string source "source"
-        string entity_type "entity_type"
+        string entity_class "place, person, organization, event, thing"
         json attributes "attributes"
         json discovered_attributes "discovered_attributes"
         json external_ids "external_ids"
@@ -192,13 +195,13 @@ engine/config/schemas/*.yaml  →  [Parser]  →  [Generators]  →  Outputs
 
 #### Schema Inheritance
 
-All entity-specific schemas (Venue, Winery, etc.) **extend** the base `Listing` schema, inheriting 27 common fields:
+All entity-specific schemas (Venue, Winery, etc.) **extend** the base `Entity` schema, inheriting 27 common fields:
 
 ```yaml
 # winery.yaml
 schema:
   name: Winery
-  extends: Listing  # Inherits all 27 Listing fields
+  extends: Entity  # Inherits all 27 Entity fields
 
 fields:
   - name: grape_varieties
@@ -211,7 +214,7 @@ fields:
 ```python
 # winery.py (auto-generated)
 WINERY_SPECIFIC_FIELDS: List[FieldSpec] = [...]  # 12 fields
-WINERY_FIELDS: List[FieldSpec] = LISTING_FIELDS + WINERY_SPECIFIC_FIELDS  # 39 total
+WINERY_FIELDS: List[FieldSpec] = ENTITY_FIELDS + WINERY_SPECIFIC_FIELDS  # 39 total
 ```
 
 #### CLI Tool
@@ -344,7 +347,7 @@ fi
 - Generated file warnings prevent manual edits
 
 **Horizontal Scaling**:
-- Already supports: Listing (base), Venue (sports facilities), Winery (proof-of-concept)
+- Already supports: Entity (base), Venue (sports facilities), Winery (proof-of-concept)
 - Easy to add: Restaurant, Hotel, Gallery, Theater, Museum, etc.
 - Each new entity inherits 27 fields + adds specific fields
 
@@ -376,7 +379,7 @@ The ingestion stage captures raw data from external APIs and persists it for pro
     -   If hash exists, ingestion is skipped.
 
 #### Stage 2: Extraction (Structured Data Processing)
-The extraction stage transforms raw ingested data into validated, structured listings ready for display. This stage implements a sophisticated hybrid extraction strategy combining deterministic rules with LLM-powered intelligence.
+The extraction stage transforms raw ingested data into validated, structured entities ready for display. This stage implements a sophisticated hybrid extraction strategy combining deterministic rules with LLM-powered intelligence.
 
 **For detailed extraction engine documentation, see:**
 - **[Extraction Engine Overview](./docs/extraction_engine_overview.md)** - Architecture and design decisions
@@ -471,7 +474,7 @@ Result: Use Google's phone (trust 70 > 40)
 
 ##### 2.4. Multi-Source Deduplication
 
-The deduplication engine prevents duplicate listings using a three-strategy cascade:
+The deduplication engine prevents duplicate entities using a three-strategy cascade:
 
 **1. External ID Matching** (100% accuracy):
 - Google Place ID, OSM ID, Council Feature ID
@@ -487,8 +490,8 @@ The deduplication engine prevents duplicate listings using a three-strategy casc
 - Confidence threshold (default: 85%)
 
 **Output:**
-- **Match found**: Records merged into single listing
-- **No match**: Create new listing
+- **Match found**: Records merged into single entity
+- **No match**: Create new entity
 - **Uncertain match (<85% confidence)**: Flag for manual review
 
 ##### 2.5. Special Field Processing
@@ -563,16 +566,16 @@ graph TD
     Categories["Categories<br/>(Canonical Mapping)"]
     Summaries["Summary Synthesis<br/>(Multi-Stage LLM)"]
 
-    Intermediate["ExtractedListing<br/>(Intermediate)"]
+    Intermediate["ExtractedEntity<br/>(Intermediate)"]
 
     Dedup["Deduplication<br/>(External ID → Slug → Fuzzy)"]
 
     Decision{{"Duplicate<br/>Found?"}}
 
     Merge["Merge with Existing<br/>(Field-Level Trust)"]
-    Create["Create New Listing"]
+    Create["Create New Entity"]
 
-    Final["Listing<br/>(Final)"]
+    Final["Entity<br/>(Final)"]
 
     Quarantine["Quarantine<br/>(FailedExtraction)"]
 
@@ -617,11 +620,11 @@ graph TD
     - Opening hours parsed to JSON schema
     - Categories mapped to canonical taxonomy
     - Summaries synthesized from facts + rich text
-7.  **Intermediate Storage**: Create `ExtractedListing` record (enables re-merging without re-extraction)
-8.  **Deduplication**: Check for existing listings via external IDs, slugs, or fuzzy matching
+7.  **Intermediate Storage**: Create `ExtractedEntity` record (enables re-merging without re-extraction)
+8.  **Deduplication**: Check for existing entities via external IDs, slugs, or fuzzy matching
 9.  **Merge or Create**:
     - If duplicate found: Merge using field-level trust hierarchy
-    - If no duplicate: Create new `Listing`
+    - If no duplicate: Create new `Entity`
 10. **Quarantine**: On failure, capture error in `FailedExtraction`, continue processing other records
 
 ##### 2.9. CLI Operations
@@ -680,7 +683,7 @@ graph TD
         Transform["Transform Pipeline"]
         Validate["Pydantic Validation"]
         ExtractTrack{"Extraction<br/>Success?"}
-        Ingestor["Listing Ingestor<br/>(Upsert Logic)"]
+        Ingestor["Entity Ingestor<br/>(Upsert Logic)"]
     end
 
     subgraph PersistenceLayer["Persistence Layer"]
@@ -708,11 +711,11 @@ graph TD
     Transform -->|"7. Parse & Split"| Validate
     Validate -->|"8. Validated Data"| ExtractTrack
 
-    ExtractTrack -->|"Success - ExtractedListing"| Database
+    ExtractTrack -->|"Success - ExtractedEntity"| Database
     ExtractTrack -->|"Failure - FailedExtraction"| Database
 
-    Database -->|"9. Read ExtractedListing"| Ingestor
-    Ingestor -->|"10. Upsert Listing"| Database
+    Database -->|"9. Read ExtractedEntity"| Ingestor
+    Ingestor -->|"10. Upsert Entity"| Database
 ```
 
 ### 3.2. Triggers
@@ -737,7 +740,7 @@ When attributes collide, the source with the highest trust level wins.
     -   Used for foundational data (Coords, Basic Existence).
 
 ### 4.2. Confidence Score
-Every listing displays a "Confidence Score" (visible to admins, simplified for users) calculated based on:
+Every entity displays a "Confidence Score" (visible to admins, simplified for users) calculated based on:
 -   **Freshness:** How recently was this data verified?
 -   **Source Authority:** Did it come from a trusted source?
 -   **Cross-Validation:** Do multiple sources agree on the core details (Name, Location)?
@@ -760,12 +763,12 @@ The platform distinguishes itself through "The Local Artisan" persona—avoiding
 The "Business Claiming" feature is the mechanism that elevates data from Level 3/4 (Automated) to Level 1 (Golden). It allows verified owners to override automated data.
 
 ### 6.1. Workflow
-1.  **Request:** User clicks "Claim this Listing" on the frontend.
+1.  **Request:** User clicks "Claim this Entity" on the frontend.
 2.  **Verification:**
     -   **MVP:** Manual Admin approval via back-office.
     -   **Future:** Automated phone/email verification or payment-based verification (Stripe).
 3.  **Ownership Assignment:**
-    -   Upon approval, the `Listing` is linked to a `User` (Owner).
+    -   Upon approval, the `Entity` is linked to a `User` (Owner).
     -   A `ClaimStatus` flag is set to `CLAIMED`.
 
 ### 6.2. Data Override Logic
@@ -782,18 +785,18 @@ sequenceDiagram
 
     Note over Owner, DB: "Manual Override (Golden Data)"
     Owner->>Web: "Updates \"Opening Hours\""
-    Web->>DB: "UPDATE Listing SET attributes = {...}, locked_fields = ['opening_hours']"
+    Web->>DB: "UPDATE Entity SET attributes = {...}, locked_fields = ['opening_hours']"
     DB-->>Web: "Success"
 
     Note over Engine, DB: "Automated Ingestion Run"
     Engine->>Engine: "Fetches Google Places Data"
-    Engine->>DB: "READ locked_fields FROM Listing"
+    Engine->>DB: "READ locked_fields FROM Entity"
     DB-->>Engine: "Returns ['opening_hours']"
     
     alt "Field is Locked"
         Engine->>Engine: "Discard Google \"Opening Hours\""
     else "Field is Unlocked"
-        Engine->>DB: "UPDATE Listing (other fields)"
+        Engine->>DB: "UPDATE Entity (other fields)"
     end
 ```
 
@@ -810,8 +813,8 @@ The URL hierarchy is designed to capture long-tail intent:
 ### 7.2. Rendering Strategy
 We utilize Next.js **Incremental Static Regeneration (ISR)** to balance performance with freshness.
 
--   **Static Generation (Build Time):** High-traffic "Hub Pages" and top 100 listings are pre-rendered for instant load times (TTFB < 50ms).
--   **On-Demand Generation (ISR):** Long-tail listing pages are generated on the first request and cached at the edge.
+-   **Static Generation (Build Time):** High-traffic "Hub Pages" and top 100 entities are pre-rendered for instant load times (TTFB < 50ms).
+-   **On-Demand Generation (ISR):** Long-tail entity pages are generated on the first request and cached at the edge.
 -   **Revalidation:** Pages are revalidated (regenerated) in the background every 24 hours (or triggered by a webhook from the Data Engine) to reflect data updates.
 
 ### 7.3. Dynamic Metadata
@@ -840,7 +843,7 @@ The web application is stateless and deployed on **Vercel** (Serverless), allowi
 ### 8.3. Data Engine Scaling
 The Data Engine (currently a sequential CLI) allows for easy parallelization:
 -   **Job Queues:** Future ingestion runs can be split into jobs (e.g., "Fetch Google Places for Postcode EH1", "Fetch EH2") and processed by multiple workers in parallel (using Celery or distinct Docker containers).
--   **Locking:** The database handles concurrency via Prisma's transaction isolation, ensuring multiple workers don't corrupt the `Listing` table.
+-   **Locking:** The database handles concurrency via Prisma's transaction isolation, ensuring multiple workers don't corrupt the `Entity` table.
 
 ## 9. Deployment & Infrastructure
 
