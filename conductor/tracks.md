@@ -91,11 +91,10 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-## [ ] Track: Engine Purity Finalization
+## [x] Track: Engine Purity Finalization
 *Link: [./conductor/tracks/engine_purity_finalization_20260121/](./conductor/tracks/engine_purity_finalization_20260121/)*
-**Status:** Active
-**Priority:** Critical
-**Description:** Finalize engine purity and schema naming cleanup for a vertical-agnostic Entity Engine. Renaming Listing -> Entity, removing EntityType and Category, and adding persisted Lens membership.
+**Completed:** 2026-01-21
+**Description:** Finalized engine purity and schema naming cleanup for a vertical-agnostic Entity Engine. Renamed Listing → Entity, removed EntityType and Category, implemented persisted Lens membership (LensEntity table), created lens membership API, updated all documentation. Completed all 4 phases: Schema & DB Migration (Phase 1), Code Refactors (Phase 2), Lens + Category Cleanup (Phase 3), Tests + Validation + Docs (Phase 4). All 27 engine tests passing, engine purity checks passing, all acceptance criteria met.
 
 ## [ ] Track: Complete Engine-Lens Architecture
 *Link: [./conductor/tracks/complete_engine_lens_architecture_20260119/](./conductor/tracks/complete_engine_lens_architecture_20260119/)*
