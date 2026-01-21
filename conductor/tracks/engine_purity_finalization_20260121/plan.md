@@ -70,7 +70,7 @@
         -   Search `listing_id` -> Replace `entity_id`.
     -   **Verification:** `grep -r "Listing" engine/ | grep -v "migration"` should be clean.
 
-- [ ] **Task 2.2:** Regenerate Schemas & Clients.
+- [x] **Task 2.2:** Regenerate Schemas & Clients.
     -   **Commands:**
         1.  `python -m engine.schema.generate` (Updates Python Pydantic models).
         2.  `npx prisma generate --schema=engine/schema.prisma` (Updates Python Prisma client).
