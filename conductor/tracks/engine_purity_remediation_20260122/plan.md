@@ -39,11 +39,14 @@
 ## Phase 3: Prompt & Taxonomy Decoupling
 **Goal:** Remove vertical-specific knowledge from the core engine assets.
 
-- [ ] **3.1. Refactor Prompts**
-    - [ ] Read `engine/extraction/prompts/serper_extraction.txt`.
-    - [ ] Identify hardcoded classification lists.
-    - [ ] Replace with `{classification_rules}` placeholder.
-    - [ ] Update calling code (likely `SerperExtractor` or `LLMClient`) to inject these rules (temporarily can be hardcoded in Python, but out of the text file).
+- [x] **3.1. Refactor Prompts**
+    - [x] Read `engine/extraction/prompts/serper_extraction.txt`.
+    - [x] Identify hardcoded classification lists (found in osm_extraction.txt lines 101-108).
+    - [x] Replace with `{classification_rules}` placeholder in all three prompt files.
+    - [x] Remove "Edinburgh Finds" and vertical-specific examples from prompts.
+    - [x] Update OSMExtractor to inject classification rules via _get_classification_rules().
+    - [x] Update SerperExtractor to inject classification rules via _get_classification_rules().
+    - [x] Verify extractors initialize correctly with injected rules (103 tests passing).
 
 - [ ] **3.2. Decouple Category Mapper**
     - [ ] Modify `engine/extraction/utils/category_mapper.py` to accept a `config_path` argument.
