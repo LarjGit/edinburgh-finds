@@ -88,7 +88,11 @@ class OSMExtractor(BaseExtractor):
         # Load OSM-specific prompt template
         prompt_path = Path(__file__).parent.parent / "prompts" / "osm_extraction.txt"
         with open(prompt_path, 'r') as f:
-            self.system_message = f.read()
+            prompt_template = f.read()
+
+        # Inject classification rules dynamically
+        classification_rules = self._get_classification_rules()
+        self.system_message = prompt_template.replace("{classification_rules}", classification_rules)
 
         # Get schema fields for attribute splitting (universal entity fields)
         self.schema_fields = get_extraction_fields()
@@ -102,6 +106,31 @@ class OSMExtractor(BaseExtractor):
             str: "openstreetmap"
         """
         return "openstreetmap"
+
+    def _get_classification_rules(self) -> str:
+        """
+        Generate classification rules text for injection into prompt.
+
+        Returns:
+            str: Formatted classification rules for LLM prompt
+        """
+        return """   Use the following priority order to determine entity_class:
+
+   1. **Time-bounded** (has start/end times) → entity_class = "event"
+   2. **Physical location** (has coordinates or street address) → entity_class = "place"
+   3. **Named individual** → entity_class = "person"
+   4. **Membership/group entity** → entity_class = "organization"
+   5. **Fallback** → entity_class = "thing"
+
+   Additionally, determine canonical_roles (optional, multi-valued array):
+   - What the entity DOES (functions/capabilities)
+   - Examples: ["provides_facility", "provides_instruction", "sells_goods", "membership_org"]
+
+   Classification examples:
+   - Sports centre with courts → entity_class="place", canonical_roles=["provides_facility"]
+   - Individual coach → entity_class="person", canonical_roles=["provides_instruction"]
+   - Tournament with dates → entity_class="event", canonical_roles=[]
+   - Retail chain → entity_class="organization", canonical_roles=["sells_goods"]"""
 
     def _aggregate_osm_elements(self, elements: List[Dict]) -> str:
         """
