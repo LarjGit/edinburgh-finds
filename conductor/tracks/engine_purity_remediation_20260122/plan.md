@@ -5,17 +5,17 @@
 ## Phase 1: Critical Runtime Fixes (Seed & Ingest)
 **Goal:** Restore the ability to run basic engine scripts by fixing the mismatch between Code and DB Schema.
 
-- [ ] **1.1. Fix `seed_data.py`**
+- [x] **1.1. Fix `seed_data.py`**
     - [x] Read `engine/seed_data.py` to identify legacy SQL/Prisma calls.
     - [x] Refactor to use `Entity` model. [12b3b29]
     - [x] Remove `entityType` field assignment. [12b3b29]
     - [x] Map legacy `entityType="VENUE"` to `entity_class="place"` + `canonical_roles=["provides_facility"]`. [12b3b29]
     - [x] Verify execution: Note - seed_data.py uses SQLite but schema is PostgreSQL. Actual seeding is via ingest.py.
 
-- [ ] **1.2. Fix `ingest.py`**
-    - [~] Search `engine/ingest.py` for `entityType` or `Listing` model usage.
-    - [ ] Update to use `Entity` model.
-    - [ ] Ensure `entity_class` is populated if missing (default to 'thing' or specific logic).
+- [x] **1.2. Fix `ingest.py`**
+    - [x] Search `engine/ingest.py` for `entityType` or `Listing` model usage. [91c2781]
+    - [x] Update to use `Entity` model. [91c2781]
+    - [x] Ensure `entity_class` is populated if missing (default to 'thing' or specific logic). [91c2781]
 
 ## Phase 2: Extractor Purification
 **Goal:** Remove "VENUE" and legacy typing from the extraction layer.
