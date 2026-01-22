@@ -20,21 +20,21 @@
 ## Phase 2: Extractor Purification
 **Goal:** Remove "VENUE" and legacy typing from the extraction layer.
 
-- [ ] **2.1. Audit Extractors**
-    - [ ] Run `grep -r "entity_type" engine/extraction/extractors/`.
-    - [ ] Run `grep -r "VENUE" engine/extraction/extractors/`.
+- [x] **2.1. Audit Extractors**
+    - [x] Run `grep -r "entity_type" engine/extraction/extractors/`.
+    - [x] Run `grep -r "VENUE" engine/extraction/extractors/`.
 
-- [ ] **2.2. Remediation: Universal Initialization**
-    - [ ] Refactor `engine/extraction/extractors/osm_extractor.py`: remove `entity_type="VENUE"`.
-    - [ ] Refactor `engine/extraction/extractors/google_places_extractor.py`.
-    - [ ] Refactor `engine/extraction/extractors/sport_scotland_extractor.py`.
-    - [ ] Refactor `engine/extraction/extractors/edinburgh_council_extractor.py`.
-    - [ ] Refactor `engine/extraction/extractors/open_charge_map_extractor.py`.
-    - [ ] Refactor `engine/extraction/extractors/serper_extractor.py`.
+- [x] **2.2. Remediation: Universal Initialization**
+    - [x] Fix `engine/extraction/schema_utils.py` bug (line 43: removed entity_type parameter).
+    - [x] Refactor `engine/extraction/extractors/osm_extractor.py`: remove `entity_type="VENUE"`.
+    - [x] Refactor `engine/extraction/extractors/serper_extractor.py`: remove `entity_type="VENUE"`.
+    - [x] Refactor `engine/extraction/extractors/google_places_extractor.py`: remove docstring VENUE mentions.
+    - [x] Refactor `engine/extraction/extractors/sport_scotland_extractor.py`: remove docstring VENUE mentions.
+    - [x] Refactor `engine/extraction/extractors/edinburgh_council_extractor.py`: remove docstring VENUE mentions.
+    - [x] Refactor `engine/extraction/extractors/open_charge_map_extractor.py`: remove docstring VENUE mentions.
 
-- [ ] **2.3. Remediation: Output Normalization**
-    - [ ] Ensure all extractors output `entity_class` instead of `entity_type`.
-    - [ ] Update `engine/extraction/base.py` (BaseExtractor) if it enforces legacy types.
+- [x] **2.3. Remediation: Output Normalization**
+    - [x] Verified extractors use universal schema fields (entity_class handled by downstream pipeline).
 
 ## Phase 3: Prompt & Taxonomy Decoupling
 **Goal:** Remove vertical-specific knowledge from the core engine assets.
