@@ -217,8 +217,6 @@ class OpenChargeMapExtractor(BaseExtractor):
         if "entity_name" not in validated or not validated["entity_name"]:
             raise ValueError("Missing required field: entity_name")
 
-        if "entity_type" not in validated:
-
         # Validate phone format (should already be E.164, but double-check)
         if "phone" in validated and validated["phone"]:
             if not validated["phone"].startswith("+"):
