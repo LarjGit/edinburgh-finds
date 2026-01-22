@@ -4,6 +4,15 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
+## [x] Track: Engine Purity Remediation
+*Link: [./conductor/tracks/engine_purity_remediation_20260122/](./conductor/tracks/engine_purity_remediation_20260122/)*
+**Status:** Complete
+**Completed:** 2026-01-22
+**Priority:** Critical
+**Description:** Address critical blocking violations and architectural debts identified in the `ENGINE_PURITY_REVIEW.md` (2026-01-22) to ensure a truly vertical-agnostic engine. Completed all 4 phases: (1) Fixed seed & ingest scripts to use Entity model with entity_class, (2) Removed VENUE/entity_type from extractors, (3) Decoupled prompts & category mapper from vertical-specific knowledge, (4) Verified purity and tested end-to-end ingestion. Engine is now 100% vertical-agnostic.
+
+---
+
 ## [x] Track: Frontend Foundation
 *Link: [./conductor/archive/frontend_foundation_20260113/](./conductor/archive/frontend_foundation_20260113/)*
 
