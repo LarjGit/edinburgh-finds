@@ -23,9 +23,6 @@ export default async function Home() {
   });
 
   // Example 2: Filtered query using Prisma array filters (demonstrates new architecture)
-  // NOTE: Prisma array filters (hasSome, has, hasEvery) only work with native PostgreSQL arrays.
-  // SQLite stores dimensions as JSON strings, so array filters are not supported.
-  // This will be fully functional when migrating to Postgres/Supabase.
   const filteredListings = await prisma.entity.findMany({
     where: {
       entity_class: "place", // Basic filtering still works
@@ -55,7 +52,7 @@ export default async function Home() {
           </p>
           <ul className="space-y-2">
             {filteredListings.map((listing) => {
-              const activities = parseDimensionArray(listing.canonical_activities);
+              const activities = listing.canonical_activities; // Native array
               return (
                 <li key={listing.id} className="text-sm text-blue-800 dark:text-blue-200">
                   <strong>{listing.entity_name}</strong> - {listing.entity_class}
@@ -83,12 +80,12 @@ export default async function Home() {
               const hasAttributes = Object.keys(attributes).length > 0;
               const hasDiscoveredAttributes = Object.keys(discoveredAttributes).length > 0;
 
-              // Parse dimension arrays (SQLite JSON strings)
-              const activities = parseDimensionArray(listing.canonical_activities);
-              const roles = parseDimensionArray(listing.canonical_roles);
-              const placeTypes = parseDimensionArray(listing.canonical_place_types);
-              const access = parseDimensionArray(listing.canonical_access);
-              const modules = parseModules(listing.modules);
+              // Native arrays/JSON objects in Postgres
+              const activities = listing.canonical_activities;
+              const roles = listing.canonical_roles;
+              const placeTypes = listing.canonical_place_types;
+              const access = listing.canonical_access;
+              const modules = typeof listing.modules === 'object' ? listing.modules as Record<string, any> : {};
 
               return (
                 <li key={listing.id} className="p-6 border border-zinc-200 rounded-lg shadow-sm bg-white dark:bg-zinc-800 dark:border-zinc-700">

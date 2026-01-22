@@ -191,16 +191,16 @@ model RawIngestion {
         "  @@index([updatedAt])",
     ]
 
-    def __init__(self, database: str = "sqlite"):
+    def __init__(self, database: str = "postgresql"):
         """
         Initialize Prisma generator.
-
+        
         Args:
-            database: Database provider ("sqlite" or "postgresql")
+            database: Database provider ("postgresql")
         """
-        if database not in ["sqlite", "postgresql"]:
-            raise ValueError(f"Unsupported database: {database}. Use 'sqlite' or 'postgresql'")
         self.database = database
+        if database != "postgresql":
+            raise ValueError(f"Unsupported database: {database}. Only 'postgresql' is supported.")
 
     def _get_prisma_field_name(self, field: FieldDefinition) -> str:
         """Return Prisma field name, honoring prisma.name overrides."""
@@ -256,10 +256,9 @@ model RawIngestion {
             # Don't add nullable suffix if type already specified
             return prisma_type
 
-        # Handle JSON type (database-specific)
-        if field.type == "json":
-            base_type = "String" if self.database == "sqlite" else "Json"
-            return f"{base_type}?" if field.nullable else base_type
+        # Dictionary types -> Json
+        if field.type == "json" or field.type.startswith("dict"):
+            return "Json"
 
         # Handle list types - not directly supported, should use Prisma override
         if field.type.startswith("list["):

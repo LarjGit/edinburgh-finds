@@ -2,75 +2,43 @@
  * Entity Helper Functions
  *
  * Utilities for working with entities in the Engine-Lens architecture.
- * Handles JSON parsing for dimension arrays and modules (SQLite workaround).
+ * Supports native PostgreSQL data types (arrays, JSONB).
  */
 
 /**
- * Parse dimension array from JSON string.
+ * Helper to ensure we have an array for dimension fields.
+ * In Postgres, these are native String[] arrays, but defensive coding helps.
  *
- * SQLite workaround: Dimensions are stored as JSON strings (e.g., '["padel","tennis"]')
- * In Postgres, these will be native String[] arrays.
- *
- * @param jsonString - JSON string or null
- * @returns Parsed array or empty array if null/invalid
+ * @param val - The dimension value (should be string[])
+ * @returns Valid string array
  */
-export function parseDimensionArray(jsonString: string | null | undefined): string[] {
-  if (!jsonString) {
-    return [];
-  }
-
-  try {
-    const parsed = JSON.parse(jsonString);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (error) {
-    console.error("Failed to parse dimension array:", jsonString, error);
-    return [];
-  }
+export function ensureArray(val: string[] | null | undefined): string[] {
+  if (!val) return [];
+  if (Array.isArray(val)) return val;
+  return [];
 }
 
 /**
- * Parse modules object from JSON string.
+ * Helper to ensure we have an object for module fields.
+ * In Postgres, these are native JSONB objects.
  *
- * SQLite workaround: Modules are stored as JSON strings
- * In Postgres, these will be native Json/JSONB type.
- *
- * @param jsonString - JSON string or null
- * @returns Parsed object or empty object if null/invalid
+ * @param val - The module value (should be object)
+ * @returns Valid object
  */
-export function parseModules(jsonString: string | null | undefined): Record<string, any> {
-  if (!jsonString) {
-    return {};
-  }
-
-  try {
-    const parsed = JSON.parse(jsonString);
-    return typeof parsed === "object" && parsed !== null ? parsed : {};
-  } catch (error) {
-    console.error("Failed to parse modules:", jsonString, error);
-    return {};
-  }
+export function ensureModules(val: Record<string, any> | null | undefined): Record<string, any> {
+  if (!val) return {};
+  if (typeof val === "object") return val;
+  return {};
 }
 
-/**
- * Stringify dimension array to JSON string.
- *
- * For inserting/updating dimension arrays in SQLite.
- *
- * @param array - Array of strings
- * @returns JSON string representation
- */
-export function stringifyDimensionArray(array: string[]): string {
-  return JSON.stringify(array || []);
+// Legacy parse/stringify functions removed as we now use native types.
+// Kept as pass-throughs temporarily if needed for API compatibility,
+// but logic now assumes input is already correct type.
+
+export function parseDimensionArray(val: string[] | null | undefined): string[] {
+  return ensureArray(val);
 }
 
-/**
- * Stringify modules object to JSON string.
- *
- * For inserting/updating modules in SQLite.
- *
- * @param modules - Modules object
- * @returns JSON string representation
- */
-export function stringifyModules(modules: Record<string, any>): string {
-  return JSON.stringify(modules || {});
+export function parseModules(val: Record<string, any> | null | undefined): Record<string, any> {
+  return ensureModules(val);
 }

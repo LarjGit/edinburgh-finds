@@ -26,6 +26,9 @@ from typing import Optional
 from engine.ingestion.connectors.serper import SerperConnector
 from engine.ingestion.connectors.google_places import GooglePlacesConnector
 from engine.ingestion.connectors.open_street_map import OSMConnector
+from engine.ingestion.connectors.open_charge_map import OpenChargeMapConnector
+from engine.ingestion.connectors.sport_scotland import SportScotlandConnector
+from engine.ingestion.connectors.edinburgh_council import EdinburghCouncilConnector
 from engine.ingestion.deduplication import compute_content_hash
 from prisma import Prisma
 
@@ -35,6 +38,9 @@ CONNECTORS = {
     'serper': SerperConnector,
     'google_places': GooglePlacesConnector,
     'openstreetmap': OSMConnector,
+    'open_charge_map': OpenChargeMapConnector,
+    'sport_scotland': SportScotlandConnector,
+    'edinburgh_council': EdinburghCouncilConnector,
 }
 
 

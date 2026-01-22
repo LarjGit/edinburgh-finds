@@ -1,22 +1,11 @@
-// @ts-nocheck
+//
 /**
  * Entity Query Utilities - Lens-Aware Prisma Queries
  *
- * ⚠️ IMPORTANT: POSTGRES/SUPABASE ONLY ⚠️
- * This module uses Prisma array filters (hasSome, has, hasEvery) which only work
- * with native PostgreSQL String[] arrays. These filters DO NOT WORK with SQLite.
+ * Uses Prisma array filters (hasSome, has, hasEvery) which work
+ * with native PostgreSQL String[] arrays.
  *
- * Current Status:
- * - SQLite: Dimensions stored as JSON strings (e.g., '["padel","tennis"]')
- * - Postgres: Dimensions stored as String[] arrays with GIN indexes (future)
- *
- * This file demonstrates the intended query patterns for Postgres deployment.
- * When migrating to Supabase/Postgres:
- * 1. Update Prisma schema to use String[] for dimension fields
- * 2. Run migrations to convert JSON strings to native arrays
- * 3. These queries will work without modification
- *
- * Key Features (Postgres only):
+ * Key Features:
  * - Faceted filtering using Prisma array filters (has, hasSome, hasEvery)
  * - OR within facet, AND across facets (standard faceted search semantics)
  * - Type-safe query building

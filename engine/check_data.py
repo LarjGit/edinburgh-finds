@@ -1,32 +1,24 @@
-import sqlite3
-import os
+import asyncio
+from prisma import Prisma
 
-# Adjust path to where the Next.js app keeps the SQLite DB
-DB_PATH = os.path.join(os.path.dirname(__file__), '../web/dev.db')
-
-def check_data():
-    if not os.path.exists(DB_PATH):
-        print(f"Database file not found at: {DB_PATH}")
-        return
-
+async def main():
+    """
+    Check data integrity in the database.
+    """
+    db = Prisma()
     try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
+        await db.connect()
+        print("Checking Entity data...")
         
-        cursor.execute("SELECT COUNT(*) FROM Entity")
-        count = cursor.fetchone()[0]
-
-        print(f"Entity count: {count}")
-
-        if count > 0:
-            cursor.execute("SELECT entity_name, entity_class FROM Entity LIMIT 3")
-            print("Sample data:")
-            for row in cursor.fetchall():
-                print(f" - {row[0]} ({row[1]})")
-        
-        conn.close()
+        entities = await db.entity.find_many(take=5)
+        for entity in entities:
+            print(f"ID: {entity.id}, Name: {entity.entity_name}, Class: {entity.entity_class}")
+            
     except Exception as e:
-        print(f"Error reading database: {e}")
+        print(f"Error checking data: {e}")
+    finally:
+        if db.is_connected():
+            await db.disconnect()
 
 if __name__ == "__main__":
-    check_data()
+    asyncio.run(main())

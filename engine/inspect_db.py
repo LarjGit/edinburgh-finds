@@ -1,18 +1,29 @@
-import sqlite3
-import os
+import asyncio
+from prisma import Prisma
 
-DB_PATH = os.path.join(os.path.dirname(__file__), '../web/dev.db')
+async def main():
+    """
+    Inspect the database schema and table names.
+    Replaces legacy sqlite3 inspection.
+    """
+    db = Prisma()
+    try:
+        await db.connect()
+        print("Connected to PostgreSQL via Prisma.")
+        
+        # Prisma Client doesn't expose raw table inspection easily without raw queries,
+        # but we can check if we can query the main table.
+        try:
+            count = await db.entity.count()
+            print(f"Table 'Entity' is accessible. Row count: {count}")
+        except Exception as exc:
+            print(f"Could not access 'Entity' table: {exc}")
 
-conn = sqlite3.connect(DB_PATH)
-cursor = conn.cursor()
+    except Exception as e:
+        print(f"Database connection error: {e}")
+    finally:
+        if db.is_connected():
+            await db.disconnect()
 
-print("Tables:")
-for row in cursor.execute("SELECT name FROM sqlite_master WHERE type='table';"):
-    print(row[0])
-
-print("\nEntity Columns:")
-for row in cursor.execute("PRAGMA table_info(Entity);"):
-    print(row[1], row[2])
-
-conn.close()
-
+if __name__ == "__main__":
+    asyncio.run(main())
