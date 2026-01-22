@@ -75,8 +75,8 @@ class SerperExtractor(BaseExtractor):
         with open(prompt_path, 'r') as f:
             self.system_message = f.read()
 
-        # Get schema fields for attribute splitting
-        self.schema_fields = get_extraction_fields(entity_type="VENUE")
+        # Get schema fields for attribute splitting (universal entity fields)
+        self.schema_fields = get_extraction_fields()
 
     @property
     def source_name(self) -> str:
@@ -192,9 +192,6 @@ class SerperExtractor(BaseExtractor):
 
         # Convert Pydantic model to dictionary
         extracted_dict = extraction_result.model_dump()
-
-        # entity_type should be extracted by LLM or inferred later
-
 
         # Parse and normalize opening hours if present
         if 'opening_hours' in extracted_dict and extracted_dict['opening_hours'] is not None:

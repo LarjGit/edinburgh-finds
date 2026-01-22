@@ -140,7 +140,6 @@ class GooglePlacesExtractor(BaseExtractor):
     - rating, user_rating_count: from rating and userRatingCount
     - postcode: extracted from formattedAddress
     - external_id: from id (Google Place ID)
-    - entity_type: defaults to VENUE
     """
 
     @property
@@ -174,7 +173,6 @@ class GooglePlacesExtractor(BaseExtractor):
 
         # Required fields
         extracted["entity_name"] = raw_data.get("displayName", {}).get("text", "")
-        # entity_type is not assigned here; inferred from types or validated later if needed
 
         # Address and location
         if "formattedAddress" in raw_data:
@@ -239,7 +237,7 @@ class GooglePlacesExtractor(BaseExtractor):
         Validate extracted fields against schema rules.
 
         Ensures:
-        - Required fields are present (entity_name, entity_type)
+        - Required fields are present (entity_name)
         - Phone is in E.164 format
         - Coordinates are valid
         - Types are appropriate
@@ -255,9 +253,6 @@ class GooglePlacesExtractor(BaseExtractor):
         # Ensure required fields exist
         if "entity_name" not in validated or not validated["entity_name"]:
             raise ValueError("Missing required field: entity_name")
-
-        # entity_type is optional at this stage
-
 
         # Validate phone format (should already be E.164, but double-check)
         if "phone" in validated and validated["phone"]:

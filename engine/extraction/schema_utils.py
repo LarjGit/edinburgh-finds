@@ -40,7 +40,7 @@ def get_llm_config() -> List[Dict]:
     Build a lightweight LLM config from schema field specs.
     """
     config: List[Dict] = []
-    for field in get_extraction_fields(entity_type):
+    for field in get_extraction_fields():
         config.append(
             {
                 "name": field.name,

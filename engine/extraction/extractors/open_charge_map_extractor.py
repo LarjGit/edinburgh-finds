@@ -29,7 +29,6 @@ class OpenChargeMapExtractor(BaseExtractor):
     - phone: from OperatorInfo.PhonePrimaryContact (formatted to E.164)
     - postcode: from AddressInfo.Postcode (formatted)
     - external_id: from UUID
-    - entity_type: defaults to VENUE
 
     EV-specific fields (go to discovered_attributes):
     - operator_name: from OperatorInfo.Title
@@ -200,7 +199,7 @@ class OpenChargeMapExtractor(BaseExtractor):
         Validate extracted fields against schema rules.
 
         Ensures:
-        - Required fields are present (entity_name, entity_type)
+        - Required fields are present (entity_name)
         - Phone is in E.164 format
         - Coordinates are valid
         - Types are appropriate

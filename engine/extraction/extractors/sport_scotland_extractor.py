@@ -48,7 +48,6 @@ class SportScotlandExtractor(BaseExtractor):
     - website: from properties.website
     - postcode: from properties.postcode
     - external_id: from feature id
-    - entity_type: defaults to VENUE
     - tennis: inferred from facility_type
     - tennis_total_courts: from properties.number_of_courts
     - tennis_outdoor_courts: inferred from indoor_outdoor
@@ -172,7 +171,7 @@ class SportScotlandExtractor(BaseExtractor):
         Validate extracted fields against schema rules.
 
         Ensures:
-        - Required fields are present (entity_name, entity_type)
+        - Required fields are present (entity_name)
         - Phone is in E.164 format
         - Coordinates are valid
         - Types are appropriate

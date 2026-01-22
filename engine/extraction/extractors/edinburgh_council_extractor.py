@@ -59,7 +59,6 @@ class EdinburghCouncilExtractor(BaseExtractor):
     - summary: from DESCRIPTION or SUMMARY
     - categories: from FACILITY_TYPE, TYPE, CATEGORY
     - external_id: from feature id or OBJECTID or FID
-    - entity_type: defaults to VENUE
     - capacity: from CAPACITY
     - wheelchair_accessible: from ACCESSIBLE
     - opening_hours: from OPENING_HOURS
@@ -219,7 +218,7 @@ class EdinburghCouncilExtractor(BaseExtractor):
         Validate extracted fields against schema rules.
 
         Ensures:
-        - Required fields are present (entity_name, entity_type)
+        - Required fields are present (entity_name)
         - Phone is in E.164 format
         - Coordinates are valid
         - Types are appropriate
