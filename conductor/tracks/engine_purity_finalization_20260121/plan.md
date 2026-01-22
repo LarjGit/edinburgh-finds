@@ -59,7 +59,7 @@
         3.  `npx prisma migrate dev --name engine_purity_v1 --schema=engine/schema.prisma` (Creates fresh migration).
     -   **Verification:** Connect to DB (e.g., `psql`) and run `\dt`. Expect `Entity` table, NO `Listing`, NO `Category`.
 
-### Phase 2 — Code Refactors
+### Phase 2 — Code Refactors ✅ COMPLETE
 **Goal:** Update the codebase to match the new schema and remove vertical logic.
 
 - [x] **Task 2.1:** Update Imports & Type Definitions (Cross-Repo).
@@ -92,7 +92,7 @@
         -   Populate `raw_categories` from source data (without processing).
     -   **Verification:** Run `pytest tests/engine/test_extraction_base.py` (or equivalent).
 
-### Phase 3 — Lens + Category Cleanup
+### Phase 3 — Lens + Category Cleanup ✅ COMPLETE
 **Goal:** Completely excise Category logic and implement explicit Lens membership.
 
 - [x] **Task 3.1:** Remove Category Logic from Engine.
@@ -159,10 +159,10 @@ The track is complete only when:
 
 Before marking complete, perform this sequence:
 
-1.  [ ] **Check Env:** `echo $DATABASE_URL` (Must be dev/local).
-2.  [ ] **Reset:** `npx prisma migrate reset --force --schema=engine/schema.prisma`
-3.  [ ] **Migrate:** `npx prisma migrate dev --schema=engine/schema.prisma`
-4.  [ ] **Smoke Test:** `python -m engine.extraction.run_all --source osm --limit 1`
+1.  [x] **Check Env:** `echo $DATABASE_URL` (Must be dev/local). ✅ Verified dev database
+2.  [x] **Reset:** `npx prisma migrate reset --force --schema=engine/schema.prisma` ✅ Completed (with Prisma 7 upgrade)
+3.  [x] **Migrate:** `npx prisma migrate dev --schema=engine/schema.prisma` ✅ Migration applied: 20260121220929_engine_purity_v1
+4.  [x] **Smoke Test:** `python -m engine.extraction.run --source osm --limit 1` ✅ Passed (0 records found, database clean)
 
 ## 🔎 Validation Examples
 
