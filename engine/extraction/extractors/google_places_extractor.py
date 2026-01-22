@@ -158,11 +158,18 @@ class GooglePlacesExtractor(BaseExtractor):
         Transform raw Google Places data into extracted listing fields.
 
         Args:
-            raw_data: Single place object from Google Places API v1 response
+            raw_data: Either a single place object OR a response with {"places": [...]}
 
         Returns:
-            Dict: Extracted fields mapped to schema names
+            Dict: Extracted fields mapped to schema names (first place if array)
         """
+        # Handle array wrapper from Google Places API responses
+        if "places" in raw_data and isinstance(raw_data["places"], list):
+            if not raw_data["places"]:
+                raise ValueError("No places found in response")
+            # Extract from first place
+            raw_data = raw_data["places"][0]
+
         extracted = {}
 
         # Required fields

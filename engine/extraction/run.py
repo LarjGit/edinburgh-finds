@@ -184,7 +184,7 @@ async def run_single_extraction(
             external_ids[f"{raw.source}_id"] = validated["external_id"]
 
         # Get entity type from extractor (no defaults - extractors must provide this)
-        entity_type = validated.get("entity_type")
+        entity_class = validated.get("entity_class")
 
         # Create ExtractedEntity record (unless dry_run)
         extracted_entity_id = None
@@ -193,7 +193,7 @@ async def run_single_extraction(
                 data={
                     "raw_ingestion_id": raw_id,
                     "source": raw.source,
-                    "entity_type": entity_type,
+                    "entity_class": entity_class,
                     "attributes": json.dumps(attributes),
                     "discovered_attributes": json.dumps(discovered_attributes),
                     "external_ids": json.dumps(external_ids),
@@ -220,7 +220,7 @@ async def run_single_extraction(
             "raw_id": raw_id,
             "source": raw.source,
             "extracted_id": extracted_entity_id,
-            "entity_type": entity_type,
+            "entity_class": entity_class,
             "dry_run": dry_run,
         }
 
@@ -354,8 +354,8 @@ async def run_source_extraction(
                 if "external_id" in validated:
                     external_ids[f"{raw_record.source}_id"] = validated["external_id"]
 
-                # Get entity_type
-                entity_type = validated.get("entity_type")
+                # Get entity_class - default to 'place' if not set
+                entity_class = validated.get("entity_class", "place")
 
                 # Track LLM usage if model_used is present
                 model_used = validated.get("model_used")
@@ -372,7 +372,7 @@ async def run_source_extraction(
                         data={
                             "raw_ingestion_id": raw_record.id,
                             "source": raw_record.source,
-                            "entity_type": entity_type,
+                            "entity_class": entity_class,
                             "attributes": json.dumps(attributes),
                             "discovered_attributes": json.dumps(discovered_attributes),
                             "external_ids": json.dumps(external_ids),
@@ -553,8 +553,8 @@ async def run_all_extraction(
                     if "external_id" in validated:
                         external_ids[f"{raw_record.source}_id"] = validated["external_id"]
 
-                    # Get entity_type
-                    entity_type = validated.get("entity_type")
+                    # Get entity_class
+                    entity_class = validated.get("entity_class")
 
                     # Track LLM usage if model_used is present
                     model_used = validated.get("model_used")
@@ -569,7 +569,7 @@ async def run_all_extraction(
                             data={
                                 "raw_ingestion_id": raw_record.id,
                                 "source": raw_record.source,
-                                "entity_type": entity_type,
+                                "entity_class": entity_class,
                                 "attributes": json.dumps(attributes),
                                 "discovered_attributes": json.dumps(discovered_attributes),
                                 "external_ids": json.dumps(external_ids),
@@ -674,8 +674,8 @@ def format_verbose_output(result: Dict) -> str:
     lines.append(f"Source:       {result['source']}")
     lines.append(f"Extracted ID: {result['extracted_id']}")
 
-    if "entity_type" in result:
-        lines.append(f"Entity Type:  {result['entity_type']}")
+    if "entity_class" in result:
+        lines.append(f"Entity Type:  {result['entity_class']}")
 
     if "fields" in result and result["fields"]:
         lines.append("")
