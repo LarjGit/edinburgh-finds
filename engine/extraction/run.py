@@ -106,7 +106,7 @@ async def run_single_extraction(
     # Check if already extracted (unless force_retry is set)
     existing_extraction = None
     if not force_retry:
-        existing_extraction = await db.extractedlisting.find_first(
+        existing_extraction = await db.extractedentity.find_first(
             where={"raw_ingestion_id": raw_id}
         )
 
@@ -189,7 +189,7 @@ async def run_single_extraction(
         # Create ExtractedEntity record (unless dry_run)
         extracted_entity_id = None
         if not dry_run:
-            extracted_listing = await db.extractedlisting.create(
+            extracted_listing = await db.extractedentity.create(
                 data={
                     "raw_ingestion_id": raw_id,
                     "source": raw.source,
@@ -283,7 +283,7 @@ async def run_source_extraction(
         "where": {
             "source": source,
         },
-        "order_by": {"created_at": "asc"},
+        "order": {"ingested_at": "asc"},
     }
 
     if limit is not None:
@@ -322,7 +322,7 @@ async def run_source_extraction(
                 # Check if already extracted (unless force_retry)
                 existing = None
                 if not force_retry:
-                    existing = await db.extractedlisting.find_first(
+                    existing = await db.extractedentity.find_first(
                         where={"raw_ingestion_id": raw_record.id}
                     )
 
@@ -368,7 +368,7 @@ async def run_source_extraction(
 
                 # Create ExtractedEntity (unless dry_run)
                 if not dry_run:
-                    await db.extractedlisting.create(
+                    await db.extractedentity.create(
                         data={
                             "raw_ingestion_id": raw_record.id,
                             "source": raw_record.source,
@@ -521,7 +521,7 @@ async def run_all_extraction(
                     # Check if already extracted (unless force_retry)
                     existing = None
                     if not force_retry:
-                        existing = await db.extractedlisting.find_first(
+                        existing = await db.extractedentity.find_first(
                             where={"raw_ingestion_id": raw_record.id}
                         )
 
@@ -565,7 +565,7 @@ async def run_all_extraction(
 
                     # Create ExtractedEntity (unless dry_run)
                     if not dry_run:
-                        await db.extractedlisting.create(
+                        await db.extractedentity.create(
                             data={
                                 "raw_ingestion_id": raw_record.id,
                                 "source": raw_record.source,
