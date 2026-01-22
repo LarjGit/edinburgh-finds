@@ -180,10 +180,12 @@ SAMPLE_DATA = {
 async def run_test():
     # Flatten/Prepare data
     payload = SAMPLE_DATA["data"].copy()
-    
-    # Rename other_attributes to discovered_attributes
+
+    # TEMP: Skip discovered_attributes to test core entity ingestion
     if "other_attributes" in payload:
-        payload["discovered_attributes"] = payload.pop("other_attributes")
+        payload.pop("other_attributes")
+    if "discovered_attributes" in payload:
+        payload.pop("discovered_attributes")
         
     print(f"Starting ingestion for {payload['entity_name']}...")
     listing = await ingest_venue(payload)

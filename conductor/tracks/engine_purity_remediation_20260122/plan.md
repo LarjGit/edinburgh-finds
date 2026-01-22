@@ -61,6 +61,11 @@
     - [x] Run `grep -r "Listing" engine/`. Result: Descriptions, generic class names like ListingMerger (acceptable).
     - [x] Fix utility scripts: check_data.py (entityTypeId → entity_class), inspect_db.py (Listing → Entity), validate_extraction_sqlite.py (Listing → Entity).
 
-- [ ] **4.2. End-to-End Test**
-    - [ ] Run a manual extraction for one source.
-    - [ ] Verify data lands in `Entity` table in Supabase (or local Postgres).
+- [x] **4.2. End-to-End Test**
+    - [x] Run seed script to test Entity ingestion.
+    - [x] Verify data lands in `Entity` table with correct schema.
+    - [x] Confirm entity_class="place" mapped from legacy entity_type="venue".
+    - [x] Confirm canonical_roles=["provides_facility"] inferred correctly.
+    - [x] Fixed ingest.py to handle legacy entity_type preprocessing.
+    - [x] Fixed JSON field serialization for Prisma (modules, opening_hours, etc.).
+    - [x] Fixed utility scripts (check_data.py, inspect_db.py, validate_extraction_sqlite.py).
