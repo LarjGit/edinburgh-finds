@@ -55,10 +55,11 @@
 ## Phase 4: Verification & Cleanup
 **Goal:** Prove purity.
 
-- [ ] **4.1. Run Purity Check**
-    - [ ] Run `grep -r "entityType" engine/`.
-    - [ ] Run `grep -r "VENUE" engine/`.
-    - [ ] Run `grep -r "Listing" engine/` (should only be found in `web` or generic contexts, not as the engine's main model).
+- [x] **4.1. Run Purity Check**
+    - [x] Run `grep -r "entityType" engine/`. Result: Only in test files (acceptable).
+    - [x] Run `grep -r "VENUE" engine/`. Result: Migration code, comments, docstrings, tests (acceptable).
+    - [x] Run `grep -r "Listing" engine/`. Result: Descriptions, generic class names like ListingMerger (acceptable).
+    - [x] Fix utility scripts: check_data.py (entityTypeId → entity_class), inspect_db.py (Listing → Entity), validate_extraction_sqlite.py (Listing → Entity).
 
 - [ ] **4.2. End-to-End Test**
     - [ ] Run a manual extraction for one source.

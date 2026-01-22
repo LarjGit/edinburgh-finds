@@ -10,8 +10,8 @@ print("Tables:")
 for row in cursor.execute("SELECT name FROM sqlite_master WHERE type='table';"):
     print(row[0])
 
-print("\nListing Columns:")
-for row in cursor.execute("PRAGMA table_info(Listing);"):
+print("\nEntity Columns:")
+for row in cursor.execute("PRAGMA table_info(Entity);"):
     print(row[1], row[2])
 
 conn.close()

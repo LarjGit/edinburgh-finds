@@ -29,12 +29,12 @@ cursor = conn.cursor()
 print("1. ENTITY COUNTS")
 print("-" * 80)
 
-cursor.execute("SELECT COUNT(*) FROM Listing")
+cursor.execute("SELECT COUNT(*) FROM Entity")
 total_count = cursor.fetchone()[0]
 print(f"Total entities: {total_count}")
 
 # Count by entity_class
-cursor.execute("SELECT entity_class, COUNT(*) FROM Listing GROUP BY entity_class")
+cursor.execute("SELECT entity_class, COUNT(*) FROM Entity GROUP BY entity_class")
 entity_class_counts = cursor.fetchall()
 
 print("\nBy entity_class:")
@@ -54,7 +54,7 @@ cursor.execute("""
     SELECT entity_name, entity_class,
            canonical_activities, canonical_roles,
            canonical_place_types, canonical_access
-    FROM Listing
+    FROM Entity
     WHERE canonical_activities IS NOT NULL
        OR canonical_roles IS NOT NULL
        OR canonical_place_types IS NOT NULL
@@ -132,7 +132,7 @@ print()
 print("3. ROLE VALUES (Universal function-style keys)")
 print("-" * 80)
 
-cursor.execute("SELECT canonical_roles FROM Listing WHERE canonical_roles IS NOT NULL")
+cursor.execute("SELECT canonical_roles FROM Entity WHERE canonical_roles IS NOT NULL")
 role_rows = cursor.fetchall()
 
 all_roles = []
@@ -162,7 +162,7 @@ print()
 print("4. MODULES JSONB STRUCTURE (Namespaced)")
 print("-" * 80)
 
-cursor.execute("SELECT entity_name, entity_class, modules FROM Listing WHERE modules IS NOT NULL LIMIT 10")
+cursor.execute("SELECT entity_name, entity_class, modules FROM Entity WHERE modules IS NOT NULL LIMIT 10")
 module_rows = cursor.fetchall()
 
 print(f"Found {len(module_rows)} entities with modules:")
@@ -210,7 +210,7 @@ for row in module_rows:
 print("5. SPORTS_FACILITY MODULE (Inventory JSON structure)")
 print("-" * 80)
 
-cursor.execute("SELECT entity_name, modules FROM Listing WHERE modules IS NOT NULL")
+cursor.execute("SELECT entity_name, modules FROM Entity WHERE modules IS NOT NULL")
 sports_rows = cursor.fetchall()
 
 sports_facility_count = 0

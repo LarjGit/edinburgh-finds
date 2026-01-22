@@ -15,11 +15,11 @@ def check_data():
         
         cursor.execute("SELECT COUNT(*) FROM Entity")
         count = cursor.fetchone()[0]
-        
-        print(f"Listing count: {count}")
-        
+
+        print(f"Entity count: {count}")
+
         if count > 0:
-            cursor.execute("SELECT entity_name, entityTypeId FROM Entity LIMIT 3")
+            cursor.execute("SELECT entity_name, entity_class FROM Entity LIMIT 3")
             print("Sample data:")
             for row in cursor.fetchall():
                 print(f" - {row[0]} ({row[1]})")
