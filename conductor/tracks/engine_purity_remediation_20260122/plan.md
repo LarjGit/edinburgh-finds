@@ -7,10 +7,10 @@
 
 - [ ] **1.1. Fix `seed_data.py`**
     - [x] Read `engine/seed_data.py` to identify legacy SQL/Prisma calls.
-    - [ ] Refactor to use `Entity` model.
-    - [ ] Remove `entityType` field assignment.
-    - [ ] Map legacy `entityType="VENUE"` to `entity_class="place"` + `canonical_roles=["provides_facility"]`.
-    - [ ] Verify execution: `python engine/run_seed.py`.
+    - [x] Refactor to use `Entity` model. [12b3b29]
+    - [x] Remove `entityType` field assignment. [12b3b29]
+    - [x] Map legacy `entityType="VENUE"` to `entity_class="place"` + `canonical_roles=["provides_facility"]`. [12b3b29]
+    - [~] Verify execution: `python engine/run_seed.py`.
 
 - [ ] **1.2. Fix `ingest.py`**
     - [ ] Search `engine/ingest.py` for `entityType` or `Listing` model usage.
