@@ -221,8 +221,9 @@ class GooglePlacesExtractor(BaseExtractor):
         if "googleMapsUri" in raw_data:
             extracted["google_maps_uri"] = raw_data["googleMapsUri"]
 
+        # Store types as categories for raw_categories field
         if "types" in raw_data:
-            extracted["types"] = raw_data["types"]
+            extracted["categories"] = raw_data["types"]
 
         return extracted
 
