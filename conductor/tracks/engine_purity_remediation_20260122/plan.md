@@ -48,9 +48,9 @@
     - [x] Update SerperExtractor to inject classification rules via _get_classification_rules().
     - [x] Verify extractors initialize correctly with injected rules (103 tests passing).
 
-- [ ] **3.2. Decouple Category Mapper**
-    - [ ] Modify `engine/extraction/utils/category_mapper.py` to accept a `config_path` argument.
-    - [ ] Update callsites to pass the path (or default to a safe location if needed).
+- [x] **3.2. Decouple Category Mapper** [dfe72a4]
+    - [x] Modify `engine/extraction/utils/category_mapper.py` to accept a `config_path` argument.
+    - [x] Update callsites to pass the path (or default to a safe location if needed).
 
 ## Phase 4: Verification & Cleanup
 **Goal:** Prove purity.
