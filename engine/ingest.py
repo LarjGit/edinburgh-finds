@@ -5,27 +5,28 @@ from typing import Dict, Any, List
 from prisma import Prisma
 from pydantic import ValidationError
 
-from engine.schema.venue import VENUE_FIELDS
 from engine.schema.entity import ENTITY_FIELDS
 from engine.schema.generator import create_pydantic_model
 
 # 1. Generate Validators
-VenueModel = create_pydantic_model("VenueModel", VENUE_FIELDS)
+EntityModel = create_pydantic_model("EntityModel", ENTITY_FIELDS)
 
 # 2. Define Core Columns (Mapping to Prisma Schema)
-# These are fields that exist as physical columns on the Listing table.
+# These are fields that exist as physical columns on the Entity table.
 CORE_COLUMNS = {
-    "entity_name", "slug", "summary", 
+    "entity_name", "entity_class", "slug", "summary",
+    "raw_categories", "canonical_activities", "canonical_roles",
+    "canonical_place_types", "canonical_access",
+    "modules", "discovered_attributes",
     "street_address", "city", "postcode", "country", "latitude", "longitude",
     "phone", "email", "website_url",
     "instagram_url", "facebook_url", "twitter_url", "linkedin_url", "mainImage",
-    "opening_hours", "source_info", "field_confidence", "external_ids",
-    "discovered_attributes"
+    "opening_hours", "source_info", "field_confidence", "external_ids"
 }
 
-async def ingest_venue(data: Dict[str, Any]):
+async def ingest_entity(data: Dict[str, Any]):
     """
-    Ingests a single Venue entity.
+    Ingests a single Entity.
     data: Flat dictionary containing all fields.
     """
     db = Prisma()
@@ -33,18 +34,17 @@ async def ingest_venue(data: Dict[str, Any]):
 
     try:
         # A. Validation
-        known_keys = {f.name for f in VENUE_FIELDS}
-        # Add common fields if not in venue (they are inherited so should be there)
-        
+        known_keys = {f.name for f in ENTITY_FIELDS}
+
         validation_payload = {k: v for k, v in data.items() if k in known_keys}
-        
-        validated_obj = VenueModel(**validation_payload)
+
+        validated_obj = EntityModel(**validation_payload)
         validated_data = validated_obj.model_dump()
-        
+
         # B. Separation
         core_data = {}
-        attributes_data = {}
-        
+        modules_data = {}
+
         # Extras that were NOT in known_keys
         extras = {k: v for k, v in data.items() if k not in known_keys}
 
@@ -54,19 +54,54 @@ async def ingest_venue(data: Dict[str, Any]):
             elif key == "entity_id":
                 continue
             elif key == "entity_type":
-                # Store EntityType Enum value for Prisma
-                # Convert Enum to its value (e.g., EntityType.VENUE -> "VENUE")
-                core_data["entityType"] = value.value if hasattr(value, 'value') else value
-            elif key in ["categories", "canonical_categories"]:
-                continue # Handled via relations
-            else:
-                # It's a schema-defined attribute (e.g. tennis_courts)
-                if value is not None:
-                    attributes_data[key] = value
+                # Map legacy entity_type to entity_class
+                # "VENUE" -> "place", "COACH" -> "person", etc.
+                entity_type_mapping = {
+                    "VENUE": "place",
+                    "venue": "place",
+                    "COACH": "person",
+                    "coach": "person",
+                    "CLUB": "organization",
+                    "club": "organization",
+                    "RETAIL": "place",
+                    "retail": "place",
+                    "EVENT": "event",
+                    "event": "event",
+                }
+                mapped_class = entity_type_mapping.get(value, "thing")
+                core_data["entity_class"] = mapped_class
 
-        # C. Serialization
-        core_data["attributes"] = json.dumps(attributes_data)
-        
+                # Also set canonical_roles based on legacy type
+                if "canonical_roles" not in core_data:
+                    if value in ["VENUE", "venue"]:
+                        core_data["canonical_roles"] = ["provides_facility"]
+                    elif value in ["COACH", "coach"]:
+                        core_data["canonical_roles"] = ["teaches", "coaches"]
+                    elif value in ["CLUB", "club"]:
+                        core_data["canonical_roles"] = ["organizes_activities"]
+                    elif value in ["RETAIL", "retail"]:
+                        core_data["canonical_roles"] = ["sells_equipment"]
+                    elif value in ["EVENT", "event"]:
+                        core_data["canonical_roles"] = ["hosts_event"]
+            elif key in ["categories", "canonical_categories"]:
+                # Map to canonical_activities
+                if "canonical_activities" not in core_data and value:
+                    # Assume categories are activities for now
+                    core_data["canonical_activities"] = value if isinstance(value, list) else [value]
+            else:
+                # It's a schema-defined module field
+                if value is not None:
+                    modules_data[key] = value
+
+        # C. Build modules JSON
+        # Modules should be organized by domain (tennis, padel, amenities, etc.)
+        # For now, put all module data in a generic "attributes" module
+        if modules_data:
+            core_data["modules"] = modules_data
+        elif "modules" not in core_data:
+            # modules is required, provide empty dict if not present
+            core_data["modules"] = {}
+
         # Handle discovered_attributes
         # Merge explicit discovered_attributes with any extras found
         disc_attrs = core_data.get("discovered_attributes") or {}
@@ -75,53 +110,57 @@ async def ingest_venue(data: Dict[str, Any]):
                 disc_attrs = {}
             disc_attrs.update(extras)
             core_data["discovered_attributes"] = disc_attrs
-        
+
         # Handle other JSON core columns
-        for col in ["opening_hours", "source_info", "field_confidence", "external_ids", "discovered_attributes"]:
+        for col in ["raw_categories", "canonical_activities", "canonical_roles",
+                    "canonical_place_types", "canonical_access"]:
             if col in core_data and core_data[col] is not None:
-                if not isinstance(core_data[col], str):
-                    core_data[col] = json.dumps(core_data[col])
+                # These are arrays in PostgreSQL, keep as lists
+                if not isinstance(core_data[col], list):
+                    core_data[col] = [core_data[col]]
+
+        for col in ["modules", "opening_hours", "source_info", "field_confidence",
+                    "external_ids", "discovered_attributes"]:
+            if col in core_data and core_data[col] is not None:
+                # Keep as dict/object for JSON fields, Prisma will handle serialization
+                pass
 
         # D. Database Upsert
         slug = core_data.get("slug")
         if not slug:
-             slug = core_data.get("entity_name", "").lower().replace(" ", "-")
-             core_data["slug"] = slug
+            slug = core_data.get("entity_name", "").lower().replace(" ", "-")
+            core_data["slug"] = slug
 
-        # Categories Relation
-        # Input 'canonical_categories' is List[str] e.g. ["Padel", "Football"]
-        category_connect = []
-        cats = data.get("canonical_categories", [])
-        if cats:
-            for cat_name in cats:
-                cat_slug = cat_name.lower().replace(" ", "-")
-                # Find or create category
-                # Prisma atomic upsert for relation is tricky inside nested create, 
-                # best to resolve IDs first or use connect_or_create
-                category_connect.append({
-                    "where": {"slug": cat_slug},
-                    "create": {"name": cat_name, "slug": cat_slug}
-                })
+        # Ensure required fields have defaults
+        if "entity_class" not in core_data:
+            core_data["entity_class"] = "thing"
 
-        # Upsert Listing
-        # Note: 'categories': {'connect_or_create': [...]}
-        upsert_data = {
-            **core_data,
-            "categories": {
-                "connectOrCreate": category_connect
-            }
-        }
+        if "raw_categories" not in core_data:
+            core_data["raw_categories"] = []
 
-        listing = await db.listing.upsert(
+        if "canonical_activities" not in core_data:
+            core_data["canonical_activities"] = []
+
+        if "canonical_roles" not in core_data:
+            core_data["canonical_roles"] = []
+
+        if "canonical_place_types" not in core_data:
+            core_data["canonical_place_types"] = []
+
+        if "canonical_access" not in core_data:
+            core_data["canonical_access"] = []
+
+        # Upsert Entity
+        entity = await db.entity.upsert(
             where={"slug": slug},
             data={
-                "create": upsert_data,
-                "update": upsert_data
+                "create": core_data,
+                "update": core_data
             }
         )
-        
-        print(f"Successfully ingested: {listing.entity_name}")
-        return listing
+
+        print(f"Successfully ingested: {entity.entity_name}")
+        return entity
 
     except ValidationError as e:
         print(f"Validation Error for {data.get('entity_name')}: {e}")
@@ -131,6 +170,14 @@ async def ingest_venue(data: Dict[str, Any]):
         raise
     finally:
         await db.disconnect()
+
+# Legacy function name for backward compatibility
+async def ingest_venue(data: Dict[str, Any]):
+    """
+    DEPRECATED: Use ingest_entity instead.
+    Wrapper for backward compatibility.
+    """
+    return await ingest_entity(data)
 
 if __name__ == "__main__":
     pass
