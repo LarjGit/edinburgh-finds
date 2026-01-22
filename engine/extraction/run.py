@@ -189,7 +189,7 @@ async def run_single_extraction(
         # Create ExtractedEntity record (unless dry_run)
         extracted_entity_id = None
         if not dry_run:
-            extracted_listing = await db.extractedentity.create(
+            extracted_entity = await db.extractedentity.create(
                 data={
                     "raw_ingestion_id": raw_id,
                     "source": raw.source,
@@ -200,7 +200,7 @@ async def run_single_extraction(
                     "model_used": validated.get("model_used"),
                 }
             )
-            extracted_entity_id = extracted_listing.id
+            extracted_entity_id = extracted_entity.id
         else:
             logger.info(f"[DRY RUN] Would create ExtractedEntity for raw_id: {raw_id}")
             extracted_entity_id = "dry-run-simulation"

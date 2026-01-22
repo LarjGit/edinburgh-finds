@@ -18,14 +18,12 @@ def seed_data():
 
     print("Seeding data...")
 
-    # Raw data from extraction (using legacy format as example)
+    # Raw data from extraction
     raw_data = {
       "entity_name": "Powerleague Edinburgh Portobello",
-      "entity_type": "VENUE",  # Legacy field - will be mapped
       "extraction_timestamp": "2026-01-10T23:39:17.976278",
       "data": {
         "entity_name": "Powerleague Edinburgh Portobello",
-        "entity_type": "VENUE",  # Legacy field - will be mapped
         "summary": "PowerLeague Edinburgh Portobello is a sports complex specializing in 5-a-side and 7-a-side football with 3 five-a-side pitches and 2 seven-a-side pitches on 3G astroturf. The venue recently invested £600,000 to add 3 covered padel courts, making it Portobello's first padel facility. On-site amenities include a clubhouse bar, Costa Coffee cafe, free parking, and WiFi, with kids' birthday parties and FA-accredited football holiday camps for ages 5-12.",
         "categories": [
           "football",
@@ -181,7 +179,6 @@ def seed_data():
         ],
         "field_confidence": {
           "entity_name": 1.0,
-          "entity_type": 1.0,
         },
         "enrichment_log": {
           "timestamp": "2026-01-11T14:50:34.188303",
@@ -194,8 +191,7 @@ def seed_data():
 
     data = raw_data['data']
 
-    # Map legacy entity_type="VENUE" to new entity_class="place"
-    # In the new architecture:
+    # Entity classification:
     # - entity_class describes what the entity IS (place, person, organization, event, etc.)
     # - canonical_roles describes what the entity DOES (provides_facility, coaches, sells, etc.)
     # - canonical_activities describes WHICH activities (football, padel, tennis, etc.)

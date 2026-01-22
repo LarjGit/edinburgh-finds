@@ -1,16 +1,16 @@
 import asyncio
 import json
 from prisma import Prisma
-from engine.ingest import ingest_venue
+from engine.ingest import ingest_entity
 
 # Sample Data extracted from original seed_data.py
 SAMPLE_DATA = {
   "entity_name": "Powerleague Edinburgh Portobello",
-  "entity_type": "venue",
+  "entity_class": "place",
   "extraction_timestamp": "2026-01-10T23:39:17.976278",
   "data": {
     "entity_name": "Powerleague Edinburgh Portobello",
-    "entity_type": "venue",
+    "entity_class": "place",
     "summary": "PowerLeague Edinburgh Portobello is a sports complex specializing in 5-a-side and 7-a-side football with 3 five-a-side pitches and 2 seven-a-side pitches on 3G astroturf. The venue recently invested £600,000 to add 3 covered padel courts, making it Portobello's first padel facility. On-site amenities include a clubhouse bar, Costa Coffee cafe, free parking, and WiFi, with kids' birthday parties and FA-accredited football holiday camps for ages 5-12.",
     "categories": [
       "football",
@@ -166,7 +166,7 @@ SAMPLE_DATA = {
     "facebook_likes": None,
     "field_confidence": {
       "entity_name": 1.0,
-      "entity_type": 1.0,
+      "entity_class": 1.0,
     },
     "enrichment_log": {
       "timestamp": "2026-01-11T14:50:34.188303",
@@ -188,18 +188,18 @@ async def run_test():
         payload.pop("discovered_attributes")
         
     print(f"Starting ingestion for {payload['entity_name']}...")
-    listing = await ingest_venue(payload)
-    
+    entity = await ingest_entity(payload)
+
     # Verification
     print(f"VERIFICATION:")
-    print(f"ID: {listing.id}")
-    print(f"Name: {listing.entity_name}")
-    print(f"Slug: {listing.slug}")
-    print(f"Attributes (JSON): {listing.attributes}")
-    print(f"Discovered (JSON): {listing.discovered_attributes}")
-    
+    print(f"ID: {entity.id}")
+    print(f"Name: {entity.entity_name}")
+    print(f"Slug: {entity.slug}")
+    print(f"Attributes (JSON): {entity.attributes}")
+    print(f"Discovered (JSON): {entity.discovered_attributes}")
+
     # Check attributes content
-    attrs = json.loads(listing.attributes)
+    attrs = json.loads(entity.attributes)
     if attrs.get("padel_total_courts") == 3:
         print("PASS: Attributes contain padel_total_courts=3")
     else:

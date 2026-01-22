@@ -173,7 +173,7 @@ class SerperExtractor(BaseExtractor):
 
     def extract(self, raw_data: Dict) -> Dict:
         """
-        Transform raw Serper search results into extracted listing fields.
+        Transform raw Serper search results into extracted entity fields.
 
         This method:
         1. Extracts organic search results from Serper response

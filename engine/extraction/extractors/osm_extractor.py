@@ -235,7 +235,7 @@ class OSMExtractor(BaseExtractor):
 
     def extract(self, raw_data: Dict) -> Dict:
         """
-        Transform raw OSM Overpass API response into extracted listing fields.
+        Transform raw OSM Overpass API response into extracted entity fields.
 
         This method:
         1. Extracts OSM elements from Overpass response

@@ -1,5 +1,5 @@
 """
-Field-level trust merging for extracted listings.
+Field-level trust merging for extracted entities.
 
 This module implements intelligent merging of data from multiple sources
 based on a trust hierarchy. Each field is merged independently, choosing
@@ -190,28 +190,28 @@ class EntityMerger:
         self.trust_hierarchy = trust_hierarchy or TrustHierarchy()
         self.field_merger = field_merger or FieldMerger(self.trust_hierarchy)
 
-    def merge_listings(self, extracted_listings: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    def merge_entities(self, extracted_entities: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
         """
-        Merge multiple extracted listings into a single listing.
+        Merge multiple extracted entities into a single entity.
 
         Args:
-            extracted_listings: List of ExtractedEntity records (as dicts)
+            extracted_entities: List of ExtractedEntity records (as dicts)
 
         Returns:
-            Merged listing dict with optimal field values and provenance tracking
+            Merged entity dict with optimal field values and provenance tracking
         """
-        if not extracted_listings:
+        if not extracted_entities:
             return None
 
-        if len(extracted_listings) == 1:
+        if len(extracted_entities) == 1:
             # No merging needed, but still format the output
-            return self._format_single_listing(extracted_listings[0])
+            return self._format_single_entity(extracted_entities[0])
 
-        # Collect all fields across all listings
+        # Collect all fields across all entities
         all_fields = set()
-        for listing in extracted_listings:
-            if "attributes" in listing and listing["attributes"]:
-                all_fields.update(listing["attributes"].keys())
+        for entity in extracted_entities:
+            if "attributes" in entity and entity["attributes"]:
+                all_fields.update(entity["attributes"].keys())
 
         # Merge each field independently
         merged_attributes = {}
@@ -222,13 +222,13 @@ class EntityMerger:
             # Collect values for this field from all sources
             field_values = []
 
-            for listing in extracted_listings:
-                attributes = listing.get("attributes", {})
+            for entity in extracted_entities:
+                attributes = entity.get("attributes", {})
                 if field_name in attributes:
                     value = attributes[field_name]
-                    source = listing["source"]
+                    source = entity["source"]
                     # Use a default confidence if not specified
-                    confidence = listing.get("confidence", 0.8)
+                    confidence = entity.get("confidence", 0.8)
 
                     field_values.append(
                         FieldValue(value=value, source=source, confidence=confidence)
@@ -247,17 +247,17 @@ class EntityMerger:
                     field_confidence[field_name] = agreement_ratio
 
         # Merge discovered_attributes
-        merged_discovered = self._merge_discovered_attributes(extracted_listings)
+        merged_discovered = self._merge_discovered_attributes(extracted_entities)
 
         # Combine external_ids from all sources
-        merged_external_ids = self._merge_external_ids(extracted_listings)
+        merged_external_ids = self._merge_external_ids(extracted_entities)
 
-        # Determine entity_type (should be consistent across all listings)
+        # Determine entity_class (should be consistent across all entities)
         # Use the entity_type from the most trusted source
         entity_types = [
-            (listing.get("entity_type"), listing["source"])
-            for listing in extracted_listings
-            if listing.get("entity_type")
+            (entity.get("entity_type"), entity["source"])
+            for entity in extracted_entities
+            if entity.get("entity_type")
         ]
         entity_type = None
         if entity_types:
@@ -269,24 +269,24 @@ class EntityMerger:
             )
             entity_type = entity_types_sorted[0][0]
 
-        # Build final merged listing
-        merged_listing = {
+        # Build final merged entity
+        merged_entity = {
             **merged_attributes,
             "entity_type": entity_type,
             "discovered_attributes": merged_discovered,
             "external_ids": merged_external_ids,
             "source_info": source_info,
             "field_confidence": field_confidence,
-            "sources": [listing["source"] for listing in extracted_listings],
-            "source_count": len(extracted_listings)
+            "sources": [entity["source"] for entity in extracted_entities],
+            "source_count": len(extracted_entities)
         }
 
-        return merged_listing
+        return merged_entity
 
-    def _format_single_listing(self, listing: Dict[str, Any]) -> Dict[str, Any]:
-        """Format a single listing to match merged listing structure."""
-        attributes = listing.get("attributes", {})
-        source = listing["source"]
+    def _format_single_entity(self, entity: Dict[str, Any]) -> Dict[str, Any]:
+        """Format a single entity to match merged entity structure."""
+        attributes = entity.get("attributes", {})
+        source = entity["source"]
 
         # Create source_info mapping for all fields
         source_info = {field_name: source for field_name in attributes.keys()}
@@ -296,9 +296,9 @@ class EntityMerger:
 
         return {
             **attributes,
-            "entity_type": listing.get("entity_type"),
-            "discovered_attributes": listing.get("discovered_attributes", {}),
-            "external_ids": listing.get("external_ids", {}),
+            "entity_type": entity.get("entity_type"),
+            "discovered_attributes": entity.get("discovered_attributes", {}),
+            "external_ids": entity.get("external_ids", {}),
             "source_info": source_info,
             "field_confidence": field_confidence,
             "sources": [source],
@@ -307,7 +307,7 @@ class EntityMerger:
 
     def _merge_discovered_attributes(
         self,
-        extracted_listings: List[Dict[str, Any]]
+        extracted_entities: List[Dict[str, Any]]
     ) -> Dict[str, Any]:
         """
         Merge discovered_attributes from multiple sources.
@@ -315,8 +315,8 @@ class EntityMerger:
         Discovered attributes are merged with same trust hierarchy as regular fields.
         """
         all_discovered_fields = set()
-        for listing in extracted_listings:
-            discovered = listing.get("discovered_attributes", {})
+        for entity in extracted_entities:
+            discovered = entity.get("discovered_attributes", {})
             if discovered:
                 all_discovered_fields.update(discovered.keys())
 
@@ -325,12 +325,12 @@ class EntityMerger:
         for field_name in all_discovered_fields:
             field_values = []
 
-            for listing in extracted_listings:
-                discovered = listing.get("discovered_attributes", {})
+            for entity in extracted_entities:
+                discovered = entity.get("discovered_attributes", {})
                 if field_name in discovered:
                     value = discovered[field_name]
-                    source = listing["source"]
-                    confidence = listing.get("confidence", 0.8)
+                    source = entity["source"]
+                    confidence = entity.get("confidence", 0.8)
 
                     field_values.append(
                         FieldValue(value=value, source=source, confidence=confidence)
@@ -345,7 +345,7 @@ class EntityMerger:
 
     def _merge_external_ids(
         self,
-        extracted_listings: List[Dict[str, Any]]
+        extracted_entities: List[Dict[str, Any]]
     ) -> Dict[str, str]:
         """
         Combine external IDs from all sources.
@@ -354,8 +354,8 @@ class EntityMerger:
         """
         merged_ids = {}
 
-        for listing in extracted_listings:
-            external_ids = listing.get("external_ids", {})
+        for entity in extracted_entities:
+            external_ids = entity.get("external_ids", {})
             if external_ids:
                 merged_ids.update(external_ids)
 

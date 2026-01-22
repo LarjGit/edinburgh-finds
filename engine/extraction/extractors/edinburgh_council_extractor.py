@@ -1,7 +1,7 @@
 """
 Edinburgh Council Extractor
 
-Transforms raw Edinburgh Council GeoJSON responses into structured listing fields.
+Transforms raw Edinburgh Council GeoJSON responses into structured entity fields.
 Uses deterministic extraction (clean, structured GeoJSON data from ArcGIS).
 
 Edinburgh Council provides local facility data via ArcGIS in GeoJSON format,
@@ -20,7 +20,7 @@ class EdinburghCouncilExtractor(BaseExtractor):
     Extractor for Edinburgh Council GeoJSON data.
 
     This extractor transforms raw Edinburgh Council ArcGIS GeoJSON responses into
-    structured listing fields. Edinburgh Council provides clean, structured data
+    structured entity fields. Edinburgh Council provides clean, structured data
     via ArcGIS, so this uses deterministic extraction (no LLM required).
 
     GeoJSON Structure (Edinburgh Council uses various field naming conventions):
@@ -76,7 +76,7 @@ class EdinburghCouncilExtractor(BaseExtractor):
 
     def extract(self, raw_data: Dict) -> Dict:
         """
-        Transform raw Edinburgh Council GeoJSON feature into extracted listing fields.
+        Transform raw Edinburgh Council GeoJSON feature into extracted entity fields.
 
         Args:
             raw_data: Single GeoJSON feature from Edinburgh Council ArcGIS response

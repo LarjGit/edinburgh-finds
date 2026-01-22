@@ -7,7 +7,7 @@ Part of Phase 5 of the YAML Schema track.
 Usage:
     python -m engine.schema.generate [options]
     python -m engine.schema.generate --validate
-    python -m engine.schema.generate --schema listing --force
+    python -m engine.schema.generate --schema entity --force
 """
 
 import argparse
@@ -73,7 +73,7 @@ def find_schema_files(schema_dir: Path, schema_name: Optional[str] = None) -> Li
 
     Args:
         schema_dir: Directory containing schema files
-        schema_name: Optional specific schema to generate (e.g., 'listing', 'venue')
+        schema_name: Optional specific schema to generate (e.g., 'entity')
 
     Returns:
         List of YAML file paths
@@ -412,7 +412,7 @@ Examples:
   python -m engine.schema.generate --validate
 
   # Generate specific schema
-  python -m engine.schema.generate --schema listing
+  python -m engine.schema.generate --schema entity
 
   # Force overwrite without prompts
   python -m engine.schema.generate --force
@@ -434,7 +434,7 @@ Examples:
     parser.add_argument(
         '--schema',
         type=str,
-        help='Generate specific schema (e.g., listing, venue)'
+        help='Generate specific schema (e.g., entity)'
     )
 
     parser.add_argument(
@@ -482,7 +482,7 @@ Examples:
     parser.add_argument(
         '--pydantic-extraction',
         action='store_true',
-        help='Generate Pydantic extraction model from listing.yaml'
+        help='Generate Pydantic extraction model from entity.yaml'
     )
 
     prisma_group = parser.add_mutually_exclusive_group()
@@ -544,8 +544,8 @@ Examples:
             print_error("--zod requires --typescript flag")
             sys.exit(1)
 
-    if generate_pydantic_extraction and args.schema and args.schema != "listing":
-        print_error("--pydantic-extraction only supports --schema listing")
+    if generate_pydantic_extraction and args.schema and args.schema != "entity":
+        print_error("--pydantic-extraction only supports --schema entity")
         sys.exit(1)
 
     # Validate mode
@@ -607,8 +607,8 @@ Examples:
                     print_error(f"Python: {message}")
                     error_count += 1
 
-            # Generate Pydantic extraction model (listing.yaml only)
-            if generate_pydantic_extraction and yaml_file.stem == "listing":
+            # Generate Pydantic extraction model (entity.yaml only)
+            if generate_pydantic_extraction and yaml_file.stem == "entity":
                 extraction_success, extraction_message = generate_pydantic_extraction_model(
                     yaml_file,
                     extraction_output,

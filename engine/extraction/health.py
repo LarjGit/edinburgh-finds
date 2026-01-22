@@ -106,7 +106,7 @@ async def fetch_health_metrics() -> Dict[str, Any]:
 
     try:
         raw_records = await db.rawingestion.find_many()
-        extracted_listings = await db.extractedlisting.find_many()
+        extracted_entities = await db.extractedlisting.find_many()
         failed_extractions = await db.failedextraction.find_many()
 
         merge_conflicts: List[Any] = []
@@ -115,7 +115,7 @@ async def fetch_health_metrics() -> Dict[str, Any]:
 
         return calculate_health_metrics(
             raw_records=raw_records,
-            extracted_listings=extracted_listings,
+            extracted_entities=extracted_entities,
             failed_extractions=failed_extractions,
             merge_conflicts=merge_conflicts,
         )

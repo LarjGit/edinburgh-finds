@@ -1,7 +1,7 @@
 """
 Python FieldSpec Generator
 
-Generates Python listing.py files with FieldSpec definitions from YAML schemas.
+Generates Python entity.py files with FieldSpec definitions from YAML schemas.
 Part of Phase 2 of the YAML Schema track.
 """
 
@@ -79,7 +79,7 @@ class PythonFieldSpecGenerator:
         needs_datetime = False
         needs_entity_type = False
 
-        # Always need List for the LISTING_FIELDS/VENUE_SPECIFIC_FIELDS declaration
+        # Always need List for the ENTITY_FIELDS declaration
         typing_imports.add("List")
 
         for field in fields:
@@ -190,7 +190,7 @@ class PythonFieldSpecGenerator:
 
         return fieldspec
 
-    def generate(self, schema: SchemaDefinition, source_file: str = "listing.yaml") -> str:
+    def generate(self, schema: SchemaDefinition, source_file: str = "entity.yaml") -> str:
         """
         Generate complete Python module with FieldSpec definitions.
 

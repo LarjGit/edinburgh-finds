@@ -1,7 +1,7 @@
 """
 Google Places Extractor
 
-Transforms raw Google Places API responses into structured listing fields.
+Transforms raw Google Places API responses into structured entity fields.
 Uses deterministic extraction (clean, structured API data).
 """
 
@@ -128,7 +128,7 @@ class GooglePlacesExtractor(BaseExtractor):
     Extractor for Google Places API data.
 
     This extractor transforms raw Google Places API v1 responses into
-    structured listing fields. Google Places provides clean, structured data,
+    structured entity fields. Google Places provides clean, structured data,
     so this uses deterministic extraction (no LLM required).
 
     Fields extracted:
@@ -154,7 +154,7 @@ class GooglePlacesExtractor(BaseExtractor):
 
     def extract(self, raw_data: Dict) -> Dict:
         """
-        Transform raw Google Places data into extracted listing fields.
+        Transform raw Google Places data into extracted entity fields.
 
         Args:
             raw_data: Either a single place object OR a response with {"places": [...]}

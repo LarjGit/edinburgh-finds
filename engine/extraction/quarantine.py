@@ -187,7 +187,7 @@ def _build_extraction_hash(
     return compute_content_hash(payload)
 
 
-async def _save_extracted_listing(
+async def _save_extracted_entity(
     db: Prisma,
     raw_ingestion_id: str,
     source: str,
@@ -288,7 +288,7 @@ class ExtractionRetryHandler:
                 if not entity_type:
                     raise ValueError("Missing required field: entity_type")
 
-                await _save_extracted_listing(
+                await _save_extracted_entity(
                     self.db,
                     raw_record.id,
                     failure.source,

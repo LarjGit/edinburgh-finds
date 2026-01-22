@@ -8,12 +8,12 @@ from engine.extraction.schema_utils import get_extraction_fields
 
 
 def split_attributes(
-    extracted: Dict, entity_type: Optional[object] = None
+    extracted: Dict
 ) -> Tuple[Dict, Dict]:
     """
     Split extracted fields into schema attributes and discovered attributes.
     """
-    schema_fields = {field.name for field in get_extraction_fields(entity_type)}
+    schema_fields = {field.name for field in get_extraction_fields()}
     attributes: Dict = {}
     discovered: Dict = {}
 

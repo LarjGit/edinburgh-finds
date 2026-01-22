@@ -300,7 +300,7 @@ modules:
 # - Domain amenities: cafe, restaurant, bar
 # - Activity values: padel, tennis, gym, swimming, wine
 # - Role labels: Venue, Coach, Retailer, Club (these are display labels in lens only)
-# - Entity type labels: VENUE, COACH, CLUB (replaced by entity_class + canonical_roles)
+# - Legacy entity type labels removed - now using entity_class + canonical_roles
 # - Place type values: These are opaque, lens-interpreted
 #
 # If this file contains ANY vertical-specific concepts, it violates engine purity.

@@ -143,7 +143,7 @@ async def store_llm_cache(
     Args:
         cache_key: The extraction cache key (SHA-256 hash)
         source: Data source name (e.g., "google_places", "serper")
-        entity_type: Entity type (e.g., "VENUE", "COACH")
+        entity_class: Entity class (e.g., "place", "person", "organization")
         attributes: Extracted structured attributes
         model_used: LLM model name used for extraction
         raw_ingestion_id: RawIngestion record ID (required)
@@ -158,7 +158,7 @@ async def store_llm_cache(
         >>> await store_llm_cache(
         ...     cache_key=cache_key,
         ...     source="google_places",
-        ...     entity_type="VENUE",
+        ...     entity_class="place",
         ...     attributes=extracted_data,
         ...     model_used="claude-haiku-20250318",
         ...     raw_ingestion_id="cmk123..."

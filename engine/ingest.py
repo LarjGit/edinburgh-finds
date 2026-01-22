@@ -33,41 +33,10 @@ async def ingest_entity(data: Dict[str, Any]):
     await db.connect()
 
     try:
-        # A. Preprocessing: Handle legacy entity_type field
-        preprocessed_data = data.copy()
-        if "entity_type" in preprocessed_data and "entity_class" not in preprocessed_data:
-            entity_type_mapping = {
-                "VENUE": "place",
-                "venue": "place",
-                "COACH": "person",
-                "coach": "person",
-                "CLUB": "organization",
-                "club": "organization",
-                "RETAIL": "place",
-                "retail": "place",
-                "EVENT": "event",
-                "event": "event",
-            }
-            entity_type_value = preprocessed_data["entity_type"]
-            preprocessed_data["entity_class"] = entity_type_mapping.get(entity_type_value, "thing")
-
-            # Also set canonical_roles based on legacy type if not already set
-            if "canonical_roles" not in preprocessed_data:
-                if entity_type_value in ["VENUE", "venue"]:
-                    preprocessed_data["canonical_roles"] = ["provides_facility"]
-                elif entity_type_value in ["COACH", "coach"]:
-                    preprocessed_data["canonical_roles"] = ["teaches", "coaches"]
-                elif entity_type_value in ["CLUB", "club"]:
-                    preprocessed_data["canonical_roles"] = ["organizes_activities"]
-                elif entity_type_value in ["RETAIL", "retail"]:
-                    preprocessed_data["canonical_roles"] = ["sells_equipment"]
-                elif entity_type_value in ["EVENT", "event"]:
-                    preprocessed_data["canonical_roles"] = ["hosts_event"]
-
-        # B. Validation
+        # A. Validation
         known_keys = {f.name for f in ENTITY_FIELDS}
 
-        validation_payload = {k: v for k, v in preprocessed_data.items() if k in known_keys}
+        validation_payload = {k: v for k, v in data.items() if k in known_keys}
 
         validated_obj = EntityModel(**validation_payload)
         validated_data = validated_obj.model_dump()
@@ -215,14 +184,6 @@ async def ingest_entity(data: Dict[str, Any]):
         raise
     finally:
         await db.disconnect()
-
-# Legacy function name for backward compatibility
-async def ingest_venue(data: Dict[str, Any]):
-    """
-    DEPRECATED: Use ingest_entity instead.
-    Wrapper for backward compatibility.
-    """
-    return await ingest_entity(data)
 
 if __name__ == "__main__":
     pass

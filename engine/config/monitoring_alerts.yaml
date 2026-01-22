@@ -183,9 +183,9 @@ info_alerts:
     notification_channels: ["slack"]
     review_frequency: "weekly"
 
-  # Duplicate listings detected
-  - name: "Potential Duplicate Listings"
-    metric: "duplicate_listing_percentage"
+  # Duplicate entities detected
+  - name: "Potential Duplicate Entities"
+    metric: "duplicate_entity_percentage"
     threshold: 5  # More than 5% suspected duplicates
     description: "Deduplication may not be working correctly"
     action: |

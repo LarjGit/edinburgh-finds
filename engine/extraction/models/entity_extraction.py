@@ -2,16 +2,16 @@
 # GENERATED FILE - DO NOT EDIT
 # ============================================================
 #
-# Generated from: engine/config/schemas/listing.yaml
-# Generated at: 2026-01-18 03:11:17
+# Generated from: engine/config/schemas/entity.yaml
+# Generated at: 2026-01-22 13:21:59
 #
 # To make changes:
-# 1. Edit engine/config/schemas/listing.yaml
+# 1. Edit engine/config/schemas/entity.yaml
 # 2. Run: python -m engine.schema.generate
 #
 # ============================================================
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 class EntityExtraction(BaseModel):
@@ -19,11 +19,7 @@ class EntityExtraction(BaseModel):
 
     entity_name: str = Field(description="Official name of the entity REQUIRED.")
 
-    entity_type: Optional[str] = Field(default=None, description="Type of entity (venue, retailer, cafe, event, members_club, etc) Null if not found.")
-
     summary: Optional[str] = Field(default=None, description="A short overall description of the entity summarising all gathered data Null if not found.")
-
-    categories: Optional[List[str]] = Field(default=None, description="Raw free-form categories detected by the LLM (uncontrolled labels) Null if not found.")
 
     discovered_attributes: Optional[Dict[str, Any]] = Field(default=None, description="Dictionary containing any extra attributes not explicitly defined in Listing or Entity models Null if not found.")
 

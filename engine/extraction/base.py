@@ -24,7 +24,7 @@ class BaseExtractor(ABC):
     Abstract base class for data extraction.
 
     Implementations are responsible for transforming raw ingestion payloads
-    into structured listing fields, validating outputs, and separating
+    into structured entity fields, validating outputs, and separating
     schema-defined attributes from discovered attributes.
     """
 
@@ -42,7 +42,7 @@ class BaseExtractor(ABC):
     @abstractmethod
     def extract(self, raw_data: Dict) -> Dict:
         """
-        Transform raw data into extracted listing fields.
+        Transform raw data into extracted entity fields.
 
         Args:
             raw_data: Raw ingestion payload for a single record

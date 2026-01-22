@@ -1,7 +1,7 @@
 """
 Sport Scotland Extractor
 
-Transforms raw Sport Scotland WFS GeoJSON responses into structured listing fields.
+Transforms raw Sport Scotland WFS GeoJSON responses into structured entity fields.
 Uses deterministic extraction (clean, structured WFS data).
 
 Sport Scotland provides official sports facility data via WFS (Web Feature Service)
@@ -21,7 +21,7 @@ class SportScotlandExtractor(BaseExtractor):
     Extractor for Sport Scotland WFS data.
 
     This extractor transforms raw Sport Scotland WFS GeoJSON responses into
-    structured listing fields. Sport Scotland provides clean, structured data
+    structured entity fields. Sport Scotland provides clean, structured data
     via WFS, so this uses deterministic extraction (no LLM required).
 
     GeoJSON Structure:
@@ -69,7 +69,7 @@ class SportScotlandExtractor(BaseExtractor):
 
     def extract(self, raw_data: Dict) -> Dict:
         """
-        Transform raw Sport Scotland GeoJSON feature into extracted listing fields.
+        Transform raw Sport Scotland GeoJSON feature into extracted entity fields.
 
         Args:
             raw_data: Single GeoJSON feature from Sport Scotland WFS response

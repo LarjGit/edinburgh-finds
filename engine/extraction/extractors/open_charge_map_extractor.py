@@ -1,11 +1,11 @@
 """
 OpenChargeMap Extractor
 
-Transforms raw OpenChargeMap API responses into structured listing fields.
+Transforms raw OpenChargeMap API responses into structured entity fields.
 Uses deterministic extraction (clean, structured API data).
 
 OpenChargeMap is an enrichment source that provides EV charging infrastructure
-data. This can supplement venue listings by showing nearby charging facilities.
+data. This can supplement entities by showing nearby charging facilities.
 """
 
 from typing import Dict, Tuple, Optional, List
@@ -19,7 +19,7 @@ class OpenChargeMapExtractor(BaseExtractor):
     Extractor for OpenChargeMap API data.
 
     This extractor transforms raw OpenChargeMap API responses into
-    structured listing fields. OpenChargeMap provides clean, structured data
+    structured entity fields. OpenChargeMap provides clean, structured data
     about EV charging stations, so this uses deterministic extraction (no LLM required).
 
     Fields extracted:
@@ -52,7 +52,7 @@ class OpenChargeMapExtractor(BaseExtractor):
 
     def extract(self, raw_data: Dict) -> Dict:
         """
-        Transform raw OpenChargeMap data into extracted listing fields.
+        Transform raw OpenChargeMap data into extracted entity fields.
 
         Args:
             raw_data: Single charging station object from OpenChargeMap API response

@@ -90,13 +90,13 @@ def _extract_llm_usage(record: Any) -> Optional[Dict[str, int]]:
 
 def calculate_unprocessed_count(
     raw_records: List[Any],
-    extracted_listings: List[Any],
+    extracted_entities: List[Any],
     failed_extractions: List[Any],
 ) -> Dict[str, Any]:
     """Calculate counts of unprocessed raw ingestion records."""
     processed_ids = {
         _get_value(record, "raw_ingestion_id")
-        for record in extracted_listings
+        for record in extracted_entities
         if _get_value(record, "raw_ingestion_id") is not None
     }
     processed_ids.update(
@@ -128,7 +128,7 @@ def calculate_unprocessed_count(
 
 def calculate_success_rate_by_source(
     raw_records: List[Any],
-    extracted_listings: List[Any],
+    extracted_entities: List[Any],
 ) -> Dict[str, Dict[str, Any]]:
     """Calculate extraction success rates by source."""
     totals: Dict[str, int] = {}
@@ -139,8 +139,8 @@ def calculate_success_rate_by_source(
         totals[source] = totals.get(source, 0) + 1
 
     extracted_counts: Dict[str, int] = {}
-    for listing in extracted_listings:
-        source = _get_value(listing, "source", "unknown")
+    for entity in extracted_entities:
+        source = _get_value(entity, "source", "unknown")
         extracted_counts[source] = extracted_counts.get(source, 0) + 1
 
     results: Dict[str, Dict[str, Any]] = {}
@@ -165,19 +165,19 @@ def calculate_success_rate_by_source(
 
 
 def calculate_field_null_rates(
-    extracted_listings: List[Any],
+    extracted_entities: List[Any],
     field_names: Optional[List[str]] = None,
 ) -> Dict[str, Dict[str, Any]]:
     """Calculate null rates for extraction fields."""
     if field_names is None:
         field_names = [field.name for field in get_extraction_fields()]
 
-    total = len(extracted_listings)
+    total = len(extracted_entities)
     results: Dict[str, Dict[str, Any]] = {}
 
     for field_name in field_names:
         null_count = 0
-        for record in extracted_listings:
+        for record in extracted_entities:
             attributes = _safe_json_load(_get_value(record, "attributes"))
             value = attributes.get(field_name)
             if value is None:
@@ -227,7 +227,7 @@ def get_recent_failures(
 
 
 def calculate_llm_usage(
-    extracted_listings: List[Any],
+    extracted_entities: List[Any],
     llm_sources: Optional[Iterable[str]] = None,
     input_cost_per_million: float = DEFAULT_INPUT_COST_PER_MILLION,
     output_cost_per_million: float = DEFAULT_OUTPUT_COST_PER_MILLION,
@@ -241,7 +241,7 @@ def calculate_llm_usage(
     total_output_tokens = 0
     has_usage_data = False
 
-    for record in extracted_listings:
+    for record in extracted_entities:
         source = _get_value(record, "source", "unknown")
         model_used = _get_value(record, "model_used")
 
@@ -285,7 +285,7 @@ def calculate_merge_conflict_count(merge_conflicts: Optional[List[Any]]) -> int:
 
 def calculate_health_metrics(
     raw_records: List[Any],
-    extracted_listings: List[Any],
+    extracted_entities: List[Any],
     failed_extractions: List[Any],
     merge_conflicts: Optional[List[Any]] = None,
     field_names: Optional[List[str]] = None,
@@ -295,17 +295,17 @@ def calculate_health_metrics(
     return {
         "timestamp": now_utc().isoformat(),
         "unprocessed": calculate_unprocessed_count(
-            raw_records, extracted_listings, failed_extractions
+            raw_records, extracted_entities, failed_extractions
         ),
         "success_rate_by_source": calculate_success_rate_by_source(
-            raw_records, extracted_listings
+            raw_records, extracted_entities
         ),
         "field_null_rates": calculate_field_null_rates(
-            extracted_listings, field_names
+            extracted_entities, field_names
         ),
         "recent_failures": get_recent_failures(failed_extractions),
         "llm_usage": calculate_llm_usage(
-            extracted_listings, llm_sources=llm_sources
+            extracted_entities, llm_sources=llm_sources
         ),
         "merge_conflicts": calculate_merge_conflict_count(merge_conflicts),
     }

@@ -1,5 +1,5 @@
 """
-Deduplication logic for extracted listings.
+Deduplication logic for extracted entities.
 
 Implements a cascade of matching strategies:
 1. External ID matching (100% confidence) - Google Place ID, OSM ID, etc.
@@ -24,15 +24,15 @@ class MatchResult:
 
 
 class ExternalIDMatcher:
-    """Matches listings based on external IDs (Google Place ID, OSM ID, etc.)."""
+    """Matches entities based on external IDs (Google Place ID, OSM ID, etc.)."""
 
     def match(self, ids1: Dict[str, str], ids2: Dict[str, str]) -> MatchResult:
         """
-        Match two listings based on external IDs.
+        Match two entities based on external IDs.
 
         Args:
-            ids1: Dictionary of external IDs for listing 1
-            ids2: Dictionary of external IDs for listing 2
+            ids1: Dictionary of external IDs for entity 1
+            ids2: Dictionary of external IDs for entity 2
 
         Returns:
             MatchResult with confidence 1.0 if any external ID matches
@@ -69,7 +69,7 @@ class ExternalIDMatcher:
 
 
 class SlugMatcher:
-    """Matches listings based on slugs (URL-safe identifiers)."""
+    """Matches entities based on slugs (URL-safe identifiers)."""
 
     def __init__(self, exact_threshold: float = 1.0, similarity_threshold: float = 0.9):
         """
@@ -84,11 +84,11 @@ class SlugMatcher:
 
     def match(self, slug1: Optional[str], slug2: Optional[str]) -> MatchResult:
         """
-        Match two listings based on slugs.
+        Match two entities based on slugs.
 
         Args:
-            slug1: Slug for listing 1
-            slug2: Slug for listing 2
+            slug1: Slug for entity 1
+            slug2: Slug for entity 2
 
         Returns:
             MatchResult with confidence based on slug similarity
@@ -131,7 +131,7 @@ class SlugMatcher:
 
 
 class FuzzyMatcher:
-    """Matches listings based on name similarity and geographic proximity."""
+    """Matches entities based on name similarity and geographic proximity."""
 
     def __init__(
         self,
@@ -154,24 +154,24 @@ class FuzzyMatcher:
         self.name_weight = name_weight
         self.location_weight = location_weight
 
-    def match(self, listing1: Dict[str, Any], listing2: Dict[str, Any]) -> MatchResult:
+    def match(self, entity1: Dict[str, Any], entity2: Dict[str, Any]) -> MatchResult:
         """
-        Match two listings based on fuzzy name and location similarity.
+        Match two entities based on fuzzy name and location similarity.
 
         Args:
-            listing1: First listing with entity_name, latitude, longitude
-            listing2: Second listing with entity_name, latitude, longitude
+            entity1: First entity with entity_name, latitude, longitude
+            entity2: Second entity with entity_name, latitude, longitude
 
         Returns:
             MatchResult with combined confidence score
         """
         # Extract fields
-        name1 = listing1.get("entity_name", "")
-        name2 = listing2.get("entity_name", "")
-        lat1 = listing1.get("latitude")
-        lng1 = listing1.get("longitude")
-        lat2 = listing2.get("latitude")
-        lng2 = listing2.get("longitude")
+        name1 = entity1.get("entity_name", "")
+        name2 = entity2.get("entity_name", "")
+        lat1 = entity1.get("latitude")
+        lng1 = entity1.get("longitude")
+        lat2 = entity2.get("latitude")
+        lng2 = entity2.get("longitude")
 
         # Both name and location are required for fuzzy matching
         if not name1 or not name2:
@@ -290,76 +290,76 @@ class Deduplicator:
         self.slug_matcher = slug_matcher or SlugMatcher()
         self.fuzzy_matcher = fuzzy_matcher or FuzzyMatcher()
 
-    def find_match(self, listing1: Dict[str, Any], listing2: Dict[str, Any]) -> MatchResult:
+    def find_match(self, entity1: Dict[str, Any], entity2: Dict[str, Any]) -> MatchResult:
         """
-        Find if two listings match using cascade of strategies.
+        Find if two entities match using cascade of strategies.
 
         Args:
-            listing1: First listing
-            listing2: Second listing
+            entity1: First entity
+            entity2: Second entity
 
         Returns:
             MatchResult with highest confidence match found
         """
         # Strategy 1: External ID matching (highest confidence)
-        result = self._match_external_id(listing1, listing2)
+        result = self._match_external_id(entity1, entity2)
         if result.is_match:
             return result
 
         # Strategy 2: Slug matching
-        result = self._match_slug(listing1, listing2)
+        result = self._match_slug(entity1, entity2)
         if result.is_match:
             return result
 
         # Strategy 3: Fuzzy name + location matching
-        result = self._match_fuzzy(listing1, listing2)
+        result = self._match_fuzzy(entity1, entity2)
         if result.is_match:
             return result
 
         # No match found
         return MatchResult(is_match=False, confidence=0.0)
 
-    def find_duplicates(self, listings: List[Dict[str, Any]]) -> List[List[Dict[str, Any]]]:
+    def find_duplicates(self, entities: List[Dict[str, Any]]) -> List[List[Dict[str, Any]]]:
         """
-        Find all duplicate groups in a list of listings.
+        Find all duplicate groups in a list of entities.
 
         Args:
-            listings: List of listings to check for duplicates
+            entities: List of entities to check for duplicates
 
         Returns:
-            List of duplicate groups, where each group contains 2+ duplicate listings
+            List of duplicate groups, where each group contains 2+ duplicate entities
         """
-        if len(listings) < 2:
+        if len(entities) < 2:
             return []
 
-        # Track which listings have been grouped
+        # Track which entities have been grouped
         grouped_ids = set()
         duplicate_groups = []
 
-        for i, listing1 in enumerate(listings):
-            listing1_id = listing1.get("id")
+        for i, entity1 in enumerate(entities):
+            entity1_id = entity1.get("id")
 
             # Skip if already grouped
-            if listing1_id in grouped_ids:
+            if entity1_id in grouped_ids:
                 continue
 
-            # Find all matches for this listing
-            group = [listing1]
-            grouped_ids.add(listing1_id)
+            # Find all matches for this entity
+            group = [entity1]
+            grouped_ids.add(entity1_id)
 
-            for j in range(i + 1, len(listings)):
-                listing2 = listings[j]
-                listing2_id = listing2.get("id")
+            for j in range(i + 1, len(entities)):
+                entity2 = entities[j]
+                entity2_id = entity2.get("id")
 
                 # Skip if already grouped
-                if listing2_id in grouped_ids:
+                if entity2_id in grouped_ids:
                     continue
 
                 # Check for match
-                result = self.find_match(listing1, listing2)
+                result = self.find_match(entity1, entity2)
                 if result.is_match:
-                    group.append(listing2)
-                    grouped_ids.add(listing2_id)
+                    group.append(entity2)
+                    grouped_ids.add(entity2_id)
 
             # Only add groups with 2+ members
             if len(group) >= 2:
@@ -367,18 +367,18 @@ class Deduplicator:
 
         return duplicate_groups
 
-    def _match_external_id(self, listing1: Dict[str, Any], listing2: Dict[str, Any]) -> MatchResult:
+    def _match_external_id(self, entity1: Dict[str, Any], entity2: Dict[str, Any]) -> MatchResult:
         """Match using external IDs."""
-        ids1 = listing1.get("external_ids", {})
-        ids2 = listing2.get("external_ids", {})
+        ids1 = entity1.get("external_ids", {})
+        ids2 = entity2.get("external_ids", {})
         return self.external_id_matcher.match(ids1, ids2)
 
-    def _match_slug(self, listing1: Dict[str, Any], listing2: Dict[str, Any]) -> MatchResult:
+    def _match_slug(self, entity1: Dict[str, Any], entity2: Dict[str, Any]) -> MatchResult:
         """Match using slugs."""
-        slug1 = listing1.get("slug")
-        slug2 = listing2.get("slug")
+        slug1 = entity1.get("slug")
+        slug2 = entity2.get("slug")
         return self.slug_matcher.match(slug1, slug2)
 
-    def _match_fuzzy(self, listing1: Dict[str, Any], listing2: Dict[str, Any]) -> MatchResult:
+    def _match_fuzzy(self, entity1: Dict[str, Any], entity2: Dict[str, Any]) -> MatchResult:
         """Match using fuzzy name + location."""
-        return self.fuzzy_matcher.match(listing1, listing2)
+        return self.fuzzy_matcher.match(entity1, entity2)
