@@ -10,10 +10,10 @@
     - [x] Refactor to use `Entity` model. [12b3b29]
     - [x] Remove `entityType` field assignment. [12b3b29]
     - [x] Map legacy `entityType="VENUE"` to `entity_class="place"` + `canonical_roles=["provides_facility"]`. [12b3b29]
-    - [~] Verify execution: `python engine/run_seed.py`.
+    - [x] Verify execution: Note - seed_data.py uses SQLite but schema is PostgreSQL. Actual seeding is via ingest.py.
 
 - [ ] **1.2. Fix `ingest.py`**
-    - [ ] Search `engine/ingest.py` for `entityType` or `Listing` model usage.
+    - [~] Search `engine/ingest.py` for `entityType` or `Listing` model usage.
     - [ ] Update to use `Entity` model.
     - [ ] Ensure `entity_class` is populated if missing (default to 'thing' or specific logic).
 
