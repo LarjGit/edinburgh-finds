@@ -1,13 +1,8 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Database Setup (Important)
-
-This project uses a local SQLite database (`dev.db`) that is **shared** with the Python Data Engine.
-
-- **Location:** The database file is located at `web/dev.db`.
-- **Configuration:** The `.env` file uses `DATABASE_URL="file:../dev.db"`.
-    - *Why `../`?* Prisma looks for the database relative to the `schema.prisma` file (in `web/prisma/`), so it needs to go up one level to find `web/dev.db`.
-- **Prisma Version:** Pinned to Prisma 5 to ensure reliable SQLite support without complex configuration adapters.
+- **Database:** PostgreSQL (via Prisma).
+- **Environment:** The app expects `DATABASE_URL` to point to a PostgreSQL instance.
+- **Prisma Version:** Pinned to Prisma 5/7.
 
 ## Getting Started
 
