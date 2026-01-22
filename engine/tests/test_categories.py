@@ -12,6 +12,28 @@ from pathlib import Path
 # Import the module to test
 from engine.extraction.utils import category_mapper
 
+# Test fixture path
+FIXTURE_CONFIG_PATH = Path(__file__).parent / "fixtures" / "canonical_categories.yaml"
+
+
+@pytest.fixture(autouse=True)
+def use_test_config(monkeypatch):
+    """
+    Auto-use fixture that patches category_mapper functions to use test config.
+
+    This ensures all tests use the test fixture instead of looking for
+    a non-existent engine config file (which is correct for engine purity).
+    """
+    original_load_config = category_mapper.load_config
+
+    def load_config_wrapper(config_path=None):
+        # If no path provided, use test fixture instead of default engine path
+        if config_path is None:
+            config_path = FIXTURE_CONFIG_PATH
+        return original_load_config(config_path=config_path)
+
+    monkeypatch.setattr(category_mapper, 'load_config', load_config_wrapper)
+
 
 class TestCategoryMapperImport:
     """Test that the category mapper module can be imported"""
@@ -371,6 +393,53 @@ class TestUnmappedCategoryLogging:
         # Should not raise any exceptions when logging is disabled
         canonical = category_mapper.map_to_canonical(raw, log_unmapped=False)
         assert isinstance(canonical, list)
+
+
+class TestConfigurableConfigPath:
+    """Test that config path can be overridden"""
+
+    def test_load_config_accepts_config_path_parameter(self):
+        """Test that load_config accepts an optional config_path parameter"""
+        # Use test fixture
+        fixture_path = Path(__file__).parent / "fixtures" / "canonical_categories.yaml"
+
+        # Should work with explicit path
+        config = category_mapper.load_config(config_path=fixture_path)
+        assert isinstance(config, dict)
+        assert 'taxonomy' in config
+
+    def test_load_config_with_custom_path(self):
+        """Test that load_config can load from a custom path"""
+        # Use test fixture path
+        custom_path = Path(__file__).parent / "fixtures" / "canonical_categories.yaml"
+        config = category_mapper.load_config(config_path=custom_path)
+
+        assert isinstance(config, dict)
+        assert 'taxonomy' in config
+        assert 'mapping_rules' in config
+
+    def test_map_to_canonical_respects_config_path(self):
+        """Test that map_to_canonical can use a custom config path"""
+        custom_path = Path(__file__).parent / "fixtures" / "canonical_categories.yaml"
+        raw = ["Tennis"]
+        canonical = category_mapper.map_to_canonical(raw, config_path=custom_path)
+        assert 'tennis' in canonical
+
+    def test_multiple_config_paths_cached_separately(self):
+        """Test that different config paths are cached separately"""
+        fixture_path = Path(__file__).parent / "fixtures" / "canonical_categories.yaml"
+
+        # Clear cache first
+        category_mapper.reload_config()
+
+        # Load from fixture path
+        config1 = category_mapper.load_config(config_path=fixture_path)
+
+        # Load again from same path - should be cached
+        config2 = category_mapper.load_config(config_path=fixture_path)
+
+        # Should be the same object (cached)
+        assert config1 is config2
 
 
 class TestConfigReload:

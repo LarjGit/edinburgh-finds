@@ -1,0 +1,114 @@
+# Test fixture for canonical categories
+# Minimal configuration for testing category mapper functionality
+
+taxonomy:
+  - category_key: tennis
+    display_name: Tennis
+    description: Tennis facilities and clubs
+    search_keywords:
+      - tennis
+      - tennis court
+      - lawn tennis
+
+  - category_key: padel
+    display_name: Padel
+    description: Padel facilities and clubs
+    search_keywords:
+      - padel
+      - pádel
+      - paddle tennis
+
+  - category_key: sports_centre
+    display_name: Sports Centre
+    description: Multi-sport facilities
+    search_keywords:
+      - sports centre
+      - sports center
+      - leisure centre
+
+  - category_key: gym
+    display_name: Gym
+    description: Fitness and gym facilities
+    search_keywords:
+      - gym
+      - fitness
+      - health club
+
+  - category_key: swimming_pool
+    display_name: Swimming Pool
+    description: Swimming facilities
+    search_keywords:
+      - swimming pool
+      - pool
+      - aquatic centre
+
+  - category_key: club
+    display_name: Club
+    description: Private clubs and member organizations
+    search_keywords:
+      - club
+      - private club
+
+  - category_key: venue
+    display_name: Venue
+    description: General venue
+    search_keywords:
+      - venue
+      - facility
+
+mapping_rules:
+  # High confidence exact matches
+  - pattern: (?i)\btennis\b
+    canonical: tennis
+    confidence: 1.0
+
+  - pattern: (?i)\bp[aá]del\b
+    canonical: padel
+    confidence: 1.0
+
+  - pattern: (?i)\bgym\b
+    canonical: gym
+    confidence: 1.0
+
+  - pattern: (?i)\bfitness\b
+    canonical: gym
+    confidence: 0.9
+
+  - pattern: (?i)\bswimming\s+pool\b
+    canonical: swimming_pool
+    confidence: 1.0
+
+  - pattern: (?i)\bpool\b
+    canonical: swimming_pool
+    confidence: 0.8
+
+  - pattern: (?i)\bsports\s+(centre|center)\b
+    canonical: sports_centre
+    confidence: 1.0
+
+  - pattern: (?i)\bleisure\s+(centre|center)\b
+    canonical: sports_centre
+    confidence: 0.9
+
+  # Medium confidence partial matches
+  - pattern: (?i)\bclub\b
+    canonical: club
+    confidence: 0.7
+
+  - pattern: (?i)\bprivate\b
+    canonical: club
+    confidence: 0.6
+
+  # Generic venue pattern
+  - pattern: (?i)\bvenue\b
+    canonical: venue
+    confidence: 0.8
+
+  - pattern: (?i)\bfacility\b
+    canonical: venue
+    confidence: 0.7
+
+promotion_config:
+  min_confidence: 0.7
+  max_categories: 5
+  log_unmapped: true

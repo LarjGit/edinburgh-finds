@@ -30,12 +30,18 @@ from typing import List, Dict, Set, Optional, Tuple
 logger = logging.getLogger(__name__)
 
 # Cache for config (loaded once per process)
-_config_cache: Optional[Dict] = None
+# Key: config_path (as string), Value: config dict
+_config_cache: Dict[str, Dict] = {}
 
 
-def load_config() -> Dict:
+def load_config(config_path: Optional[Path] = None) -> Dict:
     """
     Load canonical categories configuration from YAML file.
+
+    Args:
+        config_path: Optional path to the canonical_categories.yaml file.
+                    If not provided, uses the default engine config path.
+                    This allows the Lens layer to provide its own taxonomy.
 
     Returns:
         Dict: Configuration containing taxonomy, mapping_rules, and promotion_config
@@ -46,12 +52,20 @@ def load_config() -> Dict:
     """
     global _config_cache
 
-    # Return cached config if available
-    if _config_cache is not None:
-        return _config_cache
+    # Determine which config file to use
+    if config_path is None:
+        # Default to engine config location
+        config_path = Path(__file__).parent.parent.parent / "config" / "canonical_categories.yaml"
+    else:
+        # Convert to Path if string was provided
+        config_path = Path(config_path)
 
-    # Find config file (relative to this module)
-    config_path = Path(__file__).parent.parent.parent / "config" / "canonical_categories.yaml"
+    # Use path as cache key
+    cache_key = str(config_path.resolve())
+
+    # Return cached config if available
+    if cache_key in _config_cache:
+        return _config_cache[cache_key]
 
     if not config_path.exists():
         raise FileNotFoundError(f"Canonical categories config not found: {config_path}")
@@ -67,10 +81,10 @@ def load_config() -> Dict:
             raise ValueError(f"Missing required section in canonical_categories.yaml: {key}")
 
     # Cache for future calls
-    _config_cache = config
+    _config_cache[cache_key] = config
 
     logger.info(
-        f"Loaded canonical categories config: "
+        f"Loaded canonical categories config from {config_path}: "
         f"{len(config['taxonomy'])} categories, "
         f"{len(config['mapping_rules'])} mapping rules"
     )
@@ -78,32 +92,39 @@ def load_config() -> Dict:
     return config
 
 
-def get_taxonomy() -> List[Dict]:
+def get_taxonomy(config_path: Optional[Path] = None) -> List[Dict]:
     """
     Get the canonical taxonomy list.
+
+    Args:
+        config_path: Optional path to the canonical_categories.yaml file
 
     Returns:
         List[Dict]: List of canonical category definitions
     """
-    config = load_config()
+    config = load_config(config_path=config_path)
     return config['taxonomy']
 
 
-def get_category_keys() -> Set[str]:
+def get_category_keys(config_path: Optional[Path] = None) -> Set[str]:
     """
     Get all valid canonical category keys.
+
+    Args:
+        config_path: Optional path to the canonical_categories.yaml file
 
     Returns:
         Set[str]: Set of category_key values from taxonomy
     """
-    taxonomy = get_taxonomy()
+    taxonomy = get_taxonomy(config_path=config_path)
     return {cat['category_key'] for cat in taxonomy}
 
 
 def map_to_canonical(
     raw_categories: Optional[List[str]],
     min_confidence: Optional[float] = None,
-    log_unmapped: Optional[bool] = None
+    log_unmapped: Optional[bool] = None,
+    config_path: Optional[Path] = None
 ) -> List[str]:
     """
     Map raw categories to canonical categories using configured rules.
@@ -119,6 +140,7 @@ def map_to_canonical(
         raw_categories: List of raw category strings from extraction
         min_confidence: Minimum confidence threshold (overrides config default)
         log_unmapped: Whether to log unmapped categories (overrides config default)
+        config_path: Optional path to the canonical_categories.yaml file
 
     Returns:
         List[str]: List of canonical category keys
@@ -134,7 +156,7 @@ def map_to_canonical(
         return []
 
     # Load config
-    config = load_config()
+    config = load_config(config_path=config_path)
     mapping_rules = config['mapping_rules']
     promotion_config = config['promotion_config']
 
@@ -181,7 +203,7 @@ def map_to_canonical(
         unmapped = set(raw_categories) - mapped_raw_categories
         for raw_cat in unmapped:
             if raw_cat and isinstance(raw_cat, str) and raw_cat.strip():
-                _log_unmapped_category(raw_cat.strip())
+                _log_unmapped_category(raw_cat.strip(), config_path=config_path)
 
     # Convert to list and limit to max_categories
     result = list(canonical_categories)[:max_cats]
@@ -194,7 +216,11 @@ def map_to_canonical(
     return result
 
 
-def map_single_category(raw_category: str, min_confidence: float = 0.7) -> List[Tuple[str, float]]:
+def map_single_category(
+    raw_category: str,
+    min_confidence: float = 0.7,
+    config_path: Optional[Path] = None
+) -> List[Tuple[str, float]]:
     """
     Map a single raw category to canonical categories with confidence scores.
 
@@ -203,6 +229,7 @@ def map_single_category(raw_category: str, min_confidence: float = 0.7) -> List[
     Args:
         raw_category: Single raw category string
         min_confidence: Minimum confidence threshold
+        config_path: Optional path to the canonical_categories.yaml file
 
     Returns:
         List[Tuple[str, float]]: List of (canonical_key, confidence) tuples
@@ -215,7 +242,7 @@ def map_single_category(raw_category: str, min_confidence: float = 0.7) -> List[
     if not raw_category or not isinstance(raw_category, str):
         return []
 
-    config = load_config()
+    config = load_config(config_path=config_path)
     mapping_rules = config['mapping_rules']
 
     matches = []
@@ -237,12 +264,16 @@ def map_single_category(raw_category: str, min_confidence: float = 0.7) -> List[
     return matches
 
 
-def validate_canonical_categories(categories: List[str]) -> Tuple[List[str], List[str]]:
+def validate_canonical_categories(
+    categories: List[str],
+    config_path: Optional[Path] = None
+) -> Tuple[List[str], List[str]]:
     """
     Validate that all categories are in the canonical taxonomy.
 
     Args:
         categories: List of category keys to validate
+        config_path: Optional path to the canonical_categories.yaml file
 
     Returns:
         Tuple[List[str], List[str]]: (valid_categories, invalid_categories)
@@ -251,7 +282,7 @@ def validate_canonical_categories(categories: List[str]) -> Tuple[List[str], Lis
         >>> validate_canonical_categories(['tennis', 'padel', 'invalid_cat'])
         (['tennis', 'padel'], ['invalid_cat'])
     """
-    valid_keys = get_category_keys()
+    valid_keys = get_category_keys(config_path=config_path)
     valid = []
     invalid = []
 
@@ -264,12 +295,16 @@ def validate_canonical_categories(categories: List[str]) -> Tuple[List[str], Lis
     return valid, invalid
 
 
-def get_category_display_name(category_key: str) -> Optional[str]:
+def get_category_display_name(
+    category_key: str,
+    config_path: Optional[Path] = None
+) -> Optional[str]:
     """
     Get the user-facing display name for a canonical category.
 
     Args:
         category_key: Canonical category key
+        config_path: Optional path to the canonical_categories.yaml file
 
     Returns:
         str: Display name, or None if category not found
@@ -278,7 +313,7 @@ def get_category_display_name(category_key: str) -> Optional[str]:
         >>> get_category_display_name('sports_centre')
         'Sports Centre'
     """
-    taxonomy = get_taxonomy()
+    taxonomy = get_taxonomy(config_path=config_path)
 
     for cat in taxonomy:
         if cat['category_key'] == category_key:
@@ -287,7 +322,7 @@ def get_category_display_name(category_key: str) -> Optional[str]:
     return None
 
 
-def _log_unmapped_category(raw_category: str):
+def _log_unmapped_category(raw_category: str, config_path: Optional[Path] = None):
     """
     Log an unmapped category for manual review.
 
@@ -295,8 +330,9 @@ def _log_unmapped_category(raw_category: str):
 
     Args:
         raw_category: The raw category that wasn't mapped
+        config_path: Optional path to the canonical_categories.yaml file
     """
-    config = load_config()
+    config = load_config(config_path=config_path)
     promotion_config = config['promotion_config']
 
     # Log to standard logger
@@ -321,8 +357,8 @@ def reload_config():
     """
     Force reload of the canonical categories configuration.
 
-    Useful for testing or when config changes at runtime.
+    Clears all cached configurations. Useful for testing or when config changes at runtime.
     """
     global _config_cache
-    _config_cache = None
-    load_config()
+    _config_cache = {}
+    # Note: No need to reload immediately - will reload on next access
