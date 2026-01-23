@@ -5,7 +5,7 @@
 - [x] Task: Update `conductor/tech-stack.md` to reflect current versions (e.g., Prisma 7.3, Next.js 16) and actual libraries in use.
 - [x] Task: Conductor - User Manual Verification 'Tech Stack Synchronization' (Protocol in workflow.md)
 
-## Phase 2: Product & Architecture Alignment
+## Phase 2: Product & Architecture Alignment [checkpoint: 1c7f8f6]
 - [x] Task: Review `conductor/product.md` against the current project directory structure and `ARCHITECTURE.md` to identify drift.
 - [x] Task: Update `conductor/product.md` to match the actual file organization, "Universal Entity Framework" implementation, and current folder hierarchy.
 - [x] Task: Conductor - User Manual Verification 'Product & Architecture Alignment' (Protocol in workflow.md)
