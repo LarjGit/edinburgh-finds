@@ -19,35 +19,69 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-# Set default DATABASE_URL if not set
-# Use web/dev.db which contains all tables (Listing, RawIngestion, ExtractedListing, etc.)
-if "DATABASE_URL" not in os.environ:
-    # Priority order: web/dev.db, web/prisma/dev.db, engine/test.db
-    possible_paths = [
-        project_root / "web" / "dev.db",
-        project_root / "web" / "prisma" / "dev.db",
-        project_root / "engine" / "test.db",
-    ]
-
-    for db_path in possible_paths:
-        if db_path.exists() and db_path.stat().st_size > 0:
-            os.environ["DATABASE_URL"] = f"file:{db_path}"
-            print(f"Using database: {db_path}")
-            break
-    else:
-        raise FileNotFoundError(f"No valid database found. Tried: {possible_paths}")
-
 import asyncio
 import json
 import argparse
 from typing import Dict, Any, Optional
 from datetime import datetime
 
-from prisma import Prisma
+from prisma import Prisma, Json
 from tqdm import tqdm
 
 from engine.lenses.loader import VerticalLens
 from engine.extraction.base import extract_with_lens_contract
+
+
+def require_postgres_database() -> None:
+    """
+    Ensure DATABASE_URL is set and points to PostgreSQL.
+    """
+    db_url = os.environ.get("DATABASE_URL", "")
+    if not db_url:
+        raise RuntimeError(
+            "DATABASE_URL is required and must point to PostgreSQL."
+        )
+    db_url_lower = db_url.lower()
+    if db_url_lower.startswith("file:") or "sqlite" in db_url_lower:
+        raise RuntimeError(
+            "SQLite is not supported for lens-aware extraction. Use a PostgreSQL DATABASE_URL."
+        )
+
+
+def normalize_raw_categories(raw_categories: Any) -> Dict[str, Any]:
+    """
+    Normalize raw categories into a list of strings.
+
+    Coerces scalar values to strings and drops dict/list values.
+    Returns a dict with normalized values and drop stats.
+    """
+    if not isinstance(raw_categories, list):
+        raw_categories = [raw_categories] if raw_categories else []
+
+    normalized = []
+    dropped = []
+
+    for item in raw_categories:
+        if isinstance(item, (str, int, float, bool)):
+            normalized.append(str(item))
+            continue
+
+        if isinstance(item, (dict, list)) or item is None:
+            dropped.append(item)
+            continue
+
+        # Fallback: coerce other scalar-like objects to string
+        try:
+            normalized.append(str(item))
+        except Exception:
+            dropped.append(item)
+
+    sample = [repr(item) for item in dropped[:3]]
+    return {
+        "values": normalized,
+        "dropped_count": len(dropped),
+        "dropped_sample": sample,
+    }
 
 
 async def load_lens_contract() -> Dict[str, Any]:
@@ -182,9 +216,9 @@ async def run_extraction(
                 continue
 
             if not dry_run:
-                # Store extracted entity in Listing table
+                # Store extracted entity in Entity table
                 # For SQLite: Serialize arrays and modules as JSON strings
-                # For Postgres/Supabase: These will be native types
+                # For Postgres/Supabase: Use native types
 
                 # Extract core fields from raw_data
                 # NOTE: Full module field extraction not yet implemented (Task 3.1 deferred)
@@ -196,30 +230,36 @@ async def run_extraction(
                 # Add source prefix to avoid conflicts across sources
                 slug = f"{raw.source}-{slug}"
 
-                # Serialize dimensions as JSON strings for SQLite
-                canonical_activities_json = json.dumps(extracted["canonical_activities"])
-                canonical_roles_json = json.dumps(extracted["canonical_roles"])
-                canonical_place_types_json = json.dumps(extracted["canonical_place_types"])
-                canonical_access_json = json.dumps(extracted["canonical_access"])
+                raw_categories_info = normalize_raw_categories(raw_data.get("categories", []))
+                raw_categories_value = raw_categories_info["values"]
+                if raw_categories_info["dropped_count"] > 0:
+                    print(
+                        "⚠ Dropped "
+                        f"{raw_categories_info['dropped_count']} non-scalar raw_categories values. "
+                        f"Sample: {raw_categories_info['dropped_sample']}"
+                    )
 
-                # Serialize modules as JSON string for SQLite
-                modules_json = json.dumps(extracted["modules"])
+                canonical_activities_value = extracted["canonical_activities"]
+                canonical_roles_value = extracted["canonical_roles"]
+                canonical_place_types_value = extracted["canonical_place_types"]
+                canonical_access_value = extracted["canonical_access"]
+                modules_value = Json(extracted["modules"])
 
-                # Create or update Listing
+                # Create or update Entity
                 # Use upsert to handle duplicates (based on slug or external_id)
-                await db.listing.upsert(
+                await db.entity.upsert(
                     where={"slug": slug},
                     data={
                         "create": {
                             "entity_name": entity_name,
-                            "entityType": "VENUE",  # Temporary fallback, will be removed in Supabase
                             "entity_class": extracted["entity_class"],
                             "slug": slug,
-                            "canonical_activities": canonical_activities_json,
-                            "canonical_roles": canonical_roles_json,
-                            "canonical_place_types": canonical_place_types_json,
-                            "canonical_access": canonical_access_json,
-                            "modules": modules_json,
+                            "raw_categories": raw_categories_value,
+                            "canonical_activities": canonical_activities_value,
+                            "canonical_roles": canonical_roles_value,
+                            "canonical_place_types": canonical_place_types_value,
+                            "canonical_access": canonical_access_value,
+                            "modules": modules_value,
                             # Add other fields from raw_data if available
                             "summary": raw_data.get("summary"),
                             "street_address": raw_data.get("street_address"),
@@ -237,11 +277,12 @@ async def run_extraction(
                         },
                         "update": {
                             "entity_class": extracted["entity_class"],
-                            "canonical_activities": canonical_activities_json,
-                            "canonical_roles": canonical_roles_json,
-                            "canonical_place_types": canonical_place_types_json,
-                            "canonical_access": canonical_access_json,
-                            "modules": modules_json,
+                            "raw_categories": raw_categories_value,
+                            "canonical_activities": canonical_activities_value,
+                            "canonical_roles": canonical_roles_value,
+                            "canonical_place_types": canonical_place_types_value,
+                            "canonical_access": canonical_access_value,
+                            "modules": modules_value,
                             # Update other fields if present
                             "summary": raw_data.get("summary"),
                             "street_address": raw_data.get("street_address"),
@@ -287,6 +328,13 @@ async def main() -> int:
     )
 
     args = parser.parse_args()
+
+    # Enforce PostgreSQL for persistence
+    try:
+        require_postgres_database()
+    except RuntimeError as e:
+        print(f"✗ {e}")
+        return 1
 
     # Load lens contract
     try:
