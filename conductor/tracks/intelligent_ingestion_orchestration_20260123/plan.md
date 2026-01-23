@@ -6,9 +6,9 @@ Establish the immutable core types, the features extraction module, and the safe
 - [x] Task: Core Types Implementation [f1959cc]
     - [x] Create `engine/orchestration/types.py` with `IngestRequest`, `IngestionMode`, `BoundingBox`, `GeoPoint`.
     - [x] Add unit tests for immutability and default value handling.
-- [ ] Task: Query Features Module
-    - [ ] Create `engine/orchestration/query_features.py` with `QueryFeatures` dataclass and a deterministic factory method `extract(query, request)`.
-    - [ ] Write unit tests to verify deterministic feature extraction.
+- [x] Task: Query Features Module [8d106f0]
+    - [x] Create `engine/orchestration/query_features.py` with `QueryFeatures` dataclass and a deterministic factory method `extract(query, request)`.
+    - [x] Write unit tests to verify deterministic feature extraction.
 - [ ] Task: Condition DSL Implementation
     - [ ] Create `engine/orchestration/conditions.py` with `Condition`, `CompositeCondition`, `Operator`.
     - [ ] Implement `evaluate` method with `None`-safe logic for all operators (especially `CONTAINS`, `INTERSECTS`).
