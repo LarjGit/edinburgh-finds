@@ -1,22 +1,21 @@
 # Technology Stack
 
 ## System Architecture
-See /ARCHITECTURE.md for complete system design, 
-component interactions, data flows, entity relationships, and scaling strategies.
+See /ARCHITECTURE.md for complete system design, component interactions, data flows, entity relationships, and scaling strategies.
+
 ## Frontend
-- **Framework:** Next.js (React)
-- **Styling:** Tailwind CSS
+- **Framework:** Next.js 16 (React 19)
+- **Styling:** Tailwind CSS v4
 - **Component Library:** shadcn/ui
 - **Language:** TypeScript
 
 ## Backend
 - **Framework:** Next.js API Routes (Server Actions/API)
-- **ORM:** Prisma 5 (Stable) - *Pinned to v5 to ensure stability with SQLite and standard configuration.*
+- **ORM:** Prisma 7.3+ (PostgreSQL)
 - **Language:** TypeScript
 
 ## Database
 - **Primary Database:** Supabase (PostgreSQL)
-    - *Note: Current development uses SQLite as a temporary placeholder.*
 
 ## Data Engine / Scripts
 - **Language:** Python
@@ -26,4 +25,6 @@ component interactions, data flows, entity relationships, and scaling strategies
   - *Eliminates schema drift, enables horizontal scaling*
   - *Location: `engine/config/schemas/*.yaml`*
 - **Validation:** Pydantic (Schema-Driven)
+- **LLM Integration:** Instructor + Anthropic (Claude)
+- **Data Processing:** phonenumbers, fuzzywuzzy
 - **ORM:** Prisma Client Python
