@@ -9,12 +9,12 @@ Establish the immutable core types, the features extraction module, and the safe
 - [x] Task: Query Features Module [8d106f0]
     - [x] Create `engine/orchestration/query_features.py` with `QueryFeatures` dataclass and a deterministic factory method `extract(query, request)`.
     - [x] Write unit tests to verify deterministic feature extraction.
-- [ ] Task: Condition DSL Implementation
-    - [ ] Create `engine/orchestration/conditions.py` with `Condition`, `CompositeCondition`, `Operator`.
-    - [ ] Implement `evaluate` method with `None`-safe logic for all operators (especially `CONTAINS`, `INTERSECTS`).
-    - [ ] Implement concrete helper `build_eval_context(request, query_features, execution_context)`.
-    - [ ] Implement `ConditionParser` for dict/YAML parsing.
-    - [ ] Write comprehensive tests for DSL evaluation (including nested paths, missing keys, `None` values) and context builder assertions.
+- [x] Task: Condition DSL Implementation [396aa40]
+    - [x] Create `engine/orchestration/conditions.py` with `Condition`, `CompositeCondition`, `Operator`.
+    - [x] Implement `evaluate` method with `None`-safe logic for all operators (especially `CONTAINS`, `INTERSECTS`).
+    - [x] Implement concrete helper `build_eval_context(request, query_features, execution_context)`.
+    - [x] Implement `ConditionParser` for dict/YAML parsing.
+    - [x] Write comprehensive tests for DSL evaluation (including nested paths, missing keys, `None` values) and context builder assertions.
 - [ ] Task: Conductor - User Manual Verification 'Core Types, Features & Safe DSL' (Protocol in workflow.md)
 
 ## Phase 2: Execution Context & Deduplication (TDD)
