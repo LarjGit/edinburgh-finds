@@ -17,8 +17,8 @@
 # Lens Metadata
 id: edinburgh_finds
 name: "Edinburgh Finds"
-description: "Sports and fitness directory for Edinburgh"
-base_url: "https://edinburghfinds.com"
+description: "A curated directory of interests, activities and things to do in Edinburgh"
+base_url: "https://edinburghfinds.co.uk"
 
 # Facets
 # Maps lens-level facets to actual database columns (dimensions)
@@ -29,7 +29,7 @@ base_url: "https://edinburghfinds.com"
 facets:
   activity:
     dimension_source: "canonical_activities"  # MUST BE one of 4 canonical_* columns
-    ui_label: "What do you want to do?"
+    ui_label: "Browse by interest"
     display_mode: "multi_select"
     order: 10
     show_in_filters: true
@@ -47,7 +47,7 @@ facets:
 
   place_type:
     dimension_source: "canonical_place_types"  # MUST BE one of 4 canonical_* columns
-    ui_label: "Place type"
+    ui_label: "Type of place"
     display_mode: "single_select"
     order: 20
     show_in_filters: true
@@ -56,7 +56,7 @@ facets:
 
   access:
     dimension_source: "canonical_access"  # MUST BE one of 4 canonical_* columns
-    ui_label: "Booking & access"
+    ui_label: "Access & pricing"
     display_mode: "multi_select"
     order: 30
     show_in_filters: true
@@ -90,16 +90,71 @@ values:
     icon_url: "/icons/tennis.svg"
     color: "#4ECDC4"
 
+  - key: pickleball
+    facet: activity
+    display_name: "Pickleball"
+    description: "Pickleball courts and clubs"
+    seo_slug: "pickleball-edinburgh"
+    search_keywords:
+      - "pickleball"
+
+  - key: football
+    facet: activity
+    display_name: "Football"
+    description: "Football pitches and clubs"
+    seo_slug: "football-edinburgh"
+    search_keywords:
+      - "football"
+      - "soccer"
+      - "football pitch"
+
+  - key: climbing
+    facet: activity
+    display_name: "Climbing"
+    description: "Indoor and outdoor climbing facilities"
+    seo_slug: "climbing-edinburgh"
+    search_keywords:
+      - "climbing"
+      - "climbing wall"
+      - "bouldering"
+
+  - key: cycling
+    facet: activity
+    display_name: "Cycling"
+    description: "Cycling routes, clubs, and facilities"
+    seo_slug: "cycling-edinburgh"
+    search_keywords:
+      - "cycling"
+      - "cycle"
+      - "bike"
+
+  - key: yoga
+    facet: activity
+    display_name: "Yoga"
+    description: "Yoga studios and classes"
+    seo_slug: "yoga-edinburgh"
+    search_keywords:
+      - "yoga"
+
+  - key: pilates
+    facet: activity
+    display_name: "Pilates"
+    description: "Pilates studios and classes"
+    seo_slug: "pilates-edinburgh"
+    search_keywords:
+      - "pilates"
+
   - key: gym
     facet: activity
     display_name: "Gym & Fitness"
     description: "Gyms, fitness centers, and training facilities"
-    seo_slug: "gyms-edinburgh"
+    seo_slug: "gym-fitness-edinburgh"
     search_keywords:
       - "gym"
       - "fitness"
+      - "fitness centre"
       - "fitness center"
-      - "training"
+      - "health club"
     icon_url: "/icons/gym.svg"
     color: "#95E1D3"
 
@@ -149,6 +204,7 @@ values:
       - "sports centre"
       - "leisure centre"
       - "sports center"
+      - "leisure center"
 
   - key: outdoor_facility
     facet: place_type
@@ -159,12 +215,50 @@ values:
       - "park"
       - "outdoor facility"
 
+  - key: community_centre
+    facet: place_type
+    display_name: "Community Centre"
+    description: "Community centers and local hubs"
+    search_keywords:
+      - "community centre"
+      - "community center"
+
+  - key: food_venue
+    facet: place_type
+    display_name: "Food Venue"
+    description: "Cafes, restaurants, and bars"
+    search_keywords:
+      - "cafe"
+      - "restaurant"
+      - "bar"
+      - "food venue"
+
+  - key: retail_shop
+    facet: place_type
+    display_name: "Retail Shop"
+    description: "Retail shops and stores"
+    search_keywords:
+      - "shop"
+      - "store"
+      - "retailer"
+
+  - key: studio
+    facet: place_type
+    display_name: "Studio"
+    description: "Studios for classes and instruction"
+    search_keywords:
+      - "studio"
+      - "fitness studio"
+      - "yoga studio"
+      - "pilates studio"
+
   - key: gym_facility
     facet: place_type
     display_name: "Gym Facility"
     description: "Dedicated gym/fitness center"
     search_keywords:
       - "gym"
+      - "fitness centre"
       - "fitness center"
       - "health club"
 
@@ -204,12 +298,21 @@ values:
       - "exclusive"
       - "members only"
 
+  - key: booking_required
+    facet: access
+    display_name: "Booking required / class-only"
+    description: "Booking required or class-only access"
+    search_keywords:
+      - "booking required"
+      - "book ahead"
+      - "class only"
+      - "appointment"
 # Mapping Rules
 # Regex patterns to extract canonical values from raw data
 # IMPORTANT: Every mapping_rules.canonical value MUST exist in values section
 mapping_rules:
   # Activity Mappings
-  - pattern: '(?i)\bp[aá]d[eé]l\b'
+  - pattern: '(?i)\bp[aá]del\b'
     canonical: padel
     confidence: 1.0
 
@@ -217,11 +320,35 @@ mapping_rules:
     canonical: tennis
     confidence: 1.0
 
-  - pattern: '(?i)\bgym\b|\bfitness\b'
+  - pattern: '(?i)\bpickleball\b'
+    canonical: pickleball
+    confidence: 1.0
+
+  - pattern: '(?i)\bfootball\b|\bsoccer\b|\bfootball\s+pitch\b'
+    canonical: football
+    confidence: 0.9
+
+  - pattern: '(?i)\bclimbing\b|\bclimbing\s+wall\b|\bbouldering\b'
+    canonical: climbing
+    confidence: 0.9
+
+  - pattern: '(?i)\bcycling\b|\bcycle\b|\bbike\b'
+    canonical: cycling
+    confidence: 0.9
+
+  - pattern: '(?i)\byoga\b'
+    canonical: yoga
+    confidence: 0.95
+
+  - pattern: '(?i)\bpilates\b'
+    canonical: pilates
+    confidence: 0.95
+
+  - pattern: '(?i)\bgym\b|\bfitness\b|\bhealth\s+club\b'
     canonical: gym
     confidence: 0.9
 
-  - pattern: '(?i)\bswimming\b|\bpool\b'
+  - pattern: '(?i)\bswimming\b|\bpool\b|\baquatic\b'
     canonical: swimming
     confidence: 0.9
 
@@ -230,20 +357,36 @@ mapping_rules:
     canonical: sports_centre
     confidence: 0.95
 
+  - pattern: '(?i)gym\b|fitness\s+(centre|center)|health\s+club'
+    canonical: gym_facility
+    confidence: 0.9
+
   - pattern: '(?i)outdoor|park\b'
     canonical: outdoor_facility
     confidence: 0.85
 
-  - pattern: '(?i)gym\b|fitness\s+(centre|center)|health\s+club'
-    canonical: gym_facility
-    confidence: 0.9
+  - pattern: '(?i)community\s+(centre|center)'
+    canonical: community_centre
+    confidence: 0.85
+
+  - pattern: '(?i)\bcafe\b|\brestaurant\b|\bbar\b|food\s+venue'
+    canonical: food_venue
+    confidence: 0.85
+
+  - pattern: '(?i)\bshop\b|\bstore\b|\bretailer\b'
+    canonical: retail_shop
+    confidence: 0.85
+
+  - pattern: '(?i)\bstudio\b|\bfitness\s+studio\b|\byoga\s+studio\b|\bpilates\s+studio\b'
+    canonical: studio
+    confidence: 0.85
 
   # Access Mappings
   - pattern: '(?i)membership|members\s+only'
     canonical: membership
     confidence: 0.9
 
-  - pattern: '(?i)pay\s+and\s+play|casual|drop.?in'
+  - pattern: '(?i)pay\s+and\s+play|drop[-\s]?in|casual'
     canonical: pay_and_play
     confidence: 0.85
 
@@ -253,6 +396,10 @@ mapping_rules:
 
   - pattern: '(?i)private|exclusive'
     canonical: private_club
+    confidence: 0.8
+
+  - pattern: '(?i)booking\s+required|book\s+ahead|class\s+only|appointment'
+    canonical: booking_required
     confidence: 0.8
 
   # Role Mappings (emit universal function-style keys)
@@ -271,7 +418,6 @@ mapping_rules:
   - pattern: '(?i)\bclub\b'
     canonical: membership_org
     confidence: 0.8
-
 # Derived Groupings
 # Computed from entity_class + roles with AND/OR logic
 # NOTE: Groupings are DERIVED/VIEW-ONLY, not stored in database
@@ -439,10 +585,41 @@ module_triggers:
 
   - when:
       facet: activity
+      value: pickleball
+    add_modules:
+      - sports_facility
+    conditions:
+      - entity_class: "place"
+
+  - when:
+      facet: activity
+      value: football
+    add_modules:
+      - sports_facility
+    conditions:
+      - entity_class: "place"
+
+  - when:
+      facet: activity
       value: gym
     add_modules:
       - fitness_facility
-      - food_service
+    conditions:
+      - entity_class: "place"
+
+  - when:
+      facet: activity
+      value: yoga
+    add_modules:
+      - fitness_facility
+    conditions:
+      - entity_class: "place"
+
+  - when:
+      facet: activity
+      value: pilates
+    add_modules:
+      - fitness_facility
     conditions:
       - entity_class: "place"
 
@@ -456,12 +633,11 @@ module_triggers:
 
   - when:
       facet: place_type
-      value: sports_centre
+      value: food_venue
     add_modules:
-      - amenities
-      - hours
       - food_service
-
+    conditions:
+      - entity_class: "place"
 # SEO Templates
 # URL patterns and meta templates for SEO pages
 seo_templates:
