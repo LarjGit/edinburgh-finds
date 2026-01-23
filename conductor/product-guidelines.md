@@ -2,9 +2,9 @@
 
 ## 1. Design Philosophy: "The Sophisticated Canvas"
 
-- **Agnostic Elegance:** Design must be a "clean gallery" style. Avoid industry tropes (e.g., no "neon green" for Padel). Use a premium, neutral aesthetic that works for everything from Sports to Fine Arts.
+- **Agnostic Elegance:** Design must be a "clean gallery" style. Avoid industry tropes (e.g., no "neon green" for Padel). Use a premium, neutral aesthetic (shadcn/ui "neutral" base) that works for everything from Sports to Fine Arts.
     
-- **Slick Interaction:** Prioritize high-end typography, intentional whitespace, and subtle micro-interactions (hover states, smooth transitions) to signal "quality."
+- **Slick Interaction:** Prioritize high-end typography (Geist Sans/Mono), intentional whitespace, and subtle micro-interactions to signal "quality."
     
 - **Structured Beauty:** Transform raw entity data (opening hours, court specs) into visual components (tags, icons, progress bars) rather than text blocks.
     
@@ -15,7 +15,7 @@
     
 - **The "Magic Trick" (Humanizing AI):** AI does the heavy lifting, but the output must read like it was hand-curated.
     
-    - **Prohibited:** "Located at," "Features include," "A great place for."
+    - **Prohibited:** "Located at," "Features include," "A great place for," "Welcome to."
         
     - **Required:** Contextual bridges like "Just a short walk from [Landmark]" or "Perfect for those who prefer [Specific Need]."
         
@@ -28,15 +28,18 @@
     
 - **The "Two-Click" Rule:** A user should be able to pivot from one entity type to another (e.g., _Venue_ to _Coach_) in no more than two clicks.
     
-- **Progressive Disclosure:** * **Level 1 (The Card):** Vital stats only (Name, Image, Hero Tag, Rating).
-    
+- **Progressive Disclosure:** 
+    - **Level 1 (The Card):** Vital stats only (Name, Image, Hero Tag, Rating).
     - **Level 2 (The Profile):** Detailed attributes, AI-summary, and map.
-        
     - **Level 3 (The Deep Dive):** Full pricing tables, schedules, and long-form reviews.
         
 
 ## 4. Technical Quality Standards
 
-- **SEO Hygiene:** Every page must have a unique, human-readable meta-description and a logical H-tag hierarchy.
+- **SEO Hygiene:** Every page must have a unique, human-readable meta-description and a logical H-tag hierarchy. Leveraging Next.js dynamic metadata APIs.
     
 - **Data Freshness UI:** Always display a "Last Verified" date or "Confidence Score" on listings to manage user expectations and build trust.
+
+- **Performance:** Aim for 100/100 Core Web Vitals. Leverage Next.js incremental static regeneration (ISR) for sub-second page loads.
+
+- **Accessibility:** Maintain WCAG 2.1 AA compliance. Use semantic HTML and accessible component primitives (shadcn/ui).

@@ -11,7 +11,7 @@
 - [x] Task: Conductor - User Manual Verification 'Product & Architecture Alignment' (Protocol in workflow.md)
 
 ## Phase 3: Workflow & Guidelines Validation
-- [ ] Task: Verify development commands in `conductor/workflow.md` against `package.json` scripts, `pytest` configuration, and actual usage.
-- [ ] Task: Update `conductor/workflow.md` with correct, executable commands and ensure workflow protocols match the current process.
-- [ ] Task: Review `conductor/product-guidelines.md` and update to ensure design and quality guidelines align with existing implementation patterns.
-- [ ] Task: Conductor - User Manual Verification 'Workflow & Guidelines Validation' (Protocol in workflow.md)
+- [x] Task: Verify development commands in `conductor/workflow.md` against `package.json` scripts, `pytest` configuration, and actual usage.
+- [x] Task: Update `conductor/workflow.md` with correct, executable commands and ensure workflow protocols match the current process.
+- [x] Task: Review `conductor/product-guidelines.md` and update to ensure design and quality guidelines align with existing implementation patterns.
+- [x] Task: Conductor - User Manual Verification 'Workflow & Guidelines Validation' (Protocol in workflow.md)
