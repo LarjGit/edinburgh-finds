@@ -3,9 +3,9 @@
 ## Phase 1: Core Types, Features & Safe DSL (TDD)
 Establish the immutable core types, the features extraction module, and the safe Condition DSL. This phase ensures the foundation is type-safe and handles edge cases (like `None` values) correctly.
 
-- [ ] Task: Core Types Implementation
-    - [ ] Create `engine/orchestration/types.py` with `IngestRequest`, `IngestionMode`, `BoundingBox`, `GeoPoint`.
-    - [ ] Add unit tests for immutability and default value handling.
+- [x] Task: Core Types Implementation [f1959cc]
+    - [x] Create `engine/orchestration/types.py` with `IngestRequest`, `IngestionMode`, `BoundingBox`, `GeoPoint`.
+    - [x] Add unit tests for immutability and default value handling.
 - [ ] Task: Query Features Module
     - [ ] Create `engine/orchestration/query_features.py` with `QueryFeatures` dataclass and a deterministic factory method `extract(query, request)`.
     - [ ] Write unit tests to verify deterministic feature extraction.
