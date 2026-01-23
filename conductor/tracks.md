@@ -130,3 +130,8 @@ This file tracks all major tracks for the project. Each track has its own detail
 *Link: [./conductor/tracks/conductor_sync_20260123/](./conductor/tracks/conductor_sync_20260123/)*
 **Completed:** 2026-01-23
 **Description:** Thoroughly reviewed and updated all Conductor documentation to match the current codebase. Synchronized `tech-stack.md` with `package.json` and `requirements.txt`. Aligned `product.md` with the latest Universal Entity Framework and Engine-Lens architecture. Updated `workflow.md` with accurate development commands and testing protocols. Verified `product-guidelines.md` aligns with design goals.
+
+---
+
+- [ ] **Track: feature - Intelligent Ingestion Orchestration**
+*Link: [./conductor/tracks/intelligent_ingestion_orchestration_20260123/](./conductor/tracks/intelligent_ingestion_orchestration_20260123/)*
