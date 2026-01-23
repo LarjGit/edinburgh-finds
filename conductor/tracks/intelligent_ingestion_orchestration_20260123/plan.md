@@ -39,9 +39,9 @@ Build the DAG-lite structure and the logic for phase-based execution and aggrega
 - [x] Task: Connector Node & Plan Structure [b3f2e5b]
     - [x] Create `engine/orchestration/execution_plan.py` with `ConnectorNode` and `ExecutionPlan`.
     - [x] Implement `add_connector` with dependency inference (only `context.*` keys).
-- [ ] Task: Provider Selection & Tie-Breaking
-    - [ ] Implement `_get_best_provider` using `(-trust_level, phase_order)` logic.
-    - [ ] Write tests ensuring correct provider is selected in tie-break scenarios.
+- [x] Task: Provider Selection & Tie-Breaking [fa68946]
+    - [x] Implement `_get_best_provider` using `(-trust_level, phase_order)` logic.
+    - [x] Write tests ensuring correct provider is selected in tie-break scenarios.
 - [ ] Task: Aggregate Gating Logic
     - [ ] Implement `should_run_connector` with the specific skipping logic defined in spec.
     - [ ] Write tests for gating: ensure connectors skip/run correctly based on context availability and `supports_query_only`.
