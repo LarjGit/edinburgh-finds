@@ -1,6 +1,6 @@
 # Implementation Plan - Intelligent Ingestion Orchestration
 
-## Phase 1: Core Types, Features & Safe DSL (TDD)
+## Phase 1: Core Types, Features & Safe DSL (TDD) [checkpoint: c17ba8d]
 Establish the immutable core types, the features extraction module, and the safe Condition DSL. This phase ensures the foundation is type-safe and handles edge cases (like `None` values) correctly.
 
 - [x] Task: Core Types Implementation [f1959cc]
@@ -15,7 +15,7 @@ Establish the immutable core types, the features extraction module, and the safe
     - [x] Implement concrete helper `build_eval_context(request, query_features, execution_context)`.
     - [x] Implement `ConditionParser` for dict/YAML parsing.
     - [x] Write comprehensive tests for DSL evaluation (including nested paths, missing keys, `None` values) and context builder assertions.
-- [ ] Task: Conductor - User Manual Verification 'Core Types, Features & Safe DSL' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Core Types, Features & Safe DSL' (Protocol in workflow.md)
 
 ## Phase 2: Execution Context & Deduplication (TDD)
 Implement the shared state container and the robust, deterministic deduplication logic.
