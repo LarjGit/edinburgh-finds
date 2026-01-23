@@ -263,3 +263,185 @@ class TestExecutionPhase:
         # Phases should be ordered: DISCOVERY -> STRUCTURED -> ENRICHMENT
         assert ExecutionPhase.DISCOVERY.value < ExecutionPhase.STRUCTURED.value
         assert ExecutionPhase.STRUCTURED.value < ExecutionPhase.ENRICHMENT.value
+
+
+class TestProviderSelection:
+    """Tests for provider selection and tie-breaking logic."""
+
+    def test_get_best_provider_single_provider(self):
+        """Test that single provider is selected."""
+        plan = ExecutionPlan()
+
+        spec = ConnectorSpec(
+            name="only_provider",
+            phase=ExecutionPhase.DISCOVERY,
+            trust_level=7,
+            requires=[],
+            provides=["context.data"],
+            supports_query_only=True,
+        )
+        plan.add_connector(spec)
+
+        best = plan._get_best_provider("context.data")
+        assert best.spec.name == "only_provider"
+
+    def test_get_best_provider_higher_trust_wins(self):
+        """Test that provider with higher trust level is selected."""
+        plan = ExecutionPlan()
+
+        # Lower trust provider
+        spec_low = ConnectorSpec(
+            name="low_trust",
+            phase=ExecutionPhase.DISCOVERY,
+            trust_level=5,
+            requires=[],
+            provides=["context.data"],
+            supports_query_only=True,
+        )
+        plan.add_connector(spec_low)
+
+        # Higher trust provider
+        spec_high = ConnectorSpec(
+            name="high_trust",
+            phase=ExecutionPhase.DISCOVERY,
+            trust_level=9,
+            requires=[],
+            provides=["context.data"],
+            supports_query_only=True,
+        )
+        plan.add_connector(spec_high)
+
+        best = plan._get_best_provider("context.data")
+        assert best.spec.name == "high_trust"
+        assert best.spec.trust_level == 9
+
+    def test_get_best_provider_earlier_phase_wins_tie(self):
+        """Test that earlier phase wins when trust levels are equal."""
+        plan = ExecutionPlan()
+
+        # Later phase (ENRICHMENT)
+        spec_enrichment = ConnectorSpec(
+            name="enrichment_provider",
+            phase=ExecutionPhase.ENRICHMENT,
+            trust_level=7,
+            requires=[],
+            provides=["context.data"],
+            supports_query_only=False,
+        )
+        plan.add_connector(spec_enrichment)
+
+        # Earlier phase (STRUCTURED)
+        spec_structured = ConnectorSpec(
+            name="structured_provider",
+            phase=ExecutionPhase.STRUCTURED,
+            trust_level=7,
+            requires=[],
+            provides=["context.data"],
+            supports_query_only=True,
+        )
+        plan.add_connector(spec_structured)
+
+        best = plan._get_best_provider("context.data")
+        assert best.spec.name == "structured_provider"
+        assert best.spec.phase == ExecutionPhase.STRUCTURED
+
+    def test_get_best_provider_trust_beats_phase(self):
+        """Test that higher trust beats earlier phase."""
+        plan = ExecutionPlan()
+
+        # Earlier phase but lower trust
+        spec_early = ConnectorSpec(
+            name="early_low_trust",
+            phase=ExecutionPhase.DISCOVERY,
+            trust_level=5,
+            requires=[],
+            provides=["context.data"],
+            supports_query_only=True,
+        )
+        plan.add_connector(spec_early)
+
+        # Later phase but higher trust
+        spec_late = ConnectorSpec(
+            name="late_high_trust",
+            phase=ExecutionPhase.ENRICHMENT,
+            trust_level=9,
+            requires=[],
+            provides=["context.data"],
+            supports_query_only=False,
+        )
+        plan.add_connector(spec_late)
+
+        best = plan._get_best_provider("context.data")
+        assert best.spec.name == "late_high_trust"
+        assert best.spec.trust_level == 9
+
+    def test_get_best_provider_same_trust_and_phase_deterministic(self):
+        """Test that selection is deterministic when trust and phase are equal."""
+        plan = ExecutionPlan()
+
+        # First provider
+        spec_a = ConnectorSpec(
+            name="provider_a",
+            phase=ExecutionPhase.DISCOVERY,
+            trust_level=7,
+            requires=[],
+            provides=["context.data"],
+            supports_query_only=True,
+        )
+        plan.add_connector(spec_a)
+
+        # Second provider (identical trust and phase)
+        spec_b = ConnectorSpec(
+            name="provider_b",
+            phase=ExecutionPhase.DISCOVERY,
+            trust_level=7,
+            requires=[],
+            provides=["context.data"],
+            supports_query_only=True,
+        )
+        plan.add_connector(spec_b)
+
+        # Should select deterministically (by name, alphabetically)
+        best = plan._get_best_provider("context.data")
+        assert best.spec.name == "provider_a"
+
+    def test_get_best_provider_no_provider_returns_none(self):
+        """Test that None is returned when no provider exists."""
+        plan = ExecutionPlan()
+
+        # Add connector that doesn't provide the requested key
+        spec = ConnectorSpec(
+            name="other_provider",
+            phase=ExecutionPhase.DISCOVERY,
+            trust_level=7,
+            requires=[],
+            provides=["context.other_data"],
+            supports_query_only=True,
+        )
+        plan.add_connector(spec)
+
+        best = plan._get_best_provider("context.data")
+        assert best is None
+
+    def test_get_best_provider_multiple_provides_from_same_connector(self):
+        """Test that connector providing multiple keys can be selected."""
+        plan = ExecutionPlan()
+
+        spec = ConnectorSpec(
+            name="multi_provider",
+            phase=ExecutionPhase.DISCOVERY,
+            trust_level=8,
+            requires=[],
+            provides=["context.data_a", "context.data_b", "context.data_c"],
+            supports_query_only=True,
+        )
+        plan.add_connector(spec)
+
+        # Should find provider for any of its provided keys
+        best_a = plan._get_best_provider("context.data_a")
+        best_b = plan._get_best_provider("context.data_b")
+        best_c = plan._get_best_provider("context.data_c")
+
+        assert best_a.spec.name == "multi_provider"
+        assert best_b.spec.name == "multi_provider"
+        assert best_c.spec.name == "multi_provider"

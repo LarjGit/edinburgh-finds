@@ -14,7 +14,7 @@ The plan enforces strict phase barriers while allowing parallelism within each p
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import List
+from typing import List, Optional
 
 
 class ExecutionPhase(Enum):
@@ -152,3 +152,39 @@ class ExecutionPlan:
                         dependencies.append(existing_node.spec.name)
 
         return dependencies
+
+    def _get_best_provider(self, context_key: str) -> Optional[ConnectorNode]:
+        """
+        Select the best provider for a given context key using tie-breaking rules.
+
+        Provider selection follows the spec's (-trust_level, phase_order) logic:
+        1. Higher trust_level wins (primary criterion)
+        2. Earlier phase (smaller phase.value) wins ties
+        3. Alphabetically first name wins if trust and phase are equal (determinism)
+
+        Args:
+            context_key: The context key to find a provider for (e.g., "context.data")
+
+        Returns:
+            The best ConnectorNode that provides this key, or None if no provider exists
+        """
+        # Find all connectors that provide this key
+        candidates = [
+            node for node in self.connectors if context_key in node.spec.provides
+        ]
+
+        if not candidates:
+            return None
+
+        # Sort by: highest trust (descending), earliest phase (ascending), name (ascending)
+        # Using tuple comparison: (-trust_level, phase.value, name)
+        best = min(
+            candidates,
+            key=lambda node: (
+                -node.spec.trust_level,  # Negative for descending order
+                node.spec.phase.value,  # Ascending - earlier phases have smaller values
+                node.spec.name,  # Alphabetical for determinism
+            ),
+        )
+
+        return best
