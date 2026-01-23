@@ -20,9 +20,9 @@ Establish the immutable core types, the features extraction module, and the safe
 ## Phase 2: Execution Context & Deduplication (TDD)
 Implement the shared state container and the robust, deterministic deduplication logic.
 
-- [ ] Task: Execution Context Structure
-    - [ ] Create `engine/orchestration/execution_context.py` with `ExecutionContext` class.
-    - [ ] Implement storage for `candidates`, `accepted_entities`, `accepted_entity_keys` (Set[str]), `evidence`, `seeds`.
+- [x] Task: Execution Context Structure [3d00d9f]
+    - [x] Create `engine/orchestration/execution_context.py` with `ExecutionContext` class.
+    - [x] Implement storage for `candidates`, `accepted_entities`, `accepted_entity_keys` (Set[str]), `evidence`, `seeds`.
 - [ ] Task: Deterministic Deduplication Logic
     - [ ] Implement `_generate_entity_key` with the 3-tier strategy (Strong IDs -> Geo -> Stable SHA1).
     - [ ] Implement `accept_entity` with side-effects, explicit return type, and duplicate detection.
