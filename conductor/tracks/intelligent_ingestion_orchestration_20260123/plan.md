@@ -36,9 +36,9 @@ Implement the shared state container and the robust, deterministic deduplication
 ## Phase 3: Execution Plan & Phase Barriers (TDD)
 Build the DAG-lite structure and the logic for phase-based execution and aggregate gating.
 
-- [ ] Task: Connector Node & Plan Structure
-    - [ ] Create `engine/orchestration/execution_plan.py` with `ConnectorNode` and `ExecutionPlan`.
-    - [ ] Implement `add_connector` with dependency inference (only `context.*` keys).
+- [x] Task: Connector Node & Plan Structure [b3f2e5b]
+    - [x] Create `engine/orchestration/execution_plan.py` with `ConnectorNode` and `ExecutionPlan`.
+    - [x] Implement `add_connector` with dependency inference (only `context.*` keys).
 - [ ] Task: Provider Selection & Tie-Breaking
     - [ ] Implement `_get_best_provider` using `(-trust_level, phase_order)` logic.
     - [ ] Write tests ensuring correct provider is selected in tie-break scenarios.
