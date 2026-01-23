@@ -17,7 +17,7 @@ Establish the immutable core types, the features extraction module, and the safe
     - [x] Write comprehensive tests for DSL evaluation (including nested paths, missing keys, `None` values) and context builder assertions.
 - [x] Task: Conductor - User Manual Verification 'Core Types, Features & Safe DSL' (Protocol in workflow.md)
 
-## Phase 2: Execution Context & Deduplication (TDD)
+## Phase 2: Execution Context & Deduplication (TDD) [checkpoint: ac2f752]
 Implement the shared state container and the robust, deterministic deduplication logic.
 
 - [x] Task: Execution Context Structure [3d00d9f]
@@ -31,7 +31,7 @@ Implement the shared state container and the robust, deterministic deduplication
         - Geo rounding and `0.0` handling.
         - Priority order of key generation.
         - Duplicate candidates return correct tuple and maintain stable counts.
-- [ ] Task: Conductor - User Manual Verification 'Execution Context & Deduplication' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Execution Context & Deduplication' (Protocol in workflow.md)
 
 ## Phase 3: Execution Plan & Phase Barriers (TDD)
 Build the DAG-lite structure and the logic for phase-based execution and aggregate gating.
