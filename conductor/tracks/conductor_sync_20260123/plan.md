@@ -6,9 +6,9 @@
 - [x] Task: Conductor - User Manual Verification 'Tech Stack Synchronization' (Protocol in workflow.md)
 
 ## Phase 2: Product & Architecture Alignment
-- [ ] Task: Review `conductor/product.md` against the current project directory structure and `ARCHITECTURE.md` to identify drift.
-- [ ] Task: Update `conductor/product.md` to match the actual file organization, "Universal Entity Framework" implementation, and current folder hierarchy.
-- [ ] Task: Conductor - User Manual Verification 'Product & Architecture Alignment' (Protocol in workflow.md)
+- [x] Task: Review `conductor/product.md` against the current project directory structure and `ARCHITECTURE.md` to identify drift.
+- [x] Task: Update `conductor/product.md` to match the actual file organization, "Universal Entity Framework" implementation, and current folder hierarchy.
+- [x] Task: Conductor - User Manual Verification 'Product & Architecture Alignment' (Protocol in workflow.md)
 
 ## Phase 3: Workflow & Guidelines Validation
 - [ ] Task: Verify development commands in `conductor/workflow.md` against `package.json` scripts, `pytest` configuration, and actual usage.

@@ -8,36 +8,38 @@ USP: "AI-Scale, Local Soul" — Using LLMs to autonomously source, ingest, and s
 
 ## 2. The Universal Entity Framework (Architecture)
 
-The system must be architected to support **any** niche via a generic, scalable structure:
+The system uses a "Flexible Attribute Bucket" strategy to support **any** niche via a generic, scalable structure (see `/ARCHITECTURE.md`):
 
-- **Verticals:** (e.g., Padel, Golf, Climbing).
-    
-- **Entity Pillars:** 1. Infrastructure (Venues), 2. Commerce (Retail), 3. Guidance (Coaches), 4. Organization (Clubs), 5. Momentum (Events).
-    
-- **Generic Attributes:** Every entity uses flexible attributes (e.g., "Indoor/Outdoor," "Equipment Hire") to allow horizontal scaling without code changes.
-    
+- **Classification:** A universal `entity_class` (place, person, organization, event, thing).
+- **Dimensions:** Multi-valued arrays (`canonical_activities`, `canonical_roles`, `canonical_place_types`, `canonical_access`) stored as Postgres arrays.
+- **Attributes:** Vertical-specific data is stored in flexible JSON `modules` (e.g., `sports_facility`, `wine_production`) managed by Lenses.
+- **Lenses:** A YAML-configured layer that interprets the universal data for specific verticals (e.g., Padel, Wine), deriving navigation, facets, and display rules without engine code changes.
+- **Ecosystem Graph:** Relationships (e.g., "teaches_at", "plays_at") connecting entities to map the local community.
 
-## 3. The Target Audience
+## 3. Data Ingestion & Extraction Engine
+
+The platform relies on an autonomous Python-based ETL pipeline:
+
+- **Ingestion:** Connectors fetch raw data from diverse sources (Google Places, Serper, OSM, etc.) and store it as `RawIngestion` records.
+- **Extraction:** A hybrid engine uses:
+    - **Deterministic rules** for structured APIs (Google, SportScotland).
+    - **LLM-based extraction** (Instructor + Claude) for unstructured data (Search snippets, OSM tags).
+- **Deduplication:** A multi-stage process (External ID -> Slug -> Fuzzy Match) to prevent duplicates.
+- **Trust:** Field-level trust scoring ensures "Golden Data" (Admin/Official) overrides crowdsourced data.
+
+## 4. The Target Audience
 
 - **Enthusiasts:** Beginners (where to start?), Active players (how to improve?), and Problem-Solvers (where is available?).
-    
 - **Business Owners:** Seeking high-intent leads and visibility. The platform is a **marketing channel**, not a booking engine.
-    
 
-## 4. Content & Quality Standards
+## 5. Content & Quality Standards
 
-- **Voice:** "The Knowledgeable Local Friend." Content must include geographic context (neighborhoods) and practical quirks (e.g., "it gets windy here").
-    
+- **Voice:** "The Knowledgeable Local Friend." Content must include geographic context (neighborhoods) and practical quirks.
 - **Forbidden:** Marketing fluff, vague superlatives, and generic AI-sounding summaries.
-    
 - **Trust Architecture:** Tiered confidence system. **Business-claimed data** is the gold standard. We prioritize _credibility over completeness_.
-    
 
-## 5. Growth & Monetization Logic
+## 6. Growth & Monetization Logic
 
 - **Phase 1 (Growth):** Free listings, SEO-first (Programmatic Long-Tail), and community trust.
-    
 - **Phase 2 (Revenue):** Transition to a Freemium model (Premium listings, analytics, and featured placement).
-    
 - **Non-Goals:** No payment processing or real-time booking integrations for the MVP.
-    
