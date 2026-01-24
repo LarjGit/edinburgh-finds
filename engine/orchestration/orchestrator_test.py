@@ -289,3 +289,258 @@ class TestOrchestrator:
         # Verify final context has the candidate
         assert len(result.candidates) == 1
         assert result.candidates[0]["name"] == "test_entity"
+
+
+class TestParallelExecution:
+    """Tests for parallel execution and deterministic merging."""
+
+    def test_parallel_execution_within_phase(self):
+        """
+        Verify that multiple connectors within a phase can execute in parallel.
+
+        This test verifies the infrastructure exists, not actual parallelism.
+        Real parallelism would require async/threading, which is tested separately.
+        """
+        plan = ExecutionPlan()
+        execution_log: List[str] = []
+
+        # Create multiple connectors in same phase
+        connector_a = FakeConnector(
+            name="connector_a",
+            spec=ConnectorSpec(
+                name="connector_a",
+                phase=ExecutionPhase.DISCOVERY,
+                trust_level=5,
+                requires=["request.query"],
+                provides=["context.data_a"],
+                supports_query_only=True,
+            ),
+            on_execute=lambda: execution_log.append("connector_a"),
+        )
+
+        connector_b = FakeConnector(
+            name="connector_b",
+            spec=ConnectorSpec(
+                name="connector_b",
+                phase=ExecutionPhase.DISCOVERY,
+                trust_level=5,
+                requires=["request.query"],
+                provides=["context.data_b"],
+                supports_query_only=True,
+            ),
+            on_execute=lambda: execution_log.append("connector_b"),
+        )
+
+        plan.add_connector(connector_a.spec)
+        plan.add_connector(connector_b.spec)
+
+        connector_instances = {
+            "connector_a": connector_a,
+            "connector_b": connector_b,
+        }
+
+        orchestrator = Orchestrator(plan=plan, connector_instances=connector_instances)
+        request = IngestRequest(ingestion_mode=IngestionMode.DISCOVER_MANY)
+        query_features = QueryFeatures(
+            looks_like_category_search=False,
+            has_geo_intent=False,
+        )
+
+        orchestrator.execute(request, query_features)
+
+        # Both connectors should execute
+        assert len(execution_log) == 2
+        assert "connector_a" in execution_log
+        assert "connector_b" in execution_log
+
+    def test_deterministic_merge_order_by_connector_name(self):
+        """
+        Verify that when multiple connectors modify context, updates are merged
+        in deterministic order (sorted by connector name).
+
+        This ensures reproducible behavior even with parallel execution.
+        """
+        plan = ExecutionPlan()
+
+        # Create connectors that append to candidates list (names out of alphabetical order)
+        connector_z = FakeConnector(
+            name="z_connector",
+            spec=ConnectorSpec(
+                name="z_connector",
+                phase=ExecutionPhase.DISCOVERY,
+                trust_level=5,
+                requires=["request.query"],
+                provides=["context.candidates"],
+                supports_query_only=True,
+            ),
+            on_execute=lambda ctx: ctx.candidates.append({"source": "z_connector"}),
+        )
+
+        connector_a = FakeConnector(
+            name="a_connector",
+            spec=ConnectorSpec(
+                name="a_connector",
+                phase=ExecutionPhase.DISCOVERY,
+                trust_level=5,
+                requires=["request.query"],
+                provides=["context.candidates"],
+                supports_query_only=True,
+            ),
+            on_execute=lambda ctx: ctx.candidates.append({"source": "a_connector"}),
+        )
+
+        connector_m = FakeConnector(
+            name="m_connector",
+            spec=ConnectorSpec(
+                name="m_connector",
+                phase=ExecutionPhase.DISCOVERY,
+                trust_level=5,
+                requires=["request.query"],
+                provides=["context.candidates"],
+                supports_query_only=True,
+            ),
+            on_execute=lambda ctx: ctx.candidates.append({"source": "m_connector"}),
+        )
+
+        # Add in non-alphabetical order
+        plan.add_connector(connector_z.spec)
+        plan.add_connector(connector_a.spec)
+        plan.add_connector(connector_m.spec)
+
+        connector_instances = {
+            "z_connector": connector_z,
+            "a_connector": connector_a,
+            "m_connector": connector_m,
+        }
+
+        orchestrator = Orchestrator(plan=plan, connector_instances=connector_instances)
+        request = IngestRequest(ingestion_mode=IngestionMode.DISCOVER_MANY)
+        query_features = QueryFeatures(
+            looks_like_category_search=False,
+            has_geo_intent=False,
+        )
+
+        result = orchestrator.execute(request, query_features)
+
+        # Verify candidates are merged in alphabetical order by connector name
+        assert len(result.candidates) == 3
+        assert result.candidates[0]["source"] == "a_connector"
+        assert result.candidates[1]["source"] == "m_connector"
+        assert result.candidates[2]["source"] == "z_connector"
+
+    def test_scalar_collision_higher_trust_wins(self):
+        """
+        Verify that when multiple connectors write to the same scalar field,
+        the connector with higher trust_level wins.
+
+        Scalar collision policy: trust > last writer
+        """
+        plan = ExecutionPlan()
+
+        # Connector with low trust writes "low_trust_value"
+        low_trust_connector = FakeConnector(
+            name="low_trust",
+            spec=ConnectorSpec(
+                name="low_trust",
+                phase=ExecutionPhase.DISCOVERY,
+                trust_level=3,  # Lower trust
+                requires=["request.query"],
+                provides=["context.evidence"],
+                supports_query_only=True,
+            ),
+            on_execute=lambda ctx: setattr(ctx, "_test_scalar", "low_trust_value"),
+        )
+
+        # Connector with high trust writes "high_trust_value"
+        high_trust_connector = FakeConnector(
+            name="high_trust",
+            spec=ConnectorSpec(
+                name="high_trust",
+                phase=ExecutionPhase.DISCOVERY,
+                trust_level=8,  # Higher trust
+                requires=["request.query"],
+                provides=["context.evidence"],
+                supports_query_only=True,
+            ),
+            on_execute=lambda ctx: setattr(ctx, "_test_scalar", "high_trust_value"),
+        )
+
+        # Add in order that would make low_trust win if we used "last writer wins"
+        plan.add_connector(high_trust_connector.spec)
+        plan.add_connector(low_trust_connector.spec)
+
+        connector_instances = {
+            "low_trust": low_trust_connector,
+            "high_trust": high_trust_connector,
+        }
+
+        orchestrator = Orchestrator(plan=plan, connector_instances=connector_instances)
+        request = IngestRequest(ingestion_mode=IngestionMode.DISCOVER_MANY)
+        query_features = QueryFeatures(
+            looks_like_category_search=False,
+            has_geo_intent=False,
+        )
+
+        result = orchestrator.execute(request, query_features)
+
+        # Higher trust should win
+        assert hasattr(result, "_test_scalar")
+        assert result._test_scalar == "high_trust_value"
+
+    def test_scalar_collision_last_writer_wins_on_trust_tie(self):
+        """
+        Verify that when multiple connectors with EQUAL trust write to the same scalar field,
+        last writer wins based on deterministic connector ordering (alphabetical).
+
+        Scalar collision policy: trust > last writer (alphabetical)
+        """
+        plan = ExecutionPlan()
+
+        # Both connectors have same trust level
+        connector_a = FakeConnector(
+            name="a_connector",
+            spec=ConnectorSpec(
+                name="a_connector",
+                phase=ExecutionPhase.DISCOVERY,
+                trust_level=5,  # Same trust
+                requires=["request.query"],
+                provides=["context.evidence"],
+                supports_query_only=True,
+            ),
+            on_execute=lambda ctx: setattr(ctx, "_test_scalar", "value_from_a"),
+        )
+
+        connector_z = FakeConnector(
+            name="z_connector",
+            spec=ConnectorSpec(
+                name="z_connector",
+                phase=ExecutionPhase.DISCOVERY,
+                trust_level=5,  # Same trust
+                requires=["request.query"],
+                provides=["context.evidence"],
+                supports_query_only=True,
+            ),
+            on_execute=lambda ctx: setattr(ctx, "_test_scalar", "value_from_z"),
+        )
+
+        # Add in reverse alphabetical order
+        plan.add_connector(connector_z.spec)
+        plan.add_connector(connector_a.spec)
+
+        connector_instances = {
+            "a_connector": connector_a,
+            "z_connector": connector_z,
+        }
+
+        orchestrator = Orchestrator(plan=plan, connector_instances=connector_instances)
+        request = IngestRequest(ingestion_mode=IngestionMode.DISCOVER_MANY)
+        query_features = QueryFeatures(
+            looks_like_category_search=False,
+            has_geo_intent=False,
+        )
+
+        result = orchestrator.execute(request, query_features)
+
+        # Last writer in alphabetical order (z_connector) should win
+        assert hasattr(result, "_test_scalar")
+        assert result._test_scalar == "value_from_z"

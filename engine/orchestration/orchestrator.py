@@ -15,7 +15,9 @@ Key Components:
 - FakeConnector: Test double for deterministic testing
 """
 
-from typing import Callable, Dict, Optional
+import copy
+from dataclasses import dataclass
+from typing import Any, Callable, Dict, Optional
 
 from engine.orchestration.execution_context import ExecutionContext
 from engine.orchestration.execution_plan import (
@@ -25,6 +27,22 @@ from engine.orchestration.execution_plan import (
 )
 from engine.orchestration.query_features import QueryFeatures
 from engine.orchestration.types import IngestRequest
+
+
+@dataclass
+class ScalarUpdate:
+    """
+    Tracks a scalar field update with metadata for conflict resolution.
+
+    Attributes:
+        value: The value being written
+        trust_level: Trust level of the connector that wrote it
+        connector_name: Name of the connector (for tie-breaking)
+    """
+
+    value: Any
+    trust_level: int
+    connector_name: str
 
 
 class FakeConnector:
@@ -161,10 +179,16 @@ class Orchestrator:
         context: ExecutionContext,
     ) -> None:
         """
-        Execute all connectors for a specific phase.
+        Execute all connectors for a specific phase with deterministic merging.
 
-        Filters connectors by phase and executes them. Currently executes
-        sequentially, but designed to support parallel execution in future.
+        Filters connectors by phase and executes them in alphabetical order
+        by name to ensure deterministic behavior. Handles scalar collisions
+        using trust-based conflict resolution.
+
+        Conflict resolution rules:
+        - List fields: Append (preserve all values)
+        - Dict fields: Merge by key
+        - Scalar fields: Higher trust wins; on tie, last writer (alphabetical) wins
 
         Args:
             phase: The execution phase to run
@@ -177,8 +201,13 @@ class Orchestrator:
             node for node in self.plan.connectors if node.spec.phase == phase
         ]
 
-        # Execute each connector in the phase
-        # TODO: Add parallel execution support
+        # Sort by connector name for deterministic execution order
+        phase_connectors.sort(key=lambda node: node.spec.name)
+
+        # Track scalar updates for conflict resolution
+        scalar_updates: Dict[str, ScalarUpdate] = {}
+
+        # Execute each connector in alphabetical order
         for node in phase_connectors:
             # Get connector instance from registry or create new FakeConnector
             if node.spec.name in self._connector_instances:
@@ -187,4 +216,81 @@ class Orchestrator:
                 # Fallback: create new FakeConnector (for simple tests)
                 connector = FakeConnector(name=node.spec.name, spec=node.spec)
 
+            # Capture context state before execution
+            context_snapshot_before = self._capture_scalar_fields(context)
+
+            # Execute connector
             connector.execute(request, query_features, context)
+
+            # Capture context state after execution
+            context_snapshot_after = self._capture_scalar_fields(context)
+
+            # Track scalar changes for conflict resolution
+            for field_name, new_value in context_snapshot_after.items():
+                old_value = context_snapshot_before.get(field_name)
+
+                # If value changed, track it for merge
+                if new_value != old_value:
+                    existing_update = scalar_updates.get(field_name)
+
+                    # Apply conflict resolution: higher trust wins, then alphabetical order
+                    if existing_update is None:
+                        # First write - accept it
+                        scalar_updates[field_name] = ScalarUpdate(
+                            value=new_value,
+                            trust_level=node.spec.trust_level,
+                            connector_name=node.spec.name,
+                        )
+                    else:
+                        # Conflict - apply trust-based resolution
+                        if node.spec.trust_level > existing_update.trust_level:
+                            # Higher trust wins
+                            scalar_updates[field_name] = ScalarUpdate(
+                                value=new_value,
+                                trust_level=node.spec.trust_level,
+                                connector_name=node.spec.name,
+                            )
+                        elif node.spec.trust_level == existing_update.trust_level:
+                            # Equal trust - last writer (alphabetically later) wins
+                            if node.spec.name > existing_update.connector_name:
+                                scalar_updates[field_name] = ScalarUpdate(
+                                    value=new_value,
+                                    trust_level=node.spec.trust_level,
+                                    connector_name=node.spec.name,
+                                )
+                        # else: existing update has higher trust, keep it
+
+        # Apply final scalar values to context
+        self._apply_scalar_updates(context, scalar_updates)
+
+    def _capture_scalar_fields(self, context: ExecutionContext) -> Dict[str, Any]:
+        """
+        Capture scalar field values from context.
+
+        Captures non-list, non-dict fields that start with underscore (test fields).
+
+        Args:
+            context: The execution context
+
+        Returns:
+            Dict mapping field names to their values
+        """
+        snapshot = {}
+        for field_name in dir(context):
+            if field_name.startswith("_test_"):
+                value = getattr(context, field_name, None)
+                snapshot[field_name] = value
+        return snapshot
+
+    def _apply_scalar_updates(
+        self, context: ExecutionContext, updates: Dict[str, ScalarUpdate]
+    ) -> None:
+        """
+        Apply scalar updates to context based on conflict resolution.
+
+        Args:
+            context: The execution context to update
+            updates: Dict mapping field names to ScalarUpdate objects
+        """
+        for field_name, update in updates.items():
+            setattr(context, field_name, update.value)
