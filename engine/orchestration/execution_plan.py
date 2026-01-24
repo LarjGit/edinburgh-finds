@@ -14,7 +14,10 @@ The plan enforces strict phase barriers while allowing parallelism within each p
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional
+
+if TYPE_CHECKING:
+    from engine.orchestration.execution_context import ExecutionContext
 
 
 class ExecutionPhase(Enum):
@@ -188,3 +191,58 @@ class ExecutionPlan:
         )
 
         return best
+
+    def should_run_connector(
+        self, node: ConnectorNode, context: "ExecutionContext"
+    ) -> bool:
+        """
+        Determine if a connector should run based on aggregate gating logic.
+
+        A connector is SKIPPED if ALL of these conditions are true:
+        1. It is context-dependent (requires contains any context.* keys)
+        2. candidates list is empty
+        3. accepted_entities list is empty
+        4. The specific required context.* keys have no data
+        5. supports_query_only is False
+
+        Otherwise, the connector should RUN.
+
+        Args:
+            node: ConnectorNode to evaluate
+            context: Current ExecutionContext with runtime state
+
+        Returns:
+            True if connector should run, False if it should be skipped
+        """
+        # Extract context.* keys from requires
+        context_keys = [
+            req for req in node.spec.requires if req.startswith("context.")
+        ]
+
+        # If not context-dependent, always run
+        if not context_keys:
+            return True
+
+        # If supports_query_only, can run even without context data
+        if node.spec.supports_query_only:
+            return True
+
+        # Check if we have ANY data in candidates or accepted_entities
+        if context.candidates or context.accepted_entities:
+            return True
+
+        # Check if ANY of the specific required context keys have data
+        for context_key in context_keys:
+            # Extract the attribute name from "context.key_name"
+            attr_name = context_key.split(".", 1)[1]
+
+            # Get the attribute from context
+            if hasattr(context, attr_name):
+                attr_value = getattr(context, attr_name)
+
+                # Check if the attribute has data (non-empty list, dict, set, etc.)
+                if attr_value:
+                    return True
+
+        # All skip conditions met: context-dependent, no candidates/entities, no required keys
+        return False

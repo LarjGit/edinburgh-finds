@@ -12,6 +12,7 @@ from engine.orchestration.execution_plan import (
     ConnectorSpec,
     ExecutionPhase,
 )
+from engine.orchestration.execution_context import ExecutionContext
 
 
 class TestConnectorNode:
@@ -445,3 +446,201 @@ class TestProviderSelection:
         assert best_a.spec.name == "multi_provider"
         assert best_b.spec.name == "multi_provider"
         assert best_c.spec.name == "multi_provider"
+
+
+class TestAggregateGating:
+    """Tests for aggregate gating logic (should_run_connector)."""
+
+    def test_non_context_dependent_connector_always_runs(self):
+        """Test that connector with no context.* requirements always runs."""
+        plan = ExecutionPlan()
+        context = ExecutionContext()
+
+        # Connector with only request.* and query_features.* requirements
+        spec = ConnectorSpec(
+            name="non_context_connector",
+            phase=ExecutionPhase.DISCOVERY,
+            trust_level=7,
+            requires=["request.query", "query_features.has_geo_intent"],
+            provides=["context.data"],
+            supports_query_only=True,
+        )
+        node = ConnectorNode(spec=spec, dependencies=[])
+
+        # Should run regardless of context state
+        assert plan.should_run_connector(node, context) is True
+
+    def test_context_dependent_with_query_only_support_runs(self):
+        """Test that context-dependent connector with supports_query_only=True runs."""
+        plan = ExecutionPlan()
+        context = ExecutionContext()  # Empty context
+
+        spec = ConnectorSpec(
+            name="query_only_connector",
+            phase=ExecutionPhase.DISCOVERY,
+            trust_level=8,
+            requires=["context.seeds", "request.query"],
+            provides=["context.candidates"],
+            supports_query_only=True,  # Can run with just query
+        )
+        node = ConnectorNode(spec=spec, dependencies=[])
+
+        # Should run even though context is empty (supports_query_only=True)
+        assert plan.should_run_connector(node, context) is True
+
+    def test_context_dependent_skips_when_all_conditions_met(self):
+        """Test that context-dependent connector skips when all skip conditions are met."""
+        plan = ExecutionPlan()
+        context = ExecutionContext()  # Empty: candidates=[], accepted_entities=[]
+
+        spec = ConnectorSpec(
+            name="context_dependent",
+            phase=ExecutionPhase.ENRICHMENT,
+            trust_level=5,
+            requires=["context.candidates", "context.seeds"],
+            provides=["context.enriched"],
+            supports_query_only=False,  # Cannot run with just query
+        )
+        node = ConnectorNode(spec=spec, dependencies=[])
+
+        # Should skip: context-dependent, empty context, no query-only support
+        assert plan.should_run_connector(node, context) is False
+
+    def test_context_dependent_runs_when_candidates_not_empty(self):
+        """Test that context-dependent connector runs when candidates list is not empty."""
+        plan = ExecutionPlan()
+        context = ExecutionContext()
+        context.candidates.append({"name": "test_candidate"})  # Add candidate
+
+        spec = ConnectorSpec(
+            name="enrichment_connector",
+            phase=ExecutionPhase.ENRICHMENT,
+            trust_level=5,
+            requires=["context.candidates"],
+            provides=["context.enriched"],
+            supports_query_only=False,
+        )
+        node = ConnectorNode(spec=spec, dependencies=[])
+
+        # Should run because candidates is not empty
+        assert plan.should_run_connector(node, context) is True
+
+    def test_context_dependent_runs_when_accepted_entities_not_empty(self):
+        """Test that context-dependent connector runs when accepted_entities is not empty."""
+        plan = ExecutionPlan()
+        context = ExecutionContext()
+        context.accepted_entities.append({"name": "accepted_entity"})  # Add entity
+
+        spec = ConnectorSpec(
+            name="enrichment_connector",
+            phase=ExecutionPhase.ENRICHMENT,
+            trust_level=5,
+            requires=["context.accepted_entities"],
+            provides=["context.enriched"],
+            supports_query_only=False,
+        )
+        node = ConnectorNode(spec=spec, dependencies=[])
+
+        # Should run because accepted_entities is not empty
+        assert plan.should_run_connector(node, context) is True
+
+    def test_context_dependent_runs_when_required_context_key_present(self):
+        """Test that context-dependent connector runs when required context key is present."""
+        plan = ExecutionPlan()
+        context = ExecutionContext()
+        # Seeds is a dict, add a seed value
+        context.seeds["google_place_id"] = "ChIJ123"
+
+        spec = ConnectorSpec(
+            name="seed_based_connector",
+            phase=ExecutionPhase.STRUCTURED,
+            trust_level=9,
+            requires=["context.seeds"],
+            provides=["context.structured_data"],
+            supports_query_only=False,
+        )
+        node = ConnectorNode(spec=spec, dependencies=[])
+
+        # Should run because context.seeds is present (not empty)
+        assert plan.should_run_connector(node, context) is True
+
+    def test_context_dependent_skips_when_required_context_key_missing(self):
+        """Test that context-dependent connector skips when required context key is missing."""
+        plan = ExecutionPlan()
+        context = ExecutionContext()
+        # context.evidence is empty dict
+
+        spec = ConnectorSpec(
+            name="evidence_based_connector",
+            phase=ExecutionPhase.ENRICHMENT,
+            trust_level=6,
+            requires=["context.evidence"],
+            provides=["context.analysis"],
+            supports_query_only=False,
+        )
+        node = ConnectorNode(spec=spec, dependencies=[])
+
+        # Should skip: context-dependent, empty context, required key missing
+        assert plan.should_run_connector(node, context) is False
+
+    def test_context_dependent_with_multiple_context_keys_runs_if_any_present(self):
+        """Test that connector runs if ANY required context data is available."""
+        plan = ExecutionPlan()
+        context = ExecutionContext()
+        # Only seeds is populated
+        context.seeds["id"] = "123"
+
+        spec = ConnectorSpec(
+            name="multi_context_connector",
+            phase=ExecutionPhase.ENRICHMENT,
+            trust_level=6,
+            requires=["context.seeds", "context.candidates", "context.evidence"],
+            provides=["context.result"],
+            supports_query_only=False,
+        )
+        node = ConnectorNode(spec=spec, dependencies=[])
+
+        # Should run because at least one context key (seeds) has data
+        assert plan.should_run_connector(node, context) is True
+
+    def test_context_dependent_mixed_requirements_only_checks_context_keys(self):
+        """Test that gating only considers context.* keys, not request.* or query_features.*"""
+        plan = ExecutionPlan()
+        context = ExecutionContext()  # Empty context
+
+        spec = ConnectorSpec(
+            name="mixed_requirements",
+            phase=ExecutionPhase.STRUCTURED,
+            trust_level=8,
+            requires=[
+                "request.query",  # Not context - ignored for gating
+                "query_features.has_geo_intent",  # Not context - ignored
+                "context.seeds",  # Context key - checked
+            ],
+            provides=["context.data"],
+            supports_query_only=False,
+        )
+        node = ConnectorNode(spec=spec, dependencies=[])
+
+        # Should skip because context.seeds is missing (even though request.* present)
+        assert plan.should_run_connector(node, context) is False
+
+    def test_both_candidates_and_accepted_entities_empty_skips(self):
+        """Test that connector skips when both candidates and accepted_entities are empty."""
+        plan = ExecutionPlan()
+        context = ExecutionContext()
+        # Both lists are empty, but add something to seeds
+        # This should still skip because candidates AND accepted_entities are both empty
+
+        spec = ConnectorSpec(
+            name="requires_entities",
+            phase=ExecutionPhase.ENRICHMENT,
+            trust_level=5,
+            requires=["context.candidates"],
+            provides=["context.enriched"],
+            supports_query_only=False,
+        )
+        node = ConnectorNode(spec=spec, dependencies=[])
+
+        # candidates list is empty, accepted_entities is empty
+        assert plan.should_run_connector(node, context) is False
