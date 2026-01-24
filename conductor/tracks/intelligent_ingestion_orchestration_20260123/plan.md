@@ -63,7 +63,7 @@ Implement the main control loop that enforces the phase barriers, manages parall
     - [x] Write integration tests using `FakeConnector` to simulate full runs and verify stopping conditions.
 - [x] Task: Conductor - User Manual Verification 'Orchestrator & Integration' (Protocol in workflow.md)
 
-## Phase 5: Final Verification
+## Phase 5: Final Verification [checkpoint: f783549]
 Ensure full spec compliance.
 
 - [x] Task: Spec Compliance Audit [0cac82e]
