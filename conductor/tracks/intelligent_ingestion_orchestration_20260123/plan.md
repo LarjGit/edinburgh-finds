@@ -66,6 +66,6 @@ Implement the main control loop that enforces the phase barriers, manages parall
 ## Phase 5: Final Verification
 Ensure full spec compliance.
 
-- [ ] Task: Spec Compliance Audit
-    - [ ] Map each major spec requirement to implementation file/test.
-    - [ ] Verify all tests pass and coverage > 80%.
+- [x] Task: Spec Compliance Audit [0cac82e]
+    - [x] Map each major spec requirement to implementation file/test.
+    - [x] Verify all tests pass and coverage > 80%.
