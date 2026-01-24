@@ -47,7 +47,7 @@ Build the DAG-lite structure and the logic for phase-based execution and aggrega
     - [x] Write tests for gating: ensure connectors skip/run correctly based on context availability and `supports_query_only`.
 - [x] Task: Conductor - User Manual Verification 'Execution Plan & Phase Barriers' (Protocol in workflow.md)
 
-## Phase 4: Orchestrator & Integration (TDD)
+## Phase 4: Orchestrator & Integration (TDD) [checkpoint: 1599ecc]
 Implement the main control loop that enforces the phase barriers, manages parallelism, and handles early stopping.
 
 - [x] Task: Orchestrator Core Loop & Fake Connector [95e5ec7]
@@ -61,7 +61,7 @@ Implement the main control loop that enforces the phase barriers, manages parall
 - [x] Task: Early Stopping & Budgeting [8bfe4f5]
     - [x] Add checks for `budget_usd` (pre/post) and `target_entity_count`/`min_confidence`.
     - [x] Write integration tests using `FakeConnector` to simulate full runs and verify stopping conditions.
-- [ ] Task: Conductor - User Manual Verification 'Orchestrator & Integration' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Orchestrator & Integration' (Protocol in workflow.md)
 
 ## Phase 5: Final Verification
 Ensure full spec compliance.
