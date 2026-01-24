@@ -58,9 +58,9 @@ Implement the main control loop that enforces the phase barriers, manages parall
     - [x] Implement `_execute_phase` with parallel execution support.
     - [x] Implement deterministic result merging (sort by connector name; scalar collision policy: trust > last writer).
     - [x] Write unit tests for scalar collision to prove determinism.
-- [ ] Task: Early Stopping & Budgeting
-    - [ ] Add checks for `budget_usd` (pre/post) and `target_entity_count`/`min_confidence`.
-    - [ ] Write integration tests using `FakeConnector` to simulate full runs and verify stopping conditions.
+- [x] Task: Early Stopping & Budgeting [8bfe4f5]
+    - [x] Add checks for `budget_usd` (pre/post) and `target_entity_count`/`min_confidence`.
+    - [x] Write integration tests using `FakeConnector` to simulate full runs and verify stopping conditions.
 - [ ] Task: Conductor - User Manual Verification 'Orchestrator & Integration' (Protocol in workflow.md)
 
 ## Phase 5: Final Verification
