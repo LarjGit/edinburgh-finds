@@ -31,6 +31,8 @@ class ExecutionContext:
         accepted_entity_keys: Set of unique keys for accepted entities
         evidence: Dict of supporting evidence collected during discovery
         seeds: Dict of initial seed data (IDs, known entities)
+        budget_spent_usd: Total budget spent on connectors (USD)
+        confidence: Current confidence score (0.0-1.0)
     """
 
     def __init__(self) -> None:
@@ -40,6 +42,8 @@ class ExecutionContext:
         self.accepted_entity_keys: Set[str] = set()
         self.evidence: Dict[str, Any] = {}
         self.seeds: Dict[str, Any] = {}
+        self.budget_spent_usd: float = 0.0
+        self.confidence: float = 0.0
 
     def _normalize_name(self, name: str) -> str:
         """

@@ -67,15 +67,17 @@ class IngestRequest:
     Immutable request object for ingestion operations.
 
     Encapsulates all parameters needed to orchestrate an ingestion run.
-    Optional fields (target_entity_count, min_confidence) default to None
+    Optional fields (target_entity_count, min_confidence, budget_usd) default to None
     and should be resolved by configuration at orchestration startup.
 
     Attributes:
         ingestion_mode: The mode of operation (RESOLVE_ONE or DISCOVER_MANY)
         target_entity_count: Maximum number of entities to accept (optional)
         min_confidence: Minimum confidence threshold for acceptance (optional, 0.0-1.0)
+        budget_usd: Maximum budget in USD for the ingestion run (optional)
     """
 
     ingestion_mode: IngestionMode
     target_entity_count: Optional[int] = None
     min_confidence: Optional[float] = None
+    budget_usd: Optional[float] = None

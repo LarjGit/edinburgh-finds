@@ -141,7 +141,7 @@ class Orchestrator:
         self, request: IngestRequest, query_features: QueryFeatures
     ) -> ExecutionContext:
         """
-        Execute all connectors in the plan with phase ordering.
+        Execute all connectors in the plan with phase ordering and early stopping.
 
         Runs connectors in strict phase order:
         1. DISCOVERY phase (all connectors)
@@ -150,6 +150,11 @@ class Orchestrator:
 
         A shared ExecutionContext is passed through all phases, allowing
         later phases to build on results from earlier phases.
+
+        Early stopping conditions:
+        - RESOLVE_ONE: Stop when confidence >= min_confidence AND at least one entity accepted
+        - DISCOVER_MANY: Stop when len(accepted_entities) >= target_entity_count
+        - Budget: Stop if budget would be exceeded or has been exhausted
 
         Args:
             request: The ingestion request
@@ -161,13 +166,22 @@ class Orchestrator:
         # Create shared context
         context = ExecutionContext()
 
-        # Execute connectors in phase order
+        # Execute connectors in phase order with early stopping checks
         for phase in [
             ExecutionPhase.DISCOVERY,
             ExecutionPhase.STRUCTURED,
             ExecutionPhase.ENRICHMENT,
         ]:
+            # Pre-phase budget check
+            if not self._should_continue_execution(phase, request, context):
+                break
+
+            # Execute phase
             self._execute_phase(phase, request, query_features, context)
+
+            # Post-phase early stopping check
+            if not self._should_continue_execution(None, request, context):
+                break
 
         return context
 
@@ -221,6 +235,9 @@ class Orchestrator:
 
             # Execute connector
             connector.execute(request, query_features, context)
+
+            # Track budget spending
+            context.budget_spent_usd += node.spec.estimated_cost_usd
 
             # Capture context state after execution
             context_snapshot_after = self._capture_scalar_fields(context)
@@ -294,3 +311,67 @@ class Orchestrator:
         """
         for field_name, update in updates.items():
             setattr(context, field_name, update.value)
+
+    def _should_continue_execution(
+        self,
+        next_phase: Optional[ExecutionPhase],
+        request: IngestRequest,
+        context: ExecutionContext,
+    ) -> bool:
+        """
+        Determine if execution should continue based on early stopping conditions.
+
+        Checks three stopping conditions:
+        1. Budget: Stop if executing next_phase would exceed budget (pre-check)
+                  or if budget already exhausted (post-check)
+        2. RESOLVE_ONE: Stop if confidence >= min_confidence AND at least one entity accepted
+        3. DISCOVER_MANY: Stop if entity count >= target_entity_count
+
+        Args:
+            next_phase: The phase about to execute (None for post-phase check)
+            request: The ingestion request with thresholds
+            context: Current execution context
+
+        Returns:
+            True if execution should continue, False if should stop
+        """
+        from engine.orchestration.types import IngestionMode
+
+        # Budget pre-check: Can we afford the next phase?
+        if next_phase is not None and request.budget_usd is not None:
+            # Calculate estimated cost of next phase
+            phase_connectors = [
+                node for node in self.plan.connectors if node.spec.phase == next_phase
+            ]
+            estimated_phase_cost = sum(
+                node.spec.estimated_cost_usd for node in phase_connectors
+            )
+
+            # Stop if we can't afford this phase
+            if context.budget_spent_usd + estimated_phase_cost > request.budget_usd:
+                return False
+
+        # Budget post-check: Have we exhausted the budget?
+        if request.budget_usd is not None:
+            if context.budget_spent_usd >= request.budget_usd:
+                return False
+
+        # RESOLVE_ONE early stopping
+        if request.ingestion_mode == IngestionMode.RESOLVE_ONE:
+            if request.min_confidence is not None:
+                # Stop if we have high confidence AND at least one entity
+                if (
+                    context.confidence >= request.min_confidence
+                    and len(context.accepted_entities) >= 1
+                ):
+                    return False
+
+        # DISCOVER_MANY early stopping
+        if request.ingestion_mode == IngestionMode.DISCOVER_MANY:
+            if request.target_entity_count is not None:
+                # Stop if we've reached the target entity count
+                if len(context.accepted_entities) >= request.target_entity_count:
+                    return False
+
+        # Continue execution
+        return True

@@ -544,3 +544,323 @@ class TestParallelExecution:
         # Last writer in alphabetical order (z_connector) should win
         assert hasattr(result, "_test_scalar")
         assert result._test_scalar == "value_from_z"
+
+
+class TestEarlyStopping:
+    """Tests for early stopping based on budget and confidence thresholds."""
+
+    def test_resolve_one_stops_when_confidence_threshold_met(self):
+        """
+        RESOLVE_ONE mode should stop when confidence >= min_confidence AND
+        at least one entity is accepted.
+
+        Verifies:
+        - DISCOVERY phase runs
+        - STRUCTURED phase runs
+        - ENRICHMENT phase is skipped (early stop)
+        - Final context has confidence >= min_confidence
+        - Final context has at least one accepted entity
+        """
+        plan = ExecutionPlan()
+        execution_log: List[str] = []
+
+        # Discovery connector: adds a candidate
+        discovery_connector = FakeConnector(
+            name="discovery",
+            spec=ConnectorSpec(
+                name="discovery",
+                phase=ExecutionPhase.DISCOVERY,
+                trust_level=5,
+                requires=["request.query"],
+                provides=["context.candidates"],
+                supports_query_only=True,
+            ),
+            on_execute=lambda ctx: ctx.candidates.append({"name": "test_entity"}),
+        )
+
+        # Structured connector: accepts entity and sets high confidence
+        def structured_execute(ctx):
+            execution_log.append("structured")
+            if ctx.candidates:
+                ctx.accept_entity(ctx.candidates[0])
+            ctx.confidence = 0.9  # High confidence
+
+        structured_connector = FakeConnector(
+            name="structured",
+            spec=ConnectorSpec(
+                name="structured",
+                phase=ExecutionPhase.STRUCTURED,
+                trust_level=8,
+                requires=["context.candidates"],
+                provides=["context.accepted_entities"],
+                supports_query_only=False,
+            ),
+            on_execute=structured_execute,
+        )
+
+        # Enrichment connector: should NOT run due to early stopping
+        enrichment_connector = FakeConnector(
+            name="enrichment",
+            spec=ConnectorSpec(
+                name="enrichment",
+                phase=ExecutionPhase.ENRICHMENT,
+                trust_level=6,
+                requires=["context.accepted_entities"],
+                provides=["context.enriched"],
+                supports_query_only=False,
+            ),
+            on_execute=lambda: execution_log.append("enrichment"),
+        )
+
+        plan.add_connector(discovery_connector.spec)
+        plan.add_connector(structured_connector.spec)
+        plan.add_connector(enrichment_connector.spec)
+
+        connector_instances = {
+            "discovery": discovery_connector,
+            "structured": structured_connector,
+            "enrichment": enrichment_connector,
+        }
+
+        orchestrator = Orchestrator(plan=plan, connector_instances=connector_instances)
+        request = IngestRequest(
+            ingestion_mode=IngestionMode.RESOLVE_ONE,
+            min_confidence=0.8,  # Threshold
+        )
+        query_features = QueryFeatures(
+            looks_like_category_search=False,
+            has_geo_intent=False,
+        )
+
+        result = orchestrator.execute(request, query_features)
+
+        # Verify early stop: enrichment should NOT have executed
+        assert "structured" in execution_log
+        assert "enrichment" not in execution_log
+
+        # Verify stopping conditions were met
+        assert hasattr(result, "confidence")
+        assert result.confidence >= 0.8
+        assert len(result.accepted_entities) >= 1
+
+    def test_discover_many_stops_when_entity_count_reached(self):
+        """
+        DISCOVER_MANY mode should stop when len(accepted_entities) >= target_entity_count.
+
+        Verifies:
+        - Execution stops after reaching target count
+        - Remaining phases are skipped
+        - Final entity count >= target_entity_count
+        """
+        plan = ExecutionPlan()
+        execution_log: List[str] = []
+
+        # Discovery connector: adds multiple candidates
+        def discovery_execute(ctx):
+            execution_log.append("discovery")
+            ctx.candidates.extend([
+                {"name": "entity_1", "lat": 1.0, "lng": 1.0},
+                {"name": "entity_2", "lat": 2.0, "lng": 2.0},
+                {"name": "entity_3", "lat": 3.0, "lng": 3.0},
+            ])
+
+        discovery_connector = FakeConnector(
+            name="discovery",
+            spec=ConnectorSpec(
+                name="discovery",
+                phase=ExecutionPhase.DISCOVERY,
+                trust_level=5,
+                requires=["request.query"],
+                provides=["context.candidates"],
+                supports_query_only=True,
+            ),
+            on_execute=discovery_execute,
+        )
+
+        # Structured connector: accepts entities (reaches target count)
+        def structured_execute(ctx):
+            execution_log.append("structured")
+            for candidate in ctx.candidates:
+                ctx.accept_entity(candidate)
+
+        structured_connector = FakeConnector(
+            name="structured",
+            spec=ConnectorSpec(
+                name="structured",
+                phase=ExecutionPhase.STRUCTURED,
+                trust_level=8,
+                requires=["context.candidates"],
+                provides=["context.accepted_entities"],
+                supports_query_only=False,
+            ),
+            on_execute=structured_execute,
+        )
+
+        # Enrichment connector: should NOT run (early stop)
+        enrichment_connector = FakeConnector(
+            name="enrichment",
+            spec=ConnectorSpec(
+                name="enrichment",
+                phase=ExecutionPhase.ENRICHMENT,
+                trust_level=6,
+                requires=["context.accepted_entities"],
+                provides=["context.enriched"],
+                supports_query_only=False,
+            ),
+            on_execute=lambda: execution_log.append("enrichment"),
+        )
+
+        plan.add_connector(discovery_connector.spec)
+        plan.add_connector(structured_connector.spec)
+        plan.add_connector(enrichment_connector.spec)
+
+        connector_instances = {
+            "discovery": discovery_connector,
+            "structured": structured_connector,
+            "enrichment": enrichment_connector,
+        }
+
+        orchestrator = Orchestrator(plan=plan, connector_instances=connector_instances)
+        request = IngestRequest(
+            ingestion_mode=IngestionMode.DISCOVER_MANY,
+            target_entity_count=2,  # Stop after 2 entities
+        )
+        query_features = QueryFeatures(
+            looks_like_category_search=False,
+            has_geo_intent=False,
+        )
+
+        result = orchestrator.execute(request, query_features)
+
+        # Verify early stop: enrichment should NOT have executed
+        assert "discovery" in execution_log
+        assert "structured" in execution_log
+        assert "enrichment" not in execution_log
+
+        # Verify stopping condition was met
+        assert len(result.accepted_entities) >= 2
+
+    def test_budget_pre_check_prevents_execution(self):
+        """
+        Budget pre-check should prevent connector execution if budget would be exceeded.
+
+        Verifies:
+        - Expensive connector is skipped when budget is low
+        - Budget tracking is updated correctly
+        """
+        plan = ExecutionPlan()
+        execution_log: List[str] = []
+
+        # Expensive discovery connector (costs $10)
+        discovery_connector = FakeConnector(
+            name="expensive_discovery",
+            spec=ConnectorSpec(
+                name="expensive_discovery",
+                phase=ExecutionPhase.DISCOVERY,
+                trust_level=5,
+                requires=["request.query"],
+                provides=["context.candidates"],
+                supports_query_only=True,
+                estimated_cost_usd=10.0,  # Expensive
+            ),
+            on_execute=lambda: execution_log.append("expensive_discovery"),
+        )
+
+        plan.add_connector(discovery_connector.spec)
+
+        connector_instances = {
+            "expensive_discovery": discovery_connector,
+        }
+
+        orchestrator = Orchestrator(plan=plan, connector_instances=connector_instances)
+        request = IngestRequest(
+            ingestion_mode=IngestionMode.DISCOVER_MANY,
+            budget_usd=5.0,  # Budget too low
+        )
+        query_features = QueryFeatures(
+            looks_like_category_search=False,
+            has_geo_intent=False,
+        )
+
+        result = orchestrator.execute(request, query_features)
+
+        # Verify connector was skipped due to budget
+        assert "expensive_discovery" not in execution_log
+
+        # Verify budget tracking exists
+        assert hasattr(result, "budget_spent_usd")
+        assert result.budget_spent_usd <= 5.0
+
+    def test_budget_post_check_stops_after_phase(self):
+        """
+        Budget post-check should stop execution after a phase if budget is exhausted.
+
+        Verifies:
+        - First phase executes and consumes budget
+        - Subsequent phases are skipped due to budget exhaustion
+        - Budget spent is tracked correctly
+        """
+        plan = ExecutionPlan()
+        execution_log: List[str] = []
+
+        # Discovery connector: costs $8 (most of budget)
+        def discovery_execute(ctx):
+            execution_log.append("discovery")
+            ctx.candidates.append({"name": "entity_1"})
+
+        discovery_connector = FakeConnector(
+            name="discovery",
+            spec=ConnectorSpec(
+                name="discovery",
+                phase=ExecutionPhase.DISCOVERY,
+                trust_level=5,
+                requires=["request.query"],
+                provides=["context.candidates"],
+                supports_query_only=True,
+                estimated_cost_usd=8.0,
+            ),
+            on_execute=discovery_execute,
+        )
+
+        # Structured connector: costs $5 (would exceed budget)
+        structured_connector = FakeConnector(
+            name="structured",
+            spec=ConnectorSpec(
+                name="structured",
+                phase=ExecutionPhase.STRUCTURED,
+                trust_level=8,
+                requires=["context.candidates"],
+                provides=["context.accepted_entities"],
+                supports_query_only=False,
+                estimated_cost_usd=5.0,
+            ),
+            on_execute=lambda: execution_log.append("structured"),
+        )
+
+        plan.add_connector(discovery_connector.spec)
+        plan.add_connector(structured_connector.spec)
+
+        connector_instances = {
+            "discovery": discovery_connector,
+            "structured": structured_connector,
+        }
+
+        orchestrator = Orchestrator(plan=plan, connector_instances=connector_instances)
+        request = IngestRequest(
+            ingestion_mode=IngestionMode.DISCOVER_MANY,
+            budget_usd=10.0,  # Total budget
+        )
+        query_features = QueryFeatures(
+            looks_like_category_search=False,
+            has_geo_intent=False,
+        )
+
+        result = orchestrator.execute(request, query_features)
+
+        # Verify discovery ran but structured was skipped
+        assert "discovery" in execution_log
+        assert "structured" not in execution_log
+
+        # Verify budget tracking
+        assert hasattr(result, "budget_spent_usd")
+        assert result.budget_spent_usd <= 10.0

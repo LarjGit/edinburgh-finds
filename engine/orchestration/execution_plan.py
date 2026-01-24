@@ -49,6 +49,7 @@ class ConnectorSpec:
     - requires: List of input dependencies (e.g., "request.query", "context.candidates")
     - provides: List of outputs produced (e.g., "context.seeds", "context.enriched_data")
     - supports_query_only: Whether connector can run with only query (no geographic constraint)
+    - estimated_cost_usd: Estimated cost to run this connector in USD (optional)
 
     Attributes:
         name: Unique connector identifier
@@ -57,6 +58,7 @@ class ConnectorSpec:
         requires: List of required input keys (supports nested paths)
         provides: List of output keys this connector produces
         supports_query_only: True if connector can run without geographic constraints
+        estimated_cost_usd: Estimated cost in USD (optional, defaults to 0.0)
     """
 
     name: str
@@ -65,6 +67,7 @@ class ConnectorSpec:
     requires: List[str]
     provides: List[str]
     supports_query_only: bool
+    estimated_cost_usd: float = 0.0
 
 
 @dataclass
