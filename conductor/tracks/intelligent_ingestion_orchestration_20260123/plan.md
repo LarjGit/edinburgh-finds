@@ -33,7 +33,7 @@ Implement the shared state container and the robust, deterministic deduplication
         - Duplicate candidates return correct tuple and maintain stable counts.
 - [x] Task: Conductor - User Manual Verification 'Execution Context & Deduplication' (Protocol in workflow.md)
 
-## Phase 3: Execution Plan & Phase Barriers (TDD)
+## Phase 3: Execution Plan & Phase Barriers (TDD) [checkpoint: 8f4c0f0]
 Build the DAG-lite structure and the logic for phase-based execution and aggregate gating.
 
 - [x] Task: Connector Node & Plan Structure [b3f2e5b]
@@ -45,7 +45,7 @@ Build the DAG-lite structure and the logic for phase-based execution and aggrega
 - [x] Task: Aggregate Gating Logic [e5917b1]
     - [x] Implement `should_run_connector` with the specific skipping logic defined in spec.
     - [x] Write tests for gating: ensure connectors skip/run correctly based on context availability and `supports_query_only`.
-- [ ] Task: Conductor - User Manual Verification 'Execution Plan & Phase Barriers' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Execution Plan & Phase Barriers' (Protocol in workflow.md)
 
 ## Phase 4: Orchestrator & Integration (TDD)
 Implement the main control loop that enforces the phase barriers, manages parallelism, and handles early stopping.
