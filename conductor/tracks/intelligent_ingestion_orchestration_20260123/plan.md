@@ -42,9 +42,9 @@ Build the DAG-lite structure and the logic for phase-based execution and aggrega
 - [x] Task: Provider Selection & Tie-Breaking [fa68946]
     - [x] Implement `_get_best_provider` using `(-trust_level, phase_order)` logic.
     - [x] Write tests ensuring correct provider is selected in tie-break scenarios.
-- [ ] Task: Aggregate Gating Logic
-    - [ ] Implement `should_run_connector` with the specific skipping logic defined in spec.
-    - [ ] Write tests for gating: ensure connectors skip/run correctly based on context availability and `supports_query_only`.
+- [x] Task: Aggregate Gating Logic [e5917b1]
+    - [x] Implement `should_run_connector` with the specific skipping logic defined in spec.
+    - [x] Write tests for gating: ensure connectors skip/run correctly based on context availability and `supports_query_only`.
 - [ ] Task: Conductor - User Manual Verification 'Execution Plan & Phase Barriers' (Protocol in workflow.md)
 
 ## Phase 4: Orchestrator & Integration (TDD)
