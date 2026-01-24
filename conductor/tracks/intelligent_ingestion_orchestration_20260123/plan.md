@@ -50,10 +50,10 @@ Build the DAG-lite structure and the logic for phase-based execution and aggrega
 ## Phase 4: Orchestrator & Integration (TDD)
 Implement the main control loop that enforces the phase barriers, manages parallelism, and handles early stopping.
 
-- [ ] Task: Orchestrator Core Loop & Fake Connector
-    - [ ] Create `engine/orchestration/orchestrator.py` with `Orchestrator` class.
-    - [ ] Implement `execute` method enforcing `DISCOVERY` -> `STRUCTURED` -> `ENRICHMENT` order.
-    - [ ] Define `FakeConnector` interface for deterministic testing.
+- [x] Task: Orchestrator Core Loop & Fake Connector [95e5ec7]
+    - [x] Create `engine/orchestration/orchestrator.py` with `Orchestrator` class.
+    - [x] Implement `execute` method enforcing `DISCOVERY` -> `STRUCTURED` -> `ENRICHMENT` order.
+    - [x] Define `FakeConnector` interface for deterministic testing.
 - [ ] Task: Parallel Execution & Deterministic Merging
     - [ ] Implement `_execute_phase` with parallel execution support.
     - [ ] Implement deterministic result merging (sort by connector name; scalar collision policy: trust > last writer).
