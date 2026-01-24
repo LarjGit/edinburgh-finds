@@ -1,0 +1,248 @@
+[
+  {
+    "doc_type": "subsystem",
+    "subsystem_name": "ingestion-pipeline",
+    "source_files": [],
+    "output_path": "docs/architecture/subsystems/ingestion-pipeline.md"
+  },
+  {
+    "doc_type": "subsystem",
+    "subsystem_name": "extraction-engine",
+    "source_files": [],
+    "output_path": "docs/architecture/subsystems/extraction-engine.md"
+  },
+  {
+    "doc_type": "subsystem",
+    "subsystem_name": "orchestration",
+    "source_files": [],
+    "output_path": "docs/architecture/subsystems/orchestration.md"
+  },
+  {
+    "doc_type": "subsystem",
+    "subsystem_name": "schema-system",
+    "source_files": [],
+    "output_path": "docs/architecture/subsystems/schema-system.md"
+  },
+  {
+    "doc_type": "subsystem",
+    "subsystem_name": "lens-system",
+    "source_files": [],
+    "output_path": "docs/architecture/subsystems/lens-system.md"
+  },
+  {
+    "doc_type": "subsystem",
+    "subsystem_name": "resolution-merging",
+    "source_files": [],
+    "output_path": "docs/architecture/subsystems/resolution-merging.md"
+  },
+  {
+    "doc_type": "reference",
+    "subsystem_name": "configuration",
+    "source_files": [],
+    "output_path": "docs/reference/configuration.md"
+  },
+  {
+    "doc_type": "reference",
+    "subsystem_name": "interfaces",
+    "source_files": [],
+    "output_path": "docs/reference/interfaces.md"
+  },
+  {
+    "doc_type": "reference",
+    "subsystem_name": "data-model",
+    "source_files": [],
+    "output_path": "docs/reference/data-model.md"
+  },
+  {
+    "doc_type": "reference",
+    "subsystem_name": "module-index",
+    "source_files": [],
+    "output_path": "docs/reference/module-index.md"
+  },
+  {
+    "doc_type": "architecture",
+    "subsystem_name": "overview",
+    "source_files": [],
+    "output_path": "docs/architecture/overview.md"
+  },
+  {
+    "doc_type": "architecture",
+    "subsystem_name": "c4-context",
+    "source_files": [],
+    "output_path": "docs/architecture/c4-context.md"
+  },
+  {
+    "doc_type": "architecture",
+    "subsystem_name": "c4-container",
+    "source_files": [],
+    "output_path": "docs/architecture/c4-container.md"
+  },
+  {
+    "doc_type": "howto",
+    "subsystem_name": "run-ingestion-google-places",
+    "source_files": [],
+    "output_path": "docs/howto/run-ingestion-google-places.md"
+  },
+  {
+    "doc_type": "howto",
+    "subsystem_name": "run-ingestion-osm",
+    "source_files": [],
+    "output_path": "docs/howto/run-ingestion-osm.md"
+  },
+  {
+    "doc_type": "howto",
+    "subsystem_name": "run-ingestion-serper",
+    "source_files": [],
+    "output_path": "docs/howto/run-ingestion-serper.md"
+  },
+  {
+    "doc_type": "howto",
+    "subsystem_name": "run-ingestion-sport-scotland",
+    "source_files": [],
+    "output_path": "docs/howto/run-ingestion-sport-scotland.md"
+  },
+  {
+    "doc_type": "howto",
+    "subsystem_name": "run-ingestion-edinburgh-council",
+    "source_files": [],
+    "output_path": "docs/howto/run-ingestion-edinburgh-council.md"
+  },
+  {
+    "doc_type": "howto",
+    "subsystem_name": "run-ingestion-open-charge-map",
+    "source_files": [],
+    "output_path": "docs/howto/run-ingestion-open-charge-map.md"
+  },
+  {
+    "doc_type": "howto",
+    "subsystem_name": "configure-new-lens",
+    "source_files": [],
+    "output_path": "docs/howto/configure-new-lens.md"
+  },
+  {
+    "doc_type": "howto",
+    "subsystem_name": "add-new-entity-type",
+    "source_files": [],
+    "output_path": "docs/howto/add-new-entity-type.md"
+  },
+  {
+    "doc_type": "howto",
+    "subsystem_name": "add-new-extractor",
+    "source_files": [],
+    "output_path": "docs/howto/add-new-extractor.md"
+  },
+  {
+    "doc_type": "howto",
+    "subsystem_name": "configure-llm-prompts",
+    "source_files": [],
+    "output_path": "docs/howto/configure-llm-prompts.md"
+  },
+  {
+    "doc_type": "howto",
+    "subsystem_name": "tune-extraction-quality",
+    "source_files": [],
+    "output_path": "docs/howto/tune-extraction-quality.md"
+  },
+  {
+    "doc_type": "howto",
+    "subsystem_name": "manage-schema-migrations",
+    "source_files": [],
+    "output_path": "docs/howto/manage-schema-migrations.md"
+  },
+  {
+    "doc_type": "howto",
+    "subsystem_name": "interpret-orchestration-plans",
+    "source_files": [],
+    "output_path": "docs/howto/interpret-orchestration-plans.md"
+  },
+  {
+    "doc_type": "howto",
+    "subsystem_name": "debug-extraction-failures",
+    "source_files": [],
+    "output_path": "docs/howto/debug-extraction-failures.md"
+  },
+  {
+    "doc_type": "howto",
+    "subsystem_name": "monitor-costs",
+    "source_files": [],
+    "output_path": "docs/howto/monitor-costs.md"
+  },
+  {
+    "doc_type": "howto",
+    "subsystem_name": "configure-trust-levels",
+    "source_files": [],
+    "output_path": "docs/howto/configure-trust-levels.md"
+  },
+  {
+    "doc_type": "howto",
+    "subsystem_name": "use-snapshot-testing",
+    "source_files": [],
+    "output_path": "docs/howto/use-snapshot-testing.md"
+  },
+  {
+    "doc_type": "howto",
+    "subsystem_name": "deploy-to-production",
+    "source_files": [],
+    "output_path": "docs/howto/deploy-to-production.md"
+  },
+  {
+    "doc_type": "howto",
+    "subsystem_name": "inspect-database",
+    "source_files": [],
+    "output_path": "docs/howto/inspect-database.md"
+  },
+  {
+    "doc_type": "howto",
+    "subsystem_name": "configure-monitoring-alerts",
+    "source_files": [],
+    "output_path": "docs/howto/configure-monitoring-alerts.md"
+  },
+  {
+    "doc_type": "core",
+    "subsystem_name": "_index",
+    "source_files": [],
+    "output_path": "docs/_index.md"
+  },
+  {
+    "doc_type": "core",
+    "subsystem_name": "product",
+    "source_files": [],
+    "output_path": "docs/product.md"
+  },
+  {
+    "doc_type": "core",
+    "subsystem_name": "quickstart",
+    "source_files": [],
+    "output_path": "docs/quickstart.md"
+  },
+  {
+    "doc_type": "core",
+    "subsystem_name": "contributing",
+    "source_files": [],
+    "output_path": "docs/contributing.md"
+  },
+  {
+    "doc_type": "core",
+    "subsystem_name": "security",
+    "source_files": [],
+    "output_path": "docs/security.md"
+  },
+  {
+    "doc_type": "core",
+    "subsystem_name": "testing",
+    "source_files": [],
+    "output_path": "docs/testing.md"
+  },
+  {
+    "doc_type": "operations",
+    "subsystem_name": "runbook",
+    "source_files": [],
+    "output_path": "docs/operations/runbook.md"
+  },
+  {
+    "doc_type": "operations",
+    "subsystem_name": "cost-management",
+    "source_files": [],
+    "output_path": "docs/operations/cost-management.md"
+  }
+]

@@ -1,0 +1,177 @@
+{
+  "limits": {
+    "max_files_per_step": 20,
+    "max_loc_per_step": 2000
+  },
+  "work_queue": [
+    {
+      "work_id": "orchestration_1",
+      "subsystem": "orchestration",
+      "chunk_id": 1,
+      "files": [
+        "engine/orchestration/orchestrator.py",
+        "engine/orchestration/execution_plan.py",
+        "engine/orchestration/execution_context.py",
+        "engine/orchestration/conditions.py",
+        "engine/orchestration/types.py",
+        "engine/orchestration/query_features.py"
+      ],
+      "output_path": "docs/architecture/subsystems/orchestration.md",
+      "status": "done"
+    },
+    {
+      "work_id": "schema_1",
+      "subsystem": "schema",
+      "chunk_id": 1,
+      "files": [
+        "engine/schema/entity.py",
+        "engine/schema/core.py",
+        "engine/schema/parser.py",
+        "engine/schema/generator.py",
+        "engine/schema/types.py"
+      ],
+      "output_path": "docs/architecture/subsystems/schema-core.md",
+      "status": "done"
+    },
+    {
+      "work_id": "schema_generators",
+      "subsystem": "schema",
+      "chunk_id": 2,
+      "files": [
+        "engine/schema/generators/prisma.py",
+        "engine/schema/generators/pydantic_extraction.py",
+        "engine/schema/generators/python_fieldspec.py",
+        "engine/schema/generators/typescript.py"
+      ],
+      "output_path": "docs/architecture/subsystems/schema-generators.md",
+      "status": "done"
+    },
+    {
+      "work_id": "extraction_core",
+      "subsystem": "extraction",
+      "chunk_id": 1,
+      "files": [
+        "engine/extraction/base.py",
+        "engine/extraction/run.py",
+        "engine/extraction/entity_classifier.py",
+        "engine/extraction/config.py",
+        "engine/extraction/schema_utils.py"
+      ],
+      "output_path": "docs/architecture/subsystems/extraction-core.md",
+      "status": "done"
+    },
+    {
+      "work_id": "extraction_services",
+      "subsystem": "extraction",
+      "chunk_id": 2,
+      "files": [
+        "engine/extraction/llm_client.py",
+        "engine/extraction/llm_cache.py",
+        "engine/extraction/llm_cost.py",
+        "engine/extraction/merging.py",
+        "engine/extraction/deduplication.py",
+        "engine/extraction/quarantine.py"
+      ],
+      "output_path": "docs/architecture/subsystems/extraction-services.md",
+      "status": "done"
+    },
+    {
+      "work_id": "extraction_extractors",
+      "subsystem": "extraction",
+      "chunk_id": 3,
+      "files": [
+        "engine/extraction/extractors/osm_extractor.py",
+        "engine/extraction/extractors/google_places_extractor.py",
+        "engine/extraction/extractors/serper_extractor.py",
+        "engine/extraction/extractors/edinburgh_council_extractor.py",
+        "engine/extraction/extractors/open_charge_map_extractor.py",
+        "engine/extraction/extractors/sport_scotland_extractor.py"
+      ],
+      "output_path": "docs/architecture/subsystems/extraction-extractors.md",
+      "status": "done"
+    },
+    {
+      "work_id": "ingestion_core",
+      "subsystem": "ingestion",
+      "chunk_id": 1,
+      "files": [
+        "engine/ingestion/base.py",
+        "engine/ingestion/cli.py",
+        "engine/ingestion/storage.py",
+        "engine/ingestion/rate_limiting.py",
+        "engine/ingestion/retry_logic.py",
+        "engine/ingestion/summary_report.py"
+      ],
+      "output_path": "docs/architecture/subsystems/ingestion-core.md",
+      "status": "done"
+    },
+    {
+      "work_id": "ingestion_connectors",
+      "subsystem": "ingestion",
+      "chunk_id": 2,
+      "files": [
+        "engine/ingestion/connectors/open_street_map.py",
+        "engine/ingestion/connectors/google_places.py",
+        "engine/ingestion/connectors/serper.py",
+        "engine/ingestion/connectors/edinburgh_council.py",
+        "engine/ingestion/connectors/open_charge_map.py",
+        "engine/ingestion/connectors/sport_scotland.py"
+      ],
+      "output_path": "docs/architecture/subsystems/ingestion-connectors.md",
+      "status": "done"
+    },
+    {
+      "work_id": "lenses_engine",
+      "subsystem": "lenses",
+      "chunk_id": 1,
+      "files": [
+        "engine/lenses/loader.py",
+        "engine/lenses/ops.py",
+        "engine/lenses/validator.py",
+        "lenses/edinburgh_finds/lens.yaml",
+        "lenses/wine_discovery/lens.yaml"
+      ],
+      "output_path": "docs/architecture/subsystems/lenses.md",
+      "status": "done"
+    },
+    {
+      "work_id": "web_frontend",
+      "subsystem": "web",
+      "chunk_id": 1,
+      "files": [
+        "web/app/page.tsx",
+        "web/app/layout.tsx",
+        "web/lib/lens-query.ts",
+        "web/lib/entity-queries.ts",
+        "web/lib/entity-helpers.ts",
+        "web/lib/prisma.ts",
+        "web/lib/utils.ts"
+      ],
+      "output_path": "docs/architecture/subsystems/web-frontend.md",
+      "status": "done"
+    }
+  ],
+  "reference_queue": [
+    {
+      "work_id": "ref_config",
+      "files": [
+        "engine/config/entity_model.yaml",
+        "engine/config/sources.yaml",
+        "engine/config/extraction.yaml",
+        "engine/config/monitoring_alerts.yaml"
+      ],
+      "output_path": "docs/reference/configuration.md",
+      "status": "done"
+    },
+    {
+      "work_id": "ref_cli",
+      "files": [
+        "engine/ingestion/cli.py",
+        "engine/extraction/cli.py",
+        "engine/schema/cli.py"
+      ],
+      "output_path": "docs/reference/cli.md",
+      "status": "done"
+    }
+  ]
+}

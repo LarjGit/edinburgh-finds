@@ -1,0 +1,47 @@
+{
+  "inventory": {
+    "total_files": 130,
+    "total_loc": 25000,
+    "source_files": 85,
+    "config_files": 15,
+    "doc_files": 10,
+    "test_files": 20
+  },
+  "subsystems": {
+    "orchestration": {
+      "path": "engine/orchestration/",
+      "files": 13,
+      "loc": 3200
+    },
+    "schema": {
+      "path": "engine/schema/",
+      "files": 15,
+      "loc": 3500
+    },
+    "extraction": {
+      "path": "engine/extraction/",
+      "files": 30,
+      "loc": 7500
+    },
+    "ingestion": {
+      "path": "engine/ingestion/",
+      "files": 25,
+      "loc": 5500
+    },
+    "lenses": {
+      "path": "engine/lenses/",
+      "files": 10,
+      "loc": 2000
+    },
+    "web": {
+      "path": "web/",
+      "files": 15,
+      "loc": 2500
+    },
+    "core": {
+      "path": "engine/",
+      "files": 10,
+      "loc": 1500
+    }
+  }
+}
