@@ -54,10 +54,10 @@ Implement the main control loop that enforces the phase barriers, manages parall
     - [x] Create `engine/orchestration/orchestrator.py` with `Orchestrator` class.
     - [x] Implement `execute` method enforcing `DISCOVERY` -> `STRUCTURED` -> `ENRICHMENT` order.
     - [x] Define `FakeConnector` interface for deterministic testing.
-- [ ] Task: Parallel Execution & Deterministic Merging
-    - [ ] Implement `_execute_phase` with parallel execution support.
-    - [ ] Implement deterministic result merging (sort by connector name; scalar collision policy: trust > last writer).
-    - [ ] Write unit tests for scalar collision to prove determinism.
+- [x] Task: Parallel Execution & Deterministic Merging [ec8fb93]
+    - [x] Implement `_execute_phase` with parallel execution support.
+    - [x] Implement deterministic result merging (sort by connector name; scalar collision policy: trust > last writer).
+    - [x] Write unit tests for scalar collision to prove determinism.
 - [ ] Task: Early Stopping & Budgeting
     - [ ] Add checks for `budget_usd` (pre/post) and `target_entity_count`/`min_confidence`.
     - [ ] Write integration tests using `FakeConnector` to simulate full runs and verify stopping conditions.
