@@ -1,32 +1,46 @@
-Audience: Developers
+# Edinburgh Finds
 
-# Edinburgh Finds Documentation
+A vertical-agnostic data harmonization engine and discovery platform designed to surface structured entities (places, people, organizations) through a "Lens" based architecture.
 
-Welcome to the technical documentation for Edinburgh Finds. This project is a multi-vertical data ingestion and discovery engine designed to crawl, extract, and unify entity data (places, people, organizations) from various sources, presenting them through a "Lens" aware interface.
+## Overview
+Edinburgh Finds is a high-purity data processing system that ingests raw data from multiple sources (Google Places, OpenStreetMap, specialized government APIs), extracts structured information using LLMs (Anthropic, Instructor), and harmonizes it into a Universal Entity Model. 
 
-## 🏗️ Architecture
+The system is strictly divided into an **Engine** (vertical-agnostic) and **Lenses** (vertical-specific), allowing the same core infrastructure to power diverse discovery experiences (e.g., Wine Discovery, Sports Facility Finder, Local Services).
 
-- [**System Overview**](architecture/overview.md) — High-level architecture and engine-purity principles.
-- [**C4 Context**](architecture/c4-context.md) — System boundaries and external dependencies.
-- [**C4 Container**](architecture/c4-container.md) — Subsystems, data stores, and communication paths.
+## Technology Stack
 
-### Subsystems
-- [**Orchestration**](architecture/subsystems/orchestration.md) — The brain of the engine: query planning and execution.
-- [**Schema & Generators**](architecture/subsystems/schema-core.md) — Universal entity model and automated code generation.
-- [**Ingestion**](architecture/subsystems/ingestion-core.md) — Raw data fetching and connector management.
-- [**Extraction & LLM Services**](architecture/subsystems/extraction-core.md) — AI-powered structured data extraction.
-- [**Lens Layer**](architecture/subsystems/lenses.md) — Vertical-specific configuration and filtering.
-- [**Web Frontend**](architecture/subsystems/web-frontend.md) — Next.js discovery interface.
+### Backend (Engine)
+- **Language**: Python 3.12
+- **ORM**: Prisma (prisma-client-py)
+- **Validation**: Pydantic
+- **LLM Integration**: Anthropic (Claude), Instructor
+- **Data Ingestion**: Aiohttp (Async HTTP), Overpass QL (OSM), ArcGIS/WFS
+- **Database**: PostgreSQL (Production), SQLite (Development)
 
-## 📖 Reference
+### Frontend (Web)
+- **Framework**: Next.js 15+ (React 19)
+- **Styling**: Tailwind CSS, Tailwind Merge
+- **Icons**: Lucide React
+- **Language**: TypeScript
+- **State/Query**: Prisma (prisma-client-js)
 
-- [**CLI Reference**](reference/cli.md) — Command-line tools for engine operations.
-- [**Configuration**](reference/configuration.md) — Guide to YAML configuration files.
-- [**Module Index**](reference/module-index.md) — Detailed breakdown of internal Python modules.
-- [**Data Model**](reference/data-model.md) — Database schema and JSONB structures.
-- [**API Documentation**](reference/api.md) — (Planned) Backend API endpoints.
+### Infrastructure & Tooling
+- **CI/CD**: GitHub Actions
+- **Testing**: Pytest
+- **Linting**: ESLint
+- **Workflow Management**: Conductor
 
-## 🛠️ Guides
+## Getting Started
+- [Architecture Overview](architecture/overview.md)
+- [Development Setup](howto/development-setup.md)
+- [Testing Guide](howto/testing.md)
+- [Subsystem Documentation](architecture/subsystems/)
 
-- [**Operations**](operations/index.md) — Deployment, monitoring, and maintenance.
-- [**How-to Guides**](howto/index.md) — Common tasks and extensions.
+## Documentation Map
+- **Architecture**: System design, C4 diagrams, and subsystem details.
+- **Reference**: API endpoints and data models.
+- **How-To**: Setup, deployment, and development guides.
+- **Operations**: Monitoring, troubleshooting, and maintenance.
+
+---
+*Evidence: web/package.json, engine/requirements.txt, docs/architecture/subsystems/engine.md*

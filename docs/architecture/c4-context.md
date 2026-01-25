@@ -1,34 +1,39 @@
-Audience: Developers
-
 # C4 Context Diagram
 
-The System Context diagram shows the Edinburgh Finds system and its relationship with users and external systems.
+The C4 Context diagram shows the Edinburgh Finds system and its relationship with users and external systems.
 
 ```mermaid
 C4Context
     title System Context diagram for Edinburgh Finds
 
-    Person(user, "End User", "A user looking for local facilities (e.g., Padel courts, Wine shops).")
-    Person(admin, "System Admin", "Monitors engine health and updates Lenses.")
+    Person(User, "End User", "Discovers entities (places, people) through domain-specific lenses.")
+    Person(Admin, "System Administrator", "Configures lenses, manages data ingestion, and monitors system health.")
 
-    System(engine, "Edinburgh Finds Engine", "Ingests, extracts, and unifies entity data.")
+    System(EdinburghFinds, "Edinburgh Finds", "Harmonizes raw data into structured entities and provides discovery interfaces.")
 
-    System_Ext(osm, "OpenStreetMap", "Source for geographic and facility data.")
-    System_Ext(google, "Google Places", "Source for business names, ratings, and contact info.")
-    System_Ext(llm, "LLM Provider (Anthropic/OpenAI)", "Processes unstructured data into structured schemas.")
-    System_Ext(external_web, "External Websites", "Direct scraping of venue/provider sites.")
+    System_Ext(GooglePlaces, "Google Places API", "Provides structured place data and reviews.")
+    System_Ext(OSM, "OpenStreetMap", "Provides geographic and facility data via Overpass API.")
+    System_Ext(Serper, "Serper (Google Search)", "Provides general search results and web discovery.")
+    System_Ext(CouncilAPIs, "Government APIs", "Specialized data sources (ArcGIS, WFS) for council and sports data.")
+    System_Ext(LLM, "LLM Provider (Anthropic)", "Performs structured data extraction from raw ingestion.")
 
-    Rel(user, engine, "Searches and explores entities")
-    Rel(admin, engine, "Configures Lenses and monitors runs")
-    Rel(engine, osm, "Fetches geographic data")
-    Rel(engine, google, "Fetches business details")
-    Rel(engine, llm, "Sends raw text for structured extraction")
-    Rel(engine, external_web, "Scrapes raw content")
+    Rel(User, EdinburghFinds, "Uses", "HTTPS")
+    Rel(Admin, EdinburghFinds, "Manages & Monitors", "CLI/HTTPS")
+
+    Rel(EdinburghFinds, GooglePlaces, "Fetches data from")
+    Rel(EdinburghFinds, OSM, "Fetches data from")
+    Rel(EdinburghFinds, Serper, "Fetches data from")
+    Rel(EdinburghFinds, CouncilAPIs, "Fetches data from")
+    Rel(EdinburghFinds, LLM, "Sends raw data for extraction")
 ```
 
-## External Dependencies
+## External Actors
+- **End User**: Primarily interacts with the Next.js web application to find specific types of entities (e.g., "padel courts" or "wine shops").
+- **System Administrator**: Uses the Engine CLI to trigger ingestion jobs, check purity, and update schemas.
 
-- **OpenStreetMap:** Primary source for physical locations and basic attributes.
-- **Google Places / Serper:** High-fidelity source for business names and ratings.
-- **LLM Provider:** Critical for turning noisy raw data into the Universal Entity Model.
-- **Local Authorities:** (e.g., Edinburgh Council) Trusted sources for specific facility types.
+## External Systems
+- **Data Providers**: Various APIs that provide the raw material for the engine.
+- **LLM Provider**: The intelligence layer used for high-fidelity extraction of attributes from messy raw data.
+
+---
+*Evidence: docs/architecture/subsystems/engine.md, docs/architecture/subsystems/infrastructure.md*

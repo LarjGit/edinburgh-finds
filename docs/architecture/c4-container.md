@@ -1,44 +1,48 @@
-Audience: Developers
-
 # C4 Container Diagram
 
-The Container diagram shows the high-level software building blocks of the Edinburgh Finds system.
+The C4 Container diagram shows the high-level technical building blocks of the Edinburgh Finds system.
 
 ```mermaid
 C4Container
     title Container diagram for Edinburgh Finds
 
-    Person(user, "End User")
-    
-    Container_Boundary(c1, "Edinburgh Finds System") {
-        Container(web, "Next.js Frontend", "React, TypeScript", "Dynamic UI for entity discovery and filtering.")
-        Container(api, "Next.js API Routes", "TypeScript, Prisma", "Lens-aware data retrieval and search.")
-        Container(orchestrator, "Orchestration Engine", "Python", "Plans and executes ingestion/extraction runs.")
-        Container(ingestor, "Ingestion Pipeline", "Python", "Fetches raw data via multi-connector framework.")
-        Container(extractor, "Extraction Engine", "Python, Pydantic", "LLM-driven structured data extraction.")
-        
-        ContainerDb(db, "PostgreSQL", "PostGIS, JSONB", "Stores raw ingestion records, unified entities, and LLM cache.")
+    Person(User, "End User")
+    Person(Admin, "System Administrator")
+
+    Container_Boundary(EF_System, "Edinburgh Finds System") {
+        Container(WebUI, "Discovery Frontend", "Next.js, React, Tailwind", "Provides domain-specific search and entity views.")
+        Container(EngineCLI, "Engine CLI", "Python, Typer", "Allows administrators to trigger ingestion and extraction.")
+        Container(Orchestrator, "Ingestion Orchestrator", "Python, asyncio", "Manages complex multi-phase data acquisition.")
+        Container(Extractor, "Extraction Pipeline", "Python, Pydantic, Instructor", "Transforms raw data into universal entities using LLMs.")
+        ContainerDb(Database, "Primary Database", "PostgreSQL", "Stores raw ingestion, universal entities, and lens memberships.")
+        Container(SchemaGen, "Schema Generator", "Python", "Maintains cross-language type safety (YAML -> Prisma/Pydantic/TS).")
     }
 
-    Rel(user, web, "Uses")
-    Rel(web, api, "Queries", "JSON/HTTPS")
-    Rel(api, db, "Reads/Writes", "Prisma")
-    
-    Rel(orchestrator, ingestor, "Commands")
-    Rel(orchestrator, extractor, "Commands")
-    
-    Rel(ingestor, db, "Stores Raw Data")
-    Rel(extractor, db, "Reads Raw / Stores Entities")
-    
-    System_Ext(external_apis, "External APIs", "OSM, Google, Serper")
-    System_Ext(llm_service, "LLM Service", "Claude / OpenAI")
+    System_Ext(DataProviders, "External APIs", "Google, OSM, Serper, etc.")
+    System_Ext(LLM, "LLM Service", "Anthropic Claude")
 
-    Rel(ingestor, external_apis, "Fetch", "HTTPS")
-    Rel(extractor, llm_service, "Extract", "JSON/HTTPS")
+    Rel(User, WebUI, "Uses", "HTTPS")
+    Rel(Admin, EngineCLI, "Uses", "CLI")
+    
+    Rel(WebUI, Database, "Reads from", "Prisma JS")
+    Rel(EngineCLI, Orchestrator, "Commands")
+    Rel(EngineCLI, SchemaGen, "Commands")
+    
+    Rel(Orchestrator, DataProviders, "Fetches raw data", "HTTPS")
+    Rel(Orchestrator, Database, "Saves raw ingestion", "Prisma PY")
+    
+    Rel(Extractor, Database, "Reads raw data / Saves entities", "Prisma PY")
+    Rel(Extractor, LLM, "Sends extraction prompts", "HTTPS")
+    
+    Rel(SchemaGen, Database, "Updates schema", "Prisma Migrate")
 ```
 
-## Internal Components
+## Containers
+- **Discovery Frontend**: A modern web application that applies "Lenses" to the data. It is read-heavy and uses Prisma for type-safe queries.
+- **Ingestion Orchestrator**: The "brain" of data acquisition. It manages dependencies between connectors and ensures efficient data gathering.
+- **Extraction Pipeline**: The core value-add component that turns messy JSON into a structured, queryable database.
+- **Schema Generator**: An internal tool that ensures that a change in the data model is reflected across the entire stack.
+- **Primary Database**: The central repository for all structured and semi-structured data.
 
-- **PostgreSQL:** The central source of truth, utilizing `JSONB` for extensible module data and `PostGIS` for spatial queries.
-- **Python Engine:** Handles the heavy lifting of data processing, LLM orchestration, and schema enforcement.
-- **Next.js Frontend:** A modern, type-safe interface that leverages the shared schema for consistent data rendering.
+---
+*Evidence: docs/architecture/subsystems/engine.md, docs/architecture/subsystems/database.md, docs/architecture/subsystems/web.md*
