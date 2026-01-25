@@ -1,47 +1,1800 @@
 {
-  "inventory": {
-    "total_files": 130,
-    "total_loc": 25000,
-    "source_files": 85,
-    "config_files": 15,
-    "doc_files": 10,
-    "test_files": 20
+  "repo_root": "C:/Projects/edinburgh_finds",
+  "excludes": {
+    "directories": [
+      ".cache",
+      ".git",
+      ".prune-suite",
+      "temp",
+      ".turbo",
+      ".parcel-cache",
+      "env",
+      ".claude",
+      "docs",
+      ".vscode",
+      "dist",
+      ".idea",
+      ".obsidian",
+      ".next",
+      "out",
+      "archive",
+      "venv",
+      "build",
+      ".pytest_cache",
+      "htmlcov",
+      "node_modules",
+      "__pycache__",
+      ".doc-suite",
+      ".venv"
+    ],
+    "patterns": [
+      ".map",
+      ".min.js",
+      ".pyc",
+      ".chunk.js"
+    ]
   },
+  "limits": {
+    "max_files_per_step": 20,
+    "max_loc_per_step": 2000
+  },
+  "files": [
+    {
+      "path": ".coverage",
+      "subsystem": "root",
+      "kind": "other",
+      "loc": 98,
+      "extension": ""
+    },
+    {
+      "path": ".env",
+      "subsystem": "root",
+      "kind": "other",
+      "loc": 1,
+      "extension": ""
+    },
+    {
+      "path": ".env.example",
+      "subsystem": "root",
+      "kind": "other",
+      "loc": 31,
+      "extension": ".example"
+    },
+    {
+      "path": ".gitattributes",
+      "subsystem": "root",
+      "kind": "other",
+      "loc": 7,
+      "extension": ""
+    },
+    {
+      "path": ".github/pull_request_template.md",
+      "subsystem": "infrastructure",
+      "kind": "doc",
+      "loc": 63,
+      "extension": ".md"
+    },
+    {
+      "path": ".github/workflows/tests.yml",
+      "subsystem": "infrastructure",
+      "kind": "config",
+      "loc": 63,
+      "extension": ".yml"
+    },
+    {
+      "path": ".gitignore",
+      "subsystem": "root",
+      "kind": "other",
+      "loc": 27,
+      "extension": ""
+    },
+    {
+      "path": "DOC_SUITE_REVIEW.md",
+      "subsystem": "docs-source",
+      "kind": "doc",
+      "loc": 90,
+      "extension": ".md"
+    },
+    {
+      "path": "DOC_SUITE_REVIEW_V2.md",
+      "subsystem": "docs-source",
+      "kind": "doc",
+      "loc": 84,
+      "extension": ".md"
+    },
+    {
+      "path": "DOC_SUITE_REVIEW_V3.md",
+      "subsystem": "docs-source",
+      "kind": "doc",
+      "loc": 108,
+      "extension": ".md"
+    },
+    {
+      "path": "conductor/code_styleguides/python.md",
+      "subsystem": "conductor",
+      "kind": "doc",
+      "loc": 37,
+      "extension": ".md"
+    },
+    {
+      "path": "conductor/code_styleguides/react.md",
+      "subsystem": "conductor",
+      "kind": "doc",
+      "loc": 44,
+      "extension": ".md"
+    },
+    {
+      "path": "conductor/code_styleguides/typescript.md",
+      "subsystem": "conductor",
+      "kind": "doc",
+      "loc": 43,
+      "extension": ".md"
+    },
+    {
+      "path": "conductor/product-guidelines.md",
+      "subsystem": "conductor",
+      "kind": "doc",
+      "loc": 45,
+      "extension": ".md"
+    },
+    {
+      "path": "conductor/product.md",
+      "subsystem": "conductor",
+      "kind": "doc",
+      "loc": 45,
+      "extension": ".md"
+    },
+    {
+      "path": "conductor/setup_state.json",
+      "subsystem": "conductor",
+      "kind": "config",
+      "loc": 1,
+      "extension": ".json"
+    },
+    {
+      "path": "conductor/tech-stack.md",
+      "subsystem": "conductor",
+      "kind": "doc",
+      "loc": 30,
+      "extension": ".md"
+    },
+    {
+      "path": "conductor/tracks.md",
+      "subsystem": "conductor",
+      "kind": "doc",
+      "loc": 183,
+      "extension": ".md"
+    },
+    {
+      "path": "conductor/workflow.md",
+      "subsystem": "conductor",
+      "kind": "doc",
+      "loc": 349,
+      "extension": ".md"
+    },
+    {
+      "path": "conftest.py",
+      "subsystem": "root",
+      "kind": "source",
+      "loc": 7,
+      "extension": ".py"
+    },
+    {
+      "path": "coverage.json",
+      "subsystem": "config",
+      "kind": "config",
+      "loc": 1,
+      "extension": ".json"
+    },
+    {
+      "path": "engine/check_data.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 24,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/config/README.md",
+      "subsystem": "engine",
+      "kind": "doc",
+      "loc": 87,
+      "extension": ".md"
+    },
+    {
+      "path": "engine/config/entity_model.yaml",
+      "subsystem": "engine",
+      "kind": "config",
+      "loc": 306,
+      "extension": ".yaml"
+    },
+    {
+      "path": "engine/config/extraction.yaml",
+      "subsystem": "engine",
+      "kind": "config",
+      "loc": 13,
+      "extension": ".yaml"
+    },
+    {
+      "path": "engine/config/monitoring_alerts.yaml",
+      "subsystem": "engine",
+      "kind": "config",
+      "loc": 297,
+      "extension": ".yaml"
+    },
+    {
+      "path": "engine/config/schemas/entity.yaml",
+      "subsystem": "engine",
+      "kind": "config",
+      "loc": 425,
+      "extension": ".yaml"
+    },
+    {
+      "path": "engine/config/sources.yaml",
+      "subsystem": "engine",
+      "kind": "config",
+      "loc": 149,
+      "extension": ".yaml"
+    },
+    {
+      "path": "engine/config/sources.yaml.example",
+      "subsystem": "engine",
+      "kind": "other",
+      "loc": 124,
+      "extension": ".example"
+    },
+    {
+      "path": "engine/data/raw/edinburgh_council/20260114_facilities_1_9934d327.json",
+      "subsystem": "engine",
+      "kind": "config",
+      "loc": 19,
+      "extension": ".json"
+    },
+    {
+      "path": "engine/data/raw/google_places/20260113_places_6_1fb43bad.json",
+      "subsystem": "engine",
+      "kind": "config",
+      "loc": 133,
+      "extension": ".json"
+    },
+    {
+      "path": "engine/data/raw/google_places/20260113_places_7_34fc6a6a.json",
+      "subsystem": "engine",
+      "kind": "config",
+      "loc": 153,
+      "extension": ".json"
+    },
+    {
+      "path": "engine/data/raw/google_places/20260113_places_7_61c89275.json",
+      "subsystem": "engine",
+      "kind": "config",
+      "loc": 153,
+      "extension": ".json"
+    },
+    {
+      "path": "engine/data/raw/google_places/20260113_request_denied_0c617665.json",
+      "subsystem": "engine",
+      "kind": "config",
+      "loc": 6,
+      "extension": ".json"
+    },
+    {
+      "path": "engine/data/raw/google_places/20260114_places_0_44136fa3.json",
+      "subsystem": "engine",
+      "kind": "config",
+      "loc": 1,
+      "extension": ".json"
+    },
+    {
+      "path": "engine/data/raw/google_places/20260114_places_3_c1d5a29f.json",
+      "subsystem": "engine",
+      "kind": "config",
+      "loc": 62,
+      "extension": ".json"
+    },
+    {
+      "path": "engine/data/raw/google_places/20260114_places_7_ebf4b73c.json",
+      "subsystem": "engine",
+      "kind": "config",
+      "loc": 153,
+      "extension": ".json"
+    },
+    {
+      "path": "engine/data/raw/google_places/20260119_places_6_0ece5829.json",
+      "subsystem": "engine",
+      "kind": "config",
+      "loc": 1044,
+      "extension": ".json"
+    },
+    {
+      "path": "engine/data/raw/open_charge_map/20260114_quarter_0812fcb4.json",
+      "subsystem": "engine",
+      "kind": "config",
+      "loc": 21097,
+      "extension": ".json"
+    },
+    {
+      "path": "engine/data/raw/openstreetmap/20260113_elements_0_41137dea.json",
+      "subsystem": "engine",
+      "kind": "config",
+      "loc": 9,
+      "extension": ".json"
+    },
+    {
+      "path": "engine/data/raw/openstreetmap/20260113_elements_14046_1ad6bfb5.json",
+      "subsystem": "engine",
+      "kind": "config",
+      "loc": 101737,
+      "extension": ".json"
+    },
+    {
+      "path": "engine/data/raw/openstreetmap/20260113_elements_2957_65ebda29.json",
+      "subsystem": "engine",
+      "kind": "config",
+      "loc": 23739,
+      "extension": ".json"
+    },
+    {
+      "path": "engine/data/raw/openstreetmap/20260113_elements_6350_0dc803af.json",
+      "subsystem": "engine",
+      "kind": "config",
+      "loc": 50977,
+      "extension": ".json"
+    },
+    {
+      "path": "engine/data/raw/openstreetmap/20260114_elements_0_f97b976c.json",
+      "subsystem": "engine",
+      "kind": "config",
+      "loc": 9,
+      "extension": ".json"
+    },
+    {
+      "path": "engine/data/raw/serper/20260113_padel_edinburgh_1ba6e9d4.json",
+      "subsystem": "engine",
+      "kind": "config",
+      "loc": 72,
+      "extension": ".json"
+    },
+    {
+      "path": "engine/data/raw/serper/20260113_padel_edinburgh_26e41306.json",
+      "subsystem": "engine",
+      "kind": "config",
+      "loc": 72,
+      "extension": ".json"
+    },
+    {
+      "path": "engine/data/raw/serper/20260113_padel_edinburgh_a435756e.json",
+      "subsystem": "engine",
+      "kind": "config",
+      "loc": 72,
+      "extension": ".json"
+    },
+    {
+      "path": "engine/data/raw/serper/20260113_padel_edinburgh_test_db0ba2a2.json",
+      "subsystem": "engine",
+      "kind": "config",
+      "loc": 74,
+      "extension": ".json"
+    },
+    {
+      "path": "engine/data/raw/serper/20260114_test_query_7178bbd4.json",
+      "subsystem": "engine",
+      "kind": "config",
+      "loc": 76,
+      "extension": ".json"
+    },
+    {
+      "path": "engine/data/raw/serper/20260114_test_query_dd9f8fce.json",
+      "subsystem": "engine",
+      "kind": "config",
+      "loc": 77,
+      "extension": ".json"
+    },
+    {
+      "path": "engine/data/raw/serper/20260114_test_query_e73ca957.json",
+      "subsystem": "engine",
+      "kind": "config",
+      "loc": 77,
+      "extension": ".json"
+    },
+    {
+      "path": "engine/data/raw/sport_scotland/20260114_pub_sptk_187_181052fe.json",
+      "subsystem": "engine",
+      "kind": "config",
+      "loc": 6192,
+      "extension": ".json"
+    },
+    {
+      "path": "engine/data/raw/sport_scotland/20260114_pub_sptk_187_88a4187f.json",
+      "subsystem": "engine",
+      "kind": "config",
+      "loc": 6192,
+      "extension": ".json"
+    },
+    {
+      "path": "engine/extraction/__init__.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 6,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/extraction/attribute_splitter.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 34,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/extraction/base.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 423,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/extraction/cli.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 77,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/extraction/config.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 57,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/extraction/cost_report.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 49,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/extraction/deduplication.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 384,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/extraction/entity_classifier.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 388,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/extraction/extractors/__init__.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 22,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/extraction/extractors/edinburgh_council_extractor.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 287,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/extraction/extractors/google_places_extractor.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 341,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/extraction/extractors/open_charge_map_extractor.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 265,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/extraction/extractors/osm_extractor.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 355,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/extraction/extractors/serper_extractor.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 308,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/extraction/extractors/sport_scotland_extractor.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 240,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/extraction/health.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 387,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/extraction/health_check.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 311,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/extraction/llm_cache.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 289,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/extraction/llm_client.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 260,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/extraction/llm_cost.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 270,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/extraction/logging_config.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 252,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/extraction/merging.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 511,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/extraction/models/__init__.py",
+      "subsystem": "database",
+      "kind": "source",
+      "loc": 10,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/extraction/models/entity_extraction.py",
+      "subsystem": "database",
+      "kind": "source",
+      "loc": 110,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/extraction/prompts/extraction_base.txt",
+      "subsystem": "engine",
+      "kind": "doc",
+      "loc": 86,
+      "extension": ".txt"
+    },
+    {
+      "path": "engine/extraction/prompts/osm_extraction.txt",
+      "subsystem": "engine",
+      "kind": "doc",
+      "loc": 252,
+      "extension": ".txt"
+    },
+    {
+      "path": "engine/extraction/prompts/serper_extraction.txt",
+      "subsystem": "engine",
+      "kind": "doc",
+      "loc": 104,
+      "extension": ".txt"
+    },
+    {
+      "path": "engine/extraction/quarantine.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 378,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/extraction/run.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 952,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/extraction/run_all.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 97,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/extraction/schema_utils.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 55,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/extraction/utils/__init__.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 5,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/extraction/utils/category_mapper.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 364,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/extraction/utils/opening_hours.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 369,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/extraction/utils/summary_synthesis.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 438,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/ingest.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 189,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/ingestion/CLI_README.md",
+      "subsystem": "engine",
+      "kind": "doc",
+      "loc": 174,
+      "extension": ".md"
+    },
+    {
+      "path": "engine/ingestion/README.md",
+      "subsystem": "engine",
+      "kind": "doc",
+      "loc": 120,
+      "extension": ".md"
+    },
+    {
+      "path": "engine/ingestion/__init__.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 31,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/ingestion/base.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 129,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/ingestion/cli.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 457,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/ingestion/connectors/__init__.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 0,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/ingestion/connectors/edinburgh_council.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 288,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/ingestion/connectors/google_places.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 283,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/ingestion/connectors/open_charge_map.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 275,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/ingestion/connectors/open_street_map.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 312,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/ingestion/connectors/serper.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 266,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/ingestion/connectors/sport_scotland.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 309,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/ingestion/deduplication.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 96,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/ingestion/health_check.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 373,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/ingestion/logging_config.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 426,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/ingestion/rate_limiting.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 376,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/ingestion/retry_logic.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 240,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/ingestion/run_google_places.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 27,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/ingestion/run_osm.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 28,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/ingestion/run_serper.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 27,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/ingestion/storage.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 140,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/ingestion/summary_report.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 338,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/inspect_db.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 29,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/lenses/__init__.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 0,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/lenses/loader.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 582,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/lenses/ops.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 149,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/lenses/validator.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 185,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/logs/ingestion.log",
+      "subsystem": "engine",
+      "kind": "other",
+      "loc": 0,
+      "extension": ".log"
+    },
+    {
+      "path": "engine/migrations/20260121220929_engine_purity_v1/migration.sql",
+      "subsystem": "database",
+      "kind": "other",
+      "loc": 245,
+      "extension": ".sql"
+    },
+    {
+      "path": "engine/migrations/migration_lock.toml",
+      "subsystem": "database",
+      "kind": "config",
+      "loc": 3,
+      "extension": ".toml"
+    },
+    {
+      "path": "engine/modules/__init__.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 1,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/modules/validator.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 144,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/nul",
+      "subsystem": "engine",
+      "kind": "other",
+      "loc": 0,
+      "extension": ""
+    },
+    {
+      "path": "engine/orchestration/__init__.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 6,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/orchestration/conditions.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 319,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/orchestration/conditions_test.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 406,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/orchestration/execution_context.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 151,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/orchestration/execution_context_test.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 337,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/orchestration/execution_plan.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 251,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/orchestration/execution_plan_test.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 646,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/orchestration/orchestrator.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 377,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/orchestration/orchestrator_test.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 866,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/orchestration/query_features.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 192,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/orchestration/query_features_test.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 112,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/orchestration/types.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 83,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/orchestration/types_test.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 131,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/prisma.config.ts",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 8,
+      "extension": ".ts"
+    },
+    {
+      "path": "engine/requirements.txt",
+      "subsystem": "engine",
+      "kind": "doc",
+      "loc": 10,
+      "extension": ".txt"
+    },
+    {
+      "path": "engine/run_osm_comprehensive.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 112,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/run_osm_manual.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 113,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/run_seed.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 209,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/schema.prisma",
+      "subsystem": "database",
+      "kind": "other",
+      "loc": 187,
+      "extension": ".prisma"
+    },
+    {
+      "path": "engine/schema/__main__.py",
+      "subsystem": "database",
+      "kind": "source",
+      "loc": 11,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/schema/cli.py",
+      "subsystem": "database",
+      "kind": "source",
+      "loc": 695,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/schema/core.py",
+      "subsystem": "database",
+      "kind": "source",
+      "loc": 31,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/schema/entity.py",
+      "subsystem": "database",
+      "kind": "source",
+      "loc": 328,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/schema/generate.py",
+      "subsystem": "database",
+      "kind": "source",
+      "loc": 8,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/schema/generator.py",
+      "subsystem": "database",
+      "kind": "source",
+      "loc": 62,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/schema/generators/__init__.py",
+      "subsystem": "database",
+      "kind": "source",
+      "loc": 8,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/schema/generators/prisma.py",
+      "subsystem": "database",
+      "kind": "source",
+      "loc": 614,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/schema/generators/pydantic_extraction.py",
+      "subsystem": "database",
+      "kind": "source",
+      "loc": 595,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/schema/generators/python_fieldspec.py",
+      "subsystem": "database",
+      "kind": "source",
+      "loc": 312,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/schema/generators/typescript.py",
+      "subsystem": "database",
+      "kind": "source",
+      "loc": 251,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/schema/parser.py",
+      "subsystem": "database",
+      "kind": "source",
+      "loc": 220,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/schema/types.py",
+      "subsystem": "database",
+      "kind": "source",
+      "loc": 3,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/scripts/README.md",
+      "subsystem": "engine",
+      "kind": "doc",
+      "loc": 84,
+      "extension": ".md"
+    },
+    {
+      "path": "engine/scripts/run_edinburgh_council_connector.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 204,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/scripts/run_google_places_connector.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 241,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/scripts/run_open_charge_map_connector.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 263,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/scripts/run_serper_connector.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 215,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/scripts/run_sport_scotland_connector.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 269,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/seed_data.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 27,
+      "extension": ".py"
+    },
+    {
+      "path": "engine/test.db",
+      "subsystem": "engine",
+      "kind": "other",
+      "loc": 0,
+      "extension": ".db"
+    },
+    {
+      "path": "engine/tmpclaude-8651-cwd",
+      "subsystem": "engine",
+      "kind": "other",
+      "loc": 1,
+      "extension": ""
+    },
+    {
+      "path": "lenses/edinburgh_finds/lens.yaml",
+      "subsystem": "lenses",
+      "kind": "config",
+      "loc": 654,
+      "extension": ".yaml"
+    },
+    {
+      "path": "lenses/wine_discovery/lens.yaml",
+      "subsystem": "lenses",
+      "kind": "config",
+      "loc": 479,
+      "extension": ".yaml"
+    },
+    {
+      "path": "logs/unmapped_categories.log",
+      "subsystem": "logs",
+      "kind": "other",
+      "loc": 78,
+      "extension": ".log"
+    },
+    {
+      "path": "nul",
+      "subsystem": "root",
+      "kind": "other",
+      "loc": 0,
+      "extension": ""
+    },
+    {
+      "path": "pytest.ini",
+      "subsystem": "config",
+      "kind": "config",
+      "loc": 3,
+      "extension": ".ini"
+    },
+    {
+      "path": "scripts/run_lens_aware_extraction.py",
+      "subsystem": "scripts",
+      "kind": "source",
+      "loc": 392,
+      "extension": ".py"
+    },
+    {
+      "path": "scripts/test_wine_extraction.py",
+      "subsystem": "tests",
+      "kind": "source",
+      "loc": 217,
+      "extension": ".py"
+    },
+    {
+      "path": "scripts/validate_docs.py",
+      "subsystem": "scripts",
+      "kind": "source",
+      "loc": 63,
+      "extension": ".py"
+    },
+    {
+      "path": "scripts/validate_wine_lens.py",
+      "subsystem": "scripts",
+      "kind": "source",
+      "loc": 167,
+      "extension": ".py"
+    },
+    {
+      "path": "tests/engine/config/test_entity_model_purity.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 321,
+      "extension": ".py"
+    },
+    {
+      "path": "tests/engine/test_lens_membership.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 235,
+      "extension": ".py"
+    },
+    {
+      "path": "tests/engine/test_purity.py",
+      "subsystem": "engine",
+      "kind": "source",
+      "loc": 94,
+      "extension": ".py"
+    },
+    {
+      "path": "tests/lenses/__init__.py",
+      "subsystem": "tests",
+      "kind": "source",
+      "loc": 0,
+      "extension": ".py"
+    },
+    {
+      "path": "tests/lenses/test_edinburgh_finds_lens.py",
+      "subsystem": "tests",
+      "kind": "source",
+      "loc": 149,
+      "extension": ".py"
+    },
+    {
+      "path": "tests/lenses/test_lens_processing.py",
+      "subsystem": "tests",
+      "kind": "source",
+      "loc": 603,
+      "extension": ".py"
+    },
+    {
+      "path": "tests/lenses/test_loader.py",
+      "subsystem": "tests",
+      "kind": "source",
+      "loc": 285,
+      "extension": ".py"
+    },
+    {
+      "path": "tests/lenses/test_validator.py",
+      "subsystem": "tests",
+      "kind": "source",
+      "loc": 376,
+      "extension": ".py"
+    },
+    {
+      "path": "tests/lenses/test_wine_discovery_lens.py",
+      "subsystem": "tests",
+      "kind": "source",
+      "loc": 150,
+      "extension": ".py"
+    },
+    {
+      "path": "tests/migration/__init__.py",
+      "subsystem": "tests",
+      "kind": "source",
+      "loc": 0,
+      "extension": ".py"
+    },
+    {
+      "path": "tests/migration/test_migrate_listing_to_entity.py",
+      "subsystem": "tests",
+      "kind": "source",
+      "loc": 305,
+      "extension": ".py"
+    },
+    {
+      "path": "tests/modules/__init__.py",
+      "subsystem": "tests",
+      "kind": "source",
+      "loc": 1,
+      "extension": ".py"
+    },
+    {
+      "path": "tests/modules/test_composition.py",
+      "subsystem": "tests",
+      "kind": "source",
+      "loc": 219,
+      "extension": ".py"
+    },
+    {
+      "path": "tests/query/__init__.py",
+      "subsystem": "tests",
+      "kind": "source",
+      "loc": 0,
+      "extension": ".py"
+    },
+    {
+      "path": "tests/query/test_prisma_array_filters.py",
+      "subsystem": "tests",
+      "kind": "source",
+      "loc": 371,
+      "extension": ".py"
+    },
+    {
+      "path": "web/.env",
+      "subsystem": "web",
+      "kind": "other",
+      "loc": 1,
+      "extension": ""
+    },
+    {
+      "path": "web/.gitignore",
+      "subsystem": "web",
+      "kind": "other",
+      "loc": 43,
+      "extension": ""
+    },
+    {
+      "path": "web/README.md",
+      "subsystem": "docs-source",
+      "kind": "doc",
+      "loc": 40,
+      "extension": ".md"
+    },
+    {
+      "path": "web/app/favicon.ico",
+      "subsystem": "web",
+      "kind": "other",
+      "loc": 77,
+      "extension": ".ico"
+    },
+    {
+      "path": "web/app/globals.css",
+      "subsystem": "frontend",
+      "kind": "other",
+      "loc": 125,
+      "extension": ".css"
+    },
+    {
+      "path": "web/app/layout.tsx",
+      "subsystem": "frontend",
+      "kind": "source",
+      "loc": 34,
+      "extension": ".tsx"
+    },
+    {
+      "path": "web/app/page.tsx",
+      "subsystem": "frontend",
+      "kind": "source",
+      "loc": 200,
+      "extension": ".tsx"
+    },
+    {
+      "path": "web/components.json",
+      "subsystem": "frontend",
+      "kind": "config",
+      "loc": 22,
+      "extension": ".json"
+    },
+    {
+      "path": "web/dev.db",
+      "subsystem": "web",
+      "kind": "other",
+      "loc": 281,
+      "extension": ".db"
+    },
+    {
+      "path": "web/eslint.config.mjs",
+      "subsystem": "web",
+      "kind": "other",
+      "loc": 18,
+      "extension": ".mjs"
+    },
+    {
+      "path": "web/lib/entity-helpers.ts",
+      "subsystem": "frontend",
+      "kind": "source",
+      "loc": 44,
+      "extension": ".ts"
+    },
+    {
+      "path": "web/lib/entity-queries.ts",
+      "subsystem": "frontend",
+      "kind": "source",
+      "loc": 272,
+      "extension": ".ts"
+    },
+    {
+      "path": "web/lib/lens-query.test.ts",
+      "subsystem": "frontend",
+      "kind": "source",
+      "loc": 651,
+      "extension": ".ts"
+    },
+    {
+      "path": "web/lib/lens-query.ts",
+      "subsystem": "frontend",
+      "kind": "source",
+      "loc": 386,
+      "extension": ".ts"
+    },
+    {
+      "path": "web/lib/prisma.ts",
+      "subsystem": "frontend",
+      "kind": "source",
+      "loc": 15,
+      "extension": ".ts"
+    },
+    {
+      "path": "web/lib/types-test.ts",
+      "subsystem": "frontend",
+      "kind": "source",
+      "loc": 88,
+      "extension": ".ts"
+    },
+    {
+      "path": "web/lib/utils.test.ts",
+      "subsystem": "frontend",
+      "kind": "source",
+      "loc": 114,
+      "extension": ".ts"
+    },
+    {
+      "path": "web/lib/utils.ts",
+      "subsystem": "frontend",
+      "kind": "source",
+      "loc": 64,
+      "extension": ".ts"
+    },
+    {
+      "path": "web/next-env.d.ts",
+      "subsystem": "frontend",
+      "kind": "source",
+      "loc": 6,
+      "extension": ".ts"
+    },
+    {
+      "path": "web/next.config.ts",
+      "subsystem": "frontend",
+      "kind": "source",
+      "loc": 7,
+      "extension": ".ts"
+    },
+    {
+      "path": "web/package-lock.json",
+      "subsystem": "frontend",
+      "kind": "config",
+      "loc": 7531,
+      "extension": ".json"
+    },
+    {
+      "path": "web/package.json",
+      "subsystem": "frontend",
+      "kind": "config",
+      "loc": 33,
+      "extension": ".json"
+    },
+    {
+      "path": "web/postcss.config.mjs",
+      "subsystem": "web",
+      "kind": "other",
+      "loc": 7,
+      "extension": ".mjs"
+    },
+    {
+      "path": "web/prisma.config.ts",
+      "subsystem": "frontend",
+      "kind": "source",
+      "loc": 8,
+      "extension": ".ts"
+    },
+    {
+      "path": "web/prisma/dev.db",
+      "subsystem": "database",
+      "kind": "other",
+      "loc": 218,
+      "extension": ".db"
+    },
+    {
+      "path": "web/prisma/dev.db-journal",
+      "subsystem": "database",
+      "kind": "other",
+      "loc": 76,
+      "extension": ".db-journal"
+    },
+    {
+      "path": "web/prisma/migrations/20260121222822_engine_purity_v1/migration.sql",
+      "subsystem": "database",
+      "kind": "other",
+      "loc": 245,
+      "extension": ".sql"
+    },
+    {
+      "path": "web/prisma/migrations/migration_lock.toml",
+      "subsystem": "database",
+      "kind": "config",
+      "loc": 3,
+      "extension": ".toml"
+    },
+    {
+      "path": "web/prisma/migrations_sqlite_backup/20260111222311_init_comprehensive_schema/migration.sql",
+      "subsystem": "database",
+      "kind": "other",
+      "loc": 200,
+      "extension": ".sql"
+    },
+    {
+      "path": "web/prisma/migrations_sqlite_backup/20260112174128_init_generic_schema/migration.sql",
+      "subsystem": "database",
+      "kind": "other",
+      "loc": 63,
+      "extension": ".sql"
+    },
+    {
+      "path": "web/prisma/migrations_sqlite_backup/20260113015351_add_raw_ingestion_model/migration.sql",
+      "subsystem": "database",
+      "kind": "other",
+      "loc": 20,
+      "extension": ".sql"
+    },
+    {
+      "path": "web/prisma/migrations_sqlite_backup/20260114223935_add_listing_relationship/migration.sql",
+      "subsystem": "database",
+      "kind": "other",
+      "loc": 22,
+      "extension": ".sql"
+    },
+    {
+      "path": "web/prisma/migrations_sqlite_backup/20260115003157_entitytype_refactor/migration.sql",
+      "subsystem": "database",
+      "kind": "other",
+      "loc": 69,
+      "extension": ".sql"
+    },
+    {
+      "path": "web/prisma/migrations_sqlite_backup/20260115160306_add_extraction_models/migration.sql",
+      "subsystem": "database",
+      "kind": "other",
+      "loc": 50,
+      "extension": ".sql"
+    },
+    {
+      "path": "web/prisma/migrations_sqlite_backup/20260116232520_add_merge_conflict_model/migration.sql",
+      "subsystem": "database",
+      "kind": "other",
+      "loc": 30,
+      "extension": ".sql"
+    },
+    {
+      "path": "web/prisma/migrations_sqlite_backup/20260117201339_add_performance_indexes/migration.sql",
+      "subsystem": "database",
+      "kind": "other",
+      "loc": 1,
+      "extension": ".sql"
+    },
+    {
+      "path": "web/prisma/migrations_sqlite_backup/20260117201430_add_performance_indexes_v2/migration.sql",
+      "subsystem": "database",
+      "kind": "other",
+      "loc": 38,
+      "extension": ".sql"
+    },
+    {
+      "path": "web/prisma/migrations_sqlite_backup/20260118_add_dimension_gin_indexes/migration.sql",
+      "subsystem": "database",
+      "kind": "other",
+      "loc": 33,
+      "extension": ".sql"
+    },
+    {
+      "path": "web/prisma/migrations_sqlite_backup/migration_lock.toml",
+      "subsystem": "database",
+      "kind": "config",
+      "loc": 3,
+      "extension": ".toml"
+    },
+    {
+      "path": "web/prisma/schema.prisma",
+      "subsystem": "database",
+      "kind": "other",
+      "loc": 186,
+      "extension": ".prisma"
+    },
+    {
+      "path": "web/public/file.svg",
+      "subsystem": "web",
+      "kind": "other",
+      "loc": 1,
+      "extension": ".svg"
+    },
+    {
+      "path": "web/public/globe.svg",
+      "subsystem": "web",
+      "kind": "other",
+      "loc": 1,
+      "extension": ".svg"
+    },
+    {
+      "path": "web/public/next.svg",
+      "subsystem": "web",
+      "kind": "other",
+      "loc": 1,
+      "extension": ".svg"
+    },
+    {
+      "path": "web/public/vercel.svg",
+      "subsystem": "web",
+      "kind": "other",
+      "loc": 1,
+      "extension": ".svg"
+    },
+    {
+      "path": "web/public/window.svg",
+      "subsystem": "web",
+      "kind": "other",
+      "loc": 1,
+      "extension": ".svg"
+    },
+    {
+      "path": "web/tsconfig.json",
+      "subsystem": "frontend",
+      "kind": "config",
+      "loc": 34,
+      "extension": ".json"
+    },
+    {
+      "path": "web/types/index.ts",
+      "subsystem": "frontend",
+      "kind": "source",
+      "loc": 4,
+      "extension": ".ts"
+    }
+  ],
   "subsystems": {
-    "orchestration": {
-      "path": "engine/orchestration/",
-      "files": 13,
-      "loc": 3200
+    "root": {
+      "file_count": 7,
+      "total_loc": 171,
+      "primary_extensions": [
+        "",
+        ".example",
+        ".py"
+      ]
     },
-    "schema": {
-      "path": "engine/schema/",
-      "files": 15,
-      "loc": 3500
+    "infrastructure": {
+      "file_count": 2,
+      "total_loc": 126,
+      "primary_extensions": [
+        ".yml",
+        ".md"
+      ]
     },
-    "extraction": {
-      "path": "engine/extraction/",
-      "files": 30,
-      "loc": 7500
+    "docs-source": {
+      "file_count": 4,
+      "total_loc": 322,
+      "primary_extensions": [
+        ".md"
+      ]
     },
-    "ingestion": {
-      "path": "engine/ingestion/",
-      "files": 25,
-      "loc": 5500
+    "conductor": {
+      "file_count": 9,
+      "total_loc": 777,
+      "primary_extensions": [
+        ".json",
+        ".md"
+      ]
+    },
+    "config": {
+      "file_count": 2,
+      "total_loc": 4,
+      "primary_extensions": [
+        ".ini",
+        ".json"
+      ]
+    },
+    "engine": {
+      "file_count": 127,
+      "total_loc": 234514,
+      "primary_extensions": [
+        "",
+        ".md",
+        ".ts",
+        ".example",
+        ".db",
+        ".log",
+        ".yaml",
+        ".json",
+        ".txt",
+        ".py"
+      ]
+    },
+    "database": {
+      "file_count": 34,
+      "total_loc": 4950,
+      "primary_extensions": [
+        ".toml",
+        ".prisma",
+        ".db-journal",
+        ".sql",
+        ".db",
+        ".py"
+      ]
     },
     "lenses": {
-      "path": "engine/lenses/",
-      "files": 10,
-      "loc": 2000
+      "file_count": 2,
+      "total_loc": 1133,
+      "primary_extensions": [
+        ".yaml"
+      ]
+    },
+    "logs": {
+      "file_count": 1,
+      "total_loc": 78,
+      "primary_extensions": [
+        ".log"
+      ]
+    },
+    "scripts": {
+      "file_count": 3,
+      "total_loc": 622,
+      "primary_extensions": [
+        ".py"
+      ]
+    },
+    "tests": {
+      "file_count": 13,
+      "total_loc": 2676,
+      "primary_extensions": [
+        ".py"
+      ]
     },
     "web": {
-      "path": "web/",
-      "files": 15,
-      "loc": 2500
+      "file_count": 11,
+      "total_loc": 432,
+      "primary_extensions": [
+        "",
+        ".mjs",
+        ".db",
+        ".svg",
+        ".ico"
+      ]
     },
-    "core": {
-      "path": "engine/",
-      "files": 10,
-      "loc": 1500
+    "frontend": {
+      "file_count": 19,
+      "total_loc": 9638,
+      "primary_extensions": [
+        ".tsx",
+        ".json",
+        ".css",
+        ".ts"
+      ]
     }
   }
 }

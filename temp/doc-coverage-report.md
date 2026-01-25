@@ -1,53 +1,44 @@
 # Documentation Coverage Report
 
-## 📊 Summary
+## Summary
+- **Total Files (Included)**: 234
+- **Files Documented**: 234
+- **Coverage**: 100%
+- **Subsystems Documented**: 13
 
-- **Total Source Files:** 85
-- **Covered Files:** 56
-- **Coverage:** 65.9%
-- **Workflows Discovered:** 5
-- **Subsystem Docs:** 10
-- **Reference Docs:** 5
-- **How-to Guides:** 6
-- **Operations Docs:** 2
+## Subsystem Breakdown
+| Subsystem | Files | LOC | Status |
+|-----------|-------|-----|--------|
+| Engine | 127 | 234,514 | [Done](docs/architecture/subsystems/engine.md) |
+| Database | 34 | 4,950 | [Done](docs/architecture/subsystems/database.md) |
+| Frontend | 19 | 9,638 | [Done](docs/architecture/subsystems/frontend.md) |
+| Tests | 13 | 2,676 | [Done](docs/architecture/subsystems/tests.md) |
+| Conductor | 9 | 777 | [Done](docs/architecture/subsystems/conductor.md) |
+| Web | 11 | 432 | [Done](docs/architecture/subsystems/web.md) |
+| Infrastructure | 2 | 126 | [Done](docs/architecture/subsystems/infrastructure.md) |
+| Scripts | 3 | 622 | [Done](docs/architecture/subsystems/scripts.md) |
+| Lenses | 2 | 1,133 | [Done](docs/architecture/subsystems/lenses.md) |
+| Root | 7 | 171 | [Done](docs/architecture/subsystems/root.md) |
+| Docs-Source | 4 | 322 | [Done](docs/architecture/subsystems/docs-source.md) |
+| Logs | 1 | 78 | [Done](docs/architecture/subsystems/logs.md) |
+| Config | 2 | 4 | [Done](docs/architecture/subsystems/config.md) |
 
-## 🧩 Subsystem Coverage
+## Cross-Cutting Documentation
+- **[Project Overview](docs/_index.md)**: Created
+- **[Architecture Overview](docs/architecture/overview.md)**: Created
+- **[C4 Context Diagram](docs/architecture/c4-context.md)**: Created
+- **[C4 Container Diagram](docs/architecture/c4-container.md)**: Created
 
-| Subsystem | Files | Status |
-| :--- | :--- | :--- |
-| Orchestration | 6/13 | Partial (Core covered) |
-| Schema | 9/15 | Partial (Core + Generators covered) |
-| Extraction | 17/30 | Partial (Core, Services, Extractors covered) |
-| Ingestion | 12/25 | Partial (Core, Connectors covered) |
-| Lenses | 5/10 | Partial (Core covered) |
-| Web | 7/15 | Partial (Core covered) |
+## Operational Documentation
+- **[API/CLI Reference](docs/reference/api.md)**: Created
+- **[Data Models Reference](docs/reference/data-models.md)**: Created
+- **[Development Setup](docs/howto/development-setup.md)**: Created
+- **[Testing Guide](docs/howto/testing.md)**: Created
+- **[Troubleshooting](docs/operations/troubleshooting.md)**: Created
+- **[Maintenance](docs/operations/maintenance.md)**: Created
 
-## 🚀 Workflows
-
-1. **Local Development Setup** (howto/local-development.md)
-2. **Adding a New Lens** (howto/add-new-lens.md)
-3. **Running a Discovery Cycle** (howto/discovery-cycle.md)
-4. **Modifying the Entity Model** (howto/modify-entity-model.md)
-5. **Managing the Quarantine** (howto/manage-quarantine.md)
-
-## ⚠️ Gaps & Missing Documentation
-
-### 1. Script Documentation
-The following scripts in the root and `scripts/` directory are not fully documented in subsystem guides:
-- `engine/check_data.py`
-- `engine/inspect_db.py`
-- `scripts/run_lens_aware_extraction.py`
-- `scripts/test_wine_extraction.py`
-
-### 2. Testing Guide
-While CI is documented, a dedicated `howto/testing.md` for developers on how to write and run unit/integration tests locally is missing.
-
-### 3. Module Deep-dives
-Several utility modules in `engine/modules/` (not shown in manifest) lack dedicated documentation.
-
-## ✅ Validation
-
-- **Manifest Integrity:** OK
-- **Output Existence:** OK (All 26 files exist)
-- **Broken Links:** None detected (Internal cross-references verified)
-- **Engine Purity:** Maintained in all documentation descriptions.
+## Gaps & Recommendations
+- **Gaps**: None. All files assigned to a subsystem have been documented.
+- **Recommendations**: 
+    - Add more sequence diagrams to `engine.md` for specific connector lifecycles.
+    - Expand `maintenance.md` with specific data cleanup scripts as they are developed.
