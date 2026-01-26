@@ -50,9 +50,9 @@ Implement query-aware selection and integrate more connectors.
 ## Phase 3: Production Readiness & Persistence (Phase C)
 Complete the inventory and wire up database persistence.
 
-- [ ] **Task: Finalize Registry & Budgeting**
-    - [ ] Add `edinburgh_council` and `open_charge_map` to the registry.
-    - [ ] Update `select_connectors()` with budget-aware gating logic.
+- [x] **Task: Finalize Registry & Budgeting** `f668220`
+    - [x] Add `edinburgh_council` and `open_charge_map` to the registry.
+    - [x] Update `select_connectors()` with budget-aware gating logic.
 - [ ] **Task: Enhance Cross-Source Deduplication**
     - [ ] Implement Tier 2.5: Name-based fuzzy matching for candidates without IDs or coordinates
     - [ ] Add similarity threshold (e.g., 85% match on normalized names)
