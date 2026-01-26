@@ -86,8 +86,11 @@ class TestIngestRequest:
 
     def test_create_minimal_request(self):
         """Should create request with required fields only."""
-        request = IngestRequest(ingestion_mode=IngestionMode.RESOLVE_ONE)
+        request = IngestRequest(
+            ingestion_mode=IngestionMode.RESOLVE_ONE, query="test query"
+        )
         assert request.ingestion_mode == IngestionMode.RESOLVE_ONE
+        assert request.query == "test query"
         assert request.target_entity_count is None
         assert request.min_confidence is None
 
@@ -95,22 +98,28 @@ class TestIngestRequest:
         """Should create request with all fields."""
         request = IngestRequest(
             ingestion_mode=IngestionMode.DISCOVER_MANY,
+            query="padel courts",
             target_entity_count=50,
             min_confidence=0.8,
         )
         assert request.ingestion_mode == IngestionMode.DISCOVER_MANY
+        assert request.query == "padel courts"
         assert request.target_entity_count == 50
         assert request.min_confidence == 0.8
 
     def test_ingest_request_is_frozen(self):
         """IngestRequest should be immutable."""
-        request = IngestRequest(ingestion_mode=IngestionMode.RESOLVE_ONE)
+        request = IngestRequest(
+            ingestion_mode=IngestionMode.RESOLVE_ONE, query="test"
+        )
         with pytest.raises(FrozenInstanceError):
             request.ingestion_mode = IngestionMode.DISCOVER_MANY  # type: ignore
 
     def test_optional_fields_default_to_none(self):
         """Optional fields should default to None."""
-        request = IngestRequest(ingestion_mode=IngestionMode.RESOLVE_ONE)
+        request = IngestRequest(
+            ingestion_mode=IngestionMode.RESOLVE_ONE, query="test"
+        )
         assert request.target_entity_count is None
         assert request.min_confidence is None
 
@@ -118,6 +127,7 @@ class TestIngestRequest:
         """Should allow setting target_entity_count."""
         request = IngestRequest(
             ingestion_mode=IngestionMode.DISCOVER_MANY,
+            query="venues",
             target_entity_count=100,
         )
         assert request.target_entity_count == 100
@@ -126,6 +136,7 @@ class TestIngestRequest:
         """Should allow setting min_confidence."""
         request = IngestRequest(
             ingestion_mode=IngestionMode.RESOLVE_ONE,
+            query="test",
             min_confidence=0.9,
         )
         assert request.min_confidence == 0.9

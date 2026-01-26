@@ -317,6 +317,7 @@ class TestBuildEvalContext:
         """Context should include request.* fields."""
         request = IngestRequest(
             ingestion_mode=IngestionMode.RESOLVE_ONE,
+            query="test",
             min_confidence=0.8,
         )
         query_features = QueryFeatures(
@@ -332,7 +333,7 @@ class TestBuildEvalContext:
 
     def test_build_context_includes_query_features(self):
         """Context should include query_features.* fields."""
-        request = IngestRequest(ingestion_mode=IngestionMode.DISCOVER_MANY)
+        request = IngestRequest(ingestion_mode=IngestionMode.DISCOVER_MANY, query="test")
         query_features = QueryFeatures(
             looks_like_category_search=True,
             has_geo_intent=False,
@@ -345,7 +346,7 @@ class TestBuildEvalContext:
 
     def test_build_context_includes_precomputed_booleans(self):
         """Context should include precomputed boolean shortcuts."""
-        request = IngestRequest(ingestion_mode=IngestionMode.RESOLVE_ONE)
+        request = IngestRequest(ingestion_mode=IngestionMode.RESOLVE_ONE, query="test")
         query_features = QueryFeatures(
             looks_like_category_search=False,
             has_geo_intent=True,
@@ -360,7 +361,7 @@ class TestBuildEvalContext:
 
     def test_build_context_includes_execution_context(self):
         """Context should include execution context when provided."""
-        request = IngestRequest(ingestion_mode=IngestionMode.DISCOVER_MANY)
+        request = IngestRequest(ingestion_mode=IngestionMode.DISCOVER_MANY, query="test")
         query_features = QueryFeatures(
             looks_like_category_search=True,
             has_geo_intent=False,

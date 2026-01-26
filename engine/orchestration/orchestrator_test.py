@@ -81,7 +81,7 @@ class TestFakeConnector:
             ),
         )
 
-        request = IngestRequest(ingestion_mode=IngestionMode.DISCOVER_MANY)
+        request = IngestRequest(ingestion_mode=IngestionMode.DISCOVER_MANY, query="test")
         query_features = QueryFeatures(
             looks_like_category_search=False,
             has_geo_intent=False,
@@ -106,7 +106,7 @@ class TestOrchestrator:
         plan = ExecutionPlan()
         orchestrator = Orchestrator(plan=plan)
 
-        request = IngestRequest(ingestion_mode=IngestionMode.DISCOVER_MANY)
+        request = IngestRequest(ingestion_mode=IngestionMode.DISCOVER_MANY, query="test")
         query_features = QueryFeatures(
             looks_like_category_search=False,
             has_geo_intent=False,
@@ -163,7 +163,7 @@ class TestOrchestrator:
 
         # Execute
         orchestrator = Orchestrator(plan=plan, connector_instances=connector_instances)
-        request = IngestRequest(ingestion_mode=IngestionMode.DISCOVER_MANY)
+        request = IngestRequest(ingestion_mode=IngestionMode.DISCOVER_MANY, query="test")
         query_features = QueryFeatures(
             looks_like_category_search=False,
             has_geo_intent=False,
@@ -214,7 +214,7 @@ class TestOrchestrator:
         }
 
         orchestrator = Orchestrator(plan=plan, connector_instances=connector_instances)
-        request = IngestRequest(ingestion_mode=IngestionMode.DISCOVER_MANY)
+        request = IngestRequest(ingestion_mode=IngestionMode.DISCOVER_MANY, query="test")
         query_features = QueryFeatures(
             looks_like_category_search=False,
             has_geo_intent=False,
@@ -275,7 +275,7 @@ class TestOrchestrator:
         }
 
         orchestrator = Orchestrator(plan=plan, connector_instances=connector_instances)
-        request = IngestRequest(ingestion_mode=IngestionMode.DISCOVER_MANY)
+        request = IngestRequest(ingestion_mode=IngestionMode.DISCOVER_MANY, query="test")
         query_features = QueryFeatures(
             looks_like_category_search=False,
             has_geo_intent=False,
@@ -340,7 +340,7 @@ class TestParallelExecution:
         }
 
         orchestrator = Orchestrator(plan=plan, connector_instances=connector_instances)
-        request = IngestRequest(ingestion_mode=IngestionMode.DISCOVER_MANY)
+        request = IngestRequest(ingestion_mode=IngestionMode.DISCOVER_MANY, query="test")
         query_features = QueryFeatures(
             looks_like_category_search=False,
             has_geo_intent=False,
@@ -414,7 +414,7 @@ class TestParallelExecution:
         }
 
         orchestrator = Orchestrator(plan=plan, connector_instances=connector_instances)
-        request = IngestRequest(ingestion_mode=IngestionMode.DISCOVER_MANY)
+        request = IngestRequest(ingestion_mode=IngestionMode.DISCOVER_MANY, query="test")
         query_features = QueryFeatures(
             looks_like_category_search=False,
             has_geo_intent=False,
@@ -475,7 +475,7 @@ class TestParallelExecution:
         }
 
         orchestrator = Orchestrator(plan=plan, connector_instances=connector_instances)
-        request = IngestRequest(ingestion_mode=IngestionMode.DISCOVER_MANY)
+        request = IngestRequest(ingestion_mode=IngestionMode.DISCOVER_MANY, query="test")
         query_features = QueryFeatures(
             looks_like_category_search=False,
             has_geo_intent=False,
@@ -533,7 +533,7 @@ class TestParallelExecution:
         }
 
         orchestrator = Orchestrator(plan=plan, connector_instances=connector_instances)
-        request = IngestRequest(ingestion_mode=IngestionMode.DISCOVER_MANY)
+        request = IngestRequest(ingestion_mode=IngestionMode.DISCOVER_MANY, query="test")
         query_features = QueryFeatures(
             looks_like_category_search=False,
             has_geo_intent=False,
@@ -625,6 +625,7 @@ class TestEarlyStopping:
         orchestrator = Orchestrator(plan=plan, connector_instances=connector_instances)
         request = IngestRequest(
             ingestion_mode=IngestionMode.RESOLVE_ONE,
+            query="test",
             min_confidence=0.8,  # Threshold
         )
         query_features = QueryFeatures(
@@ -723,6 +724,7 @@ class TestEarlyStopping:
         orchestrator = Orchestrator(plan=plan, connector_instances=connector_instances)
         request = IngestRequest(
             ingestion_mode=IngestionMode.DISCOVER_MANY,
+            query="test",
             target_entity_count=2,  # Stop after 2 entities
         )
         query_features = QueryFeatures(
@@ -775,6 +777,7 @@ class TestEarlyStopping:
         orchestrator = Orchestrator(plan=plan, connector_instances=connector_instances)
         request = IngestRequest(
             ingestion_mode=IngestionMode.DISCOVER_MANY,
+            query="test",
             budget_usd=5.0,  # Budget too low
         )
         query_features = QueryFeatures(
@@ -848,6 +851,7 @@ class TestEarlyStopping:
         orchestrator = Orchestrator(plan=plan, connector_instances=connector_instances)
         request = IngestRequest(
             ingestion_mode=IngestionMode.DISCOVER_MANY,
+            query="test",
             budget_usd=10.0,  # Total budget
         )
         query_features = QueryFeatures(

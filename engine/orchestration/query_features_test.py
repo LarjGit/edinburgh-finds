@@ -27,7 +27,7 @@ class TestQueryFeatures:
 
     def test_extract_category_search_signal(self):
         """Should detect category-like queries."""
-        request = IngestRequest(ingestion_mode=IngestionMode.DISCOVER_MANY)
+        request = IngestRequest(ingestion_mode=IngestionMode.DISCOVER_MANY, query="test")
 
         # Category patterns
         features = QueryFeatures.extract("tennis courts", request)
@@ -41,7 +41,7 @@ class TestQueryFeatures:
 
     def test_extract_non_category_search_signal(self):
         """Should not flag specific venue names as category searches."""
-        request = IngestRequest(ingestion_mode=IngestionMode.RESOLVE_ONE)
+        request = IngestRequest(ingestion_mode=IngestionMode.RESOLVE_ONE, query="test")
 
         # Specific venue names
         features = QueryFeatures.extract("Oriam Scotland", request)
@@ -52,7 +52,7 @@ class TestQueryFeatures:
 
     def test_extract_geo_intent_signal(self):
         """Should detect geographic intent in queries."""
-        request = IngestRequest(ingestion_mode=IngestionMode.DISCOVER_MANY)
+        request = IngestRequest(ingestion_mode=IngestionMode.DISCOVER_MANY, query="test")
 
         # Geo patterns
         features = QueryFeatures.extract("tennis courts in Edinburgh", request)
@@ -66,7 +66,7 @@ class TestQueryFeatures:
 
     def test_extract_no_geo_intent_signal(self):
         """Should not flag queries without geographic markers."""
-        request = IngestRequest(ingestion_mode=IngestionMode.DISCOVER_MANY)
+        request = IngestRequest(ingestion_mode=IngestionMode.DISCOVER_MANY, query="test")
 
         features = QueryFeatures.extract("tennis courts", request)
         assert features.has_geo_intent is False
@@ -76,7 +76,7 @@ class TestQueryFeatures:
 
     def test_extract_is_deterministic(self):
         """Extraction should produce identical results for same input."""
-        request = IngestRequest(ingestion_mode=IngestionMode.DISCOVER_MANY)
+        request = IngestRequest(ingestion_mode=IngestionMode.DISCOVER_MANY, query="test")
 
         features1 = QueryFeatures.extract("tennis courts in Edinburgh", request)
         features2 = QueryFeatures.extract("tennis courts in Edinburgh", request)
@@ -87,7 +87,7 @@ class TestQueryFeatures:
 
     def test_extract_handles_empty_query(self):
         """Should handle empty query gracefully."""
-        request = IngestRequest(ingestion_mode=IngestionMode.DISCOVER_MANY)
+        request = IngestRequest(ingestion_mode=IngestionMode.DISCOVER_MANY, query="test")
 
         features = QueryFeatures.extract("", request)
         assert features.looks_like_category_search is False
@@ -95,7 +95,7 @@ class TestQueryFeatures:
 
     def test_extract_handles_whitespace_only_query(self):
         """Should handle whitespace-only query gracefully."""
-        request = IngestRequest(ingestion_mode=IngestionMode.DISCOVER_MANY)
+        request = IngestRequest(ingestion_mode=IngestionMode.DISCOVER_MANY, query="test")
 
         features = QueryFeatures.extract("   ", request)
         assert features.looks_like_category_search is False
@@ -103,7 +103,7 @@ class TestQueryFeatures:
 
     def test_extract_is_case_insensitive(self):
         """Feature extraction should be case insensitive."""
-        request = IngestRequest(ingestion_mode=IngestionMode.DISCOVER_MANY)
+        request = IngestRequest(ingestion_mode=IngestionMode.DISCOVER_MANY, query="test")
 
         features_lower = QueryFeatures.extract("tennis courts in edinburgh", request)
         features_upper = QueryFeatures.extract("TENNIS COURTS IN EDINBURGH", request)
