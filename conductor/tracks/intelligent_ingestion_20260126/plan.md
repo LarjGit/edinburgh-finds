@@ -29,9 +29,8 @@ Build the core infrastructure to run orchestrated queries through a CLI.
     - [x] Add tests for new API format (87 tests total).
 - [x] **Task: Conductor - User Manual Verification 'Phase 1: Foundation' (Protocol in workflow.md)** `7cf6a41`
 
-**Known Limitations (Phase 1-2):**
-1. Cross-source deduplication only works when both sources provide the same ID type (e.g., both have Google Place IDs) or both have coordinates. Serper (no IDs, no coords) vs Google Places (has IDs + coords) results in no duplicate detection even for the same venue. Will be addressed in Phase 3 with name-based fuzzy matching before database persistence.
-2. Sport Scotland integration incomplete: Query translation works (natural language → WFS layer names), but actual Sport Scotland WFS layer names need validation against real API. Currently fails gracefully without blocking other connectors. Complete Sport Scotland layer discovery and integration deferred to Phase 3.
+**Known Limitation (Phase 1-2):**
+Cross-source deduplication only works when both sources provide the same ID type (e.g., both have Google Place IDs) or both have coordinates. Serper (no IDs, no coords) vs Google Places (has IDs + coords) results in no duplicate detection even for the same venue. Will be addressed in Phase 3 with name-based fuzzy matching before database persistence.
 
 ## Phase 2: Intelligence & Expanded Connectivity (Phase B)
 Implement query-aware selection and integrate more connectors.
@@ -54,11 +53,6 @@ Complete the inventory and wire up database persistence.
 - [ ] **Task: Finalize Registry & Budgeting**
     - [ ] Add `edinburgh_council` and `open_charge_map` to the registry.
     - [ ] Update `select_connectors()` with budget-aware gating logic.
-- [ ] **Task: Complete Sport Scotland Integration**
-    - [ ] Discover actual Sport Scotland WFS layer names (query GetCapabilities endpoint)
-    - [ ] Update query translation mapping with validated layer names
-    - [ ] Add E2E test that verifies Sport Scotland successfully fetches real data
-    - [ ] Update documentation with supported sports/layer mappings
 - [ ] **Task: Enhance Cross-Source Deduplication**
     - [ ] Implement Tier 2.5: Name-based fuzzy matching for candidates without IDs or coordinates
     - [ ] Add similarity threshold (e.g., 85% match on normalized names)
