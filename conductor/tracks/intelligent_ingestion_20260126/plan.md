@@ -2,7 +2,7 @@
 
 This plan implements the integration layer for the orchestration kernel across three phases as defined in the specification.
 
-## Phase 1: Foundation & Plumbing (Phase A) [checkpoint: ad8873a]
+## Phase 1: Foundation & Plumbing (Phase A) [checkpoint: 7cf6a41]
 Build the core infrastructure to run orchestrated queries through a CLI.
 
 - [x] **Task: Modify Core Types** `5e6ef27`
@@ -22,7 +22,12 @@ Build the core infrastructure to run orchestrated queries through a CLI.
 - [x] **Task: Write Tests (Foundation)** `5928836`
     - [x] Implement `tests/engine/orchestration/test_adapters.py`.
     - [x] Implement `tests/engine/orchestration/test_registry.py`.
-- [x] **Task: Conductor - User Manual Verification 'Phase 1: Foundation' (Protocol in workflow.md)** `ad8873a`
+- [x] **Task: Fix Google Places API v1 Compatibility** `2dc971e`
+    - [x] Update adapter to recognize "places" key from new API.
+    - [x] Update field mapping for displayName, id, location format.
+    - [x] Add backward compatibility for both API versions.
+    - [x] Add tests for new API format (87 tests total).
+- [x] **Task: Conductor - User Manual Verification 'Phase 1: Foundation' (Protocol in workflow.md)** `7cf6a41`
 
 ## Phase 2: Intelligence & Expanded Connectivity (Phase B)
 Implement query-aware selection and integrate more connectors.
