@@ -209,69 +209,23 @@ class ConnectorAdapter:
         """
         Translate natural language sports query to Sport Scotland WFS layer name.
 
-        Sport Scotland WFS has 10+ facility layers. We map common sports terms
-        to their corresponding layer names.
+        Sport Scotland WFS architecture: ALL sports facilities are in a single
+        unified layer called "pub_sptk" (public sports toolkit). There are no
+        sport-specific layers.
 
-        Available layers:
-        - tennis_courts: Tennis facilities
-        - pitches: Multi-sport pitches (football, rugby, hockey, cricket)
-        - swimming_pools: Swimming and diving pools
-        - sports_halls: Indoor sports halls
-        - golf_courses: Golf facilities
-        - athletics_tracks: Running tracks and velodromes
-        - bowling_greens: Bowling facilities
-        - fitness_suites: Fitness centers
-        - ice_rinks: Ice skating and curling
-        - squash_courts: Squash facilities
+        The WFS returns all facility types, and filtering by sport happens
+        through WFS filter parameters or post-processing the results.
 
         Args:
             query: Natural language query (e.g., "padel courts Edinburgh")
-            query_features: Extracted query features
+            query_features: Extracted query features (unused - all queries use same layer)
 
         Returns:
-            Sport Scotland layer name (defaults to "pitches" for general sports)
+            Always returns "pub_sptk" - the unified Sport Scotland facilities layer
         """
-        query_lower = query.lower()
-
-        # Tennis (includes padel - racquet sport on courts)
-        if any(term in query_lower for term in ["tennis", "padel", "racquet"]):
-            return "tennis_courts"
-
-        # Swimming
-        if any(term in query_lower for term in ["swim", "pool", "diving"]):
-            return "swimming_pools"
-
-        # Golf
-        if "golf" in query_lower:
-            return "golf_courses"
-
-        # Athletics/Running
-        if any(term in query_lower for term in ["athletic", "running", "track", "velodrome"]):
-            return "athletics_tracks"
-
-        # Bowling
-        if any(term in query_lower for term in ["bowling", "bowls", "croquet", "petanque"]):
-            return "bowling_greens"
-
-        # Fitness
-        if any(term in query_lower for term in ["fitness", "gym", "weights"]):
-            return "fitness_suites"
-
-        # Ice sports
-        if any(term in query_lower for term in ["ice", "skating", "curling", "hockey"]):
-            return "ice_rinks"
-
-        # Squash
-        if "squash" in query_lower:
-            return "squash_courts"
-
-        # Sports halls
-        if any(term in query_lower for term in ["sports hall", "indoor sports"]):
-            return "sports_halls"
-
-        # Default: pitches (covers football, rugby, hockey, cricket, etc.)
-        # This is the most versatile layer for general field sports
-        return "pitches"
+        # Sport Scotland uses a single unified layer for all sports facilities
+        # Query returns 187 facilities in Edinburgh across all sports types
+        return "pub_sptk"
 
     def _extract_items(self, results: Dict[str, Any]) -> List[Dict[str, Any]]:
         """

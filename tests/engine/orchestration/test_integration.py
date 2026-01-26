@@ -416,7 +416,7 @@ class TestConnectorE2EExecution:
 
         # Should successfully fetch and map results
         assert ss_metrics["executed"] is True, "Sport Scotland should execute successfully"
-        assert ss_metrics["candidates_found"] >= 0, "Should return candidate count"
+        assert ss_metrics["candidates_added"] >= 0, "Should return candidate count"
         assert ss_metrics["execution_time_ms"] > 0, "Should track execution time"
 
     @pytest.mark.integration
