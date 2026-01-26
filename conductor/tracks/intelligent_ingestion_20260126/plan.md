@@ -34,9 +34,9 @@ Build the core infrastructure to run orchestrated queries through a CLI.
 ## Phase 2: Intelligence & Expanded Connectivity (Phase B)
 Implement query-aware selection and integrate more connectors.
 
-- [ ] **Task: Enhance Registry**
-    - [ ] Add `openstreetmap` and `sport_scotland` to the registry.
-    - [ ] Update adapter mapping for new connectors.
+- [x] **Task: Enhance Registry** `54a9c8f`
+    - [x] Add `openstreetmap` and `sport_scotland` to the registry.
+    - [x] Update adapter mapping for new connectors.
 - [ ] **Task: Implement Selection Intelligence**
     - [ ] Update `select_connectors()` in `planner.py` to use `QueryFeatures`.
     - [ ] Implement rules for category vs. specific place detection.
