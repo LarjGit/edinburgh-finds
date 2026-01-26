@@ -20,8 +20,40 @@ All tasks follow a strict lifecycle:
 2. **Mark In Progress:** Before beginning work, edit `plan.md` and change the task from `[ ]` to `[~]`
 
 3. **Write Failing Tests (Red Phase):**
-   - Create a new test file for the feature or bug fix.
-   - Write one or more unit tests that clearly define the expected behavior and acceptance criteria for the task.
+
+   **BEFORE writing any tests, define the test strategy:**
+
+   - **Acceptance Criteria:** What specific behaviors must work for this task to be complete?
+     - Write explicit, testable criteria (e.g., "User query 'padel courts Edinburgh' returns results from Sport Scotland")
+     - Include both success cases AND error cases (e.g., "Invalid layer name is handled gracefully")
+     - These become your test assertions
+
+   - **Test Strategy** (follow the Test Pyramid):
+     - **Unit Tests:** Which components need isolated testing with mocked dependencies?
+       - Fast, focused on single functions/classes
+       - Mock external systems (APIs, databases, other modules)
+     - **Integration Tests:** Which component interactions must be validated?
+       - Test that component A correctly calls component B with the right parameters
+       - Use real components, mock only external APIs/services
+       - Validate contracts between layers (e.g., adapter ↔ connector)
+     - **E2E Tests:** Which complete workflows must work end-to-end?
+       - No mocking - real execution through the entire stack
+       - Test the actual user experience (e.g., CLI command produces expected output)
+       - Slower but provide highest confidence
+
+   - **Failure Modes:** What can go wrong and how should the system respond?
+     - Invalid input → error message
+     - Network failures → graceful degradation
+     - Missing data → fallback behavior
+
+   **CRITICAL Testing Rules:**
+   - Every integration point MUST have an E2E test with zero mocking
+   - If you can't manually run the feature successfully, E2E test is missing
+   - Over-mocking hides bugs - integration tests must use real components
+
+   **Then write the tests:**
+   - Create test file(s) following the strategy above
+   - Write unit tests, integration tests, AND E2E tests as defined
    - **CRITICAL:** Run the tests and confirm that they fail as expected. This is the "Red" phase of TDD. Do not proceed until you have failing tests.
 
 4. **Implement to Pass Tests (Green Phase):**
@@ -139,7 +171,11 @@ All tasks follow a strict lifecycle:
 
 Before marking any task complete, verify:
 
-- [ ] All tests pass
+- [ ] All tests pass (unit, integration, AND E2E)
+- [ ] E2E test exists that exercises real execution with zero mocking
+- [ ] Error cases are tested (not just happy path)
+- [ ] Integration contracts are validated (component interactions actually work)
+- [ ] Manual execution of the feature succeeds (if E2E test passes but manual fails, test is wrong)
 - [ ] Code coverage meets requirements (>80%)
 - [ ] Code follows project's code style guidelines (as defined in `code_styleguides/`)
 - [ ] All public functions/methods are documented (e.g., docstrings, JSDoc, GoDoc)
