@@ -19,9 +19,9 @@ Build the core infrastructure to run orchestrated queries through a CLI.
 - [x] **Task: Create Planner & CLI** `a04b69a`
     - [x] Create `engine/orchestration/planner.py` with `orchestrate()` and hardcoded `select_connectors()`.
     - [x] Create `engine/orchestration/cli.py` with `run` command and basic report formatting.
-- [ ] **Task: Write Tests (Foundation)**
-    - [ ] Implement `tests/engine/orchestration/test_adapters.py`.
-    - [ ] Implement `tests/engine/orchestration/test_registry.py`.
+- [x] **Task: Write Tests (Foundation)** `5928836`
+    - [x] Implement `tests/engine/orchestration/test_adapters.py`.
+    - [x] Implement `tests/engine/orchestration/test_registry.py`.
 - [ ] **Task: Conductor - User Manual Verification 'Phase 1: Foundation' (Protocol in workflow.md)**
 
 ## Phase 2: Intelligence & Expanded Connectivity (Phase B)
