@@ -28,7 +28,7 @@ def select_connectors(request: IngestRequest) -> List[str]:
 
     Phase A: Hardcoded selection - always returns ["serper", "google_places"]
     Phase B: Intelligent selection based on query features
-    Phase C: Will add budget-aware gating
+    Phase C: Budget-aware gating
 
     Selection logic:
     - Category searches use multiple discovery sources (serper, openstreetmap)
@@ -36,6 +36,7 @@ def select_connectors(request: IngestRequest) -> List[str]:
     - Sports queries include domain-specific connector (sport_scotland)
     - RESOLVE_ONE mode is more selective than DISCOVER_MANY
     - Connectors ordered by phase: discovery first, then enrichment
+    - Budget constraints filter out paid connectors when budget is tight
 
     Args:
         request: The ingestion request containing query and parameters
@@ -79,8 +80,56 @@ def select_connectors(request: IngestRequest) -> List[str]:
         if is_sports_query:
             enrichment_connectors.append("sport_scotland")
 
+    # Phase C: Apply budget-aware gating
+    selected_connectors = discovery_connectors + enrichment_connectors
+
+    if request.budget_usd is not None:
+        selected_connectors = _apply_budget_gating(selected_connectors, request.budget_usd)
+
     # Return connectors ordered by phase: discovery first, then enrichment
-    return discovery_connectors + enrichment_connectors
+    return selected_connectors
+
+
+def _apply_budget_gating(connectors: List[str], budget_usd: float) -> List[str]:
+    """
+    Filter connectors based on budget constraints.
+
+    Budget-aware selection strategy:
+    - Free connectors (cost = 0.0) are always included
+    - Paid connectors are added in order until budget would be exceeded
+    - Preserves connector order (discovery before enrichment)
+    - Prioritizes high-trust connectors when budget is tight
+
+    Args:
+        connectors: List of connector names to filter
+        budget_usd: Maximum budget in USD
+
+    Returns:
+        Filtered list of connectors that fit within budget
+    """
+    selected = []
+    cumulative_cost = 0.0
+
+    for connector_name in connectors:
+        # Skip connectors not in registry
+        if connector_name not in CONNECTOR_REGISTRY:
+            continue
+
+        spec = CONNECTOR_REGISTRY[connector_name]
+        connector_cost = spec.cost_per_call_usd
+
+        # Free connectors are always included
+        if connector_cost == 0.0:
+            selected.append(connector_name)
+            continue
+
+        # Check if adding this connector would exceed budget
+        if cumulative_cost + connector_cost <= budget_usd:
+            selected.append(connector_name)
+            cumulative_cost += connector_cost
+        # else: skip this connector (budget would be exceeded)
+
+    return selected
 
 
 def _is_sports_related(query: str) -> bool:

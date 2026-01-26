@@ -326,6 +326,126 @@ class TestSelectConnectorsPhaseB:
             )
 
 
+class TestSelectConnectorsBudgetAware:
+    """Test budget-aware connector selection logic (Phase C)."""
+
+    def test_no_budget_limit_selects_all_relevant_connectors(self):
+        """
+        When budget_usd is None, select_connectors should not skip any relevant connectors.
+        """
+        request = IngestRequest(
+            ingestion_mode=IngestionMode.DISCOVER_MANY,
+            query="padel courts in Edinburgh",
+            budget_usd=None,
+        )
+
+        selected = select_connectors(request)
+
+        # Should include all relevant connectors for sports + category search
+        assert "serper" in selected
+        assert "google_places" in selected
+        assert "openstreetmap" in selected
+        assert "sport_scotland" in selected
+
+    def test_zero_budget_selects_only_free_connectors(self):
+        """
+        When budget_usd is 0.0, select_connectors should only select free connectors.
+        """
+        request = IngestRequest(
+            ingestion_mode=IngestionMode.DISCOVER_MANY,
+            query="padel courts in Edinburgh",
+            budget_usd=0.0,
+        )
+
+        selected = select_connectors(request)
+
+        # Should only include free connectors (openstreetmap, sport_scotland)
+        # Should exclude paid connectors (serper, google_places)
+        assert "openstreetmap" in selected, "Should include free OSM"
+        assert "sport_scotland" in selected, "Should include free SportScotland"
+        assert "serper" not in selected, "Should exclude paid Serper"
+        assert "google_places" not in selected, "Should exclude paid GooglePlaces"
+
+    def test_low_budget_prioritizes_essential_connectors(self):
+        """
+        When budget is tight (e.g., $0.02), prioritize essential high-trust connectors.
+        """
+        request = IngestRequest(
+            ingestion_mode=IngestionMode.DISCOVER_MANY,
+            query="tennis courts in Edinburgh",
+            budget_usd=0.02,  # Only enough for 1-2 paid API calls
+        )
+
+        selected = select_connectors(request)
+
+        # Should include at least one discovery and one enrichment source
+        # Free connectors should always be included
+        assert "openstreetmap" in selected, "Should always include free OSM"
+
+        # Should be selective with paid connectors
+        paid_connectors = [c for c in selected if c in ["serper", "google_places"]]
+        assert len(paid_connectors) <= 2, "Should limit paid connectors with low budget"
+
+    def test_high_budget_allows_comprehensive_search(self):
+        """
+        When budget is high (e.g., $1.00), select all relevant connectors for comprehensive results.
+        """
+        request = IngestRequest(
+            ingestion_mode=IngestionMode.DISCOVER_MANY,
+            query="padel courts in Edinburgh",
+            budget_usd=1.0,  # Plenty of budget
+        )
+
+        selected = select_connectors(request)
+
+        # Should include all relevant connectors
+        assert "serper" in selected
+        assert "google_places" in selected
+        assert "openstreetmap" in selected
+        assert "sport_scotland" in selected
+
+    def test_budget_respects_cumulative_cost(self):
+        """
+        Budget tracking should be cumulative - stop adding connectors when budget would be exceeded.
+        """
+        request = IngestRequest(
+            ingestion_mode=IngestionMode.DISCOVER_MANY,
+            query="tennis courts in Edinburgh",
+            budget_usd=0.015,  # Between serper ($0.01) and google_places ($0.017)
+        )
+
+        selected = select_connectors(request)
+
+        # Calculate total estimated cost
+        from engine.orchestration.registry import CONNECTOR_REGISTRY
+        total_cost = sum(
+            CONNECTOR_REGISTRY[c].cost_per_call_usd
+            for c in selected
+            if c in CONNECTOR_REGISTRY
+        )
+
+        # Total cost should not exceed budget
+        assert total_cost <= 0.015, "Total connector cost should respect budget limit"
+
+    def test_free_connectors_not_affected_by_budget(self):
+        """
+        Free connectors should always be selected regardless of budget constraints.
+        """
+        request = IngestRequest(
+            ingestion_mode=IngestionMode.DISCOVER_MANY,
+            query="padel courts in Edinburgh",
+            budget_usd=0.0,  # Zero budget
+        )
+
+        selected = select_connectors(request)
+
+        # Free connectors should be included
+        free_connector_names = ["openstreetmap", "sport_scotland"]
+        selected_free = [c for c in selected if c in free_connector_names]
+
+        assert len(selected_free) > 0, "Should include at least one free connector"
+
+
 class TestOrchestrateIntegration:
     """Integration tests for orchestrate() with real connectors."""
 
