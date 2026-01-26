@@ -16,9 +16,9 @@ Build the core infrastructure to run orchestrated queries through a CLI.
     - [x] Implement `asyncio.run` bridge for `BaseConnector.fetch`.
     - [x] Implement canonical mapping for `Serper` and `GooglePlaces`.
     - [x] Implement JSON normalization for the `raw` payload.
-- [ ] **Task: Create Planner & CLI**
-    - [ ] Create `engine/orchestration/planner.py` with `orchestrate()` and hardcoded `select_connectors()`.
-    - [ ] Create `engine/orchestration/cli.py` with `run` command and basic report formatting.
+- [x] **Task: Create Planner & CLI** `a04b69a`
+    - [x] Create `engine/orchestration/planner.py` with `orchestrate()` and hardcoded `select_connectors()`.
+    - [x] Create `engine/orchestration/cli.py` with `run` command and basic report formatting.
 - [ ] **Task: Write Tests (Foundation)**
     - [ ] Implement `tests/engine/orchestration/test_adapters.py`.
     - [ ] Implement `tests/engine/orchestration/test_registry.py`.
