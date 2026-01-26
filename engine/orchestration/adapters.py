@@ -181,6 +181,7 @@ class ConnectorAdapter:
         - Google Places (old API): {"results": [...]}
         - Google Places (new API v1): {"places": [...]}
         - OSM: {"elements": [...]}
+        - SportScotland: {"features": [...]}  # GeoJSON FeatureCollection
 
         Args:
             results: Raw connector response dict
@@ -204,6 +205,10 @@ class ConnectorAdapter:
         if "elements" in results:
             return results["elements"]
 
+        # SportScotland format (GeoJSON FeatureCollection)
+        if "features" in results:
+            return results["features"]
+
         # Fallback: assume results is the list itself
         if isinstance(results, list):
             return results
@@ -218,6 +223,8 @@ class ConnectorAdapter:
         Handles connector-specific field naming and structure:
         - Serper: title→name, no IDs, no coords
         - Google Places: place_id→ids.google, geometry.location→lat/lng, formatted_address→address
+        - OpenStreetMap: id+type→ids.osm, lat/lon→lat/lng, tags.name→name
+        - SportScotland: id→ids.sport_scotland, geometry.coordinates→lng/lat, properties.name→name
 
         Args:
             raw_item: Raw result item from connector
@@ -234,6 +241,10 @@ class ConnectorAdapter:
             return self._map_serper(raw_item)
         elif source == "google_places":
             return self._map_google_places(raw_item)
+        elif source == "openstreetmap":
+            return self._map_openstreetmap(raw_item)
+        elif source == "sport_scotland":
+            return self._map_sport_scotland(raw_item)
         else:
             # Fallback for unknown connectors
             return self._map_generic(raw_item)
@@ -344,6 +355,90 @@ class ConnectorAdapter:
             candidate["address"] = item["formatted_address"]
 
         return candidate
+
+    def _map_openstreetmap(self, item: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Map OpenStreetMap result to canonical schema.
+
+        OSM provides:
+        - id (unique OSM ID)
+        - type (node, way, or relation)
+        - lat/lon (flat coordinates)
+        - tags object with name and other attributes
+
+        Args:
+            item: OSM element
+
+        Returns:
+            Canonical candidate dict
+        """
+        # Normalize raw payload
+        raw = normalize_for_json(item)
+
+        # Build OSM ID (format: type/id, e.g., "node/123456789")
+        osm_id = f"{item.get('type', 'node')}/{item.get('id', 'unknown')}"
+
+        # Extract name from tags
+        tags = item.get("tags", {})
+        name = tags.get("name", "Unknown")
+
+        # Extract coordinates
+        lat = item.get("lat")
+        lon = item.get("lon")
+
+        return {
+            "ids": {"osm": osm_id},
+            "lat": lat,
+            "lng": lon,
+            "name": name,
+            "source": "openstreetmap",
+            "raw": raw,
+        }
+
+    def _map_sport_scotland(self, item: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Map SportScotland GeoJSON feature to canonical schema.
+
+        SportScotland provides:
+        - id (feature ID)
+        - properties object with name and facility attributes
+        - geometry object with coordinates (GeoJSON format: [lng, lat])
+
+        Args:
+            item: GeoJSON Feature
+
+        Returns:
+            Canonical candidate dict
+        """
+        # Normalize raw payload
+        raw = normalize_for_json(item)
+
+        # Extract ID
+        feature_id = item.get("id", "unknown")
+
+        # Extract name from properties
+        properties = item.get("properties", {})
+        name = properties.get("name", "Unknown")
+
+        # Extract coordinates from GeoJSON geometry
+        # GeoJSON format: coordinates = [longitude, latitude]
+        lat = None
+        lng = None
+        geometry = item.get("geometry", {})
+        if geometry and geometry.get("type") == "Point":
+            coords = geometry.get("coordinates", [])
+            if len(coords) >= 2:
+                lng = coords[0]  # Longitude first in GeoJSON
+                lat = coords[1]  # Latitude second
+
+        return {
+            "ids": {"sport_scotland": feature_id},
+            "lat": lat,
+            "lng": lng,
+            "name": name,
+            "source": "sport_scotland",
+            "raw": raw,
+        }
 
     def _map_generic(self, item: Dict[str, Any]) -> Dict[str, Any]:
         """

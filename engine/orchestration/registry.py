@@ -15,6 +15,8 @@ from typing import Dict, Type
 from engine.ingestion.base import BaseConnector
 from engine.ingestion.connectors.serper import SerperConnector
 from engine.ingestion.connectors.google_places import GooglePlacesConnector
+from engine.ingestion.connectors.open_street_map import OSMConnector
+from engine.ingestion.connectors.sport_scotland import SportScotlandConnector
 
 
 @dataclass(frozen=True)
@@ -42,7 +44,7 @@ class ConnectorSpec:
     timeout_seconds: int
 
 
-# Global connector registry - Phase 1 includes Serper and GooglePlaces
+# Global connector registry - Phase 2 includes 4 connectors
 CONNECTOR_REGISTRY: Dict[str, ConnectorSpec] = {
     "serper": ConnectorSpec(
         name="serper",
@@ -60,6 +62,22 @@ CONNECTOR_REGISTRY: Dict[str, ConnectorSpec] = {
         trust_level=0.95,  # Authoritative Google data, very high trust
         timeout_seconds=30,
     ),
+    "openstreetmap": ConnectorSpec(
+        name="openstreetmap",
+        connector_class="engine.ingestion.connectors.open_street_map.OSMConnector",
+        phase="discovery",
+        cost_per_call_usd=0.0,  # Free API
+        trust_level=0.70,  # Crowdsourced data, moderate-good trust
+        timeout_seconds=60,
+    ),
+    "sport_scotland": ConnectorSpec(
+        name="sport_scotland",
+        connector_class="engine.ingestion.connectors.sport_scotland.SportScotlandConnector",
+        phase="enrichment",
+        cost_per_call_usd=0.0,  # Free API
+        trust_level=0.90,  # Official government data, high trust
+        timeout_seconds=60,
+    ),
 }
 
 
@@ -68,6 +86,8 @@ CONNECTOR_REGISTRY: Dict[str, ConnectorSpec] = {
 _CONNECTOR_CLASSES: Dict[str, Type[BaseConnector]] = {
     "serper": SerperConnector,
     "google_places": GooglePlacesConnector,
+    "openstreetmap": OSMConnector,
+    "sport_scotland": SportScotlandConnector,
 }
 
 

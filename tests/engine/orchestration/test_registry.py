@@ -16,6 +16,8 @@ from engine.orchestration.registry import (
 from engine.ingestion.base import BaseConnector
 from engine.ingestion.connectors.serper import SerperConnector
 from engine.ingestion.connectors.google_places import GooglePlacesConnector
+from engine.ingestion.connectors.open_street_map import OSMConnector
+from engine.ingestion.connectors.sport_scotland import SportScotlandConnector
 
 
 class TestConnectorSpec:
@@ -72,6 +74,16 @@ class TestConnectorRegistry:
         assert "google_places" in CONNECTOR_REGISTRY
         assert isinstance(CONNECTOR_REGISTRY["google_places"], ConnectorSpec)
 
+    def test_registry_contains_openstreetmap(self):
+        """Registry should contain openstreetmap connector for Phase 2."""
+        assert "openstreetmap" in CONNECTOR_REGISTRY
+        assert isinstance(CONNECTOR_REGISTRY["openstreetmap"], ConnectorSpec)
+
+    def test_registry_contains_sport_scotland(self):
+        """Registry should contain sport_scotland connector for Phase 2."""
+        assert "sport_scotland" in CONNECTOR_REGISTRY
+        assert isinstance(CONNECTOR_REGISTRY["sport_scotland"], ConnectorSpec)
+
     def test_serper_spec_metadata(self):
         """Serper spec should have correct metadata."""
         spec = CONNECTOR_REGISTRY["serper"]
@@ -98,6 +110,26 @@ class TestConnectorRegistry:
         google_trust = CONNECTOR_REGISTRY["google_places"].trust_level
 
         assert google_trust > serper_trust
+
+    def test_openstreetmap_spec_metadata(self):
+        """OpenStreetMap spec should have correct metadata."""
+        spec = CONNECTOR_REGISTRY["openstreetmap"]
+
+        assert spec.name == "openstreetmap"
+        assert spec.phase == "discovery"
+        assert spec.cost_per_call_usd == 0.0  # Free API
+        assert 0.0 <= spec.trust_level <= 1.0
+        assert spec.timeout_seconds > 0
+
+    def test_sport_scotland_spec_metadata(self):
+        """SportScotland spec should have correct metadata."""
+        spec = CONNECTOR_REGISTRY["sport_scotland"]
+
+        assert spec.name == "sport_scotland"
+        assert spec.phase == "enrichment"
+        assert spec.cost_per_call_usd == 0.0  # Free API
+        assert 0.0 <= spec.trust_level <= 1.0
+        assert spec.timeout_seconds > 0
 
     def test_all_specs_have_valid_phases(self):
         """All connector specs should have valid phase values."""
@@ -128,6 +160,22 @@ class TestGetConnectorInstance:
         assert isinstance(connector, GooglePlacesConnector)
         assert connector.source_name == "google_places"
 
+    def test_can_instantiate_openstreetmap(self):
+        """Should be able to instantiate OSMConnector."""
+        connector = get_connector_instance("openstreetmap")
+
+        assert isinstance(connector, BaseConnector)
+        assert isinstance(connector, OSMConnector)
+        assert connector.source_name == "openstreetmap"
+
+    def test_can_instantiate_sport_scotland(self):
+        """Should be able to instantiate SportScotlandConnector."""
+        connector = get_connector_instance("sport_scotland")
+
+        assert isinstance(connector, BaseConnector)
+        assert isinstance(connector, SportScotlandConnector)
+        assert connector.source_name == "sport_scotland"
+
     def test_each_call_creates_new_instance(self):
         """Each factory call should create a fresh instance."""
         connector1 = get_connector_instance("serper")
@@ -157,23 +205,30 @@ class TestGetConnectorInstance:
 class TestRegistryConnectorCoverage:
     """Test that registry covers all Phase 1 connectors."""
 
-    def test_phase1_has_exactly_two_connectors(self):
-        """Phase 1 should include exactly 2 connectors: Serper and GooglePlaces."""
-        assert len(CONNECTOR_REGISTRY) == 2
-        assert set(CONNECTOR_REGISTRY.keys()) == {"serper", "google_places"}
+    def test_phase2_has_four_connectors(self):
+        """Phase 2 should include 4 connectors: Serper, GooglePlaces, OpenStreetMap, SportScotland."""
+        assert len(CONNECTOR_REGISTRY) == 4
+        assert set(CONNECTOR_REGISTRY.keys()) == {
+            "serper",
+            "google_places",
+            "openstreetmap",
+            "sport_scotland",
+        }
 
-    def test_has_one_discovery_connector(self):
-        """Phase 1 should have exactly one discovery connector."""
+    def test_has_two_discovery_connectors(self):
+        """Phase 2 should have two discovery connectors."""
         discovery_connectors = [
             spec for spec in CONNECTOR_REGISTRY.values() if spec.phase == "discovery"
         ]
-        assert len(discovery_connectors) == 1
-        assert discovery_connectors[0].name == "serper"
+        assert len(discovery_connectors) == 2
+        discovery_names = {spec.name for spec in discovery_connectors}
+        assert discovery_names == {"serper", "openstreetmap"}
 
-    def test_has_one_enrichment_connector(self):
-        """Phase 1 should have exactly one enrichment connector."""
+    def test_has_two_enrichment_connectors(self):
+        """Phase 2 should have two enrichment connectors."""
         enrichment_connectors = [
             spec for spec in CONNECTOR_REGISTRY.values() if spec.phase == "enrichment"
         ]
-        assert len(enrichment_connectors) == 1
-        assert enrichment_connectors[0].name == "google_places"
+        assert len(enrichment_connectors) == 2
+        enrichment_names = {spec.name for spec in enrichment_connectors}
+        assert enrichment_names == {"google_places", "sport_scotland"}

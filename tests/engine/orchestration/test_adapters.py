@@ -202,6 +202,22 @@ class TestExtractItems:
         assert items[0]["id"] == 1
         assert items[1]["id"] == 2
 
+    def test_extracts_sport_scotland_features(self):
+        """Should extract items from SportScotland GeoJSON features format."""
+        results = {
+            "type": "FeatureCollection",
+            "features": [
+                {"type": "Feature", "properties": {"name": "Court 1"}},
+                {"type": "Feature", "properties": {"name": "Court 2"}},
+            ],
+        }
+
+        items = self.adapter._extract_items(results)
+
+        assert len(items) == 2
+        assert items[0]["properties"]["name"] == "Court 1"
+        assert items[1]["properties"]["name"] == "Court 2"
+
     def test_handles_list_response(self):
         """Should handle response that is directly a list."""
         results = [{"item": 1}, {"item": 2}]
@@ -404,6 +420,76 @@ class TestMapToCandidate:
         # Raw payload should be normalized
         assert candidate["raw"]["timestamp"] == "2024-01-15T00:00:00"
         assert candidate["raw"]["price"] == 99.99
+
+    def test_maps_openstreetmap_result(self):
+        """Should map OpenStreetMap result to canonical candidate schema."""
+        mock_connector = Mock(spec=BaseConnector)
+        mock_connector.source_name = "openstreetmap"
+
+        spec = ConnectorSpec(
+            name="openstreetmap",
+            phase=ExecutionPhase.DISCOVERY,
+            trust_level=70,
+            requires=["request.query"],
+            provides=["context.candidates"],
+            supports_query_only=True,
+            estimated_cost_usd=0.0,
+        )
+
+        adapter = ConnectorAdapter(mock_connector, spec)
+
+        raw_item = {
+            "id": 123456789,
+            "type": "node",
+            "lat": 55.9533,
+            "lon": -3.1883,
+            "tags": {"name": "Edinburgh Tennis Centre", "sport": "tennis"},
+        }
+
+        candidate = adapter._map_to_candidate(raw_item)
+
+        assert candidate["name"] == "Edinburgh Tennis Centre"
+        assert candidate["source"] == "openstreetmap"
+        assert candidate["ids"] == {"osm": "node/123456789"}
+        assert candidate["lat"] == 55.9533
+        assert candidate["lng"] == -3.1883
+        assert "raw" in candidate
+
+    def test_maps_sport_scotland_result(self):
+        """Should map SportScotland GeoJSON feature to canonical candidate schema."""
+        mock_connector = Mock(spec=BaseConnector)
+        mock_connector.source_name = "sport_scotland"
+
+        spec = ConnectorSpec(
+            name="sport_scotland",
+            phase=ExecutionPhase.ENRICHMENT,
+            trust_level=90,
+            requires=["request.query"],
+            provides=["context.candidates"],
+            supports_query_only=True,
+            estimated_cost_usd=0.0,
+        )
+
+        adapter = ConnectorAdapter(mock_connector, spec)
+
+        raw_item = {
+            "type": "Feature",
+            "id": "tennis_courts.123",
+            "properties": {
+                "name": "Craiglockhart Tennis Centre",
+                "facility_type": "tennis",
+            },
+            "geometry": {"type": "Point", "coordinates": [-3.1883, 55.9533]},
+        }
+
+        candidate = adapter._map_to_candidate(raw_item)
+
+        assert candidate["name"] == "Craiglockhart Tennis Centre"
+        assert candidate["source"] == "sport_scotland"
+        assert candidate["ids"] == {"sport_scotland": "tennis_courts.123"}
+        assert candidate["lat"] == 55.9533
+        assert candidate["lng"] == -3.1883
+        assert "raw" in candidate
 
 
 class TestConnectorAdapterExecute:
