@@ -103,16 +103,17 @@ class ConnectorAdapter:
         Execute connector and write results to context.
 
         This is the main entry point called by the Orchestrator. It:
-        1. Calls connector.fetch() via asyncio.run bridge
-        2. Extracts items from connector response
-        3. Maps each item to canonical candidate schema
-        4. Appends candidates to context.candidates
-        5. Records metrics in context.metrics
-        6. Handles errors gracefully (logs to context.errors)
+        1. Translates query for connector-specific requirements
+        2. Calls connector.fetch() via asyncio.run bridge
+        3. Extracts items from connector response
+        4. Maps each item to canonical candidate schema
+        5. Appends candidates to context.candidates
+        6. Records metrics in context.metrics
+        7. Handles errors gracefully (logs to context.errors)
 
         Args:
             request: The ingestion request (contains query)
-            query_features: Extracted query features (unused in Phase A)
+            query_features: Extracted query features (used for query translation)
             context: Shared execution context (mutable)
         """
         start_time = time.time()
@@ -121,10 +122,14 @@ class ConnectorAdapter:
         mapping_failures = 0
 
         try:
+            # Translate query for connector-specific requirements
+            # (e.g., Sport Scotland needs layer names, not natural language)
+            translated_query = self._translate_query(request.query, query_features)
+
             # Async→sync bridge: Run connector.fetch() in asyncio.run
             # NOTE: This is Phase A compromise. Works for CLI, fails for async contexts.
             # If async orchestrator needed (Phase D), make execute() async and remove asyncio.run
-            results = asyncio.run(self.connector.fetch(request.query))
+            results = asyncio.run(self.connector.fetch(translated_query))
 
             # Extract items from connector-specific response format
             items = self._extract_items(results)
@@ -171,6 +176,102 @@ class ConnectorAdapter:
                 "execution_time_ms": elapsed_ms,
                 "cost_usd": 0.0,  # No cost if failed
             }
+
+    def _translate_query(
+        self, query: str, query_features: QueryFeatures
+    ) -> str:
+        """
+        Translate natural language query to connector-specific format.
+
+        Different connectors have different input requirements:
+        - Most connectors: Accept natural language queries directly
+        - Sport Scotland: Requires WFS layer names (e.g., "tennis_courts", "pitches")
+
+        Args:
+            query: Natural language query from user
+            query_features: Extracted query features (for sports detection)
+
+        Returns:
+            Translated query appropriate for this connector
+        """
+        source = self.connector.source_name
+
+        # Sport Scotland requires layer name translation
+        if source == "sport_scotland":
+            return self._translate_to_sport_scotland_layer(query, query_features)
+
+        # All other connectors accept natural language queries
+        return query
+
+    def _translate_to_sport_scotland_layer(
+        self, query: str, query_features: QueryFeatures
+    ) -> str:
+        """
+        Translate natural language sports query to Sport Scotland WFS layer name.
+
+        Sport Scotland WFS has 10+ facility layers. We map common sports terms
+        to their corresponding layer names.
+
+        Available layers:
+        - tennis_courts: Tennis facilities
+        - pitches: Multi-sport pitches (football, rugby, hockey, cricket)
+        - swimming_pools: Swimming and diving pools
+        - sports_halls: Indoor sports halls
+        - golf_courses: Golf facilities
+        - athletics_tracks: Running tracks and velodromes
+        - bowling_greens: Bowling facilities
+        - fitness_suites: Fitness centers
+        - ice_rinks: Ice skating and curling
+        - squash_courts: Squash facilities
+
+        Args:
+            query: Natural language query (e.g., "padel courts Edinburgh")
+            query_features: Extracted query features
+
+        Returns:
+            Sport Scotland layer name (defaults to "pitches" for general sports)
+        """
+        query_lower = query.lower()
+
+        # Tennis (includes padel - racquet sport on courts)
+        if any(term in query_lower for term in ["tennis", "padel", "racquet"]):
+            return "tennis_courts"
+
+        # Swimming
+        if any(term in query_lower for term in ["swim", "pool", "diving"]):
+            return "swimming_pools"
+
+        # Golf
+        if "golf" in query_lower:
+            return "golf_courses"
+
+        # Athletics/Running
+        if any(term in query_lower for term in ["athletic", "running", "track", "velodrome"]):
+            return "athletics_tracks"
+
+        # Bowling
+        if any(term in query_lower for term in ["bowling", "bowls", "croquet", "petanque"]):
+            return "bowling_greens"
+
+        # Fitness
+        if any(term in query_lower for term in ["fitness", "gym", "weights"]):
+            return "fitness_suites"
+
+        # Ice sports
+        if any(term in query_lower for term in ["ice", "skating", "curling", "hockey"]):
+            return "ice_rinks"
+
+        # Squash
+        if "squash" in query_lower:
+            return "squash_courts"
+
+        # Sports halls
+        if any(term in query_lower for term in ["sports hall", "indoor sports"]):
+            return "sports_halls"
+
+        # Default: pitches (covers football, rugby, hockey, cricket, etc.)
+        # This is the most versatile layer for general field sports
+        return "pitches"
 
     def _extract_items(self, results: Dict[str, Any]) -> List[Dict[str, Any]]:
         """
