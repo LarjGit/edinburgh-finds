@@ -2,7 +2,7 @@
 
 This plan implements the integration layer for the orchestration kernel across three phases as defined in the specification.
 
-## Phase 1: Foundation & Plumbing (Phase A)
+## Phase 1: Foundation & Plumbing (Phase A) [checkpoint: ad8873a]
 Build the core infrastructure to run orchestrated queries through a CLI.
 
 - [x] **Task: Modify Core Types** `5e6ef27`
@@ -22,7 +22,7 @@ Build the core infrastructure to run orchestrated queries through a CLI.
 - [x] **Task: Write Tests (Foundation)** `5928836`
     - [x] Implement `tests/engine/orchestration/test_adapters.py`.
     - [x] Implement `tests/engine/orchestration/test_registry.py`.
-- [ ] **Task: Conductor - User Manual Verification 'Phase 1: Foundation' (Protocol in workflow.md)**
+- [x] **Task: Conductor - User Manual Verification 'Phase 1: Foundation' (Protocol in workflow.md)** `ad8873a`
 
 ## Phase 2: Intelligence & Expanded Connectivity (Phase B)
 Implement query-aware selection and integrate more connectors.
