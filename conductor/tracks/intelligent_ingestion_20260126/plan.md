@@ -8,9 +8,9 @@ Build the core infrastructure to run orchestrated queries through a CLI.
 - [x] **Task: Modify Core Types** `5e6ef27`
     - [x] Update `ExecutionContext` in `engine/orchestration/execution_context.py` to include `metrics` and `errors`.
     - [x] Update `IngestRequest` in `engine/orchestration/types.py` to include the `query` field.
-- [ ] **Task: Implement Registry**
-    - [ ] Create `engine/orchestration/registry.py` with `ConnectorSpec` entries for `serper` and `google_places`.
-    - [ ] Implement `get_connector_instance` factory.
+- [x] **Task: Implement Registry** `23caad3`
+    - [x] Create `engine/orchestration/registry.py` with `ConnectorSpec` entries for `serper` and `google_places`.
+    - [x] Implement `get_connector_instance` factory.
 - [ ] **Task: Build Adapter Layer**
     - [ ] Create `engine/orchestration/adapters.py` with `ConnectorAdapter`.
     - [ ] Implement `asyncio.run` bridge for `BaseConnector.fetch`.
