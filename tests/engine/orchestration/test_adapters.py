@@ -166,7 +166,7 @@ class TestExtractItems:
         assert items[1]["title"] == "Item 2"
 
     def test_extracts_google_places_results(self):
-        """Should extract items from Google Places results format."""
+        """Should extract items from Google Places results format (old API)."""
         results = {
             "results": [{"name": "Place 1", "place_id": "abc"}, {"name": "Place 2"}]
         }
@@ -176,6 +176,21 @@ class TestExtractItems:
         assert len(items) == 2
         assert items[0]["name"] == "Place 1"
         assert items[1]["name"] == "Place 2"
+
+    def test_extracts_google_places_new_api(self):
+        """Should extract items from Google Places API v1 'places' format."""
+        results = {
+            "places": [
+                {"displayName": {"text": "Place 1"}, "id": "abc"},
+                {"displayName": {"text": "Place 2"}, "id": "def"},
+            ]
+        }
+
+        items = self.adapter._extract_items(results)
+
+        assert len(items) == 2
+        assert items[0]["displayName"]["text"] == "Place 1"
+        assert items[1]["displayName"]["text"] == "Place 2"
 
     def test_extracts_osm_elements(self):
         """Should extract items from OpenStreetMap elements format."""
@@ -245,7 +260,7 @@ class TestMapToCandidate:
         assert "raw" in candidate
 
     def test_maps_google_places_result(self):
-        """Should map Google Places result to canonical candidate schema."""
+        """Should map Google Places result to canonical candidate schema (old API)."""
         mock_connector = Mock(spec=BaseConnector)
         mock_connector.source_name = "google_places"
 
@@ -266,6 +281,40 @@ class TestMapToCandidate:
             "place_id": "ChIJXYZ123",
             "geometry": {"location": {"lat": 55.9533, "lng": -3.1883}},
             "formatted_address": "123 Street, Edinburgh",
+        }
+
+        candidate = adapter._map_to_candidate(raw_item)
+
+        assert candidate["name"] == "Powerleague Portobello"
+        assert candidate["source"] == "google_places"
+        assert candidate["ids"] == {"google": "ChIJXYZ123"}
+        assert candidate["lat"] == 55.9533
+        assert candidate["lng"] == -3.1883
+        assert candidate["address"] == "123 Street, Edinburgh"
+        assert "raw" in candidate
+
+    def test_maps_google_places_new_api_result(self):
+        """Should map Google Places API v1 result to canonical candidate schema."""
+        mock_connector = Mock(spec=BaseConnector)
+        mock_connector.source_name = "google_places"
+
+        spec = ConnectorSpec(
+            name="google_places",
+            phase=ExecutionPhase.ENRICHMENT,
+            trust_level=95,
+            requires=["request.query"],
+            provides=["context.candidates"],
+            supports_query_only=True,
+            estimated_cost_usd=0.017,
+        )
+
+        adapter = ConnectorAdapter(mock_connector, spec)
+
+        raw_item = {
+            "displayName": {"text": "Powerleague Portobello"},
+            "id": "ChIJXYZ123",
+            "location": {"latitude": 55.9533, "longitude": -3.1883},
+            "formattedAddress": "123 Street, Edinburgh",
         }
 
         candidate = adapter._map_to_candidate(raw_item)

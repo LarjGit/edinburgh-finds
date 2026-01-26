@@ -178,7 +178,8 @@ class ConnectorAdapter:
 
         Different connectors return results in different formats:
         - Serper: {"organic": [...]}
-        - Google Places: {"results": [...]}
+        - Google Places (old API): {"results": [...]}
+        - Google Places (new API v1): {"places": [...]}
         - OSM: {"elements": [...]}
 
         Args:
@@ -191,7 +192,11 @@ class ConnectorAdapter:
         if "organic" in results:
             return results["organic"]
 
-        # Google Places format
+        # Google Places format (new API v1)
+        if "places" in results:
+            return results["places"]
+
+        # Google Places format (old API - legacy)
         if "results" in results:
             return results["results"]
 
@@ -265,11 +270,19 @@ class ConnectorAdapter:
         """
         Map Google Places result to canonical schema.
 
-        Google Places provides:
+        Supports both old and new Google Places API formats:
+
+        Old API:
         - place_id (strong ID)
         - name (required)
         - geometry.location.lat/lng (flat coords)
         - formatted_address (optional)
+
+        New API (v1):
+        - id (strong ID)
+        - displayName.text (required)
+        - location.latitude/longitude (flat coords)
+        - formattedAddress (optional)
 
         Args:
             item: Google Places result
@@ -280,31 +293,54 @@ class ConnectorAdapter:
         # Normalize raw payload
         raw = normalize_for_json(item)
 
-        # Extract IDs
+        # Extract IDs (handle both old and new API)
         ids = {}
         if "place_id" in item:
             ids["google"] = item["place_id"]
+        elif "id" in item:
+            ids["google"] = item["id"]
 
-        # Extract flat coordinates
+        # Extract flat coordinates (handle both old and new API)
         lat = None
         lng = None
-        if "geometry" in item and "location" in item["geometry"]:
+
+        # New API format: location.latitude/longitude
+        if "location" in item and isinstance(item["location"], dict):
+            lat = item["location"].get("latitude")
+            lng = item["location"].get("longitude")
+
+        # Old API format: geometry.location.lat/lng
+        elif "geometry" in item and "location" in item["geometry"]:
             location = item["geometry"]["location"]
             lat = location.get("lat")
             lng = location.get("lng")
+
+        # Extract name (handle both old and new API)
+        name = None
+        if "displayName" in item and isinstance(item["displayName"], dict):
+            # New API format: displayName.text
+            name = item["displayName"].get("text")
+        elif "name" in item:
+            # Old API format: name
+            name = item["name"]
+
+        if not name:
+            raise KeyError("Missing required 'name' or 'displayName' field")
 
         # Build candidate
         candidate = {
             "ids": ids,
             "lat": lat,
             "lng": lng,
-            "name": item["name"],  # May raise KeyError if missing
+            "name": name,
             "source": "google_places",
             "raw": raw,
         }
 
-        # Optional fields
-        if "formatted_address" in item:
+        # Optional fields (handle both old and new API)
+        if "formattedAddress" in item:
+            candidate["address"] = item["formattedAddress"]
+        elif "formatted_address" in item:
             candidate["address"] = item["formatted_address"]
 
         return candidate
