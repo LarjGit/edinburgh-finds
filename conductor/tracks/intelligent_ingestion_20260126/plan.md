@@ -32,7 +32,7 @@ Build the core infrastructure to run orchestrated queries through a CLI.
 **Known Limitation (Phase 1-2):**
 Cross-source deduplication only works when both sources provide the same ID type (e.g., both have Google Place IDs) or both have coordinates. Serper (no IDs, no coords) vs Google Places (has IDs + coords) results in no duplicate detection even for the same venue. Will be addressed in Phase 3 with name-based fuzzy matching before database persistence.
 
-## Phase 2: Intelligence & Expanded Connectivity (Phase B)
+## Phase 2: Intelligence & Expanded Connectivity (Phase B) [checkpoint: f3349a7]
 Implement query-aware selection and integrate more connectors.
 
 - [x] **Task: Enhance Registry** `54a9c8f`
@@ -45,7 +45,7 @@ Implement query-aware selection and integrate more connectors.
 - [x] **Task: Write Tests (Intelligence)** `99b4260`
     - [x] Implement `tests/engine/orchestration/test_planner.py` for selection logic.
     - [x] Add integration tests in `tests/engine/orchestration/test_integration.py`.
-- [ ] **Task: Conductor - User Manual Verification 'Phase 2: Intelligence' (Protocol in workflow.md)**
+- [x] **Task: Conductor - User Manual Verification 'Phase 2: Intelligence' (Protocol in workflow.md)** `f3349a7`
 
 ## Phase 3: Production Readiness & Persistence (Phase C)
 Complete the inventory and wire up database persistence.
