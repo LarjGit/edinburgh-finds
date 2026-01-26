@@ -6,6 +6,11 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
+## [ ] **Track: Intelligent Ingestion Orchestration - Integration Layer**
+*Link: [./tracks/intelligent_ingestion_20260126/](./tracks/intelligent_ingestion_20260126/)*
+
+---
+
 ## [x] Track: Intelligent Ingestion Orchestration
 *Link: [./conductor/archive/intelligent_ingestion_orchestration_20260123/](./conductor/archive/intelligent_ingestion_orchestration_20260123/)*
 **Status:** Complete
