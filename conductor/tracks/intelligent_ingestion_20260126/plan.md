@@ -41,9 +41,9 @@ Implement query-aware selection and integrate more connectors.
     - [x] Update `select_connectors()` in `planner.py` to use `QueryFeatures`.
     - [x] Implement rules for category vs. specific place detection.
     - [x] Implement domain-specific routing (e.g., sports).
-- [ ] **Task: Write Tests (Intelligence)**
-    - [ ] Implement `tests/engine/orchestration/test_planner.py` for selection logic.
-    - [ ] Add integration tests in `tests/engine/orchestration/test_integration.py`.
+- [x] **Task: Write Tests (Intelligence)** `99b4260`
+    - [x] Implement `tests/engine/orchestration/test_planner.py` for selection logic.
+    - [x] Add integration tests in `tests/engine/orchestration/test_integration.py`.
 - [ ] **Task: Conductor - User Manual Verification 'Phase 2: Intelligence' (Protocol in workflow.md)**
 
 ## Phase 3: Production Readiness & Persistence (Phase C)
