@@ -79,10 +79,15 @@ class TestConnectorRegistry:
         assert 0 <= spec.trust_level <= 1.0
         assert spec.timeout_seconds > 0
 
-    def test_registry_has_exactly_two_connectors_in_phase_1(self):
-        """Phase 1 registry should contain exactly Serper and GooglePlaces."""
-        assert len(CONNECTOR_REGISTRY) == 2
-        assert set(CONNECTOR_REGISTRY.keys()) == {"serper", "google_places"}
+    def test_registry_has_all_phase_2_connectors(self):
+        """Phase 2 registry should contain 4 connectors: Serper, GooglePlaces, OSM, SportScotland."""
+        assert len(CONNECTOR_REGISTRY) == 4
+        assert set(CONNECTOR_REGISTRY.keys()) == {
+            "serper",
+            "google_places",
+            "openstreetmap",
+            "sport_scotland",
+        }
 
     def test_serper_has_correct_metadata(self):
         """Serper spec should have discovery phase and appropriate trust."""
