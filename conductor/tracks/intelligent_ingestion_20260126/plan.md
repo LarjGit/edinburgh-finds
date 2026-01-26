@@ -11,11 +11,11 @@ Build the core infrastructure to run orchestrated queries through a CLI.
 - [x] **Task: Implement Registry** `23caad3`
     - [x] Create `engine/orchestration/registry.py` with `ConnectorSpec` entries for `serper` and `google_places`.
     - [x] Implement `get_connector_instance` factory.
-- [ ] **Task: Build Adapter Layer**
-    - [ ] Create `engine/orchestration/adapters.py` with `ConnectorAdapter`.
-    - [ ] Implement `asyncio.run` bridge for `BaseConnector.fetch`.
-    - [ ] Implement canonical mapping for `Serper` and `GooglePlaces`.
-    - [ ] Implement JSON normalization for the `raw` payload.
+- [x] **Task: Build Adapter Layer** `618389a`
+    - [x] Create `engine/orchestration/adapters.py` with `ConnectorAdapter`.
+    - [x] Implement `asyncio.run` bridge for `BaseConnector.fetch`.
+    - [x] Implement canonical mapping for `Serper` and `GooglePlaces`.
+    - [x] Implement JSON normalization for the `raw` payload.
 - [ ] **Task: Create Planner & CLI**
     - [ ] Create `engine/orchestration/planner.py` with `orchestrate()` and hardcoded `select_connectors()`.
     - [ ] Create `engine/orchestration/cli.py` with `run` command and basic report formatting.
