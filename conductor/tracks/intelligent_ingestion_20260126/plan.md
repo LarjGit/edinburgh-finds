@@ -37,10 +37,10 @@ Implement query-aware selection and integrate more connectors.
 - [x] **Task: Enhance Registry** `54a9c8f`
     - [x] Add `openstreetmap` and `sport_scotland` to the registry.
     - [x] Update adapter mapping for new connectors.
-- [ ] **Task: Implement Selection Intelligence**
-    - [ ] Update `select_connectors()` in `planner.py` to use `QueryFeatures`.
-    - [ ] Implement rules for category vs. specific place detection.
-    - [ ] Implement domain-specific routing (e.g., sports).
+- [x] **Task: Implement Selection Intelligence** `07d0863`
+    - [x] Update `select_connectors()` in `planner.py` to use `QueryFeatures`.
+    - [x] Implement rules for category vs. specific place detection.
+    - [x] Implement domain-specific routing (e.g., sports).
 - [ ] **Task: Write Tests (Intelligence)**
     - [ ] Implement `tests/engine/orchestration/test_planner.py` for selection logic.
     - [ ] Add integration tests in `tests/engine/orchestration/test_integration.py`.
