@@ -33,6 +33,8 @@ class ExecutionContext:
         seeds: Dict of initial seed data (IDs, known entities)
         budget_spent_usd: Total budget spent on connectors (USD)
         confidence: Current confidence score (0.0-1.0)
+        metrics: Dict of per-connector execution metrics
+        errors: List of errors that occurred during execution
     """
 
     def __init__(self) -> None:
@@ -44,6 +46,8 @@ class ExecutionContext:
         self.seeds: Dict[str, Any] = {}
         self.budget_spent_usd: float = 0.0
         self.confidence: float = 0.0
+        self.metrics: Dict[str, Any] = {}
+        self.errors: List[Dict[str, Any]] = []
 
     def _normalize_name(self, name: str) -> str:
         """

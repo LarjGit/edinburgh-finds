@@ -72,12 +72,14 @@ class IngestRequest:
 
     Attributes:
         ingestion_mode: The mode of operation (RESOLVE_ONE or DISCOVER_MANY)
+        query: Raw query string for connector execution
         target_entity_count: Maximum number of entities to accept (optional)
         min_confidence: Minimum confidence threshold for acceptance (optional, 0.0-1.0)
         budget_usd: Maximum budget in USD for the ingestion run (optional)
     """
 
     ingestion_mode: IngestionMode
+    query: str
     target_entity_count: Optional[int] = None
     min_confidence: Optional[float] = None
     budget_usd: Optional[float] = None
