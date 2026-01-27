@@ -62,7 +62,7 @@ Complete the inventory and wire up database persistence.
     - [x] Add `--persist` flag to CLI.
     - [x] Integrate with existing extractors/ingestors to save accepted entities to the DB.
     - [x] Ensure enhanced deduplication runs BEFORE database persistence
-- [ ] **Task: Polish & Smoke Test**
-    - [ ] Finalize CLI report formatting (colors, tables).
-    - [ ] Create `scripts/test_orchestration_live.py` for real-world verification.
+- [x] **Task: Polish & Smoke Test** `09e9cd8`
+    - [x] Finalize CLI report formatting (colors, tables).
+    - [x] Create `scripts/test_orchestration_live.py` for real-world verification.
 - [ ] **Task: Conductor - User Manual Verification 'Phase 3: Production' (Protocol in workflow.md)**
