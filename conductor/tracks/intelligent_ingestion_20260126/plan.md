@@ -53,11 +53,11 @@ Complete the inventory and wire up database persistence.
 - [x] **Task: Finalize Registry & Budgeting** `f668220`
     - [x] Add `edinburgh_council` and `open_charge_map` to the registry.
     - [x] Update `select_connectors()` with budget-aware gating logic.
-- [ ] **Task: Enhance Cross-Source Deduplication**
-    - [ ] Implement Tier 2.5: Name-based fuzzy matching for candidates without IDs or coordinates
-    - [ ] Add similarity threshold (e.g., 85% match on normalized names)
-    - [ ] Test with Serper vs Google Places overlap detection
-    - [ ] Update tests to verify cross-source deduplication works
+- [x] **Task: Enhance Cross-Source Deduplication** `5a90f88`
+    - [x] Implement Tier 2.5: Name-based fuzzy matching for candidates without IDs or coordinates
+    - [x] Add similarity threshold (e.g., 85% match on normalized names)
+    - [x] Test with Serper vs Google Places overlap detection
+    - [x] Update tests to verify cross-source deduplication works
 - [ ] **Task: Implement Persistence Mode**
     - [ ] Add `--persist` flag to CLI.
     - [ ] Integrate with existing extractors/ingestors to save accepted entities to the DB.
