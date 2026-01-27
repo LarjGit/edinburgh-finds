@@ -65,260 +65,136 @@ Phase 2 was marked complete based on passing unit tests (22/22), but the real in
 
 ---
 
-### Task 2.1: Add Diagnostic Logging & Error Visibility
-**Goal:** Make failures visible so we know what's actually breaking
+- [ ] **Task: Add Diagnostic Logging & Error Visibility**
+    - [ ] Add debug logging to `persistence.py` before calling `extract_entity()` (log source, raw_ingestion_id)
+    - [ ] Add debug logging after successful extraction (log entity_class, attribute count)
+    - [ ] Add full stack trace logging in exception handlers with context
+    - [ ] Use structured logging with clear prefixes: `[PERSIST]`, `[EXTRACT]`
+    - [ ] Update `planner.py` to add `extraction_errors` list to report dict
+    - [ ] Include in extraction errors: source, entity_name, error message, timestamp
+    - [ ] Update `planner.py` to count total vs successful extractions
+    - [ ] Update CLI (`engine/orchestration/cli.py`) to display "Extraction Pipeline" section
+    - [ ] CLI shows "X/Y entities extracted successfully" with color coding
+    - [ ] CLI lists extraction failures with source and error details
+    - [ ] Add upfront validation check for `ANTHROPIC_API_KEY` if query might need Serper
+    - [ ] Display warning: "⚠ Serper extraction will fail without ANTHROPIC_API_KEY"
+    - [ ] Test: Run CLI with missing API key and verify warning displays at start
+    - [ ] Test: Run CLI with extraction failure and verify error in "Extraction Pipeline" section
+    - [ ] Test: Verify logs show entry/exit for each extraction attempt
+    - [ ] Test: Verify errors include full context (source, raw_id, exception)
+- [ ] **Task: Create Database Verification Script**
+    - [ ] Create file `scripts/verify_orchestration_db.py`
+    - [ ] Implement query for recent OrchestrationRun records (last 10)
+    - [ ] Implement query for linked RawIngestion records per run
+    - [ ] Implement query for linked ExtractedEntity records per RawIngestion
+    - [ ] Display actual attributes (first 200 chars) to verify not empty
+    - [ ] Display discovered_attributes (first 100 chars)
+    - [ ] Count totals: runs, raw_ingestions, extracted_entities
+    - [ ] Add `--latest` flag to show only most recent run
+    - [ ] Add `--run-id <id>` flag to show specific run
+    - [ ] Implement color output: green for complete chains, red for broken links
+    - [ ] Highlight RawIngestion with no ExtractedEntity (extraction failed)
+    - [ ] Highlight ExtractedEntity with empty attributes
+    - [ ] Add summary section at end with total counts
+    - [ ] Test: Run script without errors
+    - [ ] Test: Verify shows complete data lineage (run → raw → extracted)
+    - [ ] Test: Verify highlights broken chains
+    - [ ] Test: Verify output is human-readable
+- [ ] **Task: Write Real Integration Tests**
+    - [ ] Create file `tests/engine/orchestration/test_persistence_integration.py`
+    - [ ] Write test: `test_google_places_full_integration()`
+        - [ ] Test orchestrate → persist → extract → database query for Google Places
+        - [ ] Verify OrchestrationRun record exists
+        - [ ] Verify RawIngestion record exists and links to run
+        - [ ] Verify ExtractedEntity has entity_class = "place"
+        - [ ] Verify attributes contains: name, latitude, longitude, address
+        - [ ] Verify attributes is NOT empty JSON "{}"
+        - [ ] Verify external_ids has google place_id
+    - [ ] Write test: `test_serper_extraction_integration()`
+        - [ ] Mock Anthropic API to return structured entity (avoid API costs)
+        - [ ] Create orchestration run with Serper data
+        - [ ] Verify ExtractedEntity created with LLM-extracted data
+        - [ ] Verify model_used field is populated
+    - [ ] Write test: `test_extraction_failure_handling()`
+        - [ ] Create RawIngestion with invalid data
+        - [ ] Attempt extraction (should fail gracefully)
+        - [ ] Verify error logged in persistence_errors
+        - [ ] Verify other entities still processed (resilience)
+    - [ ] Write test: `test_multiple_sources_single_run()`
+        - [ ] Run orchestration that triggers Google Places + OSM
+        - [ ] Verify multiple RawIngestion records link to same run
+        - [ ] Verify ExtractedEntity records created for both sources
+    - [ ] Ensure all tests use real Prisma database (test database or transaction rollback)
+    - [ ] Ensure NO mocks for PersistenceManager, extract_entity, or database
+    - [ ] Mock only external APIs (Anthropic, HTTP calls)
+    - [ ] Create fixtures for test data cleanup
+    - [ ] Verify all 4 tests pass
+    - [ ] Verify tests use real database (no mock Prisma client)
+    - [ ] Verify coverage >80% for persistence.py and extraction_integration.py
+    - [ ] Verify tests catch the type of failure we had (empty ExtractedEntity table)
+- [ ] **Task: Manual E2E Verification Protocol**
+    - [ ] Step 1: Run live query with CLI
+        - [ ] Execute: `python -m engine.orchestration.cli run "powerleague portobello" --persist`
+        - [ ] Verify connectors executed: google_places, sport_scotland
+        - [ ] Verify candidates found: 5-10
+        - [ ] Verify "Extraction Pipeline" section shows X/Y entities extracted
+        - [ ] Verify NO errors in Extraction Pipeline section
+    - [ ] Step 2: Run verification script
+        - [ ] Execute: `python scripts/verify_orchestration_db.py --latest`
+        - [ ] Verify shows OrchestrationRun with query
+        - [ ] Verify shows RawIngestion records (2-3 for google_places, sport_scotland)
+        - [ ] Verify shows ExtractedEntity records with populated attributes
+        - [ ] Verify attributes show actual data: {name: "Powerleague Portobello", ...}
+        - [ ] Verify NO broken chains (raw with no extracted entity)
+    - [ ] Step 3: Direct database inspection
+        - [ ] Open Prisma Studio: `cd web && npx prisma studio`
+        - [ ] Check OrchestrationRun has record with query "powerleague portobello"
+        - [ ] Check RawIngestion has 2-3 records linked to run
+        - [ ] Check ExtractedEntity has 2-3 records with entity_class: "place"
+        - [ ] Check ExtractedEntity attributes is NOT empty JSON "{}"
+        - [ ] Check attributes contains: {"name": "...", "latitude": ..., ...}
+    - [ ] Step 4: Document results in git notes
+        - [ ] Document CLI execution result (SUCCESS/FAIL)
+        - [ ] Document OrchestrationRun ID
+        - [ ] Document RawIngestion count
+        - [ ] Document ExtractedEntity count
+        - [ ] Document sample attributes (paste actual data)
+        - [ ] Document extraction errors (NONE or list)
+        - [ ] Document verification script output summary
+- [ ] **Task: Fix Any Issues Found During Verification**
+    - [ ] If Google Places extraction fails:
+        - [ ] Check `_extract_entity_from_raw()` logic for Google Places
+        - [ ] Verify field extraction handles both old/new API formats
+        - [ ] Add error handling for missing required fields
+        - [ ] Write integration test for fix
+        - [ ] Re-run verification
+    - [ ] If Serper extraction fails due to API key:
+        - [ ] Document as expected in git notes
+        - [ ] Verify error is logged correctly
+        - [ ] Ensure other sources still process
+    - [ ] If extraction succeeds but attributes are empty:
+        - [ ] Check `split_attributes()` logic in extractors
+        - [ ] Verify attributes dict is being built correctly
+        - [ ] Check JSON serialization (ensure not serializing as empty)
+        - [ ] Write integration test for fix
+        - [ ] Re-run verification
+    - [ ] If database records not created:
+        - [ ] Check Prisma schema matches expectations
+        - [ ] Verify foreign key relationships
+        - [ ] Check transaction handling in persistence
+        - [ ] Write integration test for fix
+        - [ ] Re-run verification
+    - [ ] Ensure all issues found are resolved
+    - [ ] Ensure verification re-run shows clean results
+    - [ ] Ensure integration tests pass after fixes
 
-**Implementation:**
-1. **Add debug logging to `persistence.py`:**
-   - Before calling `extract_entity()` - log source, raw_ingestion_id
-   - After successful extraction - log entity_class, attribute count
-   - In exception handlers - log full stack trace with context
-   - Use structured logging with clear prefixes: `[PERSIST]`, `[EXTRACT]`
+**Completed Earlier:**
+- [x] **Task: Tune LLM Prompts for Orchestration Pipeline** [1909733]
+    - [x] Update prompts in `engine/extraction/prompts/` to focus on concise summaries
+    - [x] Improve classification and dimension extraction in prompts
+    - [x] Add "Uncertainty Handling" instructions to reduce hallucinations
 
-2. **Update `planner.py` to show extraction errors prominently:**
-   - Add separate section in report: `extraction_errors` list
-   - Include: source, entity_name, error message, timestamp
-   - Count total vs successful extractions
-
-3. **Update CLI (`engine/orchestration/cli.py`) to display extraction errors:**
-   - Add "Extraction Pipeline" section after connector metrics
-   - Show: "X/Y entities extracted successfully"
-   - List extraction failures with source and error
-   - Color-code: green for success, red for failures
-
-4. **Add upfront validation for API keys:**
-   - Check `ANTHROPIC_API_KEY` at start if query might need Serper
-   - Warn user: "⚠ Serper extraction will fail without ANTHROPIC_API_KEY"
-   - Don't block execution, just warn
-
-**Acceptance Criteria:**
-- Run CLI with missing API key → see warning at start
-- Run CLI with extraction failure → see error in "Extraction Pipeline" section
-- Logs show entry/exit for each extraction attempt
-- Errors include full context (source, raw_id, exception)
-
----
-
-### Task 2.2: Create Database Verification Script
-**Goal:** Quick tool to inspect what's actually in the database
-
-**Implementation:**
-Create `scripts/verify_orchestration_db.py`:
-
-```python
-"""
-Database verification script for orchestration pipeline.
-
-Queries all relevant tables and displays actual data to verify
-the pipeline is working end-to-end.
-
-Usage:
-    python scripts/verify_orchestration_db.py [--run-id <id>]
-    python scripts/verify_orchestration_db.py --latest
-"""
-
-# Queries:
-# 1. List recent OrchestrationRun records (last 10)
-# 2. For each run, show linked RawIngestion records
-# 3. For each RawIngestion, show linked ExtractedEntity records
-# 4. Show actual attributes (first 200 chars) to verify not empty
-# 5. Count totals: runs, raw_ingestions, extracted_entities
-
-# Output format:
-# OrchestrationRun: <id> | Query: <query> | Status: <status>
-#   └─ RawIngestion: <id> | Source: <source> | Status: <status>
-#      └─ ExtractedEntity: <id> | Class: <entity_class>
-#         Attributes: {name: "...", ...} (first 200 chars)
-#         Discovered: {...} (first 100 chars)
-
-# Highlight issues:
-# - RawIngestion with no ExtractedEntity (extraction failed)
-# - ExtractedEntity with empty attributes (extraction returned nothing)
-# - OrchestrationRun with status "failed"
-```
-
-**Features:**
-- `--latest` flag: Show only the most recent run
-- `--run-id <id>` flag: Show specific run
-- Color output: green for complete chains, red for broken links
-- Summary at end: "X runs, Y raw ingestions, Z extracted entities"
-
-**Acceptance Criteria:**
-- Script runs without errors
-- Shows complete data lineage (run → raw → extracted)
-- Highlights broken chains (raw with no extracted entity)
-- Output is human-readable
-
----
-
-### Task 2.3: Write Real Integration Tests
-**Goal:** Test with actual database, no mocks for core persistence/extraction flow
-
-**Implementation:**
-Create `tests/engine/orchestration/test_persistence_integration.py`:
-
-**Test 1: Full Structured Source Flow (Google Places)**
-```python
-async def test_google_places_full_integration():
-    """Test complete flow: orchestrate → persist → extract → database query"""
-    # 1. Create orchestration run with Google Places data
-    # 2. Verify OrchestrationRun record exists
-    # 3. Verify RawIngestion record exists and links to run
-    # 4. Verify ExtractedEntity record exists with:
-    #    - entity_class = "place"
-    #    - attributes contains: name, latitude, longitude, address
-    #    - attributes is not empty JSON "{}"
-    # 5. Verify external_ids has google place_id
-```
-
-**Test 2: Unstructured Source with Mock LLM (Serper)**
-```python
-async def test_serper_extraction_integration(mock_anthropic):
-    """Test Serper extraction with mocked LLM (to avoid API costs)"""
-    # 1. Mock Anthropic API to return structured entity
-    # 2. Create orchestration run with Serper data
-    # 3. Verify ExtractedEntity created with LLM-extracted data
-    # 4. Verify model_used field is populated
-```
-
-**Test 3: Extraction Failure Handling**
-```python
-async def test_extraction_failure_handling():
-    """Test that extraction failures don't crash persistence"""
-    # 1. Create RawIngestion with invalid data
-    # 2. Attempt extraction (should fail)
-    # 3. Verify error logged in persistence_errors
-    # 4. Verify other entities still processed
-```
-
-**Test 4: Multiple Sources Same Run**
-```python
-async def test_multiple_sources_single_run():
-    """Test orchestration with multiple connectors"""
-    # 1. Run orchestration that triggers Google Places + OSM
-    # 2. Verify multiple RawIngestion records link to same run
-    # 3. Verify ExtractedEntity records created for both sources
-```
-
-**Key Requirements:**
-- Use real Prisma database (test database or transaction rollback)
-- No mocks for PersistenceManager, extract_entity, or database
-- Mock only external APIs (Anthropic, HTTP calls)
-- Use fixtures for test data cleanup
-- Each test verifies actual database state
-
-**Acceptance Criteria:**
-- All 4 tests pass
-- Tests use real database (no mock Prisma client)
-- Coverage >80% for persistence.py and extraction_integration.py
-- Tests catch the type of failure we had (empty ExtractedEntity table)
-
----
-
-### Task 2.4: Manual E2E Verification Protocol
-**Goal:** Human verification that the system actually works
-
-**Step 1: Run Live Query**
-```bash
-# With Google Places (structured source)
-python -m engine.orchestration.cli run "powerleague portobello" --persist
-
-# Expected output:
-# - Connectors executed: google_places, sport_scotland
-# - Candidates found: 5-10
-# - Extraction Pipeline: X/Y entities extracted successfully
-# - Persisted: X entities
-# - NO errors in Extraction Pipeline section
-```
-
-**Step 2: Run Verification Script**
-```bash
-python scripts/verify_orchestration_db.py --latest
-
-# Expected output:
-# - Shows OrchestrationRun with query
-# - Shows RawIngestion records (2-3 for google_places, sport_scotland)
-# - Shows ExtractedEntity records with populated attributes
-# - Attributes show actual data: {name: "Powerleague Portobello", ...}
-# - NO broken chains (raw with no extracted entity)
-```
-
-**Step 3: Direct Database Query**
-```bash
-# Use Prisma Studio or direct SQL to verify
-cd web && npx prisma studio
-
-# Check tables:
-# 1. OrchestrationRun - has record with query "powerleague portobello"
-# 2. RawIngestion - has 2-3 records linked to run
-# 3. ExtractedEntity - has 2-3 records with:
-#    - entity_class: "place"
-#    - attributes: NOT empty JSON "{}"
-#    - attributes contains: {"name": "...", "latitude": ..., ...}
-```
-
-**Step 4: Document Results**
-Create verification report in git notes:
-```
-Phase 2 Manual Verification Results:
-- CLI execution: SUCCESS
-- OrchestrationRun created: YES (id: <id>)
-- RawIngestion count: X
-- ExtractedEntity count: X
-- Sample attributes: {name: "...", latitude: ..., address: "..."}
-- Extraction errors: NONE (or list errors if any)
-- Verification script output: [paste summary]
-```
-
-**Acceptance Criteria:**
-- CLI completes without crashes
-- Verification script shows complete data lineage
-- ExtractedEntity table has records with populated attributes
-- Attributes contain actual data (not empty JSON)
-- All results documented in git notes before commit
-
----
-
-### Task 2.5: Fix Any Issues Found
-**Goal:** Address issues discovered during verification
-
-**Contingency Actions Based on Findings:**
-
-**If Google Places extraction fails:**
-- Check `_extract_entity_from_raw()` logic for Google Places
-- Verify field extraction handles both old/new API formats
-- Add error handling for missing required fields
-
-**If Serper extraction fails due to API key:**
-- This is expected - document in git notes
-- Verify error is logged correctly
-- Ensure other sources still process
-
-**If extraction succeeds but attributes are empty:**
-- Check `split_attributes()` logic in extractors
-- Verify attributes dict is being built correctly
-- Check JSON serialization (ensure not serializing as empty)
-
-**If database records not created:**
-- Check Prisma schema matches expectations
-- Verify foreign key relationships
-- Check transaction handling in persistence
-
-**Implementation:**
-- Only fix issues found during verification
-- Each fix must be tested with integration test
-- Re-run verification after each fix
-
-**Acceptance Criteria:**
-- All issues found during verification are resolved
-- Verification re-run shows clean results
-- Integration tests pass
-
----
-
-### Summary Checkpoint Requirements
-
-**Before marking Phase 2 complete, ALL must be true:**
+**Phase 2 Checkpoint Requirements (ALL must be true):**
 1. ✅ Diagnostic logging shows entry/exit for each extraction
 2. ✅ CLI displays extraction errors prominently
 3. ✅ Verification script runs and shows complete data lineage
@@ -327,13 +203,6 @@ Phase 2 Manual Verification Results:
 6. ✅ Git notes document verification results with actual data samples
 7. ✅ No silent failures - all errors visible to user
 
-**Completed Earlier:**
-- [x] **Task: Tune LLM Prompts for Orchestration Pipeline** [1909733]
-    - [x] Update prompts in `engine/extraction/prompts/` to focus on concise summaries
-    - [x] Improve classification and dimension extraction in prompts
-    - [x] Add "Uncertainty Handling" instructions to reduce hallucinations
-
-**Phase 2 Verification Task:**
 - [ ] **Task: Conductor - User Manual Verification 'Phase 2: Extraction Integration & Diagnostic Verification' (Protocol in workflow.md)**
 
 ## Phase 3: Merging Integration & Pipeline Completion
