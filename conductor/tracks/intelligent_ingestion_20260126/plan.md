@@ -58,7 +58,7 @@ Complete the inventory and wire up database persistence.
     - [x] Add similarity threshold (e.g., 85% match on normalized names)
     - [x] Test with Serper vs Google Places overlap detection
     - [x] Update tests to verify cross-source deduplication works
-- [ ] **Task: Implement Persistence Mode**
+- [~] **Task: Implement Persistence Mode**
     - [ ] Add `--persist` flag to CLI.
     - [ ] Integrate with existing extractors/ingestors to save accepted entities to the DB.
     - [ ] Ensure enhanced deduplication runs BEFORE database persistence

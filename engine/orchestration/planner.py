@@ -5,13 +5,15 @@ Orchestrates the execution of connectors to fulfill an ingestion request:
 - Analyzes query and selects optimal connectors
 - Executes connectors in sequence via adapters
 - Applies deduplication to candidates
+- Optionally persists accepted entities to database
 - Produces structured execution report
 
 Phase A: Hardcoded connector selection (serper, google_places)
 Phase B: Intelligent selection based on query features
-Phase C: Budget-aware gating and early stopping
+Phase C: Budget-aware gating, early stopping, and persistence
 """
 
+import asyncio
 from typing import Dict, List, Any
 
 from engine.orchestration.adapters import ConnectorAdapter
@@ -20,6 +22,7 @@ from engine.orchestration.execution_plan import ConnectorSpec, ExecutionPhase
 from engine.orchestration.query_features import QueryFeatures
 from engine.orchestration.registry import CONNECTOR_REGISTRY, get_connector_instance
 from engine.orchestration.types import IngestRequest, IngestionMode
+from engine.orchestration.persistence import persist_entities_sync
 
 
 def select_connectors(request: IngestRequest) -> List[str]:
@@ -249,7 +252,17 @@ def orchestrate(request: IngestRequest) -> Dict[str, Any]:
     for candidate in context.candidates:
         context.accept_entity(candidate)
 
-    # 6. Build structured report
+    # 6. Persist accepted entities if requested
+    persisted_count = 0
+    persistence_errors = []
+
+    if request.persist:
+        # Use sync wrapper that handles event loop detection
+        persistence_result = persist_entities_sync(context.accepted_entities, context.errors)
+        persisted_count = persistence_result["persisted_count"]
+        persistence_errors = persistence_result["persistence_errors"]
+
+    # 7. Build structured report
     report = {
         "query": request.query,
         "candidates_found": len(context.candidates),
@@ -257,5 +270,10 @@ def orchestrate(request: IngestRequest) -> Dict[str, Any]:
         "connectors": context.metrics,
         "errors": context.errors,
     }
+
+    # Add persistence info if persist was enabled
+    if request.persist:
+        report["persisted_count"] = persisted_count
+        report["persistence_errors"] = persistence_errors
 
     return report

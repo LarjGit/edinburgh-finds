@@ -53,6 +53,11 @@ def format_report(report: Dict[str, Any]) -> str:
     lines.append(f"  Accepted Entities:   {report['accepted_entities']}")
     deduped = report['candidates_found'] - report['accepted_entities']
     lines.append(f"  Duplicates Removed:  {deduped}")
+
+    # Add persistence info if available
+    if "persisted_count" in report:
+        lines.append(f"  Persisted to DB:     {report['persisted_count']}")
+
     lines.append("")
 
     # Connector Metrics
@@ -86,13 +91,22 @@ def format_report(report: Dict[str, Any]) -> str:
     lines.append("")
 
     # Errors
-    if report['errors']:
+    if report['errors'] or report.get('persistence_errors'):
         lines.append("Errors:")
         lines.append("-" * 80)
         for error in report['errors']:
             connector = error.get("connector", "Unknown")
             error_msg = error.get("error", "Unknown error")
             lines.append(f"  [{connector}] {error_msg}")
+
+        # Add persistence errors if present
+        if report.get('persistence_errors'):
+            for error in report['persistence_errors']:
+                source = error.get("source", "Unknown")
+                error_msg = error.get("error", "Unknown error")
+                entity_name = error.get("entity_name", "N/A")
+                lines.append(f"  [Persistence/{source}] {error_msg} (entity: {entity_name})")
+
         lines.append("")
 
     # Footer
@@ -127,6 +141,11 @@ def main():
         default="discover_many",
         help="Ingestion mode (default: discover_many)",
     )
+    run_parser.add_argument(
+        "--persist",
+        action="store_true",
+        help="Persist accepted entities to database (default: False)",
+    )
 
     # Parse arguments
     args = parser.parse_args()
@@ -146,6 +165,7 @@ def main():
         request = IngestRequest(
             ingestion_mode=ingestion_mode,
             query=args.query,
+            persist=args.persist,
         )
 
         # Execute orchestration
