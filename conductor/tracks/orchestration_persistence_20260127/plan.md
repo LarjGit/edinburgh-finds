@@ -2,7 +2,7 @@
 
 This plan implements the complete orchestration persistence pipeline, including the `OrchestrationRun` tracking table, async-native persistence, and tuned LLM extraction.
 
-## Phase 1: Infrastructure & Async Fixes
+## Phase 1: Infrastructure & Async Fixes [checkpoint: 3c44eed]
 *Goal: Prepare the database and fix event loop issues to enable reliable data flow.*
 
 - [x] **Task: Update Prisma Schema for OrchestrationRun** [807eb13]
@@ -14,7 +14,7 @@ This plan implements the complete orchestration persistence pipeline, including 
     - [x] Update `orchestrate()` in `planner.py` to be `async`
     - [x] Update CLI to call async orchestrate via `asyncio.run()`
     - [x] Verify Google Places data is now persisted correctly
-- [ ] **Task: Conductor - User Manual Verification 'Phase 1: Infrastructure & Async Fixes' (Protocol in workflow.md)**
+- [x] **Task: Conductor - User Manual Verification 'Phase 1: Infrastructure & Async Fixes' (Protocol in workflow.md)**
 
 ## Phase 2: Extraction Integration & Prompt Tuning
 *Goal: Bridge the orchestration layer to the extraction engine and improve LLM output.*
