@@ -21,7 +21,7 @@ from engine.ingestion.base import BaseConnector
 class TestMultiConnectorOrchestration:
     """Test orchestration with multiple connectors working together."""
 
-    def test_orchestrate_executes_multiple_connectors(self):
+    async def test_orchestrate_executes_multiple_connectors(self):
         """
         orchestrate() should execute all selected connectors and aggregate results.
         """
@@ -30,7 +30,7 @@ class TestMultiConnectorOrchestration:
             query="padel courts in Edinburgh",
         )
 
-        report = orchestrate(request)
+        report = await orchestrate(request)
 
         # Should execute multiple connectors for a category search
         assert len(report["connectors"]) > 1, "Should execute multiple connectors"
@@ -41,7 +41,7 @@ class TestMultiConnectorOrchestration:
             assert "execution_time_ms" in metrics, f"{connector_name} should track execution time"
             assert "cost_usd" in metrics, f"{connector_name} should track cost"
 
-    def test_orchestrate_aggregates_candidates_across_sources(self):
+    async def test_orchestrate_aggregates_candidates_across_sources(self):
         """
         orchestrate() should collect candidates from all connectors.
         """
@@ -50,7 +50,7 @@ class TestMultiConnectorOrchestration:
             query="tennis courts in Edinburgh",
         )
 
-        report = orchestrate(request)
+        report = await orchestrate(request)
 
         # Should find candidates from multiple sources
         assert report["candidates_found"] >= 0, "Should collect candidates"
@@ -65,7 +65,7 @@ class TestMultiConnectorOrchestration:
         # (Note: This may differ if deduplication happens during collection)
         assert isinstance(total_candidates_from_metrics, int), "Should aggregate candidate counts"
 
-    def test_orchestrate_deduplicates_across_sources(self):
+    async def test_orchestrate_deduplicates_across_sources(self):
         """
         orchestrate() should deduplicate entities found by multiple connectors.
         Same venue found by serper and google_places should only appear once.
@@ -75,14 +75,14 @@ class TestMultiConnectorOrchestration:
             query="Oriam Scotland",  # Well-known venue likely in multiple sources
         )
 
-        report = orchestrate(request)
+        report = await orchestrate(request)
 
         # After deduplication, accepted entities should be <= candidates
         assert report["accepted_entities"] <= report["candidates_found"], (
             "Deduplication should reduce or maintain entity count"
         )
 
-    def test_orchestrate_respects_phase_ordering(self):
+    async def test_orchestrate_respects_phase_ordering(self):
         """
         orchestrate() should execute discovery connectors before enrichment.
         Verify through metrics that discovery phase completes first.
@@ -95,7 +95,7 @@ class TestMultiConnectorOrchestration:
         # Get selected connectors to understand expected order
         selected = select_connectors(request)
 
-        report = orchestrate(request)
+        report = await orchestrate(request)
 
         # All selected connectors should have metrics (even if they failed)
         for connector_name in selected:
@@ -115,7 +115,7 @@ class TestMultiConnectorOrchestration:
 class TestErrorHandlingAndResilience:
     """Test orchestration error handling and resilience."""
 
-    def test_orchestrate_continues_after_connector_failure(self):
+    async def test_orchestrate_continues_after_connector_failure(self):
         """
         If one connector fails, orchestration should continue with other connectors.
         """
@@ -125,7 +125,7 @@ class TestErrorHandlingAndResilience:
         )
 
         # Execute orchestration (may have errors from API failures)
-        report = orchestrate(request)
+        report = await orchestrate(request)
 
         # Report should still be structured even if errors occurred
         assert "errors" in report, "Report should include errors list"
@@ -136,7 +136,7 @@ class TestErrorHandlingAndResilience:
         assert "candidates_found" in report, "Should report candidates found"
         assert "accepted_entities" in report, "Should report accepted entities"
 
-    def test_orchestrate_tracks_connector_errors(self):
+    async def test_orchestrate_tracks_connector_errors(self):
         """
         orchestrate() should track which connectors encountered errors.
         """
@@ -145,14 +145,14 @@ class TestErrorHandlingAndResilience:
             query="test query",
         )
 
-        report = orchestrate(request)
+        report = await orchestrate(request)
 
         # Errors should be structured
         for error in report["errors"]:
             assert "connector" in error, "Error should identify connector"
             assert "error" in error, "Error should include error message"
 
-    def test_orchestrate_handles_invalid_connector_gracefully(self):
+    async def test_orchestrate_handles_invalid_connector_gracefully(self):
         """
         If a connector is in the selection but not in the registry,
         orchestration should log error and continue.
@@ -166,7 +166,7 @@ class TestErrorHandlingAndResilience:
         with patch("engine.orchestration.planner.select_connectors") as mock_select:
             mock_select.return_value = ["serper", "invalid_connector", "google_places"]
 
-            report = orchestrate(request)
+            report = await orchestrate(request)
 
             # Should handle invalid connector gracefully
             assert "invalid_connector" in [e["connector"] for e in report["errors"]], (
@@ -183,7 +183,7 @@ class TestRealWorldQueryScenarios:
     """Test orchestration with real-world query patterns."""
 
     @pytest.mark.integration
-    def test_category_search_uses_multiple_sources(self):
+    async def test_category_search_uses_multiple_sources(self):
         """
         Category search should use multiple discovery sources for comprehensive coverage.
         """
@@ -193,7 +193,7 @@ class TestRealWorldQueryScenarios:
         )
 
         selected = select_connectors(request)
-        report = orchestrate(request)
+        report = await orchestrate(request)
 
         # Should use discovery sources (serper, openstreetmap)
         discovery_connectors = ["serper", "openstreetmap"]
@@ -207,7 +207,7 @@ class TestRealWorldQueryScenarios:
         )
 
     @pytest.mark.integration
-    def test_specific_venue_search_prioritizes_quality(self):
+    async def test_specific_venue_search_prioritizes_quality(self):
         """
         Specific venue search should prioritize high-quality enrichment sources.
         """
@@ -217,7 +217,7 @@ class TestRealWorldQueryScenarios:
         )
 
         selected = select_connectors(request)
-        report = orchestrate(request)
+        report = await orchestrate(request)
 
         # Should use high-trust enrichment (google_places)
         assert "google_places" in report["connectors"], (
@@ -259,7 +259,7 @@ class TestRealWorldQueryScenarios:
         )
 
     @pytest.mark.integration
-    def test_empty_query_handled_gracefully(self):
+    async def test_empty_query_handled_gracefully(self):
         """
         Empty or whitespace-only queries should be handled gracefully.
         """
@@ -268,7 +268,7 @@ class TestRealWorldQueryScenarios:
             query="   ",  # Whitespace only
         )
 
-        report = orchestrate(request)
+        report = await orchestrate(request)
 
         # Should complete without error
         assert report["query"] == "   ", "Should echo original query"
@@ -279,7 +279,7 @@ class TestRealWorldQueryScenarios:
 class TestMetricsAndObservability:
     """Test metrics collection and observability features."""
 
-    def test_orchestrate_tracks_execution_time_per_connector(self):
+    async def test_orchestrate_tracks_execution_time_per_connector(self):
         """
         orchestrate() should track execution time for each connector.
         """
@@ -288,7 +288,7 @@ class TestMetricsAndObservability:
             query="tennis courts Edinburgh",
         )
 
-        report = orchestrate(request)
+        report = await orchestrate(request)
 
         # Each connector should have execution time
         for connector_name, metrics in report["connectors"].items():
@@ -302,7 +302,7 @@ class TestMetricsAndObservability:
                 "Execution time should be non-negative"
             )
 
-    def test_orchestrate_tracks_cost_per_connector(self):
+    async def test_orchestrate_tracks_cost_per_connector(self):
         """
         orchestrate() should track cost for each connector.
         """
@@ -311,7 +311,7 @@ class TestMetricsAndObservability:
             query="tennis courts Edinburgh",
         )
 
-        report = orchestrate(request)
+        report = await orchestrate(request)
 
         # Each connector should have cost tracking
         for connector_name, metrics in report["connectors"].items():
@@ -319,7 +319,7 @@ class TestMetricsAndObservability:
             assert isinstance(metrics["cost_usd"], (int, float)), "Cost should be numeric"
             assert metrics["cost_usd"] >= 0, "Cost should be non-negative"
 
-    def test_orchestrate_tracks_candidates_per_connector(self):
+    async def test_orchestrate_tracks_candidates_per_connector(self):
         """
         orchestrate() should track how many candidates each connector found.
         """
@@ -328,7 +328,7 @@ class TestMetricsAndObservability:
             query="padel courts Edinburgh",
         )
 
-        report = orchestrate(request)
+        report = await orchestrate(request)
 
         # Each connector should report candidates found
         for connector_name, metrics in report["connectors"].items():
@@ -340,7 +340,7 @@ class TestMetricsAndObservability:
                     "Candidates count should be non-negative"
                 )
 
-    def test_orchestrate_provides_total_cost_visibility(self):
+    async def test_orchestrate_provides_total_cost_visibility(self):
         """
         Report should enable calculating total cost across all connectors.
         """
@@ -349,7 +349,7 @@ class TestMetricsAndObservability:
             query="tennis courts Edinburgh",
         )
 
-        report = orchestrate(request)
+        report = await orchestrate(request)
 
         # Should be able to calculate total cost
         total_cost = sum(
@@ -374,7 +374,7 @@ class TestConnectorE2EExecution:
 
     @pytest.mark.integration
     @pytest.mark.slow
-    def test_sport_scotland_executes_with_natural_language_query(self):
+    async def test_sport_scotland_executes_with_natural_language_query(self):
         """
         E2E test: Sport Scotland should handle natural language sports queries.
 
@@ -396,7 +396,7 @@ class TestConnectorE2EExecution:
             query="tennis courts Edinburgh",
         )
 
-        report = orchestrate(request)
+        report = await orchestrate(request)
 
         # Verify sport_scotland was executed
         assert "sport_scotland" in report["connectors"], (
@@ -421,7 +421,7 @@ class TestConnectorE2EExecution:
 
     @pytest.mark.integration
     @pytest.mark.slow
-    def test_sport_scotland_query_translation_and_graceful_failure(self):
+    async def test_sport_scotland_query_translation_and_graceful_failure(self):
         """
         E2E test: Sport Scotland query translation and graceful failure handling.
 
@@ -442,7 +442,7 @@ class TestConnectorE2EExecution:
             query="padel courts in Edinburgh",
         )
 
-        report = orchestrate(request)
+        report = await orchestrate(request)
 
         # Sport Scotland should be selected for sports query
         assert "sport_scotland" in report["connectors"], (
@@ -473,7 +473,7 @@ class TestConnectorE2EExecution:
         )
 
     @pytest.mark.integration
-    def test_all_selected_connectors_can_execute(self):
+    async def test_all_selected_connectors_can_execute(self):
         """
         E2E test: Every connector selected by planner should be able to execute.
 
@@ -492,7 +492,7 @@ class TestConnectorE2EExecution:
                 query=query,
             )
 
-            report = orchestrate(request)
+            report = await orchestrate(request)
 
             # Every selected connector should either succeed or fail gracefully
             for connector_name, metrics in report["connectors"].items():
@@ -511,7 +511,7 @@ class TestConnectorE2EExecution:
 class TestDeduplicationIntegration:
     """Test cross-source deduplication integration."""
 
-    def test_deduplication_reduces_duplicates(self):
+    async def test_deduplication_reduces_duplicates(self):
         """
         When multiple connectors return the same venue, deduplication should reduce count.
         """
@@ -520,7 +520,7 @@ class TestDeduplicationIntegration:
             query="Oriam Scotland",  # Well-known venue
         )
 
-        report = orchestrate(request)
+        report = await orchestrate(request)
 
         # If we got candidates from multiple sources
         if len(report["connectors"]) > 1 and report["candidates_found"] > 0:
@@ -530,7 +530,7 @@ class TestDeduplicationIntegration:
                 "Deduplication should reduce or maintain count"
             )
 
-    def test_deduplication_preserves_unique_entities(self):
+    async def test_deduplication_preserves_unique_entities(self):
         """
         Deduplication should preserve all unique entities.
         """
@@ -539,7 +539,7 @@ class TestDeduplicationIntegration:
             query="tennis courts Edinburgh",
         )
 
-        report = orchestrate(request)
+        report = await orchestrate(request)
 
         # If candidates were found
         if report["candidates_found"] > 0:
