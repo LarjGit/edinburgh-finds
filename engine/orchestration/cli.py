@@ -12,8 +12,14 @@ Outputs a structured report with:
 """
 
 import argparse
+import asyncio
 import sys
+from pathlib import Path
 from typing import Dict, Any
+
+# Load environment variables from .env file
+from dotenv import load_dotenv
+load_dotenv(Path(__file__).parent.parent.parent / ".env")
 
 from engine.orchestration.planner import orchestrate
 from engine.orchestration.types import IngestRequest, IngestionMode
@@ -198,8 +204,8 @@ def main():
             persist=args.persist,
         )
 
-        # Execute orchestration
-        report = orchestrate(request)
+        # Execute orchestration (async)
+        report = asyncio.run(orchestrate(request))
 
         # Format and print report
         formatted = format_report(report)

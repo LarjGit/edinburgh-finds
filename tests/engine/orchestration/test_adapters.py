@@ -495,8 +495,9 @@ class TestMapToCandidate:
 class TestConnectorAdapterExecute:
     """Test execute method with async bridge and error handling."""
 
-    def test_execute_calls_connector_fetch_via_asyncio_run(self):
-        """execute should call connector.fetch() via asyncio.run bridge."""
+    @pytest.mark.asyncio
+    async def test_execute_calls_connector_fetch_via_asyncio_run(self):
+        """execute should call connector.fetch() directly (async-native)."""
         mock_connector = Mock(spec=BaseConnector)
         mock_connector.source_name = "serper"
 
@@ -524,12 +525,13 @@ class TestConnectorAdapterExecute:
         query_features = QueryFeatures.extract(query="test query", request=request)
         context = ExecutionContext()
 
-        adapter.execute(request, query_features, context)
+        await adapter.execute(request, query_features, context)
 
         # Verify fetch was called with query
         mock_connector.fetch.assert_called_once_with("test query")
 
-    def test_execute_adds_candidates_to_context(self):
+    @pytest.mark.asyncio
+    async def test_execute_adds_candidates_to_context(self):
         """execute should append mapped candidates to context.candidates."""
         mock_connector = Mock(spec=BaseConnector)
         mock_connector.source_name = "serper"
@@ -557,14 +559,15 @@ class TestConnectorAdapterExecute:
         query_features = QueryFeatures.extract(query="test query", request=request)
         context = ExecutionContext()
 
-        adapter.execute(request, query_features, context)
+        await adapter.execute(request, query_features, context)
 
         # Should have 2 candidates added
         assert len(context.candidates) == 2
         assert context.candidates[0]["name"] == "Result 1"
         assert context.candidates[1]["name"] == "Result 2"
 
-    def test_execute_records_success_metrics(self):
+    @pytest.mark.asyncio
+    async def test_execute_records_success_metrics(self):
         """execute should record success metrics in context.metrics."""
         mock_connector = Mock(spec=BaseConnector)
         mock_connector.source_name = "serper"
@@ -592,7 +595,7 @@ class TestConnectorAdapterExecute:
         query_features = QueryFeatures.extract(query="test query", request=request)
         context = ExecutionContext()
 
-        adapter.execute(request, query_features, context)
+        await adapter.execute(request, query_features, context)
 
         # Check metrics recorded
         assert "serper" in context.metrics
@@ -604,7 +607,8 @@ class TestConnectorAdapterExecute:
         assert "execution_time_ms" in metrics
         assert metrics["cost_usd"] == 0.01
 
-    def test_execute_handles_connector_error_gracefully(self):
+    @pytest.mark.asyncio
+    async def test_execute_handles_connector_error_gracefully(self):
         """execute should handle connector errors gracefully (non-fatal)."""
         mock_connector = Mock(spec=BaseConnector)
         mock_connector.source_name = "serper"
@@ -633,7 +637,7 @@ class TestConnectorAdapterExecute:
         context = ExecutionContext()
 
         # Should not raise exception
-        adapter.execute(request, query_features, context)
+        await adapter.execute(request, query_features, context)
 
         # Check error recorded
         assert len(context.errors) == 1
@@ -648,7 +652,8 @@ class TestConnectorAdapterExecute:
         assert "error" in metrics
         assert metrics["cost_usd"] == 0.0  # No cost on failure
 
-    def test_execute_tracks_mapping_failures(self):
+    @pytest.mark.asyncio
+    async def test_execute_tracks_mapping_failures(self):
         """execute should track mapping failures without crashing."""
         mock_connector = Mock(spec=BaseConnector)
         mock_connector.source_name = "serper"
@@ -683,7 +688,7 @@ class TestConnectorAdapterExecute:
         query_features = QueryFeatures.extract(query="test query", request=request)
         context = ExecutionContext()
 
-        adapter.execute(request, query_features, context)
+        await adapter.execute(request, query_features, context)
 
         # Should add only the 2 good results
         assert len(context.candidates) == 2

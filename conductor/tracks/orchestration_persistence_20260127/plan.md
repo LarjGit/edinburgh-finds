@@ -9,7 +9,7 @@ This plan implements the complete orchestration persistence pipeline, including 
     - [x] Add `OrchestrationRun` model to `engine/schema.prisma`
     - [x] Link `RawIngestion` to `OrchestrationRun`
     - [x] Run `npx prisma migrate dev` (or equivalent) to apply changes
-- [ ] **Task: Refactor Persistence to be Async-Native**
+- [~] **Task: Refactor Persistence to be Async-Native**
     - [ ] Remove `persist_entities_sync` wrapper in `engine/orchestration/persistence.py`
     - [ ] Update `orchestrate()` in `planner.py` to be `async`
     - [ ] Update CLI to call async orchestrate via `asyncio.run()`

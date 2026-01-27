@@ -22,7 +22,7 @@ from engine.orchestration.execution_plan import ConnectorSpec, ExecutionPhase
 from engine.orchestration.query_features import QueryFeatures
 from engine.orchestration.registry import CONNECTOR_REGISTRY, get_connector_instance
 from engine.orchestration.types import IngestRequest, IngestionMode
-from engine.orchestration.persistence import persist_entities_sync
+from engine.orchestration.persistence import PersistenceManager
 
 
 def select_connectors(request: IngestRequest) -> List[str]:
@@ -172,7 +172,7 @@ def _is_sports_related(query: str) -> bool:
     return any(keyword in normalized for keyword in sports_keywords)
 
 
-def orchestrate(request: IngestRequest) -> Dict[str, Any]:
+async def orchestrate(request: IngestRequest) -> Dict[str, Any]:
     """
     Orchestrate execution of connectors to fulfill ingestion request.
 
@@ -237,7 +237,7 @@ def orchestrate(request: IngestRequest) -> Dict[str, Any]:
             adapter = ConnectorAdapter(connector, connector_spec)
 
             # Execute connector (adapter handles errors internally)
-            adapter.execute(request, query_features, context)
+            await adapter.execute(request, query_features, context)
 
         except Exception as e:
             # Unexpected error during adapter creation
@@ -257,10 +257,24 @@ def orchestrate(request: IngestRequest) -> Dict[str, Any]:
     persistence_errors = []
 
     if request.persist:
-        # Use sync wrapper that handles event loop detection
-        persistence_result = persist_entities_sync(context.accepted_entities, context.errors)
-        persisted_count = persistence_result["persisted_count"]
-        persistence_errors = persistence_result["persistence_errors"]
+        try:
+            # Use async PersistenceManager directly
+            async with PersistenceManager() as persistence:
+                persistence_result = await persistence.persist_entities(context.accepted_entities, context.errors)
+                persisted_count = persistence_result["persisted_count"]
+                persistence_errors = persistence_result["persistence_errors"]
+        except Exception as e:
+            # Handle persistence errors gracefully - don't crash orchestration
+            error_msg = f"Persistence failed: {str(e)}"
+            context.errors.append({
+                "connector": "persistence",
+                "error": error_msg,
+            })
+            persistence_errors.append({
+                "source": "persistence",
+                "error": error_msg,
+                "entity_name": "N/A",
+            })
 
     # 7. Build structured report
     report = {

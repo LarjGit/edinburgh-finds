@@ -93,7 +93,7 @@ class ConnectorAdapter:
         self.connector = connector
         self.spec = spec
 
-    def execute(
+    async def execute(
         self,
         request: IngestRequest,
         query_features: QueryFeatures,
@@ -104,7 +104,7 @@ class ConnectorAdapter:
 
         This is the main entry point called by the Orchestrator. It:
         1. Translates query for connector-specific requirements
-        2. Calls connector.fetch() via asyncio.run bridge
+        2. Calls connector.fetch() directly (async)
         3. Extracts items from connector response
         4. Maps each item to canonical candidate schema
         5. Appends candidates to context.candidates
@@ -126,10 +126,8 @@ class ConnectorAdapter:
             # (e.g., Sport Scotland needs layer names, not natural language)
             translated_query = self._translate_query(request.query, query_features)
 
-            # Async→sync bridge: Run connector.fetch() in asyncio.run
-            # NOTE: This is Phase A compromise. Works for CLI, fails for async contexts.
-            # If async orchestrator needed (Phase D), make execute() async and remove asyncio.run
-            results = asyncio.run(self.connector.fetch(translated_query))
+            # Call connector.fetch() directly (now async-native)
+            results = await self.connector.fetch(translated_query)
 
             # Extract items from connector-specific response format
             items = self._extract_items(results)

@@ -212,16 +212,18 @@ class TestCLIMain:
 
     def test_main_run_command_with_query(self):
         """main() run command should accept query argument."""
-        with patch("sys.argv", ["cli.py", "run", "tennis courts Edinburgh"]):
-            with patch("engine.orchestration.cli.orchestrate") as mock_orchestrate:
-                mock_orchestrate.return_value = {
-                    "query": "tennis courts Edinburgh",
-                    "candidates_found": 15,
-                    "accepted_entities": 10,
-                    "connectors": {},
-                    "errors": [],
-                }
+        # Mock orchestrate as async function
+        async def mock_async_orchestrate(request):
+            return {
+                "query": request.query,
+                "candidates_found": 15,
+                "accepted_entities": 10,
+                "connectors": {},
+                "errors": [],
+            }
 
+        with patch("sys.argv", ["cli.py", "run", "tennis courts Edinburgh"]):
+            with patch("engine.orchestration.cli.orchestrate", side_effect=mock_async_orchestrate):
                 # Should not raise
                 try:
                     main()
@@ -232,16 +234,18 @@ class TestCLIMain:
     @patch("sys.stdout", new_callable=StringIO)
     def test_main_prints_formatted_report(self, mock_stdout):
         """main() should print formatted report to stdout."""
-        with patch("sys.argv", ["cli.py", "run", "tennis courts Edinburgh"]):
-            with patch("engine.orchestration.cli.orchestrate") as mock_orchestrate:
-                mock_orchestrate.return_value = {
-                    "query": "tennis courts Edinburgh",
-                    "candidates_found": 15,
-                    "accepted_entities": 10,
-                    "connectors": {},
-                    "errors": [],
-                }
+        # Mock orchestrate as async function
+        async def mock_async_orchestrate(request):
+            return {
+                "query": request.query,
+                "candidates_found": 15,
+                "accepted_entities": 10,
+                "connectors": {},
+                "errors": [],
+            }
 
+        with patch("sys.argv", ["cli.py", "run", "tennis courts Edinburgh"]):
+            with patch("engine.orchestration.cli.orchestrate", side_effect=mock_async_orchestrate):
                 try:
                     main()
                 except SystemExit:

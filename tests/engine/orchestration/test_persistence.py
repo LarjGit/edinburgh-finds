@@ -6,7 +6,7 @@ to the database after cross-source deduplication.
 """
 
 import pytest
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, patch, MagicMock
 from prisma import Prisma
 
 from engine.orchestration.cli import main
@@ -14,7 +14,8 @@ from engine.orchestration.planner import orchestrate
 from engine.orchestration.types import IngestRequest, IngestionMode
 
 
-def test_persist_flag_saves_accepted_entities_to_database():
+@pytest.mark.asyncio
+async def test_persist_flag_saves_accepted_entities_to_database():
     """
     Test that --persist flag triggers database persistence.
 
@@ -30,26 +31,33 @@ def test_persist_flag_saves_accepted_entities_to_database():
         persist=True,  # NEW: Flag to enable persistence
     )
 
-    # Mock the persist_entities_sync function to simulate database persistence
+    # Mock PersistenceManager
     mock_persist_result = {
         "persisted_count": 3,  # Simulated count
         "persistence_errors": [],
     }
 
     # Act: Execute orchestration with persist flag
-    with patch("engine.orchestration.planner.persist_entities_sync", return_value=mock_persist_result) as mock_persist:
-        report = orchestrate(request)
+    with patch("engine.orchestration.planner.PersistenceManager") as mock_pm_class:
+        mock_pm_instance = MagicMock()
+        mock_pm_instance.__aenter__ = AsyncMock(return_value=mock_pm_instance)
+        mock_pm_instance.__aexit__ = AsyncMock(return_value=None)
+        mock_pm_instance.persist_entities = AsyncMock(return_value=mock_persist_result)
+        mock_pm_class.return_value = mock_pm_instance
+
+        report = await orchestrate(request)
 
     # Assert: Verify persistence was attempted
     assert report["persisted_count"] == 3
-    assert mock_persist.called
+    assert mock_pm_instance.persist_entities.called
     # Verify it was called with accepted entities
-    call_args = mock_persist.call_args[0]
+    call_args = mock_pm_instance.persist_entities.call_args[0]
     accepted_entities = call_args[0]
     assert len(accepted_entities) > 0
 
 
-def test_persist_flag_false_does_not_save_to_database():
+@pytest.mark.asyncio
+async def test_persist_flag_false_does_not_save_to_database():
     """
     Test that without --persist flag, entities are NOT saved to database.
 
@@ -64,23 +72,24 @@ def test_persist_flag_false_does_not_save_to_database():
         persist=False,  # Explicitly set to False
     )
 
-    # Mock persist_entities_sync
-    mock_persist_result = {
-        "persisted_count": 0,
-        "persistence_errors": [],
-    }
+    # Mock PersistenceManager
+    with patch("engine.orchestration.planner.PersistenceManager") as mock_pm_class:
+        mock_pm_instance = MagicMock()
+        mock_pm_instance.__aenter__ = AsyncMock(return_value=mock_pm_instance)
+        mock_pm_instance.__aexit__ = AsyncMock(return_value=None)
+        mock_pm_instance.persist_entities = AsyncMock()
+        mock_pm_class.return_value = mock_pm_instance
 
-    # Act: Execute orchestration without persist flag
-    with patch("engine.orchestration.planner.persist_entities_sync", return_value=mock_persist_result) as mock_persist:
-        report = orchestrate(request)
+        report = await orchestrate(request)
 
     # Assert: Verify no persistence was attempted
     assert report.get("persisted_count") is None  # Key not even in report
-    assert not mock_persist.called  # persist_entities_sync should not be called
+    assert not mock_pm_class.called  # PersistenceManager should not be created
     assert report["accepted_entities"] > 0  # Entities still processed in memory
 
 
-def test_deduplication_runs_before_persistence():
+@pytest.mark.asyncio
+async def test_deduplication_runs_before_persistence():
     """
     Test that deduplication happens BEFORE database persistence.
 
@@ -97,15 +106,21 @@ def test_deduplication_runs_before_persistence():
     )
 
     # Mock persistence to return count matching accepted entities
-    def mock_persist_func(accepted_entities, errors):
+    async def mock_persist_func(accepted_entities, errors):
         return {
             "persisted_count": len(accepted_entities),
             "persistence_errors": [],
         }
 
     # Act: Execute orchestration
-    with patch("engine.orchestration.planner.persist_entities_sync", side_effect=mock_persist_func) as mock_persist:
-        report = orchestrate(request)
+    with patch("engine.orchestration.planner.PersistenceManager") as mock_pm_class:
+        mock_pm_instance = MagicMock()
+        mock_pm_instance.__aenter__ = AsyncMock(return_value=mock_pm_instance)
+        mock_pm_instance.__aexit__ = AsyncMock(return_value=None)
+        mock_pm_instance.persist_entities = AsyncMock(side_effect=mock_persist_func)
+        mock_pm_class.return_value = mock_pm_instance
+
+        report = await orchestrate(request)
 
     # Assert: Verify deduplication worked correctly
     candidates_found = report["candidates_found"]
@@ -114,7 +129,7 @@ def test_deduplication_runs_before_persistence():
 
     assert persisted_count == report["accepted_entities"]
     assert duplicates_removed >= 0  # Some duplicates may have been removed
-    assert mock_persist.called
+    assert mock_pm_instance.persist_entities.called
 
 
 def test_cli_accepts_persist_flag():
@@ -129,19 +144,20 @@ def test_cli_accepts_persist_flag():
     # Arrange: Mock sys.argv to simulate CLI call
     test_args = ["cli.py", "run", "tennis courts", "--persist"]
 
-    # Mock orchestrate function
-    mock_report = {
-        "query": "tennis courts",
-        "candidates_found": 5,
-        "accepted_entities": 3,
-        "persisted_count": 3,
-        "connectors": {},
-        "errors": [],
-    }
+    # Mock orchestrate function as async
+    async def mock_async_orchestrate(request):
+        return {
+            "query": request.query,
+            "candidates_found": 5,
+            "accepted_entities": 3,
+            "persisted_count": 3,
+            "connectors": {},
+            "errors": [],
+        }
 
     # Act & Assert: Run CLI with --persist flag
     with patch("sys.argv", test_args):
-        with patch("engine.orchestration.cli.orchestrate", return_value=mock_report) as mock_orch:
+        with patch("engine.orchestration.cli.orchestrate", side_effect=mock_async_orchestrate) as mock_orch:
             with pytest.raises(SystemExit) as exc_info:
                 main()
 
@@ -153,7 +169,8 @@ def test_cli_accepts_persist_flag():
             assert call_args.persist is True
 
 
-def test_persist_creates_correct_extracted_entity_structure():
+@pytest.mark.asyncio
+async def test_persist_creates_correct_extracted_entity_structure():
     """
     Test that persisted entities have correct structure in database.
 
@@ -173,7 +190,7 @@ def test_persist_creates_correct_extracted_entity_structure():
     # Capture the accepted_entities passed to persist function
     captured_entities = []
 
-    def capture_persist(accepted_entities, errors):
+    async def capture_persist(accepted_entities, errors):
         captured_entities.extend(accepted_entities)
         return {
             "persisted_count": len(accepted_entities),
@@ -181,8 +198,14 @@ def test_persist_creates_correct_extracted_entity_structure():
         }
 
     # Act: Execute orchestration
-    with patch("engine.orchestration.planner.persist_entities_sync", side_effect=capture_persist):
-        report = orchestrate(request)
+    with patch("engine.orchestration.planner.PersistenceManager") as mock_pm_class:
+        mock_pm_instance = MagicMock()
+        mock_pm_instance.__aenter__ = AsyncMock(return_value=mock_pm_instance)
+        mock_pm_instance.__aexit__ = AsyncMock(return_value=None)
+        mock_pm_instance.persist_entities = AsyncMock(side_effect=capture_persist)
+        mock_pm_class.return_value = mock_pm_instance
+
+        report = await orchestrate(request)
 
     # Assert: Verify structure of entities that would be persisted
     assert len(captured_entities) > 0
@@ -196,7 +219,8 @@ def test_persist_creates_correct_extracted_entity_structure():
         # external IDs may or may not be present (depends on source)
 
 
-def test_persist_handles_database_errors_gracefully():
+@pytest.mark.asyncio
+async def test_persist_handles_database_errors_gracefully():
     """
     Test that database errors during persistence are handled gracefully.
 
@@ -212,19 +236,19 @@ def test_persist_handles_database_errors_gracefully():
         persist=True,
     )
 
-    # Mock persistence to return errors
-    mock_persist_result = {
-        "persisted_count": 0,
-        "persistence_errors": [{
-            "source": "test_source",
-            "error": "Database connection failed",
-            "entity_name": "Test Entity",
-        }],
-    }
+    # Mock persistence to raise an error
+    async def failing_persist(accepted_entities, errors):
+        raise Exception("Database connection failed")
 
     # Act: Execute orchestration
-    with patch("engine.orchestration.planner.persist_entities_sync", return_value=mock_persist_result):
-        report = orchestrate(request)
+    with patch("engine.orchestration.planner.PersistenceManager") as mock_pm_class:
+        mock_pm_instance = MagicMock()
+        mock_pm_instance.__aenter__ = AsyncMock(return_value=mock_pm_instance)
+        mock_pm_instance.__aexit__ = AsyncMock(return_value=None)
+        mock_pm_instance.persist_entities = AsyncMock(side_effect=failing_persist)
+        mock_pm_class.return_value = mock_pm_instance
+
+        report = await orchestrate(request)
 
     # Assert: Verify error was handled
     assert "persistence_errors" in report

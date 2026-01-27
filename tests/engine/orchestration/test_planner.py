@@ -56,25 +56,27 @@ class TestSelectConnectors:
 class TestOrchestrate:
     """Test orchestrate() main execution flow."""
 
-    def test_orchestrate_returns_dict(self):
+    @pytest.mark.asyncio
+    async def test_orchestrate_returns_dict(self):
         """orchestrate() should return a structured report dict."""
         request = IngestRequest(
             ingestion_mode=IngestionMode.DISCOVER_MANY,
             query="tennis courts Edinburgh",
         )
 
-        report = orchestrate(request)
+        report = await orchestrate(request)
 
         assert isinstance(report, dict), "orchestrate should return a dict"
 
-    def test_orchestrate_report_structure(self):
+    @pytest.mark.asyncio
+    async def test_orchestrate_report_structure(self):
         """orchestrate() report should have required top-level keys."""
         request = IngestRequest(
             ingestion_mode=IngestionMode.DISCOVER_MANY,
             query="tennis courts Edinburgh",
         )
 
-        report = orchestrate(request)
+        report = await orchestrate(request)
 
         # Required report keys
         assert "query" in report, "report should include query"
@@ -83,73 +85,79 @@ class TestOrchestrate:
         assert "connectors" in report, "report should include connectors metrics"
         assert "errors" in report, "report should include errors"
 
-    def test_orchestrate_candidates_found_is_int(self):
+    @pytest.mark.asyncio
+    async def test_orchestrate_candidates_found_is_int(self):
         """candidates_found should be a non-negative integer."""
         request = IngestRequest(
             ingestion_mode=IngestionMode.DISCOVER_MANY,
             query="tennis courts Edinburgh",
         )
 
-        report = orchestrate(request)
+        report = await orchestrate(request)
 
         assert isinstance(report["candidates_found"], int), "candidates_found should be int"
         assert report["candidates_found"] >= 0, "candidates_found should be >= 0"
 
-    def test_orchestrate_accepted_entities_is_int(self):
+    @pytest.mark.asyncio
+    async def test_orchestrate_accepted_entities_is_int(self):
         """accepted_entities should be a non-negative integer."""
         request = IngestRequest(
             ingestion_mode=IngestionMode.DISCOVER_MANY,
             query="tennis courts Edinburgh",
         )
 
-        report = orchestrate(request)
+        report = await orchestrate(request)
 
         assert isinstance(report["accepted_entities"], int), "accepted_entities should be int"
         assert report["accepted_entities"] >= 0, "accepted_entities should be >= 0"
 
-    def test_orchestrate_deduplication_works(self):
+    @pytest.mark.asyncio
+    async def test_orchestrate_deduplication_works(self):
         """Deduplication should result in accepted_entities <= candidates_found."""
         request = IngestRequest(
             ingestion_mode=IngestionMode.DISCOVER_MANY,
             query="tennis courts Edinburgh",
         )
 
-        report = orchestrate(request)
+        report = await orchestrate(request)
 
         # Deduplication invariant
         assert report["accepted_entities"] <= report["candidates_found"], \
             "accepted_entities should be <= candidates_found (deduplication)"
 
-    def test_orchestrate_connectors_metrics_is_dict(self):
+    @pytest.mark.asyncio
+    async def test_orchestrate_connectors_metrics_is_dict(self):
         """connectors metrics should be a dict with per-connector data."""
         request = IngestRequest(
             ingestion_mode=IngestionMode.DISCOVER_MANY,
             query="tennis courts Edinburgh",
         )
 
-        report = orchestrate(request)
+        report = await orchestrate(request)
 
         assert isinstance(report["connectors"], dict), "connectors should be a dict"
 
-    def test_orchestrate_errors_is_list(self):
+    @pytest.mark.asyncio
+    async def test_orchestrate_errors_is_list(self):
         """errors should be a list."""
         request = IngestRequest(
             ingestion_mode=IngestionMode.DISCOVER_MANY,
             query="tennis courts Edinburgh",
         )
 
-        report = orchestrate(request)
+        report = await orchestrate(request)
 
         assert isinstance(report["errors"], list), "errors should be a list"
 
-    def test_orchestrate_query_echo(self):
+    @pytest.mark.asyncio
+    async def test_orchestrate_query_echo(self):
         """Report should echo the original query string."""
         request = IngestRequest(
             ingestion_mode=IngestionMode.DISCOVER_MANY,
             query="tennis courts Edinburgh",
         )
 
-        report = orchestrate(request)
+        report = await orchestrate(request)
 
         assert report["query"] == "tennis courts Edinburgh", "query should be echoed in report"
 
@@ -450,28 +458,30 @@ class TestOrchestrateIntegration:
     """Integration tests for orchestrate() with real connectors."""
 
     @pytest.mark.integration
-    def test_orchestrate_executes_serper_and_google_places(self):
+    @pytest.mark.asyncio
+    async def test_orchestrate_executes_serper_and_google_places(self):
         """orchestrate() should execute both serper and google_places connectors."""
         request = IngestRequest(
             ingestion_mode=IngestionMode.DISCOVER_MANY,
             query="tennis courts Edinburgh",
         )
 
-        report = orchestrate(request)
+        report = await orchestrate(request)
 
         # Both connectors should have metrics
         assert "serper" in report["connectors"], "serper metrics should be present"
         assert "google_places" in report["connectors"], "google_places metrics should be present"
 
     @pytest.mark.integration
-    def test_orchestrate_serper_metrics_structure(self):
+    @pytest.mark.asyncio
+    async def test_orchestrate_serper_metrics_structure(self):
         """Serper connector metrics should have expected structure."""
         request = IngestRequest(
             ingestion_mode=IngestionMode.DISCOVER_MANY,
             query="tennis courts Edinburgh",
         )
 
-        report = orchestrate(request)
+        report = await orchestrate(request)
         serper_metrics = report["connectors"]["serper"]
 
         # Verify metrics structure
@@ -480,14 +490,15 @@ class TestOrchestrateIntegration:
         assert "cost_usd" in serper_metrics, "serper metrics should include 'cost_usd'"
 
     @pytest.mark.integration
-    def test_orchestrate_google_places_metrics_structure(self):
+    @pytest.mark.asyncio
+    async def test_orchestrate_google_places_metrics_structure(self):
         """Google Places connector metrics should have expected structure."""
         request = IngestRequest(
             ingestion_mode=IngestionMode.DISCOVER_MANY,
             query="tennis courts Edinburgh",
         )
 
-        report = orchestrate(request)
+        report = await orchestrate(request)
         google_places_metrics = report["connectors"]["google_places"]
 
         # Verify metrics structure
@@ -496,14 +507,15 @@ class TestOrchestrateIntegration:
         assert "cost_usd" in google_places_metrics, "google_places metrics should include 'cost_usd'"
 
     @pytest.mark.integration
-    def test_orchestrate_finds_candidates(self):
+    @pytest.mark.asyncio
+    async def test_orchestrate_finds_candidates(self):
         """orchestrate() should find at least some candidates for a real query."""
         request = IngestRequest(
             ingestion_mode=IngestionMode.DISCOVER_MANY,
             query="tennis courts Edinburgh",
         )
 
-        report = orchestrate(request)
+        report = await orchestrate(request)
 
         # Should find some candidates (real API call)
         # Note: This test requires API keys and network access
