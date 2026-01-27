@@ -65,7 +65,7 @@ Phase 2 was marked complete based on passing unit tests (22/22), but the real in
 
 ---
 
-- [ ] **Task: Add Diagnostic Logging & Error Visibility**
+- [x] **Task: Add Diagnostic Logging & Error Visibility** [7f0fd97]
     - [ ] Add debug logging to `persistence.py` before calling `extract_entity()` (log source, raw_ingestion_id)
     - [ ] Add debug logging after successful extraction (log entity_class, attribute count)
     - [ ] Add full stack trace logging in exception handlers with context
