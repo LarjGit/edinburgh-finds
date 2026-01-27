@@ -138,16 +138,38 @@ model LensEntity {
   @@index([entityId])
 }
 
-model RawIngestion {
-  id            String   @id @default(cuid())
-  source        String   // e.g., "serper", "google_places", "osm"
-  source_url    String   // Original URL or query that generated this data
-  file_path     String   // Path to raw JSON file: engine/data/raw/<source>/<timestamp>_<id>.json
-  status        String   // e.g., "success", "failed", "pending"
-  ingested_at   DateTime @default(now())
-  hash          String   // Content hash for deduplication
-  metadata_json String?  // Additional metadata stored as JSON
+model OrchestrationRun {
+  id                String   @id @default(cuid())
+  query             String   // Original user query
+  ingestion_mode    String   // e.g., "discover_many", "verify_one"
+  status            String   // e.g., "in_progress", "completed", "failed"
+  candidates_found  Int      @default(0)
+  accepted_entities Int      @default(0)
+  budget_spent_usd  Float?   @default(0.0)
+  metadata_json     String?  // Additional metadata stored as JSON
 
+  raw_ingestions RawIngestion[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([query])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model RawIngestion {
+  id                    String   @id @default(cuid())
+  source                String   // e.g., "serper", "google_places", "osm"
+  source_url            String   // Original URL or query that generated this data
+  file_path             String   // Path to raw JSON file: engine/data/raw/<source>/<timestamp>_<id>.json
+  status                String   // e.g., "success", "failed", "pending"
+  ingested_at           DateTime @default(now())
+  hash                  String   // Content hash for deduplication
+  metadata_json         String?  // Additional metadata stored as JSON
+  orchestration_run_id  String?  // Link to parent OrchestrationRun (nullable for backward compatibility)
+
+  orchestration_run OrchestrationRun? @relation(fields: [orchestration_run_id], references: [id], onDelete: SetNull)
   extractedEntities ExtractedEntity[]
   failedExtractions FailedExtraction[]
 
@@ -155,6 +177,7 @@ model RawIngestion {
   @@index([status])
   @@index([hash])
   @@index([ingested_at])
+  @@index([orchestration_run_id])
   @@index([source, status])
   @@index([status, ingested_at])
 }"""
