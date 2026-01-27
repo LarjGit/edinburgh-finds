@@ -19,10 +19,10 @@ This plan implements the complete orchestration persistence pipeline, including 
 ## Phase 2: Extraction Integration & Prompt Tuning
 *Goal: Bridge the orchestration layer to the extraction engine and improve LLM output.*
 
-- [ ] **Task: Implement Extraction Integration Bridge**
-    - [ ] Create `engine/orchestration/extraction_integration.py`
-    - [ ] Implement `needs_extraction` logic (skip structured sources)
-    - [ ] Implement `extract_entity` to invoke `HybridExtractionEngine`
+- [x] **Task: Implement Extraction Integration Bridge** [84184b2]
+    - [x] Create `engine/orchestration/extraction_integration.py`
+    - [x] Implement `needs_extraction` logic (skip structured sources)
+    - [x] Implement `extract_entity` to invoke `HybridExtractionEngine`
 - [ ] **Task: Tune LLM Prompts for Orchestration Pipeline**
     - [ ] Update prompts in `engine/extraction/prompts/` (or equivalent) to focus on concise summaries
     - [ ] Improve classification and dimension extraction in prompts
