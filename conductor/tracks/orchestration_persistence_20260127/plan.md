@@ -23,10 +23,10 @@ This plan implements the complete orchestration persistence pipeline, including 
     - [x] Create `engine/orchestration/extraction_integration.py`
     - [x] Implement `needs_extraction` logic (skip structured sources)
     - [x] Implement `extract_entity` to invoke `HybridExtractionEngine`
-- [ ] **Task: Tune LLM Prompts for Orchestration Pipeline**
-    - [ ] Update prompts in `engine/extraction/prompts/` (or equivalent) to focus on concise summaries
-    - [ ] Improve classification and dimension extraction in prompts
-    - [ ] Add "Uncertainty Handling" instructions to reduce hallucinations
+- [x] **Task: Tune LLM Prompts for Orchestration Pipeline** [1909733]
+    - [x] Update prompts in `engine/extraction/prompts/` (or equivalent) to focus on concise summaries
+    - [x] Improve classification and dimension extraction in prompts
+    - [x] Add "Uncertainty Handling" instructions to reduce hallucinations
 - [ ] **Task: Conductor - User Manual Verification 'Phase 2: Extraction Integration & Prompt Tuning' (Protocol in workflow.md)**
 
 ## Phase 3: Merging Integration & Pipeline Completion
