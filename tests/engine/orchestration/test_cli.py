@@ -124,6 +124,80 @@ class TestFormatReport:
         assert "error" in formatted.lower() or "failed" in formatted.lower(), \
             "report should indicate errors occurred"
 
+    def test_format_report_includes_success_status_indicators(self):
+        """format_report should include SUCCESS/FAILED status indicators."""
+        report = {
+            "query": "test query",
+            "candidates_found": 10,
+            "accepted_entities": 10,
+            "connectors": {
+                "serper": {
+                    "executed": True,
+                    "candidates_added": 10,
+                    "execution_time_ms": 100,
+                    "cost_usd": 0.01,
+                },
+                "google_places": {
+                    "executed": False,
+                    "error": "API error",
+                    "execution_time_ms": 50,
+                }
+            },
+            "errors": [],
+        }
+
+        formatted = format_report(report)
+
+        # Should include status indicators
+        assert "SUCCESS" in formatted or "✓" in formatted or "✔" in formatted, \
+            "report should include success indicator for executed connector"
+        assert "FAILED" in formatted or "✗" in formatted or "✘" in formatted, \
+            "report should include failure indicator for failed connector"
+
+    def test_format_report_has_visual_separators(self):
+        """format_report should have clear visual section separators."""
+        report = {
+            "query": "test query",
+            "candidates_found": 5,
+            "accepted_entities": 5,
+            "connectors": {},
+            "errors": [],
+        }
+
+        formatted = format_report(report)
+
+        # Should have section separators (=, -, or similar)
+        assert "=" * 20 in formatted or "-" * 20 in formatted or "─" * 20 in formatted, \
+            "report should include visual separators for sections"
+
+    def test_format_report_includes_persistence_metrics(self):
+        """format_report should display persistence metrics when available."""
+        report = {
+            "query": "test query",
+            "candidates_found": 10,
+            "accepted_entities": 10,
+            "persisted_count": 8,
+            "persistence_errors": [
+                {
+                    "source": "serper",
+                    "error": "Duplicate slug",
+                    "entity_name": "Test Venue"
+                }
+            ],
+            "connectors": {},
+            "errors": [],
+        }
+
+        formatted = format_report(report)
+
+        # Should include persistence count
+        assert "8" in formatted and ("Persisted" in formatted or "persisted" in formatted), \
+            "report should include persisted count"
+
+        # Should show persistence errors
+        assert "Duplicate slug" in formatted, \
+            "report should include persistence error details"
+
 
 class TestCLIMain:
     """Test CLI main() entry point."""

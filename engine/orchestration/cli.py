@@ -19,85 +19,115 @@ from engine.orchestration.planner import orchestrate
 from engine.orchestration.types import IngestRequest, IngestionMode
 
 
+# ANSI color codes for terminal output
+class Colors:
+    """ANSI color codes for terminal formatting."""
+    RESET = "\033[0m"
+    BOLD = "\033[1m"
+    GREEN = "\033[92m"
+    RED = "\033[91m"
+    YELLOW = "\033[93m"
+    BLUE = "\033[94m"
+    CYAN = "\033[96m"
+    GRAY = "\033[90m"
+
+
+def colorize(text: str, color: str) -> str:
+    """
+    Apply color to text using ANSI codes.
+
+    Args:
+        text: The text to colorize
+        color: The color code to apply
+
+    Returns:
+        Colorized text with reset code
+    """
+    return f"{color}{text}{Colors.RESET}"
+
+
 def format_report(report: Dict[str, Any]) -> str:
     """
-    Format orchestration report for CLI output.
+    Format orchestration report for CLI output with colors and visual indicators.
 
     Creates a human-readable report with:
     - Query echo
-    - Summary statistics
-    - Per-connector metrics table
-    - Errors (if any)
+    - Summary statistics (with color-coded values)
+    - Per-connector metrics table (with status indicators)
+    - Errors (if any, highlighted in red)
 
     Args:
         report: The orchestration report dict
 
     Returns:
-        Formatted string for CLI display
+        Formatted string for CLI display with ANSI color codes
     """
     lines = []
 
-    # Header
-    lines.append("=" * 80)
-    lines.append("INTELLIGENT INGESTION ORCHESTRATION REPORT")
-    lines.append("=" * 80)
+    # Header with color
+    separator = "=" * 80
+    lines.append(colorize(separator, Colors.CYAN))
+    lines.append(colorize("INTELLIGENT INGESTION ORCHESTRATION REPORT", Colors.BOLD + Colors.CYAN))
+    lines.append(colorize(separator, Colors.CYAN))
     lines.append("")
 
-    # Query
-    lines.append(f"Query: {report['query']}")
+    # Query in bold
+    lines.append(f"{colorize('Query:', Colors.BOLD)} {colorize(report['query'], Colors.BLUE)}")
     lines.append("")
 
-    # Summary
-    lines.append("Summary:")
-    lines.append(f"  Candidates Found:    {report['candidates_found']}")
-    lines.append(f"  Accepted Entities:   {report['accepted_entities']}")
+    # Summary with color-coded values
+    lines.append(colorize("Summary:", Colors.BOLD))
+    lines.append(f"  Candidates Found:    {colorize(str(report['candidates_found']), Colors.CYAN)}")
+    lines.append(f"  Accepted Entities:   {colorize(str(report['accepted_entities']), Colors.GREEN)}")
     deduped = report['candidates_found'] - report['accepted_entities']
-    lines.append(f"  Duplicates Removed:  {deduped}")
+    lines.append(f"  Duplicates Removed:  {colorize(str(deduped), Colors.YELLOW)}")
 
     # Add persistence info if available
     if "persisted_count" in report:
-        lines.append(f"  Persisted to DB:     {report['persisted_count']}")
+        lines.append(f"  Persisted to DB:     {colorize(str(report['persisted_count']), Colors.GREEN)}")
 
     lines.append("")
 
-    # Connector Metrics
-    lines.append("Connector Metrics:")
-    lines.append("-" * 80)
+    # Connector Metrics with color
+    lines.append(colorize("Connector Metrics:", Colors.BOLD))
+    lines.append(colorize("-" * 80, Colors.GRAY))
 
     if report['connectors']:
         # Table header
-        lines.append(f"{'Connector':<20} {'Status':<10} {'Time (ms)':<12} {'Candidates':<12} {'Cost (USD)':<12}")
-        lines.append("-" * 80)
+        header = f"{'Connector':<20} {'Status':<15} {'Time (ms)':<12} {'Candidates':<12} {'Cost (USD)':<12}"
+        lines.append(colorize(header, Colors.BOLD))
+        lines.append(colorize("-" * 80, Colors.GRAY))
 
-        # Table rows
+        # Table rows with color-coded status
         for connector_name, metrics in report['connectors'].items():
             if metrics.get("executed", False):
-                status = "SUCCESS"
+                status = colorize("✓ SUCCESS", Colors.GREEN)
                 time_ms = metrics.get("execution_time_ms", 0)
                 candidates = metrics.get("candidates_added", 0)
                 cost = metrics.get("cost_usd", 0.0)
 
-                lines.append(f"{connector_name:<20} {status:<10} {time_ms:<12} {candidates:<12} {cost:<12.4f}")
+                # Format row with proper spacing (accounting for ANSI codes)
+                lines.append(f"{connector_name:<20} {status:<24} {time_ms:<12} {candidates:<12} {cost:<12.4f}")
             else:
-                status = "FAILED"
+                status = colorize("✗ FAILED", Colors.RED)
                 time_ms = metrics.get("execution_time_ms", 0)
                 error = metrics.get("error", "Unknown error")
 
-                lines.append(f"{connector_name:<20} {status:<10} {time_ms:<12} {'N/A':<12} {'N/A':<12}")
-                lines.append(f"  Error: {error}")
+                lines.append(f"{connector_name:<20} {status:<24} {time_ms:<12} {'N/A':<12} {'N/A':<12}")
+                lines.append(colorize(f"  Error: {error}", Colors.RED))
     else:
-        lines.append("  No connectors executed")
+        lines.append(colorize("  No connectors executed", Colors.YELLOW))
 
     lines.append("")
 
-    # Errors
+    # Errors section with color
     if report['errors'] or report.get('persistence_errors'):
-        lines.append("Errors:")
-        lines.append("-" * 80)
+        lines.append(colorize("Errors:", Colors.BOLD + Colors.RED))
+        lines.append(colorize("-" * 80, Colors.GRAY))
         for error in report['errors']:
             connector = error.get("connector", "Unknown")
             error_msg = error.get("error", "Unknown error")
-            lines.append(f"  [{connector}] {error_msg}")
+            lines.append(colorize(f"  [{connector}] {error_msg}", Colors.RED))
 
         # Add persistence errors if present
         if report.get('persistence_errors'):
@@ -105,12 +135,12 @@ def format_report(report: Dict[str, Any]) -> str:
                 source = error.get("source", "Unknown")
                 error_msg = error.get("error", "Unknown error")
                 entity_name = error.get("entity_name", "N/A")
-                lines.append(f"  [Persistence/{source}] {error_msg} (entity: {entity_name})")
+                lines.append(colorize(f"  [Persistence/{source}] {error_msg} (entity: {entity_name})", Colors.RED))
 
         lines.append("")
 
-    # Footer
-    lines.append("=" * 80)
+    # Footer with color
+    lines.append(colorize("=" * 80, Colors.CYAN))
 
     return "\n".join(lines)
 
