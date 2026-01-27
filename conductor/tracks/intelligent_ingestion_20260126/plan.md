@@ -58,10 +58,10 @@ Complete the inventory and wire up database persistence.
     - [x] Add similarity threshold (e.g., 85% match on normalized names)
     - [x] Test with Serper vs Google Places overlap detection
     - [x] Update tests to verify cross-source deduplication works
-- [~] **Task: Implement Persistence Mode**
-    - [ ] Add `--persist` flag to CLI.
-    - [ ] Integrate with existing extractors/ingestors to save accepted entities to the DB.
-    - [ ] Ensure enhanced deduplication runs BEFORE database persistence
+- [x] **Task: Implement Persistence Mode** `b4ad8c3`
+    - [x] Add `--persist` flag to CLI.
+    - [x] Integrate with existing extractors/ingestors to save accepted entities to the DB.
+    - [x] Ensure enhanced deduplication runs BEFORE database persistence
 - [ ] **Task: Polish & Smoke Test**
     - [ ] Finalize CLI report formatting (colors, tables).
     - [ ] Create `scripts/test_orchestration_live.py` for real-world verification.
