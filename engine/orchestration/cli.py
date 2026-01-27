@@ -94,6 +94,51 @@ def format_report(report: Dict[str, Any]) -> str:
 
     lines.append("")
 
+    # Warnings section (display prominently before other sections)
+    if report.get("warnings"):
+        lines.append(colorize("Warnings:", Colors.BOLD + Colors.YELLOW))
+        lines.append(colorize("-" * 80, Colors.GRAY))
+        for warning in report["warnings"]:
+            message = warning.get("message", str(warning))
+            lines.append(colorize(f"  {message}", Colors.YELLOW))
+        lines.append("")
+
+    # Extraction Pipeline section
+    if "extraction_total" in report:
+        lines.append(colorize("Extraction Pipeline:", Colors.BOLD))
+        lines.append(colorize("-" * 80, Colors.GRAY))
+
+        extraction_total = report["extraction_total"]
+        extraction_success = report["extraction_success"]
+        extraction_failed = extraction_total - extraction_success
+
+        # Color code based on success rate
+        if extraction_failed == 0:
+            status_color = Colors.GREEN
+        elif extraction_success == 0:
+            status_color = Colors.RED
+        else:
+            status_color = Colors.YELLOW
+
+        lines.append(
+            f"  {colorize(f'{extraction_success}/{extraction_total}', status_color)} "
+            f"entities extracted successfully"
+        )
+
+        # List extraction failures if any
+        extraction_errors = report.get("extraction_errors", [])
+        if extraction_errors:
+            lines.append("")
+            lines.append(colorize("  Extraction Failures:", Colors.RED))
+            for error in extraction_errors:
+                source = error.get("source", "unknown")
+                entity_name = error.get("entity_name", "N/A")
+                error_msg = error.get("error", "Unknown error")
+                timestamp = error.get("timestamp", "")
+                lines.append(colorize(f"    [{source}] {entity_name}: {error_msg}", Colors.RED))
+
+        lines.append("")
+
     # Connector Metrics with color
     lines.append(colorize("Connector Metrics:", Colors.BOLD))
     lines.append(colorize("-" * 80, Colors.GRAY))

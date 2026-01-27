@@ -6,9 +6,19 @@ Uses the existing ExtractedEntity model from the extraction system.
 """
 
 import asyncio
+import hashlib
 import json
+import logging
+import traceback
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import Dict, List, Any, Optional
 from prisma import Prisma
+
+from engine.orchestration.extraction_integration import extract_entity, needs_extraction
+
+# Set up structured logging with prefix
+logger = logging.getLogger(__name__)
 
 
 class PersistenceManager:
@@ -46,14 +56,21 @@ class PersistenceManager:
             await self.db.disconnect()
 
     async def persist_entities(
-        self, accepted_entities: List[Dict[str, Any]], errors: List[Dict[str, Any]]
+        self,
+        accepted_entities: List[Dict[str, Any]],
+        errors: List[Dict[str, Any]],
+        orchestration_run_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Persist accepted entities to the database.
 
+        Creates RawIngestion records first to maintain data lineage,
+        then creates linked ExtractedEntity records.
+
         Args:
             accepted_entities: List of accepted (deduplicated) candidate dicts
             errors: List to append persistence errors to
+            orchestration_run_id: Optional ID of OrchestrationRun to link RawIngestions to
 
         Returns:
             Dict with persistence statistics:
@@ -65,23 +82,112 @@ class PersistenceManager:
 
         for candidate in accepted_entities:
             try:
-                # Convert candidate to ExtractedEntity format
-                entity_data = self._candidate_to_entity_data(candidate)
+                # Step 1: Save raw payload to disk (like ingestion system)
+                source = candidate.get("source", "orchestration")
+                candidate_name = candidate.get("name", "unknown")
+                raw_item = candidate.get("raw", {})
 
-                # Create ExtractedEntity record
+                # Create directory structure: engine/data/raw/<source>/
+                data_dir = Path("engine/data/raw") / source
+                data_dir.mkdir(parents=True, exist_ok=True)
+
+                # Generate filename: timestamp_hash.json
+                timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+                raw_payload_str = json.dumps(raw_item, indent=2)
+                content_hash = hashlib.sha256(raw_payload_str.encode()).hexdigest()[:16]
+                file_name = f"{timestamp}_{content_hash}.json"
+                file_path = data_dir / file_name
+
+                # Write raw payload to disk
+                file_path.write_text(raw_payload_str, encoding="utf-8")
+
+                # Generate source URL from raw item (connector-specific)
+                source_url = self._extract_source_url(raw_item, source, candidate_name)
+
+                # Step 2: Create RawIngestion record with proper file path
+                raw_ingestion_data = {
+                    "source": source,
+                    "source_url": source_url,
+                    "file_path": str(file_path.relative_to(Path("."))),  # Relative path from project root
+                    "status": "success",
+                    "hash": content_hash,
+                    "metadata_json": json.dumps({
+                        "ingestion_mode": "orchestration",
+                        "candidate_name": candidate_name,
+                    }),
+                }
+
+                # Link to OrchestrationRun if provided
+                if orchestration_run_id:
+                    raw_ingestion_data["orchestration_run_id"] = orchestration_run_id
+
+                raw_ingestion = await self.db.rawingestion.create(data=raw_ingestion_data)
+
+                # Step 3: Check if this source needs extraction
+                if needs_extraction(source):
+                    # Log extraction start with context
+                    logger.debug(
+                        f"[PERSIST] Extracting entity from source={source}, "
+                        f"raw_ingestion_id={raw_ingestion.id}, entity_name={candidate_name}"
+                    )
+
+                    # Use extraction engine to properly extract and structure the data
+                    extracted_data = await extract_entity(raw_ingestion.id, self.db)
+
+                    # Log extraction success with details
+                    entity_class = extracted_data["entity_class"]
+                    attr_count = len(extracted_data.get("attributes", {}))
+                    logger.debug(
+                        f"[PERSIST] Successfully extracted entity: entity_class={entity_class}, "
+                        f"attributes={attr_count}, raw_ingestion_id={raw_ingestion.id}"
+                    )
+
+                    # Build entity_data from extraction result
+                    entity_data = {
+                        "source": source,
+                        "entity_class": extracted_data["entity_class"],
+                        "attributes": json.dumps(extracted_data["attributes"]),
+                        "discovered_attributes": json.dumps(extracted_data["discovered_attributes"]),
+                        "raw_ingestion_id": raw_ingestion.id,
+                    }
+
+                    # Add optional fields if present
+                    if "external_ids" in extracted_data:
+                        entity_data["external_ids"] = json.dumps(extracted_data["external_ids"])
+
+                    if "model_used" in extracted_data:
+                        entity_data["model_used"] = extracted_data["model_used"]
+                else:
+                    # Structured source - extract directly without LLM
+                    logger.debug(
+                        f"[PERSIST] Processing structured source={source}, "
+                        f"raw_ingestion_id={raw_ingestion.id}, entity_name={candidate_name}"
+                    )
+                    entity_data = self._extract_entity_from_raw(raw_item, source, raw_ingestion.id)
+
+                # Step 4: Create ExtractedEntity record
                 await self.db.extractedentity.create(data=entity_data)
 
                 persisted_count += 1
 
             except Exception as e:
-                # Log error and continue with next entity
+                # Log error with full context and stack trace
                 source = candidate.get("source", "unknown")
                 name = candidate.get("name", "unknown")
                 error_msg = f"Failed to persist entity from {source}: {str(e)}"
+
+                logger.error(
+                    f"[PERSIST] Extraction failed: source={source}, entity_name={name}, "
+                    f"raw_ingestion_id={raw_ingestion.id if 'raw_ingestion' in locals() else 'N/A'}, "
+                    f"error={str(e)}",
+                    exc_info=True  # This includes the full stack trace
+                )
+
                 persistence_errors.append({
                     "source": source,
                     "error": error_msg,
                     "entity_name": name,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                 })
 
                 # Also append to main errors list
@@ -95,59 +201,177 @@ class PersistenceManager:
             "persistence_errors": persistence_errors,
         }
 
-    def _candidate_to_entity_data(self, candidate: Dict[str, Any]) -> Dict[str, Any]:
+    def _extract_source_url(self, raw_item: Dict[str, Any], source: str, fallback_name: str) -> str:
         """
-        Convert canonical candidate format to ExtractedEntity data structure.
+        Extract the original source URL from raw API response.
 
         Args:
-            candidate: Candidate dict to convert
+            raw_item: Raw API response dict
+            source: Source connector name
+            fallback_name: Fallback name if URL can't be extracted
+
+        Returns:
+            Source URL string
+        """
+        if source == "serper":
+            return raw_item.get("link", f"https://www.google.com/search?q={fallback_name}")
+        elif source == "google_places":
+            # Google Places API doesn't provide a direct URL, use Maps link
+            place_id = raw_item.get("place_id") or raw_item.get("id")
+            if place_id:
+                return f"https://www.google.com/maps/place/?q=place_id:{place_id}"
+            return f"https://www.google.com/maps/search/{fallback_name}"
+        elif source == "openstreetmap":
+            osm_type = raw_item.get("type", "node")
+            osm_id = raw_item.get("id", "unknown")
+            return f"https://www.openstreetmap.org/{osm_type}/{osm_id}"
+        elif source == "sport_scotland":
+            return raw_item.get("properties", {}).get("url", f"https://www.activeplaces.com/search?q={fallback_name}")
+        else:
+            return f"orchestration://{source}/{fallback_name}"
+
+    def _extract_entity_from_raw(self, raw_item: Dict[str, Any], source: str, raw_ingestion_id: str) -> Dict[str, Any]:
+        """
+        Extract entity data directly from raw API response (more complete than minimal candidate).
+
+        Args:
+            raw_item: Raw API response dict
+            source: Source connector name
+            raw_ingestion_id: ID of the RawIngestion record to link to
 
         Returns:
             Dict suitable for ExtractedEntity.create()
         """
-        # Build attributes dict from candidate fields
         attributes = {}
-
-        # Add fields if present
-        if "name" in candidate:
-            attributes["name"] = candidate["name"]
-
-        if "lat" in candidate and candidate["lat"] is not None:
-            attributes["latitude"] = candidate["lat"]
-
-        if "lng" in candidate and candidate["lng"] is not None:
-            attributes["longitude"] = candidate["lng"]
-
-        if "address" in candidate and candidate["address"]:
-            attributes["address"] = candidate["address"]
-
-        if "phone" in candidate and candidate["phone"]:
-            attributes["phone"] = candidate["phone"]
-
-        if "website" in candidate and candidate["website"]:
-            attributes["website"] = candidate["website"]
-
-        # Build external_ids dict
         external_ids = {}
-        if "ids" in candidate and candidate["ids"]:
-            # Copy all IDs from candidate
-            external_ids = candidate["ids"].copy()
 
-        # Determine entity_class (default to "place" for now)
-        # In future, this could be extracted from candidate metadata
-        entity_class = "place"
+        # Extract fields based on source
+        if source == "google_places":
+            # Google Places provides rich data
+            # Name (handle both old and new API)
+            if "displayName" in raw_item and isinstance(raw_item["displayName"], dict):
+                attributes["name"] = raw_item["displayName"].get("text")
+            elif "name" in raw_item:
+                attributes["name"] = raw_item["name"]
 
-        # Get source from candidate
-        source = candidate.get("source", "orchestration")
+            # Coordinates (handle both formats)
+            if "location" in raw_item and isinstance(raw_item["location"], dict):
+                attributes["latitude"] = raw_item["location"].get("latitude")
+                attributes["longitude"] = raw_item["location"].get("longitude")
+            elif "geometry" in raw_item and "location" in raw_item["geometry"]:
+                loc = raw_item["geometry"]["location"]
+                attributes["latitude"] = loc.get("lat")
+                attributes["longitude"] = loc.get("lng")
 
-        # Build entity data for database
+            # Address
+            attributes["address"] = raw_item.get("formattedAddress") or raw_item.get("formatted_address")
+
+            # Phone
+            attributes["phone"] = raw_item.get("internationalPhoneNumber") or raw_item.get("formatted_phone_number")
+
+            # Website
+            attributes["website"] = raw_item.get("website") or raw_item.get("websiteUri")
+
+            # Place ID
+            place_id = raw_item.get("place_id") or raw_item.get("id")
+            if place_id:
+                external_ids["google"] = place_id
+
+        elif source == "serper":
+            # Serper has minimal structured data
+            attributes["name"] = raw_item.get("title")
+            attributes["snippet"] = raw_item.get("snippet")
+
+        elif source == "openstreetmap":
+            # OSM provides tags
+            tags = raw_item.get("tags", {})
+            attributes["name"] = tags.get("name")
+            attributes["latitude"] = raw_item.get("lat")
+            attributes["longitude"] = raw_item.get("lon")
+
+            # Address components from OSM tags
+            if "addr:street" in tags or "addr:housenumber" in tags:
+                addr_parts = []
+                if "addr:housenumber" in tags:
+                    addr_parts.append(tags["addr:housenumber"])
+                if "addr:street" in tags:
+                    addr_parts.append(tags["addr:street"])
+                if "addr:city" in tags:
+                    addr_parts.append(tags["addr:city"])
+                if "addr:postcode" in tags:
+                    addr_parts.append(tags["addr:postcode"])
+                attributes["address"] = ", ".join(addr_parts)
+
+            # Phone and website from OSM tags
+            attributes["phone"] = tags.get("phone") or tags.get("contact:phone")
+            attributes["website"] = tags.get("website") or tags.get("contact:website")
+
+            # OSM ID
+            osm_type = raw_item.get("type", "node")
+            osm_id = raw_item.get("id")
+            if osm_id:
+                external_ids["osm"] = f"{osm_type}/{osm_id}"
+
+        elif source == "sport_scotland":
+            # Sport Scotland GeoJSON properties
+            props = raw_item.get("properties", {})
+
+            # Sport Scotland data structure varies - extract what's available
+            # Try to extract name from various fields
+            name = props.get("Name") or props.get("name") or props.get("facility_name")
+
+            # If no name field, try to extract from address (first part before ---)
+            if not name and "address" in props:
+                address_str = props["address"]
+                if "---" in address_str:
+                    name = address_str.split("---")[0].strip()
+                elif "," in address_str:
+                    # Take first part before comma as name
+                    name = address_str.split(",")[0].strip()
+                else:
+                    name = address_str
+
+            if name:
+                attributes["name"] = name
+
+            # Coordinates from GeoJSON geometry (handle both MultiPoint and Point)
+            geom = raw_item.get("geometry", {})
+            geom_type = geom.get("type")
+            coords = geom.get("coordinates", [])
+
+            if geom_type == "MultiPoint" and coords and len(coords) > 0:
+                # MultiPoint: coordinates is array of [lng, lat] pairs
+                if len(coords[0]) >= 2:
+                    attributes["longitude"] = coords[0][0]
+                    attributes["latitude"] = coords[0][1]
+            elif geom_type == "Point" and len(coords) >= 2:
+                # Point: coordinates is [lng, lat]
+                attributes["longitude"] = coords[0]
+                attributes["latitude"] = coords[1]
+
+            # Address from properties
+            attributes["address"] = props.get("address") or props.get("Address")
+            attributes["postcode"] = props.get("Postcode") or props.get("postcode")
+            attributes["phone"] = props.get("Phone") or props.get("phone")
+            attributes["website"] = props.get("Website") or props.get("website")
+            attributes["local_authority"] = props.get("local_authority")
+
+            # Sport Scotland ID
+            if "id" in raw_item:
+                external_ids["sport_scotland"] = str(raw_item["id"])
+
+        # Clean up None values
+        attributes = {k: v for k, v in attributes.items() if v is not None}
+        external_ids = {k: v for k, v in external_ids.items() if v is not None}
+
+        # Build entity data
         entity_data = {
             "source": source,
-            "entity_class": entity_class,
+            "entity_class": "place",
             "attributes": json.dumps(attributes),
             "external_ids": json.dumps(external_ids),
-            "discovered_attributes": json.dumps({}),  # No discovered attributes in orchestration
-            "raw_ingestion_id": None,  # Not linked to RawIngestion (orchestration creates entities directly)
+            "discovered_attributes": json.dumps({}),
+            "raw_ingestion_id": raw_ingestion_id,
         }
 
         return entity_data

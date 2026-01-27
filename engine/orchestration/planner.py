@@ -14,7 +14,10 @@ Phase C: Budget-aware gating, early stopping, and persistence
 """
 
 import asyncio
+import os
 from typing import Dict, List, Any
+
+from prisma import Prisma
 
 from engine.orchestration.adapters import ConnectorAdapter
 from engine.orchestration.execution_context import ExecutionContext
@@ -177,12 +180,14 @@ async def orchestrate(request: IngestRequest) -> Dict[str, Any]:
     Orchestrate execution of connectors to fulfill ingestion request.
 
     Main orchestration flow:
+    0. Create OrchestrationRun record (if persisting)
     1. Extract query features
     2. Select connectors to run
     3. Create execution context
     4. Execute connectors via adapters
     5. Apply deduplication
-    6. Build structured report
+    6. Persist and extract entities
+    7. Build structured report
 
     Args:
         request: The ingestion request containing query and parameters
@@ -195,99 +200,170 @@ async def orchestrate(request: IngestRequest) -> Dict[str, Any]:
         - connectors: Dict of per-connector metrics
         - errors: List of errors that occurred during execution
     """
-    # 1. Extract query features
-    query_features = QueryFeatures.extract(request.query, request)
+    # 0. Create OrchestrationRun record if persisting
+    orchestration_run_id = None
+    db = None
 
-    # 2. Select connectors to run
-    connector_names = select_connectors(request)
+    if request.persist:
+        db = Prisma()
+        await db.connect()
 
-    # 3. Create execution context
-    context = ExecutionContext()
-
-    # 4. Execute connectors via adapters
-    for connector_name in connector_names:
-        # Get connector spec from registry
-        if connector_name not in CONNECTOR_REGISTRY:
-            # Log error but continue with other connectors
-            context.errors.append({
-                "connector": connector_name,
-                "error": f"Connector not found in registry: {connector_name}",
-                "execution_time_ms": 0,
-            })
-            continue
-
-        registry_spec = CONNECTOR_REGISTRY[connector_name]
-
-        # Create ConnectorSpec for adapter (convert registry spec to execution plan spec)
-        connector_spec = ConnectorSpec(
-            name=registry_spec.name,
-            phase=ExecutionPhase.DISCOVERY if registry_spec.phase == "discovery" else ExecutionPhase.ENRICHMENT,
-            trust_level=int(registry_spec.trust_level * 100),  # Convert 0.0-1.0 to 0-100
-            requires=["request.query"],  # Phase A: minimal requirements
-            provides=["context.candidates"],
-            supports_query_only=True,
-            estimated_cost_usd=registry_spec.cost_per_call_usd,
+        orchestration_run = await db.orchestrationrun.create(
+            data={
+                "query": request.query,
+                "ingestion_mode": request.ingestion_mode.value,
+                "status": "in_progress",
+            }
         )
+        orchestration_run_id = orchestration_run.id
 
-        # Get connector instance
-        try:
-            connector = get_connector_instance(connector_name)
+    try:
+        # 1. Extract query features
+        query_features = QueryFeatures.extract(request.query, request)
 
-            # Create adapter
-            adapter = ConnectorAdapter(connector, connector_spec)
+        # 2. Select connectors to run
+        connector_names = select_connectors(request)
 
-            # Execute connector (adapter handles errors internally)
-            await adapter.execute(request, query_features, context)
-
-        except Exception as e:
-            # Unexpected error during adapter creation
-            context.errors.append({
-                "connector": connector_name,
-                "error": f"Failed to create connector: {str(e)}",
-                "execution_time_ms": 0,
+        # 2.5. Check API key availability and warn if Serper will be used
+        warnings = []
+        if "serper" in connector_names and not os.getenv("ANTHROPIC_API_KEY"):
+            warnings.append({
+                "type": "missing_api_key",
+                "message": "⚠ Serper extraction will fail without ANTHROPIC_API_KEY",
             })
 
-    # 5. Apply deduplication
-    # Process all candidates through accept_entity to deduplicate
-    for candidate in context.candidates:
-        context.accept_entity(candidate)
+        # 3. Create execution context
+        context = ExecutionContext()
 
-    # 6. Persist accepted entities if requested
-    persisted_count = 0
-    persistence_errors = []
+        # 4. Execute connectors via adapters
+        for connector_name in connector_names:
+            # Get connector spec from registry
+            if connector_name not in CONNECTOR_REGISTRY:
+                # Log error but continue with other connectors
+                context.errors.append({
+                    "connector": connector_name,
+                    "error": f"Connector not found in registry: {connector_name}",
+                    "execution_time_ms": 0,
+                })
+                continue
 
-    if request.persist:
-        try:
-            # Use async PersistenceManager directly
-            async with PersistenceManager() as persistence:
-                persistence_result = await persistence.persist_entities(context.accepted_entities, context.errors)
-                persisted_count = persistence_result["persisted_count"]
-                persistence_errors = persistence_result["persistence_errors"]
-        except Exception as e:
-            # Handle persistence errors gracefully - don't crash orchestration
-            error_msg = f"Persistence failed: {str(e)}"
-            context.errors.append({
-                "connector": "persistence",
-                "error": error_msg,
-            })
-            persistence_errors.append({
-                "source": "persistence",
-                "error": error_msg,
-                "entity_name": "N/A",
-            })
+            registry_spec = CONNECTOR_REGISTRY[connector_name]
 
-    # 7. Build structured report
-    report = {
-        "query": request.query,
-        "candidates_found": len(context.candidates),
-        "accepted_entities": len(context.accepted_entities),
-        "connectors": context.metrics,
-        "errors": context.errors,
-    }
+            # Create ConnectorSpec for adapter (convert registry spec to execution plan spec)
+            connector_spec = ConnectorSpec(
+                name=registry_spec.name,
+                phase=ExecutionPhase.DISCOVERY if registry_spec.phase == "discovery" else ExecutionPhase.ENRICHMENT,
+                trust_level=int(registry_spec.trust_level * 100),  # Convert 0.0-1.0 to 0-100
+                requires=["request.query"],  # Phase A: minimal requirements
+                provides=["context.candidates"],
+                supports_query_only=True,
+                estimated_cost_usd=registry_spec.cost_per_call_usd,
+            )
 
-    # Add persistence info if persist was enabled
-    if request.persist:
-        report["persisted_count"] = persisted_count
-        report["persistence_errors"] = persistence_errors
+            # Get connector instance
+            try:
+                connector = get_connector_instance(connector_name)
 
-    return report
+                # Create adapter
+                adapter = ConnectorAdapter(connector, connector_spec)
+
+                # Execute connector (adapter handles errors internally)
+                await adapter.execute(request, query_features, context)
+
+            except Exception as e:
+                # Unexpected error during adapter creation
+                context.errors.append({
+                    "connector": connector_name,
+                    "error": f"Failed to create connector: {str(e)}",
+                    "execution_time_ms": 0,
+                })
+
+        # 5. Apply deduplication
+        # Process all candidates through accept_entity to deduplicate
+        for candidate in context.candidates:
+            context.accept_entity(candidate)
+
+        # 6. Persist accepted entities if requested
+        persisted_count = 0
+        persistence_errors = []
+        extraction_errors = []
+
+        if request.persist:
+            try:
+                # Use async PersistenceManager with db connection
+                async with PersistenceManager(db=db) as persistence:
+                    persistence_result = await persistence.persist_entities(
+                        context.accepted_entities,
+                        context.errors,
+                        orchestration_run_id=orchestration_run_id
+                    )
+                    persisted_count = persistence_result["persisted_count"]
+                    persistence_errors = persistence_result["persistence_errors"]
+
+                    # Extraction errors are a subset of persistence_errors
+                    # (failures during the extraction step)
+                    extraction_errors = [
+                        err for err in persistence_errors
+                        if "timestamp" in err  # Extraction errors have timestamps
+                    ]
+            except Exception as e:
+                # Handle persistence errors gracefully - don't crash orchestration
+                error_msg = f"Persistence failed: {str(e)}"
+                context.errors.append({
+                    "connector": "persistence",
+                    "error": error_msg,
+                })
+                persistence_errors.append({
+                    "source": "persistence",
+                    "error": error_msg,
+                    "entity_name": "N/A",
+                })
+
+        # 7. Build structured report
+        report = {
+            "query": request.query,
+            "candidates_found": len(context.candidates),
+            "accepted_entities": len(context.accepted_entities),
+            "connectors": context.metrics,
+            "errors": context.errors,
+        }
+
+        # Add warnings if any
+        if warnings:
+            report["warnings"] = warnings
+
+        # Add persistence info if persist was enabled
+        if request.persist:
+            report["persisted_count"] = persisted_count
+            report["persistence_errors"] = persistence_errors
+
+            # Add extraction statistics
+            extraction_total = len(context.accepted_entities)
+            extraction_success = persisted_count  # Successfully persisted = successfully extracted
+            report["extraction_total"] = extraction_total
+            report["extraction_success"] = extraction_success
+            report["extraction_errors"] = extraction_errors
+
+        return report
+
+    finally:
+        # Update OrchestrationRun status and metrics if created
+        if db and orchestration_run_id:
+            try:
+                # Calculate total budget spent
+                total_budget = sum(m.get("cost_usd", 0.0) for m in context.metrics.values())
+
+                await db.orchestrationrun.update(
+                    where={"id": orchestration_run_id},
+                    data={
+                        "status": "completed" if not context.errors else "completed_with_errors",
+                        "candidates_found": len(context.candidates),
+                        "accepted_entities": len(context.accepted_entities),
+                        "budget_spent_usd": total_budget,
+                    }
+                )
+            except Exception as e:
+                # Don't crash if status update fails
+                pass
+
+            await db.disconnect()
