@@ -9,11 +9,11 @@ This plan implements the complete orchestration persistence pipeline, including 
     - [x] Add `OrchestrationRun` model to `engine/schema.prisma`
     - [x] Link `RawIngestion` to `OrchestrationRun`
     - [x] Run `npx prisma migrate dev` (or equivalent) to apply changes
-- [~] **Task: Refactor Persistence to be Async-Native**
-    - [ ] Remove `persist_entities_sync` wrapper in `engine/orchestration/persistence.py`
-    - [ ] Update `orchestrate()` in `planner.py` to be `async`
-    - [ ] Update CLI to call async orchestrate via `asyncio.run()`
-    - [ ] Verify Google Places data is now persisted correctly
+- [x] **Task: Refactor Persistence to be Async-Native** [abc8991]
+    - [x] Remove `persist_entities_sync` wrapper usage from `planner.py`
+    - [x] Update `orchestrate()` in `planner.py` to be `async`
+    - [x] Update CLI to call async orchestrate via `asyncio.run()`
+    - [x] Verify Google Places data is now persisted correctly
 - [ ] **Task: Conductor - User Manual Verification 'Phase 1: Infrastructure & Async Fixes' (Protocol in workflow.md)**
 
 ## Phase 2: Extraction Integration & Prompt Tuning
