@@ -15,6 +15,12 @@ Serper provides Google search results as unstructured text snippets. These snipp
 
 ## EXTRACTION STRATEGY
 
+**Output Style: Concise and Factual**
+- Extract precise, factual information without verbose descriptions
+- Keep all text fields concise and to-the-point
+- No marketing fluff or AI-sounding language
+- Focus on concrete, verifiable facts from snippets
+
 1. **Entity Name Identification**
    - Look for the primary business name that appears consistently
    - Ignore generic terms like "Find padel courts" or "Directory of..."
@@ -55,19 +61,26 @@ Serper provides Google search results as unstructured text snippets. These snipp
 8. **Entity Classification**
 {classification_rules}
 
-## CRITICAL NULL SEMANTICS
+## CRITICAL NULL SEMANTICS & UNCERTAINTY HANDLING
 
 **Use null aggressively for Serper data:**
 - If information is not explicitly stated in snippets → null
-- If information is mentioned but unclear → null
+- If information is mentioned but unclear or uncertain → null
 - If information conflicts across snippets → null
 - "Probably X" or "Seems to be X" → null (we need certainty)
+
+**PREVENTING HALLUCINATIONS:**
+- NEVER infer or guess information not present in snippets
+- When uncertain about a value, return null instead of hallucinating
+- If multiple values conflict, return null rather than choosing arbitrarily
+- Confidence threshold: Only extract if you are >90% certain based on snippets
 
 **Do not hallucinate or infer:**
 - Do NOT assume a phone number format
 - Do NOT infer address from city name alone
 - Do NOT guess opening hours
 - Do NOT create a website URL if not explicitly mentioned
+- Do NOT fabricate categories, ratings, or features
 
 ## SNIPPET AGGREGATION
 

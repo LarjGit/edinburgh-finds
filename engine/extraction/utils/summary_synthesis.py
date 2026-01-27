@@ -117,6 +117,7 @@ CRITICAL BRAND VOICE RULES (from product-guidelines.md):
    - "Proud to offer"
 
 2. REQUIRED STYLE:
+   - Be CONCISE - every word must add value
    - Use contextual bridges: "Just a short walk from [Landmark]" or "Perfect for those who prefer [Specific Need]"
    - Be a "Knowledgeable Local Friend" - helpful, warm, authoritative
    - Utility over hype: If expensive, say "Premium-priced". If basic, say "Functional and focused"
@@ -126,6 +127,7 @@ CRITICAL BRAND VOICE RULES (from product-guidelines.md):
    - Practical and informative
    - Warm but not effusive
    - Specific details over generic praise
+   - Brief and to-the-point - avoid verbose descriptions
 """
 
     def synthesize_summary(

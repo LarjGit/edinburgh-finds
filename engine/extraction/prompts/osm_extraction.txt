@@ -130,19 +130,27 @@ OpenStreetMap provides geographic data as structured key-value tags. These tags:
    - Multiple sports → ["Tennis Club", "Padel Facility"]
    - Be specific and user-friendly
 
-## CRITICAL NULL SEMANTICS
+## CRITICAL NULL SEMANTICS & UNCERTAINTY HANDLING
 
 **Use null for missing OSM data:**
 - If tag doesn't exist → null
 - If tag value is empty string → null
 - If tag value is "unknown" or "?" → null
 - If multiple elements conflict → null (unless one is clearly primary)
+- When uncertain about interpretation → null
+
+**PREVENTING HALLUCINATIONS:**
+- NEVER infer or guess information not present in OSM tags
+- When uncertain about tag interpretation, return null instead of hallucinating
+- If tags are ambiguous or contradictory, return null rather than choosing arbitrarily
+- Confidence threshold: Only extract if you are >90% certain based on tags
 
 **Do not hallucinate or infer:**
 - Do NOT assume facility exists because of sport tag (e.g., sport=tennis does NOT guarantee tennis:outdoor > 0)
-- Do NOT infer contact information
-- Do NOT guess capacity numbers
+- Do NOT infer contact information not in tags
+- Do NOT guess capacity numbers without explicit capacity:* tags
 - Do NOT create coordinates if not in element
+- Do NOT fabricate amenity booleans without corresponding tags
 
 ## TAG PRIORITY
 
