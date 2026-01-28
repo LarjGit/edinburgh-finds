@@ -1,8 +1,0 @@
-{
-  "id": "pytest_collection_conflicts_20260118",
-  "title": "Pytest Collection Conflicts",
-  "status": "proposed",
-  "created": "2026-01-18",
-  "owner": "Conductor",
-  "tags": ["tests", "pytest", "maintenance"]
-}
