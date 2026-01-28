@@ -8,3 +8,4 @@ phonenumbers
 fuzzywuzzy
 python-Levenshtein
 tqdm
+python-dotenv

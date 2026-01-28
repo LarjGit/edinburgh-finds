@@ -32,8 +32,13 @@ Expected Behavior:
 
 import argparse
 import sys
+from pathlib import Path
 from typing import Dict, Any, List
 from dataclasses import dataclass
+
+# Add project root to Python path so we can import engine modules
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
 
 from engine.orchestration.planner import orchestrate
 from engine.orchestration.types import IngestRequest, IngestionMode
