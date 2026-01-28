@@ -11,6 +11,8 @@ from dataclasses import dataclass
 from typing import Dict, List, Optional, Any
 from fuzzywuzzy import fuzz
 import math
+import re
+from unidecode import unidecode
 
 
 @dataclass
@@ -382,3 +384,48 @@ class Deduplicator:
     def _match_fuzzy(self, entity1: Dict[str, Any], entity2: Dict[str, Any]) -> MatchResult:
         """Match using fuzzy name + location."""
         return self.fuzzy_matcher.match(entity1, entity2)
+
+
+class SlugGenerator:
+    """Generate URL-safe slugs from entity names."""
+
+    def generate(self, name: str, location: Optional[str] = None) -> str:
+        """
+        Generate URL-safe slug from entity name.
+
+        Examples:
+            "Edinburgh Padel Club" → "edinburgh-padel-club"
+            "The Game4Padel - Portobello" → "game4padel-portobello"
+            "Café Olé" → "cafe-ole"
+
+        Args:
+            name: Entity name
+            location: Optional location to append
+
+        Returns:
+            URL-safe slug
+        """
+        # Remove articles (the, a, an) from start
+        slug = re.sub(r'^(the|a|an)\s+', '', name.lower(), flags=re.IGNORECASE)
+
+        # Convert Unicode to ASCII (accents: "Café" → "Cafe")
+        slug = unidecode(slug)
+
+        # Remove special characters (keep alphanumeric, spaces, hyphens)
+        slug = re.sub(r'[^a-z0-9\s-]', '', slug)
+
+        # Replace spaces with hyphens
+        slug = re.sub(r'\s+', '-', slug.strip())
+
+        # Add location suffix if provided
+        if location:
+            location_slug = unidecode(location.lower())
+            location_slug = re.sub(r'[^a-z0-9\s-]', '', location_slug)
+            location_slug = re.sub(r'\s+', '-', location_slug.strip())
+            slug = f"{slug}-{location_slug}"
+
+        # Remove duplicate hyphens
+        slug = re.sub(r'-+', '-', slug)
+
+        # Strip leading/trailing hyphens
+        return slug.strip('-')

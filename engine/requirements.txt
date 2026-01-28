@@ -9,3 +9,4 @@ fuzzywuzzy
 python-Levenshtein
 tqdm
 python-dotenv
+unidecode>=1.3.0
