@@ -127,8 +127,19 @@ def extract_roles(raw_data: Dict[str, Any]) -> List[str]:
     """
     Extract roles (canonical_roles) from raw entity data.
 
+    VERTICAL-AGNOSTIC: Uses generic field names that work across all verticals.
+    Domain-specific data should be stored in modules (e.g., modules.sports_facility).
+
+    Generic Field Names (Extractors should populate these):
+    - provides_equipment: Boolean - facility provides equipment/assets
+    - equipment_count: Integer - number of equipment units (courts, tasting rooms, etc.)
+    - provides_instruction: Boolean - educational/training services offered
+    - membership_required: Boolean - membership organization
+    - is_members_only: Boolean - alternative membership indicator
+    - sells_goods: Boolean - retail function
+
     Args:
-        raw_data: Raw entity data dictionary
+        raw_data: Raw entity data dictionary with GENERIC field names
 
     Returns:
         List of role strings (e.g., ["provides_facility", "membership_org"])
@@ -137,16 +148,18 @@ def extract_roles(raw_data: Dict[str, Any]) -> List[str]:
     """
     roles = []
 
-    # Check for facility provision
-    if raw_data.get("has_courts") or raw_data.get("has_pitches") or raw_data.get("has_facilities"):
+    # Check for facility provision (VERTICAL-AGNOSTIC: generic field names)
+    # Extractors should populate provides_equipment flag or equipment_count
+    # Sports-specific details (court types, etc.) go in modules.sports_facility
+    if raw_data.get("provides_equipment") or raw_data.get("equipment_count", 0) > 0:
         roles.append("provides_facility")
 
-    # Check for membership organization
-    if raw_data.get("membership_required"):
+    # Check for membership organization (already generic - works across all verticals)
+    if raw_data.get("membership_required") or raw_data.get("is_members_only"):
         roles.append("membership_org")
 
-    # Check for instruction provision - use explicit flags only
-    if raw_data.get("provides_coaching") or raw_data.get("provides_instruction"):
+    # Check for instruction provision (already generic - sports coaching, wine education, etc.)
+    if raw_data.get("provides_instruction"):
         roles.append("provides_instruction")
 
     # Check for retail/goods sales - use type hints only
