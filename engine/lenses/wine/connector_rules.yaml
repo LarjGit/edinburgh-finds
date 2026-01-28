@@ -1,0 +1,112 @@
+# Wine Lens - Connector Selection Rules
+# Demonstrates extensibility - new vertical-specific routing with zero engine changes
+
+# Connector selection rules for wine-related queries
+connectors:
+  # Wine Searcher API (hypothetical - demonstrates domain connector)
+  # NOTE: This connector doesn't exist yet - just demonstrates extensibility
+  wine_searcher:
+    priority: high
+    description: "Wine Searcher API - wine-specific search engine"
+
+    triggers:
+      # Trigger if query contains ANY wine-related keyword
+      - type: any_keyword_match
+        keywords:
+          - wine
+          - winery
+          - vineyard
+          - tasting
+          - cellar
+          - vintage
+          - grape
+          - pinot
+          - chardonnay
+          - merlot
+        threshold: 1  # Match at least 1 keyword
+
+      # Trigger for wine category searches
+      - type: category_search
+        activity_keywords: [wine, winery, vineyard, tasting]
+        confidence: high
+
+    budget_weight: 0.05  # $0.05 per query (hypothetical)
+    trust_score: crowdsourced  # Community data
+    phase: discovery  # Run in discovery phase
+    timeout_seconds: 30
+
+  # Edinburgh Council - Local retailers/venues
+  edinburgh_council:
+    priority: medium
+    description: "Edinburgh Council data - may include licensed wine retailers"
+
+    triggers:
+      # Trigger if query mentions Edinburgh + wine
+      - type: location_match
+        keywords:
+          - edinburgh
+          - leith
+          - stockbridge
+        threshold: 1
+
+      # Require wine-related context
+      - type: any_keyword_match
+        keywords: [wine, winery, tasting, cellar]
+        threshold: 1
+
+    budget_weight: 0.0  # Free connector
+    trust_score: official  # Government data
+    phase: enrichment
+    timeout_seconds: 30
+
+  # Google Places - Wine bars, retailers, tasting rooms
+  google_places:
+    priority_boost_if:
+      # Higher priority for branded wine searches
+      - type: brand_mention
+        brands:
+          - cairn o'mohr
+          - loch fyne
+          - oddbins
+          - majestic
+          - laithwaites
+          - vivino
+        boost: high
+
+# Connector selection strategy
+selection_strategy:
+  # For category searches (e.g., "wineries in scotland")
+  category_search:
+    discovery_phase:
+      - serper  # Generic web search (base connector)
+      - openstreetmap  # Geographic data (base connector)
+      - wine_searcher  # Domain-specific (lens connector - hypothetical)
+
+    enrichment_phase:
+      - google_places  # Detailed place data (base connector)
+      - edinburgh_council  # Local government data (lens connector)
+
+  # For specific searches (e.g., "Cairn O'Mohr Winery")
+  specific_search:
+    discovery_phase:
+      - serper  # Generic web search
+      - google_places  # Detailed place data (prioritized)
+
+    enrichment_phase:
+      - openstreetmap  # Additional geodata
+      - wine_searcher  # Domain verification (hypothetical)
+
+# Budget guidelines
+budget_guidelines:
+  free_connectors:
+    - serper
+    - openstreetmap
+    - edinburgh_council
+
+  paid_connectors:
+    - google_places  # $0.017 per request
+    - wine_searcher  # $0.05 per request (hypothetical)
+
+  recommendations:
+    category_search: "Maximize free connectors (OSM, Serper)"
+    specific_search: "Google Places + Wine Searcher for precision"

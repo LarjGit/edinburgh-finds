@@ -1,0 +1,125 @@
+# Padel Lens - Connector Selection Rules
+# This file defines domain-specific connector routing rules
+
+# Connector selection rules for sports-related queries
+connectors:
+  # Sport Scotland - Official sports facilities database (FREE)
+  sport_scotland:
+    priority: high
+    description: "Sport Scotland facilities database - official government data"
+
+    triggers:
+      # Trigger if query contains ANY sports-related keyword
+      - type: any_keyword_match
+        keywords:
+          - padel
+          - tennis
+          - football
+          - rugby
+          - swimming
+          - pool
+          - sport
+          - gym
+          - fitness
+          - court
+          - pitch
+          - club
+          - squash
+          - badminton
+          - basketball
+          - athletics
+        threshold: 1  # Match at least 1 keyword
+
+      # Trigger for category searches with activity keywords
+      - type: category_search
+        activity_keywords: [padel, tennis, sport, swimming, football]
+        confidence: high
+
+    # Connector metadata
+    budget_weight: 0.0  # Free connector
+    trust_score: official  # Government data source
+    phase: discovery  # Run in discovery phase
+    timeout_seconds: 30
+
+  # Edinburgh Council - Local authority facilities data (FREE)
+  edinburgh_council:
+    priority: medium
+    description: "Edinburgh Council facilities - local government data"
+
+    triggers:
+      # Trigger if query mentions Edinburgh locations
+      - type: location_match
+        keywords:
+          - edinburgh
+          - leith
+          - portobello
+          - morningside
+          - stockbridge
+        threshold: 1
+
+      # Trigger for facility searches in Edinburgh area
+      - type: facility_search
+        keywords: [facility, centre, center, venue, leisure]
+        location_required: true
+
+    budget_weight: 0.0  # Free connector
+    trust_score: official  # Government data
+    phase: enrichment  # Run after discovery for additional detail
+    timeout_seconds: 30
+
+  # Brand-specific triggers (e.g., Powerleague, Goals, David Lloyd)
+  google_places:
+    priority_boost_if:
+      # Higher priority for branded searches
+      - type: brand_mention
+        brands:
+          - powerleague
+          - goals
+          - nuffield
+          - david lloyd
+          - virgin active
+          - puregym
+          - the gym
+          - anytime fitness
+        boost: high  # Prioritize enrichment connectors for brand queries
+
+# Connector selection strategy
+selection_strategy:
+  # For category searches (e.g., "padel courts Edinburgh")
+  category_search:
+    discovery_phase:
+      - serper  # Generic web search (base connector)
+      - openstreetmap  # Geographic data (base connector)
+      - sport_scotland  # Domain-specific (lens connector)
+
+    enrichment_phase:
+      - google_places  # Detailed place data (base connector)
+      - edinburgh_council  # Local government data (lens connector)
+
+  # For specific searches (e.g., "Powerleague Portobello")
+  specific_search:
+    discovery_phase:
+      - serper  # Generic web search
+      - google_places  # Detailed place data (prioritized)
+
+    enrichment_phase:
+      - openstreetmap  # Additional geodata
+      - sport_scotland  # Official verification
+
+# Budget guidelines
+budget_guidelines:
+  free_connectors:
+    - serper
+    - openstreetmap
+    - sport_scotland
+    - edinburgh_council
+
+  paid_connectors:
+    - google_places  # $0.017 per request
+
+  recommendations:
+    # Prefer free connectors for category searches (broad discovery)
+    category_search: "Maximize free connectors (OSM, Sport Scotland)"
+
+    # Use paid connectors for specific searches (higher precision needed)
+    specific_search: "Google Places acceptable for brand/specific queries"

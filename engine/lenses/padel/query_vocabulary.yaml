@@ -1,0 +1,93 @@
+# Padel Lens - Query Vocabulary Configuration
+# This file defines domain-specific keywords for query feature extraction
+
+# Activity-related keywords that indicate this query is relevant to the Padel lens
+activity_keywords:
+  - padel
+  - tennis
+  - football
+  - rugby
+  - swimming
+  - pool
+  - pools
+  - sport
+  - sports
+  - gym
+  - fitness
+  - court
+  - courts
+  - pitch
+  - pitches
+  - club
+  - clubs
+  - squash
+  - badminton
+  - basketball
+  - volleyball
+  - athletics
+  - running
+  - cycling
+  - climbing
+
+# Location indicators that suggest the query includes geographic context
+location_indicators:
+  - in
+  - near
+  - around
+  - edinburgh
+  - leith
+  - portobello
+  - morningside
+  - stockbridge
+  - newtown
+  - old town
+  - southside
+  - west end
+  - corstorphine
+  - cramond
+  - musselburgh
+
+# Facility type keywords that indicate category searches
+facility_keywords:
+  - centre
+  - center
+  - facility
+  - facilities
+  - venue
+  - venues
+  - arena
+  - hall
+  - complex
+  - ground
+  - park
+
+# Query patterns for classification (optional - for future enhancement)
+query_patterns:
+  category_search:
+    # Patterns like "padel courts" or "tennis facilities"
+    description: "Activity + facility type indicates category search"
+    examples:
+      - "padel courts"
+      - "tennis facilities"
+      - "swimming pools"
+    confidence: high
+
+  specific_search:
+    # Patterns like "Edinburgh Indoor Sports Centre"
+    description: "Proper noun + facility type indicates specific place search"
+    examples:
+      - "Edinburgh Indoor Sports Centre"
+      - "Craiglockhart Tennis Centre"
+      - "David Lloyd Edinburgh"
+    confidence: high
+
+  brand_search:
+    # Patterns like "powerleague" or "goals"
+    description: "Brand name indicates specific chain search"
+    examples:
+      - "powerleague"
+      - "goals"
+      - "nuffield"
+      - "david lloyd"
+      - "puregym"
+    confidence: very_high

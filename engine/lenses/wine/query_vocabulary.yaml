@@ -1,0 +1,91 @@
+# Wine Lens - Query Vocabulary Configuration
+# This demonstrates horizontal extensibility - new vertical added with ZERO engine code changes
+
+# Activity-related keywords for wine discovery vertical
+activity_keywords:
+  - wine
+  - winery
+  - wineries
+  - vineyard
+  - vineyards
+  - tasting
+  - tastings
+  - cellar
+  - cellars
+  - sommelier
+  - bottle
+  - bottles
+  - vintage
+  - vintages
+  - grape
+  - grapes
+  - pinot
+  - chardonnay
+  - merlot
+  - cabernet
+  - riesling
+  - sauvignon
+  - prosecco
+  - champagne
+  - red wine
+  - white wine
+  - ros
+  - rosé
+  - sparkling
+
+# Location indicators (Scotland-focused)
+location_indicators:
+  - in
+  - near
+  - around
+  - scotland
+  - edinburgh
+  - glasgow
+  - aberdeen
+  - dundee
+  - stirling
+  - perth
+  - highlands
+  - lowlands
+  - borders
+  - fife
+  - lothian
+
+# Facility type keywords for wine vertical
+facility_keywords:
+  - winery
+  - vineyard
+  - cellar
+  - bar
+  - shop
+  - merchant
+  - retailer
+  - tasting room
+  - estate
+
+# Query patterns for wine vertical
+query_patterns:
+  category_search:
+    description: "Wine activity + facility type indicates category search"
+    examples:
+      - "wine tastings"
+      - "wineries near me"
+      - "vineyard tours"
+    confidence: high
+
+  specific_search:
+    description: "Proper noun + winery indicates specific place search"
+    examples:
+      - "Cairn O'Mohr Winery"
+      - "Loch Fyne Vineyard"
+      - "Edinburgh Wine Merchants"
+    confidence: high
+
+  product_search:
+    description: "Wine type + vintage indicates product search (not place)"
+    examples:
+      - "pinot noir 2019"
+      - "champagne vintage"
+      - "scottish red wine"
+    confidence: medium
+    note: "May need disambiguation - looking for wine or place that sells wine?"
