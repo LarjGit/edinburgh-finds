@@ -115,15 +115,6 @@ class EntityFinalizer:
         # Build Entity data (matching actual Entity schema)
         external_ids_data = json.loads(extracted.external_ids) if extracted.external_ids else {}
 
-        # Handle field name variations (legacy vs new naming)
-        latitude = attributes.get("location_lat") or attributes.get("latitude")
-        longitude = attributes.get("location_lng") or attributes.get("longitude")
-        street_address = (
-            attributes.get("address_full") or
-            attributes.get("address_street") or
-            attributes.get("address")
-        )
-
         return {
             "slug": slug,
             "entity_class": extracted.entity_class,
@@ -133,15 +124,15 @@ class EntityFinalizer:
             "canonical_roles": attributes.get("canonical_roles", []),
             "canonical_place_types": attributes.get("canonical_place_types", []),
             "canonical_access": attributes.get("canonical_access", []),
-            "latitude": latitude,
-            "longitude": longitude,
-            "street_address": street_address,
-            "city": attributes.get("address_city") or attributes.get("city"),
-            "postcode": attributes.get("address_postal_code") or attributes.get("postcode"),
-            "country": attributes.get("address_country") or attributes.get("country"),
-            "phone": attributes.get("contact_phone") or attributes.get("phone"),
-            "email": attributes.get("contact_email") or attributes.get("email"),
-            "website_url": attributes.get("contact_website") or attributes.get("website"),
+            "latitude": attributes.get("location_lat"),
+            "longitude": attributes.get("location_lng"),
+            "street_address": attributes.get("address_full") or attributes.get("address_street"),
+            "city": attributes.get("address_city"),
+            "postcode": attributes.get("address_postal_code"),
+            "country": attributes.get("address_country"),
+            "phone": attributes.get("contact_phone"),
+            "email": attributes.get("contact_email"),
+            "website_url": attributes.get("contact_website"),
             "modules": Json(attributes.get("modules", {})),
             "discovered_attributes": Json({}),
             "opening_hours": Json({}),
