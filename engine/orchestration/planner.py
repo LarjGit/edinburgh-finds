@@ -30,6 +30,7 @@ from engine.orchestration.query_features import QueryFeatures
 from engine.orchestration.registry import CONNECTOR_REGISTRY, get_connector_instance
 from engine.orchestration.types import IngestRequest, IngestionMode
 from engine.orchestration.persistence import PersistenceManager
+from engine.orchestration.entity_finalizer import EntityFinalizer
 from engine.lenses.query_lens import get_active_lens
 
 
@@ -258,6 +259,8 @@ async def orchestrate(request: IngestRequest) -> Dict[str, Any]:
         persisted_count = 0
         persistence_errors = []
         extraction_errors = []
+        entities_created = 0
+        entities_updated = 0
 
         if request.persist:
             try:
@@ -277,6 +280,13 @@ async def orchestrate(request: IngestRequest) -> Dict[str, Any]:
                         err for err in persistence_errors
                         if "timestamp" in err  # Extraction errors have timestamps
                     ]
+
+                # ✅ NEW: Finalize entities to Entity table
+                finalizer = EntityFinalizer(db)
+                finalization_result = await finalizer.finalize_entities(orchestration_run_id)
+                entities_created = finalization_result.get("entities_created", 0)
+                entities_updated = finalization_result.get("entities_updated", 0)
+
             except Exception as e:
                 # Handle persistence errors gracefully - don't crash orchestration
                 error_msg = f"Persistence failed: {str(e)}"
@@ -314,6 +324,10 @@ async def orchestrate(request: IngestRequest) -> Dict[str, Any]:
             report["extraction_total"] = extraction_total
             report["extraction_success"] = extraction_success
             report["extraction_errors"] = extraction_errors
+
+            # Add entity finalization stats
+            report["entities_created"] = entities_created
+            report["entities_updated"] = entities_updated
 
         return report
 

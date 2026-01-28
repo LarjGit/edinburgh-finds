@@ -178,7 +178,7 @@ class QueryLens:
                     if not location_required:
                         return True
                     # Check if location indicator present
-                    if query_features and query_features.has_location_indicator:
+                    if query_features and query_features.has_geo_intent:
                         return True
 
             elif trigger_type == "category_search":
