@@ -77,6 +77,8 @@ class IngestRequest:
         min_confidence: Minimum confidence threshold for acceptance (optional, 0.0-1.0)
         budget_usd: Maximum budget in USD for the ingestion run (optional)
         persist: Whether to persist accepted entities to database (default: False)
+        lens: Lens identifier for vertical-specific interpretation (e.g., "padel", "wine")
+              Defaults to None which becomes "padel" lens
     """
 
     ingestion_mode: IngestionMode
@@ -85,3 +87,4 @@ class IngestRequest:
     min_confidence: Optional[float] = None
     budget_usd: Optional[float] = None
     persist: bool = False
+    lens: Optional[str] = None  # Defaults to "padel" if None

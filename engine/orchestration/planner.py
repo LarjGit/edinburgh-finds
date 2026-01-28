@@ -11,6 +11,10 @@ Orchestrates the execution of connectors to fulfill an ingestion request:
 Phase A: Hardcoded connector selection (serper, google_places)
 Phase B: Intelligent selection based on query features
 Phase C: Budget-aware gating, early stopping, and persistence
+
+ARCHITECTURAL NOTE: This module is now VERTICAL-AGNOSTIC. Domain-specific connector
+routing (e.g., sport_scotland for sports queries) is driven by Lens configurations.
+Adding a new vertical (Wine, Restaurants) requires ZERO planner code changes.
 """
 
 import asyncio
@@ -26,6 +30,7 @@ from engine.orchestration.query_features import QueryFeatures
 from engine.orchestration.registry import CONNECTOR_REGISTRY, get_connector_instance
 from engine.orchestration.types import IngestRequest, IngestionMode
 from engine.orchestration.persistence import PersistenceManager
+from engine.lenses.query_lens import get_active_lens
 
 
 def select_connectors(request: IngestRequest) -> List[str]:
@@ -39,7 +44,9 @@ def select_connectors(request: IngestRequest) -> List[str]:
     Selection logic:
     - Category searches use multiple discovery sources (serper, openstreetmap)
     - Specific searches prioritize high-trust enrichment (google_places)
-    - Sports queries include domain-specific connector (sport_scotland)
+    - Domain-specific connectors determined by Lens (VERTICAL-AGNOSTIC)
+      e.g., Padel lens adds sport_scotland for sports queries
+           Wine lens adds wine_searcher for wine queries
     - RESOLVE_ONE mode is more selective than DISCOVER_MANY
     - Connectors ordered by phase: discovery first, then enrichment
     - Budget constraints filter out paid connectors when budget is tight
@@ -51,10 +58,10 @@ def select_connectors(request: IngestRequest) -> List[str]:
         List of connector names to execute, ordered by phase
     """
     # Phase B: Intelligent selection based on query features
-    query_features = QueryFeatures.extract(request.query, request)
+    query_features = QueryFeatures.extract(request.query, request, lens_name=request.lens)
 
-    # Detect sports domain
-    is_sports_query = _is_sports_related(request.query)
+    # Load Lens for domain-specific connector routing (VERTICAL-AGNOSTIC)
+    lens = get_active_lens(request.lens)
 
     # Initialize connector sets by phase
     discovery_connectors = []
@@ -82,9 +89,10 @@ def select_connectors(request: IngestRequest) -> List[str]:
         # Enrichment phase: Always use google_places for authoritative data
         enrichment_connectors.append("google_places")
 
-        # Domain-specific routing: Add sport_scotland for sports queries
-        if is_sports_query:
-            enrichment_connectors.append("sport_scotland")
+    # Domain-specific routing: Use Lens to determine additional connectors (VERTICAL-AGNOSTIC)
+    # This replaces the hardcoded _is_sports_related() check
+    lens_connectors = lens.get_connectors_for_query(request.query.lower(), query_features)
+    enrichment_connectors.extend(lens_connectors)
 
     # Phase C: Apply budget-aware gating
     selected_connectors = discovery_connectors + enrichment_connectors
@@ -136,43 +144,6 @@ def _apply_budget_gating(connectors: List[str], budget_usd: float) -> List[str]:
         # else: skip this connector (budget would be exceeded)
 
     return selected
-
-
-def _is_sports_related(query: str) -> bool:
-    """
-    Detect if query is sports-related.
-
-    Checks for sports-specific keywords to determine if domain-specific
-    sports connectors (like sport_scotland) should be included.
-
-    Args:
-        query: The search query string
-
-    Returns:
-        True if query contains sports-related terms
-    """
-    normalized = query.lower()
-
-    sports_keywords = [
-        "padel",
-        "tennis",
-        "football",
-        "rugby",
-        "swimming",
-        "pool",
-        "pools",
-        "sport",
-        "sports",
-        "gym",
-        "fitness",
-        "court",
-        "courts",
-        "pitch",
-        "club",
-        "clubs",
-    ]
-
-    return any(keyword in normalized for keyword in sports_keywords)
 
 
 async def orchestrate(request: IngestRequest) -> Dict[str, Any]:
