@@ -16,6 +16,7 @@ from typing import Dict, List, Any, Optional
 from prisma import Prisma
 
 from engine.orchestration.extraction_integration import extract_entity, needs_extraction
+from engine.extraction.entity_classifier import classify_entity
 
 # Set up structured logging with prefix
 logger = logging.getLogger(__name__)
@@ -367,7 +368,7 @@ class PersistenceManager:
         # Build entity data
         entity_data = {
             "source": source,
-            "entity_class": "place",
+            "entity_class": classify_entity(attributes),  # ✅ DERIVED from data
             "attributes": json.dumps(attributes),
             "external_ids": json.dumps(external_ids),
             "discovered_attributes": json.dumps({}),

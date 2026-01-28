@@ -399,3 +399,42 @@ def get_engine_modules(entity_class: str) -> List[str]:
 
     required_modules = entity_config.get("required_modules", [])
     return required_modules
+
+
+def classify_entity(attributes: Dict[str, Any]) -> str:
+    """
+    Classify entity type from attributes (VERTICAL-AGNOSTIC).
+
+    Classification rules:
+    - event: Has start_date/end_date (time-bounded)
+    - person: Has entity_type="person" or person indicators
+    - place: Has location coordinates or address
+    - organization: Has entity_type="organization" without location
+    - thing: Default fallback
+
+    Args:
+        attributes: Entity attributes dict
+
+    Returns:
+        entity_class string (place|person|organization|event|thing)
+    """
+    # Event: Time-bounded
+    if attributes.get("start_date") or attributes.get("end_date"):
+        return "event"
+
+    # Person: Explicit type or person indicators
+    if attributes.get("entity_type") == "person":
+        return "person"
+
+    # Place: Has location
+    has_coords = attributes.get("location_lat") and attributes.get("location_lng")
+    has_address = attributes.get("address_full") or attributes.get("address_street")
+    if has_coords or has_address:
+        return "place"
+
+    # Organization: Explicit type without location
+    if attributes.get("entity_type") == "organization":
+        return "organization"
+
+    # Default: thing
+    return "thing"
