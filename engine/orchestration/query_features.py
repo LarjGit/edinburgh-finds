@@ -7,10 +7,17 @@ request and made available to condition evaluation via query_features.*.
 
 The extraction is purely rule-based and deterministic - same query always
 produces same features.
+
+ARCHITECTURAL NOTE: This module is now VERTICAL-AGNOSTIC. All domain-specific
+vocabulary (activity keywords, location names) is loaded from Lens configurations
+at runtime. Adding a new vertical (Wine, Restaurants) requires ZERO code changes -
+just create a new lens YAML config.
 """
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
+
+from engine.lenses.query_lens import get_active_lens, QueryLens
 
 if TYPE_CHECKING:
     from engine.orchestration.types import IngestRequest
@@ -37,16 +44,26 @@ class QueryFeatures:
     has_geo_intent: bool
 
     @classmethod
-    def extract(cls, query: str, request: "IngestRequest") -> "QueryFeatures":
+    def extract(
+        cls,
+        query: str,
+        request: "IngestRequest",
+        lens_name: Optional[str] = None
+    ) -> "QueryFeatures":
         """
         Extract features from query string and request parameters.
 
         This is the only way to create QueryFeatures instances. Extraction is
         deterministic - same inputs always produce same output.
 
+        VERTICAL-AGNOSTIC: Uses Lens-provided vocabulary for domain-specific
+        term detection. Different lenses (Padel, Wine) provide different keywords
+        without requiring code changes.
+
         Args:
             query: The user's search query string
             request: The ingestion request containing mode and parameters
+            lens_name: Optional lens identifier (defaults to Padel if not specified)
 
         Returns:
             QueryFeatures with computed boolean signals
@@ -61,11 +78,14 @@ class QueryFeatures:
                 has_geo_intent=False,
             )
 
-        # Detect category search patterns
-        looks_like_category = cls._detect_category_search(normalized)
+        # Load Lens configuration for domain-specific vocabulary
+        lens = get_active_lens(lens_name)
 
-        # Detect geographic intent
-        has_geo = cls._detect_geo_intent(normalized)
+        # Detect category search patterns (using Lens vocabulary)
+        looks_like_category = cls._detect_category_search(normalized, lens)
+
+        # Detect geographic intent (using Lens location indicators)
+        has_geo = cls._detect_geo_intent(normalized, lens)
 
         return cls(
             looks_like_category_search=looks_like_category,
@@ -73,7 +93,7 @@ class QueryFeatures:
         )
 
     @staticmethod
-    def _detect_category_search(normalized_query: str) -> bool:
+    def _detect_category_search(normalized_query: str, lens: "QueryLens") -> bool:
         """
         Detect if query looks like a category/activity search.
 
@@ -81,44 +101,36 @@ class QueryFeatures:
         (e.g., "tennis courts", "padel", "sports facilities") rather than
         specific venue names (e.g., "Oriam Scotland", "Edinburgh Leisure Centre").
 
+        VERTICAL-AGNOSTIC: Uses Lens-provided activity and facility keywords.
+        Different verticals (Padel sports vs Wine) provide different term sets
+        without requiring code changes.
+
         Heuristics:
-        - Contains generic activity/facility terms
+        - Contains generic activity/facility terms (from Lens)
         - Plural forms (courts, facilities, centres)
         - Lacks proper nouns or specific identifiers
         - Short queries (1-3 words) without geographic qualifiers
 
         Args:
             normalized_query: Lowercased, stripped query string
+            lens: QueryLens providing domain-specific vocabulary
 
         Returns:
             True if query appears to be a category search
         """
-        # Category indicator terms
-        category_terms = [
-            "court",
-            "courts",
-            "centre",
-            "center",
-            "facility",
-            "facilities",
-            "club",
-            "clubs",
-            "padel",
-            "tennis",
-            "football",
-            "rugby",
-            "swimming",
-            "gym",
-            "sport",
-            "sports",
-        ]
+        # Load category indicator terms from Lens (VERTICAL-AGNOSTIC)
+        activity_keywords = lens.get_activity_keywords()
+        facility_keywords = lens.get_facility_keywords()
+        category_terms = activity_keywords + facility_keywords
 
-        # Specific venue indicators (suggest not a category search)
+        # Generic specific venue indicators (universal across verticals)
+        # These suggest a branded/specific search rather than category search
         specific_indicators = [
             "leisure",  # Often part of specific venue names
-            "edinburgh leisure",
-            "oriam",
-            "meggetland",
+            "the ",     # "The" suggests proper noun
+            " ltd",
+            " limited",
+            " plc",
         ]
 
         # Check for specific venue indicators first
@@ -128,7 +140,7 @@ class QueryFeatures:
                 # unless it also has clear category terms
                 return False
 
-        # Check for category terms
+        # Check for category terms (from Lens vocabulary)
         for term in category_terms:
             if term in normalized_query:
                 return True
@@ -137,7 +149,7 @@ class QueryFeatures:
         return False
 
     @staticmethod
-    def _detect_geo_intent(normalized_query: str) -> bool:
+    def _detect_geo_intent(normalized_query: str, lens: "QueryLens") -> bool:
         """
         Detect if query contains geographic intent.
 
@@ -145,18 +157,24 @@ class QueryFeatures:
         location or area. This includes explicit location names, proximity
         indicators, and geographic prepositions.
 
+        VERTICAL-AGNOSTIC: Uses Lens-provided location indicators.
+        Different lenses (Edinburgh Padel vs Scotland Wine) provide different
+        geographic vocabularies without requiring code changes.
+
         Heuristics:
-        - Contains "in", "near", "around", "at"
-        - Contains location names (Edinburgh, Leith, etc.)
-        - Contains "near me" or similar proximity phrases
+        - Contains "in", "near", "around", "at" (universal geo markers)
+        - Contains location names (from Lens - e.g., Edinburgh, Scotland, regions)
+        - Contains "near me" or similar proximity phrases (universal)
 
         Args:
             normalized_query: Lowercased, stripped query string
+            lens: QueryLens providing domain-specific location indicators
 
         Returns:
             True if query has geographic intent
         """
-        # Geographic prepositions and proximity terms
+        # Universal geographic prepositions and proximity terms
+        # These are vertical-agnostic (same across Padel, Wine, etc.)
         geo_markers = [
             " in ",
             " near ",
@@ -166,25 +184,17 @@ class QueryFeatures:
             "nearby",
         ]
 
-        # Known location names (can be expanded)
-        location_names = [
-            "edinburgh",
-            "leith",
-            "morningside",
-            "stockbridge",
-            "portobello",
-            "musselburgh",
-            "dalkeith",
-            "lothian",
-            "scotland",
-        ]
-
-        # Check for geographic markers
+        # Check for universal geographic markers
         for marker in geo_markers:
             if marker in normalized_query:
                 return True
 
-        # Check for location names
+        # Load location names from Lens (VERTICAL-AGNOSTIC)
+        # Padel lens: Edinburgh neighborhoods
+        # Wine lens: Scotland wine regions
+        location_names = lens.get_location_indicators()
+
+        # Check for location names (from Lens vocabulary)
         for location in location_names:
             if location in normalized_query:
                 return True
