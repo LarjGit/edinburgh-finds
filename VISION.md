@@ -1,771 +1,630 @@
-# Edinburgh Finds - Vision Document
+# Edinburgh Finds - System Vision
 
 **Last Updated:** 2026-01-28
 
-**Purpose:** Define what success looks like for the intelligent ingestion engine.
+**Purpose:** Define what success looks like for the complete Edinburgh Finds discovery platform - from natural language query to rich, accurate entity data.
 
 ---
 
 ## Core Vision
 
-**An AI-scale discovery platform that captures RICH, domain-specific data across any vertical (Padel, Wine, Restaurants, Hiking) through intelligent multi-source orchestration, with zero engine code changes when adding new verticals.**
+**A horizontal, vertical-agnostic entity extraction engine that transforms natural language queries into complete, accurate entity records through AI-powered multi-source orchestration. The engine is universal - all vertical-specific logic lives in pluggable lens configurations.**
 
-Success = Running a natural language query produces high-quality Entity records with:
-- ✅ Correct universal classification (entity_class, roles)
-- ✅ Rich domain-specific module data (equipment specs, wine varieties, menu items)
-- ✅ Accurate location and contact information
-- ✅ Deduplicated across sources (one entity, not five duplicates)
+**Edinburgh Finds** is the first vertical lens - an Edinburgh-centric discovery platform for venues, retailers, clubs, events, and coaches - used to prove the system's vertical independence and completeness.
+
+### What This Means
+
+**Universal Engine:**
+- Vertical-agnostic architecture: the engine knows nothing about "Padel", "Wine", or domain concepts
+- All entities stored as universal `entity_class` (place, person, organization, event, thing)
+- Multi-valued dimensions (`canonical_activities`, `canonical_categories`) stored as opaque arrays
+- Vertical-specific data lives in JSON `modules`, interpreted by lenses
+
+**Lens Layer (Edinburgh Finds is first):**
+- YAML configuration defines domain vocabulary, connector routing, field schemas
+- Adding new verticals (Wine Discovery, Restaurant Finder) requires ZERO engine code changes
+- Each lens provides query interpretation, data source selection, and display logic
+
+**Infinite Connector Extensibility:**
+- Current prototype: 6 connectors (Serper, Google Places, OpenStreetMap, Sport Scotland, Edinburgh Council, Open Charge Map)
+- System designed for unlimited connector growth as verticals expand
+- **New verticals need new sources:** Wine Discovery adds Vivino, Wine-Searcher, Decanter APIs
+- **Existing verticals get enriched:** Edinburgh Finds adds TripAdvisor, Yelp, VisitScotland, Edinburgh Leisure API
+- **Connector registry** (`engine/orchestration/registry.py`) provides pluggable architecture - new sources integrate via standardized interface
+- Each connector self-describes: cost tier, trust level, orchestration phase, timeout, capabilities
+
+**End-to-End Flow:**
+
+Users ask questions in natural language:
+- **Single entity lookup:** "powerleague portobello" → detailed venue record with all facilities
+- **General discovery:** "padel courts edinburgh" → all venues offering padel
+- **Category search:** "sports facilities with swimming pools" → filtered results
+
+The system automatically:
+- **Interprets** the query using lens vocabulary (what are they looking for?)
+- **Orchestrates** intelligent data gathering using lens connector rules (which sources to use?)
+- **Extracts** structured data from multiple sources using hybrid deterministic + LLM extraction
+- **Deduplicates** cross-source matches (same entity from Google, OSM, domain APIs)
+- **Merges** conflicting data using trust hierarchies and field-level confidence
+- **Finalizes** unified entities with slug generation and entity_class classification
+- **Delivers** complete, rich entity records to database
+
+**Success Criteria:**
+
+Entity records that are **complete** (all available data populated, exceptions tracked) and **accurate** (correctly classified, no hallucinations, proper deduplication).
 
 ---
 
-## The Core Architecture: Universal + Opaque + Modules
+## The Three-Layer Architecture
 
-### Three-Layer Data Model
+Edinburgh Finds uses a universal data model that separates what the engine stores from how the lens interprets it.
 
-#### 1. Universal Fields (Engine-Defined)
+### Layer 1: Universal Fields (Engine-Defined)
+
 Fields every entity has, regardless of vertical:
 
 ```
-entity_class: "place" | "person" | "organization" | "event" | "thing"
-entity_name: "Game4Padel Barnton Park"
-slug: "game4padel-barnton-park"
-summary: "Indoor padel facility with 6 courts..."
-latitude: 55.9679631
-longitude: -3.2790334
-street_address: "12 Barnton Park, Edinburgh"
-phone: "+44 131 XXX XXXX"
-website_url: "https://game4padel.co.uk"
-```
+entity_name: "Craiglockhart Sports Centre"
+entity_class: "place"
+slug: "craiglockhart-sports-centre"
+summary: "Multi-sport facility offering tennis, swimming, gym and spa facilities"
 
-#### 2. Opaque Dimensions (Engine Stores, Lens Interprets)
-Multi-valued arrays stored as PostgreSQL `text[]` with GIN indexes. **The engine treats these as completely opaque** - it stores string identifiers, lenses provide meaning:
+latitude: 55.920654
+longitude: -3.237891
+street_address: "177 Colinton Road"
+city: "Edinburgh"
+postcode: "EH14 1BZ"
+country: "UK"
 
-```
-canonical_activities: ["activity_padel", "activity_tennis"]
-  ↓ Padel Lens interprets as:
-  → "Padel" (primary activity)
-  → "Tennis" (secondary activity)
+phone: "+441314447100"
+email: "info@craiglockhart.com"
+website_url: "https://www.edinburghleisure.co.uk/venues/craiglockhart"
+instagram_url: "https://instagram.com/edinburghleisure"
+facebook_url: "https://facebook.com/craiglockhartsports"
 
-canonical_place_types: ["facility_indoor_courts", "facility_membership_club"]
-  ↓ Padel Lens interprets as:
-  → "Indoor Sports Facility"
-  → "Membership Club"
+opening_hours: {
+  "monday": {"open": "06:00", "close": "22:00"},
+  "tuesday": {"open": "06:00", "close": "22:00"},
+  ...
+}
 
-canonical_roles: ["provides_facility", "provides_instruction"]
-  ↓ Universal (all lenses interpret same):
-  → Venue provides equipment/facilities
-  → Coaching/instruction available
+source_info: {
+  "discovered_by": ["google_places", "edinburgh_leisure_api"],
+  "verified_date": "2026-01-28"
+}
 
-canonical_access: ["access_pay_and_play", "access_membership"]
-  ↓ Padel Lens interprets as:
-  → "Pay & Play Available"
-  → "Membership Options"
-```
-
-**Why opaque?** Adding Wine Discovery doesn't change the engine. Wine lens interprets `["activity_wine_tasting", "activity_retail"]` differently than Padel lens interprets `["activity_padel", "activity_tennis"]`, but the engine just stores strings.
-
-#### 3. Domain Modules (JSONB, Lens-Triggered)
-Rich, vertical-specific data in namespaced JSON:
-
-**Padel Venue:**
-```json
-{
-  "modules": {
-    "sports_facility": {
-      "equipment": [
-        {
-          "type": "padel_court",
-          "count": 4,
-          "surface": "artificial_turf",
-          "indoor": true,
-          "dimensions": "20m x 10m",
-          "lighting": "LED",
-          "booking_required": true
-        },
-        {
-          "type": "padel_court",
-          "count": 2,
-          "surface": "artificial_turf",
-          "indoor": false,
-          "floodlit": true
-        }
-      ],
-      "changing_rooms": true,
-      "equipment_rental": ["rackets", "balls"],
-      "booking_system": "courtside",
-      "peak_pricing": {"weekday": "£40/hr", "weekend": "£50/hr"},
-      "membership_options": {
-        "individual_monthly": "£60",
-        "family_annual": "£600"
-      },
-      "coaching": {
-        "available": true,
-        "types": ["group", "1-on-1", "kids"],
-        "price_range": "£25-60/session"
-      }
-    }
-  }
+external_ids: {
+  "google_places": "ChIJabcdef123456",
+  "edinburgh_leisure": "CRAIG-001"
 }
 ```
 
-**Winery:**
-```json
-{
-  "modules": {
-    "wine_production": {
-      "grape_varieties": ["pinot_noir", "chardonnay", "riesling"],
-      "wine_styles": ["sparkling", "still_white", "still_red"],
-      "production_method": "traditional_method",
-      "vineyard_size_acres": 12.5,
-      "annual_production_bottles": 15000,
-      "tasting_room": {
-        "available": true,
-        "booking_required": true,
-        "tasting_fee": "£15 (redeemable on purchase)",
-        "group_size": "2-12 people"
-      },
-      "retail": {
-        "on_site": true,
-        "online": true,
-        "price_range": "£18-45/bottle"
-      },
-      "tours": {
-        "available": true,
-        "duration_mins": 90,
-        "includes_tasting": true,
-        "price": "£25/person"
-      }
-    }
-  }
-}
+### Layer 2: Opaque Dimensions (Engine Stores, Lens Interprets)
+
+Multi-valued arrays stored as PostgreSQL `text[]`. **The engine treats these as opaque** - it stores string identifiers, the Edinburgh Finds lens provides human-readable interpretation:
+
+```
+categories: ["Sports Centre", "Swimming Pool", "Gym"]
+  ↓ Edinburgh Finds lens interprets as:
+  → Navigation taxonomy
+  → Search filters
+  → Display labels
+
+canonical_categories: ["sports_facility", "swimming_pool", "gym"]
+  ↓ Controlled vocabulary for:
+  → Consistent categorization
+  → Cross-source matching
+  → Faceted search
 ```
 
-**Restaurant:**
-```json
-{
-  "modules": {
-    "food_service": {
-      "cuisine_types": ["italian", "mediterranean"],
-      "menu_highlights": ["handmade_pasta", "wood_fired_pizza"],
-      "dietary_options": ["vegetarian", "vegan", "gluten_free"],
-      "price_range": "££" (1-4 scale),
-      "seating_capacity": 60,
-      "reservations": {
-        "required": false,
-        "recommended_for": "weekend_dinner",
-        "booking_system": "opentable"
-      },
-      "service_style": "table_service",
-      "alcohol_license": true,
-      "outdoor_seating": {
-        "available": true,
-        "capacity": 20,
-        "heated": true
-      }
-    }
-  }
-}
+**Design Question:** Should lenses also be responsible for populating these opaque dimensions? Or should the engine extract them generically and lenses just interpret?
+
+### Layer 3: Rich Vertical Data (Venue-Specific Fields)
+
+Edinburgh Finds "Venue" entities have comprehensive facility data:
+
+#### Racquet Sports
 ```
+tennis_summary: "8 indoor courts and 4 outdoor clay courts"
+tennis: true
+tennis_total_courts: 12
+tennis_indoor_courts: 8
+tennis_outdoor_courts: 4
+tennis_covered_courts: 8
+tennis_floodlit_courts: 4
+
+padel_summary: "4 indoor courts available for pay-and-play"
+padel: true
+padel_total_courts: 4
+
+pickleball_summary: "2 dedicated pickleball courts"
+pickleball: true
+pickleball_total_courts: 2
+
+badminton_summary: "6 courts available for casual play and league matches"
+badminton: true
+badminton_total_courts: 6
+
+squash_summary: "3 courts including 1 glass-back court"
+squash: true
+squash_total_courts: 3
+squash_glass_back_courts: 1
+
+table_tennis_summary: "2 tables in dedicated area"
+table_tennis: true
+table_tennis_total_tables: 2
+```
+
+#### Football
+```
+football_summary: "Multiple pitch sizes for 5-a-side, 7-a-side and full 11-a-side matches"
+football_5_a_side: true
+football_5_a_side_total_pitches: 4
+football_7_a_side: true
+football_7_a_side_total_pitches: 2
+football_11_a_side: true
+football_11_a_side_total_pitches: 1
+```
+
+#### Swimming
+```
+swimming_summary: "25m indoor pool with separate learner pool"
+indoor_pool: true
+indoor_pool_length_m: 25
+outdoor_pool: false
+outdoor_pool_length_m: null
+family_swim: true
+adult_only_swim: true
+swimming_lessons: true
+```
+
+#### Gym & Classes
+```
+gym_summary: "120-station gym with modern equipment"
+gym_available: true
+gym_size: 120
+classes_summary: "60+ classes per week including yoga, HIIT, spin, pilates and strength"
+classes_per_week: 60
+hiit_classes: true
+yoga_classes: true
+pilates_classes: true
+strength_classes: true
+cycling_studio: true
+functional_training_zone: true
+```
+
+#### Spa & Wellness
+```
+spa_summary: "Full spa with sauna, steam room and hydro pool"
+spa_available: true
+sauna: true
+steam_room: true
+hydro_pool: true
+hot_tub: false
+outdoor_spa: false
+ice_cold_plunge: true
+relaxation_area: true
+```
+
+#### Dining & Amenities
+```
+amenities_summary: "Cafe serving healthy snacks and smoothies"
+restaurant: false
+bar: false
+cafe: true
+childrens_menu: false
+wifi: true
+```
+
+#### Family & Kids
+```
+family_summary: "Creche available, kids swimming and tennis lessons"
+creche_available: true
+creche_age_min: 6
+creche_age_max: 12
+kids_swimming_lessons: true
+kids_tennis_lessons: true
+holiday_club: true
+play_area: false
+```
+
+#### Parking & Transport
+```
+parking_and_transport_summary: "80 spaces including disabled parking, bus routes nearby"
+parking_spaces: 80
+disabled_parking: true
+parent_child_parking: true
+ev_charging_available: true
+ev_charging_connectors: 4
+public_transport_nearby: true
+nearest_railway_station: "Slateford"
+```
+
+#### Reviews & Social Proof
+```
+reviews_summary: "4.2 stars from 340 Google reviews"
+average_rating: 4.2
+review_count: 340
+google_review_count: 340
+facebook_likes: 1250
+```
+
+This is what makes Edinburgh Finds valuable - **complete facility data, not just name and address**.
 
 ---
 
-## What "Success" Looks Like
+## What Success Looks Like
 
-### Running a Query
+### Complete Data with Exception Management
 
-```bash
-python -m engine.orchestration.cli run "padel courts edinburgh" --persist
-```
+**Principle:** ALL available data should be populated. Empty fields should be exceptions with tracked reasons, not arbitrary coverage targets.
 
-### Expected Entity Table Results
+For a venue like Craiglockhart Sports Centre:
 
-**Quantity:**
-- 50-200 entities discovered
-- 80%+ are `entity_class='place'` (correctly classified)
-- <5% duplicates (effective deduplication)
+**Universal Fields:**
+- ✅ All fields populated (name, address, coordinates, contact, hours)
+- ✅ Multiple contact methods (phone, email, website, social media)
+- ✅ Opening hours captured as structured JSON
+- ✅ Source provenance tracked
+- ⚠️ Exception: twitter_url null (venue doesn't have Twitter) - ACCEPTABLE
 
-**Universal Data Quality:**
-```sql
-SELECT
-  COUNT(*) as total,
-  COUNT(CASE WHEN entity_class = 'place' THEN 1 END) as places,
-  COUNT(CASE WHEN latitude IS NOT NULL THEN 1 END) as with_coords,
-  COUNT(CASE WHEN array_length(canonical_activities, 1) > 0 THEN 1 END) as with_activities,
-  COUNT(CASE WHEN phone IS NOT NULL OR website_url IS NOT NULL THEN 1 END) as with_contact
-FROM "Entity";
-```
+**Venue-Specific Fields:**
+- ✅ All sports offered correctly identified (tennis, swimming, gym, spa)
+- ✅ Quantitative data captured (court counts, pool length, gym size)
+- ✅ Facility details complete (indoor/outdoor, surfaces, lighting)
+- ✅ Amenities and services listed (creche, cafe, parking)
+- ✅ Reviews and ratings captured
+- ⚠️ Exception: outdoor_pool null (doesn't have one) - ACCEPTABLE
+- ❌ Exception: padel_total_courts null but padel exists (data loss) - NOT ACCEPTABLE
 
-**Target Coverage:**
-- `places`: 95%+ (correct classification)
-- `with_coords`: 85%+ (geocoded)
-- `with_activities`: 75%+ (activities identified)
-- `with_contact`: 70%+ (phone or website)
+**Exception Categories:**
+1. **Facility Doesn't Exist** (outdoor_pool = null for indoor-only venue) → ACCEPTABLE
+2. **Data Not Available from Sources** (reviews not provided by API) → TRACK & IMPROVE
+3. **Extraction Failed** (LLM missed court count in description) → BUG, MUST FIX
+4. **Data Quality Issue** (conflicting counts from different sources) → MERGE LOGIC NEEDED
 
-**Module Data Quality (THE DIFFERENTIATOR):**
-```sql
-SELECT
-  COUNT(CASE WHEN modules ? 'sports_facility' THEN 1 END) as with_sports_module,
-  COUNT(CASE WHEN modules->'sports_facility' ? 'equipment' THEN 1 END) as with_equipment_detail
-FROM "Entity"
-WHERE entity_class = 'place';
-```
+### Classification Accuracy
 
-**Target Coverage:**
-- `with_sports_module`: 60%+ (rich domain data captured)
-- `with_equipment_detail`: 40%+ (deep specs available)
+**Entity Class (Universal):**
+- ✅ Venues correctly classified as entity_class "place"
+- ✅ Events correctly classified as entity_class "event"
+- ✅ Coaches correctly classified as entity_class "person"
+- ✅ Clubs correctly classified as entity_class "organization"
+- ✅ Products/Equipment correctly classified as entity_class "thing" (e.g., specific racquet models, equipment rentals)
 
-### Sample "Good" Entity
+**No arbitrary percentages** - the goal is 100% accuracy with exceptions tracked and justified.
+
+### Sample "Complete" Entity
 
 ```json
 {
-  "entity_id": "cm4abc123",
-  "entity_name": "Game4Padel Barnton Park",
-  "slug": "game4padel-barnton-park",
+  "entity_name": "Craiglockhart Sports Centre",
   "entity_class": "place",
-  "summary": "Indoor padel facility with 6 courts offering pay-and-play and membership options. Coaching available for all levels.",
+  "slug": "craiglockhart-sports-centre",
+  "summary": "Multi-sport facility in South Edinburgh offering tennis, swimming, gym, and spa facilities with extensive class programs",
 
-  "canonical_activities": ["activity_padel", "activity_tennis"],
-  "canonical_roles": ["provides_facility", "provides_instruction", "membership_org"],
-  "canonical_place_types": ["facility_indoor_courts", "facility_membership_club"],
-  "canonical_access": ["access_pay_and_play", "access_membership"],
+  "categories": ["Sports Centre", "Swimming Pool", "Gym", "Tennis Club"],
+  "canonical_categories": ["sports_facility", "swimming_pool", "gym", "tennis_facility"],
 
-  "latitude": 55.9679631,
-  "longitude": -3.2790334,
-  "street_address": "12 Barnton Park",
+  "latitude": 55.920654,
+  "longitude": -3.237891,
+  "street_address": "177 Colinton Road",
   "city": "Edinburgh",
-  "postcode": "EH4 6JF",
+  "postcode": "EH14 1BZ",
   "country": "UK",
 
-  "phone": "+44 131 XXX XXXX",
-  "email": "info@game4padel.co.uk",
-  "website_url": "https://game4padel.co.uk",
-  "instagram_url": "https://instagram.com/game4padel",
+  "phone": "+441314447100",
+  "email": "info@craiglockhart.com",
+  "website_url": "https://www.edinburghleisure.co.uk/venues/craiglockhart",
+  "instagram_url": "https://instagram.com/edinburghleisure",
+  "facebook_url": "https://facebook.com/craiglockhartsports",
 
   "opening_hours": {
-    "monday": {"open": "06:00", "close": "23:00"},
-    "tuesday": {"open": "06:00", "close": "23:00"},
-    "wednesday": {"open": "06:00", "close": "23:00"},
-    "thursday": {"open": "06:00", "close": "23:00"},
-    "friday": {"open": "06:00", "close": "23:00"},
-    "saturday": {"open": "08:00", "close": "22:00"},
-    "sunday": {"open": "08:00", "close": "22:00"}
+    "monday": {"open": "06:00", "close": "22:00"},
+    "tuesday": {"open": "06:00", "close": "22:00"},
+    "wednesday": {"open": "06:00", "close": "22:00"},
+    "thursday": {"open": "06:00", "close": "22:00"},
+    "friday": {"open": "06:00", "close": "22:00"},
+    "saturday": {"open": "08:00", "close": "20:00"},
+    "sunday": {"open": "08:00", "close": "20:00"}
   },
 
-  "modules": {
-    "sports_facility": {
-      "equipment": [
-        {"type": "padel_court", "count": 4, "indoor": true, "surface": "artificial_turf"},
-        {"type": "padel_court", "count": 2, "indoor": false, "floodlit": true}
-      ],
-      "changing_rooms": true,
-      "equipment_rental": ["rackets", "balls"],
-      "booking_system": "courtside",
-      "coaching_available": true
-    }
-  },
+  "tennis_summary": "8 indoor courts and 4 outdoor clay courts with coaching available",
+  "tennis": true,
+  "tennis_total_courts": 12,
+  "tennis_indoor_courts": 8,
+  "tennis_outdoor_courts": 4,
+  "tennis_covered_courts": 8,
+  "tennis_floodlit_courts": 4,
+
+  "padel_summary": "4 indoor courts available for pay-and-play",
+  "padel": true,
+  "padel_total_courts": 4,
+
+  "pickleball_summary": "2 dedicated pickleball courts",
+  "pickleball": true,
+  "pickleball_total_courts": 2,
+
+  "badminton_summary": "6 courts available for casual play and league matches",
+  "badminton": true,
+  "badminton_total_courts": 6,
+
+  "squash_summary": "3 courts including 1 glass-back court",
+  "squash": true,
+  "squash_total_courts": 3,
+  "squash_glass_back_courts": 1,
+
+  "table_tennis_summary": "2 tables in dedicated area",
+  "table_tennis": true,
+  "table_tennis_total_tables": 2,
+
+  "football_summary": "Multiple pitch sizes for 5-a-side, 7-a-side and full 11-a-side matches",
+  "football_5_a_side": true,
+  "football_5_a_side_total_pitches": 4,
+  "football_7_a_side": true,
+  "football_7_a_side_total_pitches": 2,
+  "football_11_a_side": true,
+  "football_11_a_side_total_pitches": 1,
+
+  "swimming_summary": "25m indoor pool with separate learner pool",
+  "indoor_pool": true,
+  "indoor_pool_length_m": 25,
+  "outdoor_pool": false,
+  "outdoor_pool_length_m": null,
+  "family_swim": true,
+  "adult_only_swim": true,
+  "swimming_lessons": true,
+
+  "gym_summary": "120-station gym with modern equipment",
+  "gym_available": true,
+  "gym_size": 120,
+  "classes_summary": "60+ classes per week including yoga, HIIT, spin, pilates and strength",
+  "classes_per_week": 60,
+  "hiit_classes": true,
+  "yoga_classes": true,
+  "pilates_classes": true,
+  "strength_classes": true,
+  "cycling_studio": true,
+  "functional_training_zone": true,
+
+  "spa_summary": "Full spa with sauna, steam room and hydro pool",
+  "spa_available": true,
+  "sauna": true,
+  "steam_room": true,
+  "hydro_pool": true,
+  "hot_tub": false,
+  "outdoor_spa": false,
+  "ice_cold_plunge": true,
+  "relaxation_area": true,
+
+  "amenities_summary": "Cafe serving healthy snacks and smoothies",
+  "restaurant": false,
+  "bar": false,
+  "cafe": true,
+  "childrens_menu": false,
+  "wifi": true,
+
+  "family_summary": "Creche available, kids swimming and tennis lessons",
+  "creche_available": true,
+  "creche_age_min": 6,
+  "creche_age_max": 12,
+  "kids_swimming_lessons": true,
+  "kids_tennis_lessons": true,
+  "holiday_club": true,
+  "play_area": false,
+
+  "parking_and_transport_summary": "80 spaces including disabled parking, bus routes nearby",
+  "parking_spaces": 80,
+  "disabled_parking": true,
+  "parent_child_parking": true,
+  "ev_charging_available": true,
+  "ev_charging_connectors": 4,
+  "public_transport_nearby": true,
+  "nearest_railway_station": "Slateford",
+
+  "reviews_summary": "4.2 stars from 340 Google reviews",
+  "average_rating": 4.2,
+  "review_count": 340,
+  "google_review_count": 340,
+  "facebook_likes": 1250,
 
   "source_info": {
-    "discovered_by": ["google_places", "sport_scotland"],
-    "primary_source": "google_places",
+    "discovered_by": ["google_places", "edinburgh_leisure_api", "sport_scotland"],
+    "primary_source": "edinburgh_leisure_api",
     "verified_date": "2026-01-28"
   },
 
   "external_ids": {
     "google_places": "ChIJabcdef123456",
-    "sport_scotland": "EH-PADEL-001"
+    "edinburgh_leisure": "CRAIG-001",
+    "sport_scotland": "EH-MULTI-014"
   }
 }
 ```
 
-This is a **10/10 entity** - perfect classification, rich modules, complete contact info, hours, multiple source verification.
+This is **complete** - every facility the venue offers is captured with quantitative details.
 
-### Sample "Bad" Entity (Current Reality)
+### Sample "Incomplete" Entity (Current Problem)
 
 ```json
 {
-  "entity_id": "cm4xyz789",
-  "entity_name": "Game4Padel Barnton Park",
-  "slug": "game4padel-barnton-park",
-  "entity_class": "thing",  // ❌ WRONG - should be "place"
-  "summary": null,
+  "entity_name": "Craiglockhart Sports Centre",
+  "entity_class": "place",
+  "slug": "craiglockhart-sports-centre",
+  "summary": null,  // ❌ Should have description
 
-  "canonical_activities": [],  // ❌ EMPTY - should have padel
-  "canonical_roles": [],  // ❌ EMPTY - should have provides_facility
-  "canonical_place_types": [],
-  "canonical_access": [],
+  "categories": [],  // ❌ Should have categories
 
-  "latitude": 55.9679631,  // ✅ Good
-  "longitude": -3.2790334,  // ✅ Good
-  "street_address": "12 Barnton Park, Edinburgh EH4 6JF, UK",  // ✅ Good
-  "city": null,  // ⚠️ Missing - should parse from address
-  "postcode": null,  // ⚠️ Missing
+  "latitude": 55.920654,  // ✅ Good
+  "longitude": -3.237891,  // ✅ Good
+  "street_address": "177 Colinton Road, Edinburgh EH14 1BZ",  // ✅ Good
+  "city": null,  // ❌ Should parse from address
+  "postcode": null,  // ❌ Should parse from address
 
-  "phone": null,  // ❌ Missing
-  "website_url": null,  // ❌ Missing
+  "phone": null,  // ❌ Missing - available from source
+  "website_url": null,  // ❌ Missing - available from source
 
-  "modules": {}  // ❌ EMPTY - should have sports_facility
+  "tennis": null,  // ❌ Missing - venue HAS tennis
+  "swimming_summary": null,  // ❌ Missing
+  "gym_available": null,  // ❌ Missing
+  "parking_spaces": null  // ❌ Missing
 }
 ```
 
-This is a **3/10 entity** - has location but everything else is broken.
-
----
-
-## How Lenses Enable This
-
-### Lens Responsibilities
-
-**1. Query Interpretation** (`query_vocabulary.yaml`)
-Define domain-specific keywords so engine can detect intent:
-
-```yaml
-activity_keywords:
-  - padel
-  - tennis
-  - squash
-  - court
-
-location_indicators:
-  - edinburgh
-  - leith
-  - portobello
-
-facility_keywords:
-  - centre
-  - facility
-  - venue
-  - club
-```
-
-**2. Connector Routing** (`connector_rules.yaml`)
-Tell orchestrator which data sources are relevant:
-
-```yaml
-connectors:
-  sport_scotland:
-    priority: high
-    triggers:
-      - type: any_keyword_match
-        keywords: [padel, tennis, squash, football]
-        threshold: 1
-      - type: facility_search
-        keywords: [centre, facility, court]
-        location_required: true
-```
-
-**3. Value Interpretation** (in lens code/config)
-Map opaque dimension values to display labels:
-
-```yaml
-dimension_labels:
-  canonical_activities:
-    activity_padel: "Padel"
-    activity_tennis: "Tennis"
-  canonical_place_types:
-    facility_indoor_courts: "Indoor Sports Facility"
-    facility_outdoor_courts: "Outdoor Courts"
-```
-
-**4. Module Schema Definition** (in lens config)
-Define what rich data to extract for this vertical:
-
-```yaml
-module_schemas:
-  sports_facility:
-    equipment:
-      - type: string (e.g., "padel_court", "tennis_court")
-      - count: integer
-      - surface: string
-      - indoor: boolean
-    coaching_available: boolean
-    booking_system: string
-```
-
-### Why This Enables Horizontal Scaling
-
-**Adding Wine Discovery:**
-1. Create `engine/lenses/wine/query_vocabulary.yaml`
-2. Create `engine/lenses/wine/connector_rules.yaml`
-3. Define wine module schema (wine_production, retail, tasting_room)
-4. **DONE** - Zero engine code changes
-
-Wine queries automatically:
-- Use wine vocabulary for query analysis
-- Route to wine-specific connectors (Wine Searcher API)
-- Extract wine-specific modules (grape varieties, tasting options)
-- Display through wine lens interpretation
+This is **incomplete** - has location but missing all the valuable facility data.
 
 ---
 
 ## Intelligent Orchestration
 
-### Query Analysis → Connector Selection
+**Design Question:** How should query interpretation and connector selection work together?
+
+### Current Design Approach
 
 **Query:** "padel courts edinburgh"
 
-**Step 1: Feature Detection** (using Padel lens vocabulary)
-```python
-QueryFeatures:
-  looks_like_category_search: True  # "courts" is generic, not specific venue
-  has_geo_intent: True  # "edinburgh" detected
-  activity: "padel"  # From lens activity_keywords
+**Step 1: Query Analysis**
+- Detect activity: "padel"
+- Detect location: "edinburgh"
+- Classify intent: category search (general "courts" not specific venue)
+
+**Step 2: Connector Selection**
+Uses Edinburgh Finds lens configuration to select relevant sources:
+- **Free/cheap discovery:** Serper, OpenStreetMap, Edinburgh Council API
+- **Edinburgh Finds-specific:** Sport Scotland, Edinburgh Leisure API
+- **Enrichment:** Google Places (paid, detailed data)
+
+**Step 3: Ordered Execution**
+- Phase 1: Discovery (free sources first)
+- Phase 2: Enrichment (paid sources if needed)
+- Early stopping if sufficient results
+
+**Step 4: Extraction**
+- Each connector has specialized extractor
+- Hybrid approach: deterministic rules + LLM for unstructured data
+- Produces ExtractedEntity records
+
+**Step 5: Cross-Source Deduplication**
+- External ID matching: "ChIJabc..." = "EH-PAD-001"?
+- Slug matching: "craiglockhart-sports-centre" = "craiglockhart-sports-centre"
+- Fuzzy matching: Name similarity + distance < 50m
+- Merge duplicates into single entity
+
+**Step 6: Field-Level Merging**
+Trust hierarchy resolves conflicts:
 ```
-
-**Step 2: Connector Selection** (using lens rules + registry)
-```python
-Selected Connectors:
-  Phase 1 (Discovery - free/cheap):
-    - serper (base, $0.002/query)
-    - openstreetmap (base, free)
-    - edinburgh_council (geo-specific, free)
-    - sport_scotland (lens-triggered, free)  # ← Lens added this!
-
-  Phase 2 (Enrichment - paid):
-    - google_places (base, $0.017/query)
-```
-
-**Step 3: Execution** (ordered by cost, early stopping if sufficient results)
-
-**Step 4: Extraction** (connector-specific extractors)
-- Serper → LLM extraction from search snippets
-- Google Places → Structured API response mapping
-- Sport Scotland → WFS geographic layer parsing
-- Each produces: ExtractedEntity records
-
-**Step 5: Deduplication** (cross-source)
-- External ID matching: "ChIJabc..." from Google = "EH-PAD-001" from Sport Scotland? (no)
-- Slug matching: "game4padel-barnton-park" = "game4padel-barnton-park"? (yes!)
-- Fuzzy matching: Name similarity + distance < 50m? (yes)
-- **Merge into ONE entity**
-
-**Step 6: Merging** (trust hierarchy resolves conflicts)
-```
-Field: equipment_count
+Field: tennis_total_courts
   - Google Places: null
-  - Sport Scotland: 6 courts (trust: official)
-  → Winner: Sport Scotland (6 courts)
+  - Edinburgh Leisure API: 12 courts (trust: official)
+  - Sport Scotland: 12 courts (trust: official)
+  → Winner: 12 courts (official sources agree)
 
 Field: website_url
-  - Google Places: "https://game4padel.co.uk" (trust: crowdsourced)
-  - Sport Scotland: null
-  → Winner: Google Places
+  - Google Places: "https://edinburghleisure.co.uk" (trust: crowdsourced)
+  - Edinburgh Leisure API: "https://www.edinburghleisure.co.uk/venues/craiglockhart" (trust: official)
+  → Winner: Official source (more specific URL)
 ```
 
-**Step 7: Finalization**
+**Step 7: Entity Finalization**
 - Generate slug from name
-- Classify entity (place/person/org/event/thing)
+- Classify entity type
 - Upsert to Entity table (idempotent)
 
----
-
-## Data Quality Standards
-
-### Universal Data (All Entities)
-
-**MUST HAVE (100% required):**
-- ✅ `entity_name` (never "Unknown")
-- ✅ `slug` (auto-generated, unique)
-- ✅ `entity_class` (correctly classified)
-
-**SHOULD HAVE (80%+ target):**
-- ✅ Coordinates (`latitude`, `longitude`) for places
-- ✅ Address (at minimum: `city` or `street_address`)
-- ✅ At least one activity in `canonical_activities`
-- ✅ At least one contact method (`phone` or `website_url`)
-
-**NICE TO HAVE (50%+ target):**
-- ✅ `summary` (brief description)
-- ✅ `opening_hours`
-- ✅ `canonical_roles` populated
-- ✅ Social media links
-
-### Module Data (The Value Proposition)
-
-**For Sports Facilities (Padel lens):**
-
-**MUST HAVE (60%+ of sports venues):**
-- ✅ `modules.sports_facility` exists
-- ✅ `equipment` array has at least one entry
-
-**SHOULD HAVE (40%+ of sports venues):**
-- ✅ Equipment details: type, count, surface, indoor/outdoor
-- ✅ Booking info: system, pricing, membership options
-
-**NICE TO HAVE (20%+ of sports venues):**
-- ✅ Coaching details: types, pricing
-- ✅ Amenities: changing rooms, showers, parking
-- ✅ Special features: disability access, cafe, pro shop
-
-**For Wineries (Wine lens):**
-
-**MUST HAVE (60%+ of wineries):**
-- ✅ `modules.wine_production` exists
-- ✅ `grape_varieties` or `wine_styles` populated
-
-**SHOULD HAVE (40%+ of wineries):**
-- ✅ Tasting room info (availability, booking, pricing)
-- ✅ Retail info (on-site, online, price range)
-
-**NICE TO HAVE (20%+ of wineries):**
-- ✅ Production details: method, annual output, vineyard size
-- ✅ Tour details: duration, pricing, what's included
-
-### Deduplication Quality
-
-**Zero Tolerance:**
-- ❌ Same entity with same slug appearing twice (critical bug)
-- ❌ External IDs not matched (Google Place ID should dedupe)
-
-**Acceptable:**
-- ⚠️ Different branches of same chain (e.g., "David Lloyd Edinburgh" vs "David Lloyd Leith") showing as separate (they ARE separate places)
-- ⚠️ 5% false negatives (two records that should merge but don't)
-
-**Not Acceptable:**
-- ❌ 10%+ false positives (merging different entities)
-- ❌ Lost data in merges (fields disappearing after deduplication)
+**Questions to Resolve:**
+1. Should lens configuration drive connector selection entirely, or should there be base orchestration logic?
+2. How much query interpretation logic belongs in the lens vs. the engine?
+3. Should deduplication and merging be lens-aware, or purely universal?
 
 ---
 
-## Current State: Gaps Analysis
+## Lens Responsibilities
 
-### Critical Gaps (Blocking)
+The Edinburgh Finds lens provides vertical-specific interpretation:
 
-**1. Classification Broken**
-- **Problem:** 95% of entities are `entity_class="thing"` instead of `"place"`
-- **Root Cause:** `classify_entity()` requires `location_lat`/`location_lng` but connectors provide `latitude`/`longitude`
-- **Impact:** Frontend can't filter by entity type, entities unusable
-- **Priority:** P0 - must fix first
+### 1. Query Vocabulary
+Define domain keywords so engine can detect intent:
+```yaml
+activity_keywords:
+  - padel
+  - tennis
+  - squash
+  - swimming
+  - gym
 
-**2. Activities Not Extracted**
-- **Problem:** `canonical_activities` is empty for 100% of entities
-- **Root Cause:** Extractors don't populate activities from connector data
-- **Impact:** Can't filter by activity ("show me padel only"), lens routing broken
-- **Priority:** P0 - must fix first
+location_indicators:
+  - edinburgh
+  - leith
+  - portobello
+  - stockbridge
 
-**3. Modules Completely Empty**
-- **Problem:** `modules` is `{}` for 100% of entities
-- **Root Cause:** No module extraction logic exists
-- **Impact:** No rich data, no value proposition, just basic listings
-- **Priority:** P0 - this is THE differentiator
-
-**4. Field Name Inconsistency**
-- **Problem:** Connectors use different field names (`latitude` vs `location_lat`)
-- **Root Cause:** No standard extraction contract
-- **Impact:** EntityFinalizer can't find data, fields are NULL
-- **Priority:** P0 - data loss
-
-### Important Gaps (Degraded Experience)
-
-**5. Roles Not Populated**
-- **Problem:** `canonical_roles` is empty
-- **Root Cause:** `extract_roles()` checks for fields extractors don't populate
-- **Priority:** P1
-
-**6. No Serper Extractor**
-- **Problem:** Serper results fail to persist (7 failures per query)
-- **Root Cause:** Missing `engine/extraction/extractors/serper.py`
-- **Priority:** P1
-
-**7. Poor Deduplication**
-- **Problem:** Duplicate entities slipping through
-- **Root Cause:** Slug matching works, but fuzzy matching may be too strict
-- **Priority:** P1
-
-### Nice-to-Have Gaps
-
-**8. Contact Info Coverage Low**
-- **Problem:** Only 30% have phone/website
-- **Root Cause:** Google Places doesn't always provide, other sources don't extract
-- **Priority:** P2
-
-**9. Opening Hours Rarely Captured**
-- **Problem:** <10% have opening_hours populated
-- **Root Cause:** Complex to parse, not all sources provide
-- **Priority:** P2
-
----
-
-## Priority Order: What to Fix
-
-### Phase 1: Make Entities Usable (P0 - Blocking)
-
-**Goal:** Get to 7/10 entity quality
-
-1. **Fix field name standardization**
-   - Define extraction contract: what fields MUST extractors output?
-   - Update all extractors to output standard fields
-   - Success: latitude/longitude/address/name consistent across all connectors
-
-2. **Fix entity classification**
-   - Classify correctly: places are "place", not "thing"
-   - Success: 95%+ entities correctly classified
-
-3. **Extract activities**
-   - Populate canonical_activities from raw data
-   - Success: 75%+ entities have at least one activity
-
-4. **Extract basic modules**
-   - For sports facilities: capture equipment type and count
-   - Success: 40%+ sports venues have sports_facility module with equipment
-
-### Phase 2: Rich Module Data (P0 - Differentiator)
-
-**Goal:** Get to 9/10 entity quality
-
-5. **Deep sports facility extraction**
-   - Equipment details: surface, indoor/outdoor, lighting
-   - Booking info: system, pricing
-   - Success: 60%+ sports venues have rich equipment details
-
-6. **Coaching/instruction extraction**
-   - Detect coaching availability, types, pricing
-   - Populate canonical_roles with "provides_instruction"
-   - Success: 40%+ relevant venues have coaching info
-
-7. **Contact info extraction**
-   - Phone numbers (E.164 format)
-   - Website URLs (validated)
-   - Social media (Instagram, Facebook)
-   - Success: 70%+ have phone or website
-
-### Phase 3: Robustness (P1)
-
-8. **Add missing extractors** (Serper, Sport Scotland improvements)
-9. **Improve deduplication** (reduce false negatives)
-10. **Extract opening hours** (structured JSON)
-
----
-
-## How to Validate Changes
-
-### Before Making ANY Code Changes
-
-**1. Establish Baseline**
-
-Clear Entity table:
-```sql
-DELETE FROM "Entity";
+facility_keywords:
+  - centre
+  - club
+  - facility
+  - pool
 ```
 
-Run baseline query:
-```bash
-python -m engine.orchestration.cli run "padel courts edinburgh" --persist
+### 2. Connector Configuration
+Tell orchestrator which data sources are relevant:
+```yaml
+connectors:
+  edinburgh_leisure_api:
+    priority: high
+    triggers:
+      - type: location_match
+        locations: [edinburgh]
+
+  sport_scotland:
+    priority: high
+    triggers:
+      - type: any_keyword_match
+        keywords: [tennis, padel, squash, swimming, football]
 ```
 
-Capture metrics:
-```sql
--- Baseline Metrics
-SELECT
-  COUNT(*) as total_entities,
-  COUNT(CASE WHEN entity_class = 'place' THEN 1 END) as classified_as_place,
-  COUNT(CASE WHEN entity_class = 'thing' THEN 1 END) as classified_as_thing,
-  COUNT(CASE WHEN latitude IS NOT NULL THEN 1 END) as with_coordinates,
-  COUNT(CASE WHEN array_length(canonical_activities, 1) > 0 THEN 1 END) as with_activities,
-  COUNT(CASE WHEN modules != '{}' THEN 1 END) as with_modules,
-  COUNT(CASE WHEN modules ? 'sports_facility' THEN 1 END) as with_sports_module
-FROM "Entity";
+### 3. Value Interpretation
+Map categories and dimension values to display labels:
+```yaml
+category_labels:
+  sports_facility: "Sports Facility"
+  swimming_pool: "Swimming Pool"
+  tennis_facility: "Tennis Club"
+  gym: "Gym & Fitness"
 ```
 
-Sample inspection:
-```sql
-SELECT entity_name, entity_class, canonical_activities, modules
-FROM "Entity"
-LIMIT 5;
-```
+### 4. Field Schema Definition
+Define what data to capture for Edinburgh Finds venues (already defined in old_db_models.py - Venue table).
 
-**Record these numbers!** This is your "before" state.
-
-### After Making Changes
-
-**2. Validate Improvement**
-
-Clear Entity table again:
-```sql
-DELETE FROM "Entity";
-```
-
-Re-run same query:
-```bash
-python -m engine.orchestration.cli run "padel courts edinburgh" --persist
-```
-
-Capture same metrics, compare:
-```
-Metric                  | Before | After | Change
-------------------------|--------|-------|--------
-classified_as_place     |   5%   |  95%  | +90% ✅
-with_activities         |   0%   |  75%  | +75% ✅
-with_modules            |   0%   |  40%  | +40% ✅
-with_sports_module      |   0%   |  60%  | +60% ✅
-```
-
-**3. Inspect Sample Entities**
-
-Pick random entities and inspect quality:
-```sql
-SELECT entity_name, entity_class, canonical_activities, latitude, longitude, modules
-FROM "Entity"
-WHERE entity_class = 'place'
-ORDER BY RANDOM()
-LIMIT 3;
-```
-
-Does the data LOOK correct? Are modules populated? Is classification right?
-
-### Definition of Success
-
-**A change is successful if:**
-- ✅ Target metrics improved (more places, more activities, more modules)
-- ✅ No regressions (didn't break something else)
-- ✅ Sample entities look correct when manually inspected
-- ✅ Tests pass with REAL connector data (not mock data)
-
-**A change FAILED if:**
-- ❌ Metrics stayed same or got worse
-- ❌ Tests pass but Entity table still has bad data
-- ❌ Only works with test data, not real queries
+**Design Question:** Should lenses also be responsible for field-level extraction rules, or just schema definition?
 
 ---
 
 ## Guiding Principles
 
-### 1. Rich Data Over Quantity
-100 entities with full modules > 500 entities with just name/address
+### 1. Complete Data Over Partial Data
+Capture ALL available information. Empty fields should be exceptions (facility doesn't exist, data not available) not the norm.
 
 ### 2. Reality Over Tests
-Validate with real queries, real connectors, real Entity table inspection.
-Tests that pass with mock data but fail with real connectors are WORSE than no tests.
+Validate with real queries, real connectors, real Entity table inspection. Tests that pass with mock data but fail with real connectors are worse than no tests.
 
-### 3. Outcomes Over Architecture
-Success = "Entity table has 9/10 quality data"
-NOT = "tests pass" or "code is elegant" or "followed TDD"
+### 3. Accuracy Over Coverage
+100 perfectly accurate entities > 500 entities with wrong classifications and missing data.
 
-### 4. Incremental Over Big Bang
-Fix ONE gap (e.g., classification).
-Validate end-to-end (run query, check Entity table).
-THEN fix next gap.
+### 4. Incremental Validation
+Fix one thing (e.g., classification), validate end-to-end (run query, inspect Entity table), THEN fix next thing.
 
-### 5. Modules Are The Moat
-Basic listings (name/address/phone) are commoditized.
-Rich modules (equipment specs, pricing, booking details) are the unique value.
+### 5. Rich Facility Data is the Differentiator
+Basic listings (name/address/phone) are commodity data. Comprehensive facility details (court counts, pool specs, amenities, pricing, reviews) are the unique value.
 
-### 6. Configuration Over Code
-Adding Wine should require:
-- 2 YAML files (query_vocabulary, connector_rules)
-- 1 module schema definition
-- 0 Python code changes
-
-### 7. Opaque By Design
-Engine stores `["activity_x", "activity_y"]` without knowing what "x" means.
-Lenses interpret. This enables infinite horizontal scaling.
+### 6. Source Provenance Always Tracked
+Every entity should track which sources contributed, when it was verified, what external IDs exist. Enables debugging, trust decisions, and incremental updates.
 
 ---
 
-**This vision document is the reference for all future plans.**
+**This vision document defines what success looks like for Edinburgh Finds.**
 
-Every plan should:
-1. ✅ Reference which gap it's fixing (use the numbered list above)
-2. ✅ Define success criteria (specific Entity table metrics)
-3. ✅ Include before/after validation (run query, compare results)
-4. ✅ Focus on outcomes (data quality) not process (tests passing)
-5. ✅ Be small (3-5 tasks max, fix ONE specific thing)
+Every implementation plan should:
+- ✅ Reference this vision to ensure alignment
+- ✅ Define success as "Entity table has complete, accurate data"
+- ✅ Include before/after validation with real queries
+- ✅ Focus on outcomes (data completeness, accuracy) not process
+- ✅ Be small and focused (fix ONE specific gap at a time)
