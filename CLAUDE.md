@@ -127,12 +127,21 @@ python -m engine.orchestration.cli run "padel clubs in Edinburgh"
 - Coverage target: >80% for all new code
 - Use `pytest.mark.slow` for tests >1 second (allows `pytest -m "not slow"` for fast iteration)
 
-### 4. Data Flow: Ingest → Extract → Merge → Display
+### 4. Data Flow: Ingest → Extract → Finalize → Display
 1. **Ingestion** (`engine/ingestion/`): Connectors fetch raw data from 6 sources → `RawIngestion` records
-2. **Extraction** (`engine/extraction/`): Hybrid engine (deterministic rules + LLM) → structured entities
-3. **Deduplication** (`engine/extraction/deduplication.py`): External ID → Slug → Fuzzy match
-4. **Merging** (`engine/extraction/merging.py`): Field-level trust hierarchy (Admin > Official > Crowdsourced)
-5. **Display** (`web/`): Next.js frontend with Prisma queries
+2. **Extraction** (`engine/extraction/`): Hybrid engine (deterministic rules + LLM) → structured `ExtractedEntity` records
+3. **Finalization** (`engine/orchestration/entity_finalizer.py`): Merge + slug generation → `Entity` table
+4. **Display** (`web/`): Next.js frontend queries `Entity` table via Prisma
+
+**Complete Pipeline:**
+```
+Query → Orchestrator → Connectors → RawIngestion → Extraction → ExtractedEntity → EntityFinalizer → Entity → Frontend
+```
+
+**Key Components:**
+- `EntityFinalizer`: Groups entities by slug, generates URL-safe slugs, upserts to Entity table
+- `SlugGenerator`: Creates URL-safe slugs (`"The Padel Club"` → `"padel-club"`)
+- Idempotent: Re-running same query updates existing entities
 
 ### 5. Orchestration: Intelligent Multi-Source Queries
 - **Orchestration kernel** (`engine/orchestration/`) provides runtime-safe, phase-ordered control plane
@@ -141,6 +150,64 @@ python -m engine.orchestration.cli run "padel clubs in Edinburgh"
 - Adapters (`adapters.py`): Bridge async connectors to orchestrator, normalize results
 - Deduplication runs at orchestration level (cross-source) before database persistence
 - CLI: `python -m engine.orchestration.cli run "your query here"`
+
+## Lens Configuration System
+
+The **Lens system** provides vertical-specific interpretation of universal engine data. The engine is completely vertical-agnostic - all domain knowledge lives in YAML configuration files.
+
+### Core Principle
+- **Engine:** Knows NOTHING about domains (Padel, Wine, Restaurants)
+- **Lenses:** Provide domain-specific vocabulary and routing rules
+- **Extensibility:** Adding a new vertical requires ZERO engine code changes
+
+### Lens Structure
+
+Each lens consists of two YAML files:
+
+1. **`query_vocabulary.yaml`** - Domain-specific keywords
+```yaml
+activity_keywords:    # Domain activities
+  - padel
+  - tennis
+location_indicators:  # Geographic terms
+  - edinburgh
+facility_keywords:    # Facility types
+  - centre
+  - venue
+```
+
+2. **`connector_rules.yaml`** - Connector routing
+```yaml
+connectors:
+  sport_scotland:
+    priority: high
+    triggers:
+      - type: any_keyword_match
+        keywords: [padel, tennis]
+```
+
+### Usage
+
+```python
+from engine.lenses.query_lens import get_active_lens
+
+lens = get_active_lens("padel")
+keywords = lens.get_activity_keywords()  # ["padel", "tennis", ...]
+connectors = lens.get_connectors_for_query(query, features)
+```
+
+### Adding a New Vertical
+
+1. Create `engine/lenses/wine/query_vocabulary.yaml`
+2. Create `engine/lenses/wine/connector_rules.yaml`
+3. **DONE** - No code changes needed
+
+**Example:** The Wine lens was created with ZERO engine modifications. The planner automatically routes wine queries to wine-specific connectors based on Lens configuration alone.
+
+### Integration Points
+- `engine/orchestration/query_features.py`: Uses Lens vocabulary for feature detection
+- `engine/orchestration/planner.py`: Uses Lens rules for connector routing
+- Both are **Lens-driven**, not hardcoded
 
 ## Conductor Workflow (Context-Driven Development)
 
