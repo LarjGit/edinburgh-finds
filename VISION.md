@@ -74,7 +74,7 @@ mapping_rules:
 module_triggers:
   - when:
       dimension: canonical_activities
-      value: tennis
+      values: [tennis]
     add_modules: [sports_facility]
     conditions:
       - entity_class: place
@@ -231,7 +231,6 @@ class BaseExtractor(ABC):
     def apply_lens_contract(
         self,
         raw_data: Dict,
-        basic_fields: Dict,
         *,
         ctx: ExecutionContext
     ) -> Dict:
@@ -243,18 +242,16 @@ class BaseExtractor(ABC):
 
         Args:
             raw_data: Original raw data
-            basic_fields: Already-extracted basic fields
             ctx: Execution context with lens_contract
 
         Returns:
-            Dict: Fields with canonical dimensions and modules populated
+            Dict: Extracted fields with canonical dimensions and modules populated
         """
         if not ctx or not ctx.lens_contract:
             raise ValueError("Missing lens_contract in execution context")
 
         return extract_with_lens_contract(
             raw_data,
-            basic_fields,
             ctx.lens_contract
         )
 ```
@@ -307,7 +304,7 @@ def test_extractors_never_load_lenses():
 **Future Extensions:**
 - Multi-lens queries: Create separate ExecutionContext per lens
 - Lens versioning: Add lens_version to ExecutionContext
-- Lens hot-reload: Replace ctx.lens_contract dict (keep same lens_id)
+- Lens hot-reload: Create new ExecutionContext with reloaded lens.yaml (ctx remains immutable)
 
 ---
 
@@ -461,14 +458,14 @@ Entity data is organized into **modules** - namespaced JSONB structures that sep
 module_triggers:
   - when:
       dimension: canonical_activities
-      value: tennis
+      values: [tennis]
     add_modules: [sports_facility]
     conditions:
       - entity_class: place
 
   - when:
       dimension: canonical_activities
-      value: wine_tasting
+      values: [wine_tasting]
     add_modules: [wine_production, food_service]
     conditions:
       - entity_class: place
@@ -1443,7 +1440,7 @@ seo_templates:
 - ✅ Connector routing (`connector_rules`)
 
 **Designed but Not Wired Up:**
-- ⚠️ Mapping rules (`mapping_rules`) - infrastructure exists (category_mapper.py) but in wrong layer
+- ⚠️ Mapping rules (`mapping_rules`) - infrastructure exists (category_mapper.py) but not lens-driven (contains domain literals)
 - ⚠️ Module triggers (`module_triggers`) - schema defined, validator built, not used in extraction
 - ⚠️ Canonical values (`canonical_values`) - structure designed, not implemented
 - ⚠️ Domain modules (`modules`) - schema defined, not populated by extractors
@@ -1716,14 +1713,14 @@ If adding a new vertical requires engine code changes, the architecture has fail
 
 ### What's Misaligned ⚠️
 
-1. **category_mapper.py** - Lives in engine layer, should be lens-driven
+1. **category_mapper.py** - Mapping algorithm can stay in engine but must be purely lens-driven via ctx.lens_contract rules (no domain literals)
 2. **Dimension extractor functions** - Exist but not called (orphaned code)
 3. **EntityFinalizer expectations** - Reads fields extractors don't populate
 
 ### Implementation Roadmap
 
 **Phase 1: Wire Up Mapping Rules (Critical)**
-1. Move category_mapper logic to lens layer
+1. Update category_mapper to consume ctx.lens_contract rules (remove domain literals)
 2. Update extractors to populate raw_categories
 3. Apply lens mapping_rules during extraction/finalization
 4. Validate canonical dimension arrays populated
@@ -1777,6 +1774,6 @@ Every implementation plan should:
 
 ---
 
-**Last Updated:** 2026-01-28
+**Last Updated:** 2026-01-29
 **Document Status:** Definitive architectural specification
 **Reference Implementation:** Edinburgh Finds (first vertical lens)
