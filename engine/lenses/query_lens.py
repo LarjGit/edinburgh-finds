@@ -218,28 +218,21 @@ def load_query_lens(lens_name: str) -> QueryLens:
         >>> keywords = lens.get_activity_keywords()
     """
     lens_dir = Path(f"engine/lenses/{lens_name}")
+    lens_path = lens_dir / "lens.yaml"
 
-    # Load query vocabulary
-    vocab_path = lens_dir / "query_vocabulary.yaml"
-    if not vocab_path.exists():
+    # Load unified lens configuration
+    if not lens_path.exists():
         raise FileNotFoundError(
-            f"Query vocabulary not found: {vocab_path}. "
-            f"Expected structure: engine/lenses/{lens_name}/query_vocabulary.yaml"
+            f"Lens configuration not found: {lens_path}. "
+            f"Expected structure: engine/lenses/{lens_name}/lens.yaml"
         )
 
-    with vocab_path.open() as f:
-        vocab = yaml.safe_load(f)
+    with lens_path.open() as f:
+        lens_config = yaml.safe_load(f)
 
-    # Load connector rules
-    connectors_path = lens_dir / "connector_rules.yaml"
-    if not connectors_path.exists():
-        raise FileNotFoundError(
-            f"Connector rules not found: {connectors_path}. "
-            f"Expected structure: engine/lenses/{lens_name}/connector_rules.yaml"
-        )
-
-    with connectors_path.open() as f:
-        connector_rules = yaml.safe_load(f)
+    # Extract vocabulary and connector rules from unified config
+    vocab = lens_config.get("vocabulary", {})
+    connector_rules = lens_config.get("connector_rules", {})
 
     # Build configuration
     config = QueryLensConfig(
@@ -269,7 +262,7 @@ def get_active_lens(lens_name: Optional[str] = None) -> QueryLens:
         ['padel', 'tennis', 'football', ...]
     """
     if lens_name is None:
-        lens_name = "padel"  # Default lens
+        lens_name = "edinburgh_finds"  # Default lens
 
     # Simple caching: load once and reuse
     if not hasattr(get_active_lens, "_cache"):

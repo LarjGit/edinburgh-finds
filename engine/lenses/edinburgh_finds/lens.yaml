@@ -1,6 +1,59 @@
 # Edinburgh Finds Lens Configuration
 # Defines domain knowledge for sports discovery in Edinburgh
 
+# Query vocabulary for orchestration
+vocabulary:
+  activity_keywords:
+    - padel
+    - tennis
+    - squash
+    - badminton
+    - pickleball
+    - racquet sport
+    - racket sport
+
+  location_indicators:
+    - edinburgh
+    - leith
+    - portobello
+    - stockbridge
+    - morningside
+    - newington
+    - bruntsfield
+    - marchmont
+    - in
+    - near
+    - around
+
+  facility_keywords:
+    - sports centre
+    - sports center
+    - leisure centre
+    - leisure center
+    - sports facility
+    - club
+    - courts
+    - venue
+
+# Connector selection rules for query orchestration
+connector_rules:
+  sport_scotland:
+    priority: high
+    triggers:
+      - type: any_keyword_match
+        keywords: [padel, tennis, squash, sports]
+
+  google_places:
+    priority: medium
+    triggers:
+      - type: location_present
+      - type: facility_search
+
+  serper:
+    priority: medium
+    triggers:
+      - type: always
+
 # Facets define how dimensions are interpreted and displayed
 facets:
   activity:
