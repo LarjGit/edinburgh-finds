@@ -235,7 +235,7 @@ Any behavior that violates determinism, purity, or traceability is forbidden.
 
 ---
 
-# 3. Engine–Lens Integration and Validation (Decision 2)
+# 3. Engine–Lens Integration and Validation
 
 This section defines how Lens contracts are resolved, validated, materialized,
 and consumed by the engine at runtime.
@@ -262,15 +262,12 @@ The active lens is resolved deterministically using first-match precedence:
 3. **Application configuration**
    - `engine/config/app.yaml → default_lens`.
 
-4. **Hardcoded fallback**
-   - Absolute safety net for local development and test execution.
+4. **Dev/Test fallback (non-production only)**
+   - Absolute safety net for local development and test execution only.
+   - Must be explicitly enabled (e.g., dev-mode config or `--allow-default-lens`).
+   - When used, it must emit a prominent warning and persist metadata indicating fallback occurred.
 
-Resolution must be explicit and reproducible.
-
-The resolved lens identifier must be logged and persisted as part of execution
-metadata.
-
-Ambiguous or missing lens resolution is treated as a fatal error.
+Resolution must be explicit and reproducible. The resolved lens identifier must be logged and persisted as part of execution metadata. Ambiguous lens resolution is treated as a fatal error. Missing lens resolution is treated as a fatal error unless an explicitly enabled Dev/Test fallback is in effect.
 
 ---
 
@@ -730,7 +727,7 @@ migration paths.
 
 ## 5.2 Canonical Dimensions (Universal Structure)
 
-The engine maintains exactly four canonical dimensions.
+The engine maintains exactly four canonical dimensions. Adding, removing, or redefining canonical dimensions requires explicit architectural review and a corresponding amendment to `docs/system-vision.md`.
 
 Structure is universal.  
 Values are opaque and defined exclusively by lenses.
@@ -758,6 +755,8 @@ Lens responsibilities:
 ---
 
 ## 5.3 Structural Semantics (Engine Perspective Only)
+
+These descriptions are human mnemonics only; the engine must not implement logic that depends on these meanings.
 
 From the engine’s perspective, dimensions are purely structural buckets.
 
@@ -799,6 +798,7 @@ Structural characteristics:
 - Module schemas are defined exclusively by lenses.
 - Universal modules are always available (core, location, contact, hours,
   amenities, time_range).
+- “Always available” means these namespaces are structurally reserved by the engine; lenses still own module schemas/fields and all population rules (unless explicitly declared as engine-owned universal schemas).
 - Domain modules are conditionally attached via lens rules.
 
 Engine guarantees:
@@ -896,6 +896,8 @@ A lens is not a draft configuration artifact.
 
 A lens is a compiled, deterministic runtime contract that must be fully valid
 before any execution begins.
+
+“Compiled” means materialized once during bootstrap into a plain, serializable runtime contract; no per-execution compilation or runtime mutation is permitted.
 
 Contract properties:
 
@@ -1601,7 +1603,7 @@ Strategy:
 
 - Prefer higher trust_tier unless empty or unusable.
 - Prefer more complete values deterministically.
-- Tie-break by default_priority then lexicographic source name.
+- Tie-break by default_priority then lexicographic stable source identifier (e.g., connector_id).
 
 ---
 
@@ -1618,7 +1620,7 @@ Strategy:
 - Else higher trust_tier.
 - Else greater decimal precision.
 - Never compute centroids.
-- Tie-break by priority then lexicographic source name.
+- Tie-break by priority then lexicographic stable source identifier (e.g., connector_id).
 
 ---
 
@@ -1635,7 +1637,7 @@ Strategy:
 
 - Deterministic quality scoring based on structure only.
 - Allow higher-quality crowdsourced values to win over sparse official values.
-- Tie-break by quality → trust → priority → lexicographic source.
+- Tie-break by quality → trust → priority → lexicographic stable source identifier (e.g., connector_id).
 
 Quality scoring must never use external validation or network calls.
 
@@ -1696,7 +1698,7 @@ When conflicts remain:
 3. confidence (if applicable)
 4. completeness
 5. default_priority
-6. lexicographic source identifier
+6. lexicographic stable source identifier (e.g., connector_id)
 
 All merges must resolve deterministically.
 
@@ -1764,14 +1766,15 @@ Representative responsibilities:
 
 - Fetch raw data from external source.
 - Detect ingestion-level duplicates.
-- Persist raw artifacts.
+- Return raw payloads and connector metadata to the engine for persistence as immutable raw artifacts.
 
 Interface shape:
 
     class BaseConnector(ABC):
         async def fetch(self, query: str) -> RawData
         async def is_duplicate(self, data: RawData) -> bool
-        async def save(self, data: RawData) -> str
+
+Raw artifact persistence is owned by the engine ingestion stage; connectors must not directly write canonical entities.
 
 The interface is intentionally minimal and domain-blind.
 
