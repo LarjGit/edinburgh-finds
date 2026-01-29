@@ -143,6 +143,8 @@ Query → Orchestrator → Connectors → RawIngestion → Extraction → Extrac
 - `SlugGenerator`: Creates URL-safe slugs (`"The Padel Club"` → `"padel-club"`)
 - Idempotent: Re-running same query updates existing entities
 
+**⚠️ Current Limitation:** Extractors populate `entity_name`, `entity_class`, and basic `modules` but don't yet use lens mapping rules to populate canonical dimension arrays. This means entities are stored but may not be fully categorized until lens-driven extraction is implemented.
+
 ### 5. Orchestration: Intelligent Multi-Source Queries
 - **Orchestration kernel** (`engine/orchestration/`) provides runtime-safe, phase-ordered control plane
 - Registry (`registry.py`): Central metadata for all 6 connectors (cost, trust, phase, timeout)
@@ -155,6 +157,8 @@ Query → Orchestrator → Connectors → RawIngestion → Extraction → Extrac
 
 The **Lens system** provides vertical-specific interpretation of universal engine data. The engine is completely vertical-agnostic - all domain knowledge lives in YAML configuration files.
 
+**⚠️ IMPLEMENTATION STATUS:** The lens architecture is partially complete (see "Current Implementation Status" section in `VISION.md`). Query orchestration and connector routing work, but canonical dimension extraction is not fully wired up. Extractors don't yet populate the canonical dimension arrays from lens mapping rules.
+
 ### Core Principle
 - **Engine:** Knows NOTHING about domains (Padel, Wine, Restaurants)
 - **Lenses:** Provide domain-specific vocabulary and routing rules
@@ -162,52 +166,59 @@ The **Lens system** provides vertical-specific interpretation of universal engin
 
 ### Lens Structure
 
-Each lens consists of two YAML files:
+Each lens is defined in a single comprehensive YAML file (`engine/lenses/<lens_id>/lens.yaml`):
 
-1. **`query_vocabulary.yaml`** - Domain-specific keywords
 ```yaml
-activity_keywords:    # Domain activities
-  - padel
-  - tennis
-location_indicators:  # Geographic terms
-  - edinburgh
-facility_keywords:    # Facility types
-  - centre
-  - venue
-```
+# Example structure (see VISION.md for complete specification)
+vocabulary:
+  activity_keywords: [tennis, padel, squash]
+  location_indicators: [edinburgh, leith]
 
-2. **`connector_rules.yaml`** - Connector routing
-```yaml
-connectors:
+connector_rules:
   sport_scotland:
     priority: high
     triggers:
       - type: any_keyword_match
-        keywords: [padel, tennis]
+        keywords: [tennis, padel]
+
+mapping_rules:
+  - pattern: "(?i)tennis|racket sports"
+    dimension: canonical_activities
+    value: tennis
+    confidence: 0.95
+
+module_triggers:
+  - when:
+      dimension: canonical_activities
+      values: [tennis]
+    add_modules: [sports_facility]
+
+canonical_values:
+  tennis:
+    display_name: "Tennis"
+    seo_slug: "tennis"
+    icon: "racquet"
 ```
 
-### Usage
+### Current Status
 
-```python
-from engine.lenses.query_lens import get_active_lens
-
-lens = get_active_lens("padel")
-keywords = lens.get_activity_keywords()  # ["padel", "tennis", ...]
-connectors = lens.get_connectors_for_query(query, features)
-```
-
-### Adding a New Vertical
-
-1. Create `engine/lenses/wine/query_vocabulary.yaml`
-2. Create `engine/lenses/wine/connector_rules.yaml`
-3. **DONE** - No code changes needed
-
-**Example:** The Wine lens was created with ZERO engine modifications. The planner automatically routes wine queries to wine-specific connectors based on Lens configuration alone.
-
-### Integration Points
+**What Works:**
 - `engine/orchestration/query_features.py`: Uses Lens vocabulary for feature detection
 - `engine/orchestration/planner.py`: Uses Lens rules for connector routing
-- Both are **Lens-driven**, not hardcoded
+- `engine/lenses/query_lens.py`: Lens loading and query routing
+
+**What's Not Yet Implemented:**
+- Canonical dimension population from mapping rules (extractors don't use lens configs yet)
+- Module triggers (modules field exists but not auto-populated)
+- Complete `lens.yaml` files for verticals (directory structure exists but configs are incomplete)
+
+### Adding a New Vertical (Future)
+
+When lens system is complete:
+1. Create `engine/lenses/<vertical_id>/lens.yaml` with full configuration
+2. **DONE** - No code changes needed
+
+For now, adding a vertical requires some extractor modifications until the lens extraction bridge is built.
 
 ## Development Workflow
 
@@ -271,20 +282,25 @@ This project follows **Test-Driven Development (TDD)** with strict quality gates
 
 ## Common Gotchas
 
-### 1. Schema Changes Require Regeneration
+### 1. Lens Implementation is Incomplete
+The canonical dimension extraction system is partially implemented. Extractors currently don't populate `canonical_activities`, `canonical_roles`, `canonical_place_types`, or `canonical_access` arrays from lens mapping rules. See "Current Implementation Status" in `VISION.md` for detailed breakdown.
+
+**Current Workaround:** Manual population or extraction logic until lens-driven extraction is wired up (Phase 1 in VISION.md roadmap).
+
+### 2. Schema Changes Require Regeneration
 When you modify `engine/config/schemas/*.yaml`:
 ```bash
 python -m engine.schema.generate --all  # Must regenerate Python/Prisma/TypeScript
 ```
 Never manually edit generated files - they have "DO NOT EDIT" headers.
 
-### 2. Tests Use CI=true for Non-Interactive Mode
+### 3. Tests Use CI=true for Non-Interactive Mode
 ```bash
 CI=true npm test  # Frontend: Prevents watch mode
 pytest            # Backend: Already non-interactive
 ```
 
-### 3. Entity Class vs. Vertical-Specific Types
+### 4. Entity Class vs. Vertical-Specific Types
 **WRONG:**
 ```python
 if entity_type == "Venue":  # ❌ Vertical-specific
@@ -297,14 +313,14 @@ if entity.entity_class == "place":  # ✅ Universal
     # Use lenses/modules for vertical interpretation
 ```
 
-### 4. Pytest Markers for Test Performance
+### 5. Pytest Markers for Test Performance
 ```bash
 pytest                    # All tests (some slow)
 pytest -m "not slow"      # Fast tests only (for quick iteration)
 ```
 Mark slow tests with `@pytest.mark.slow` decorator.
 
-### 5. Commit Message Format
+### 6. Commit Message Format
 ```
 <type>(<scope>): <description>
 
@@ -312,7 +328,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
 ```
 Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
 
-### 6. Orchestration Registry
+### 7. Orchestration Registry
 When adding a new connector to the orchestration system:
 1. Add to `engine/orchestration/registry.py` with `ConnectorSpec` (cost, trust, phase, timeout)
 2. Add adapter mapping in `engine/orchestration/adapters.py`
@@ -320,10 +336,10 @@ When adding a new connector to the orchestration system:
 
 ## Key Files to Reference
 
-- **Architecture:** `VISION.md` (architectural principles, design decisions, success criteria)
-- **Implementation Plans:** `docs/plans/` (phase-by-phase implementation strategy)
+- **Architecture & Status:** `VISION.md` (architectural principles, design decisions, implementation status, roadmap)
+- **Implementation Plans:** `docs/plans/` (phase-by-phase implementation strategy for specific features)
 - **Schema Definitions:** `engine/config/schemas/*.yaml` (single source of truth for data models)
-- **Lens Configurations:** `lenses/<lens_id>/lens.yaml` (vertical-specific domain knowledge)
+- **Lens System:** `engine/lenses/` (vertical-specific domain knowledge - in progress)
 
 ## Testing Strategy
 
