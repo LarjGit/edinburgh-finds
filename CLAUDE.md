@@ -43,8 +43,8 @@ edinburgh_finds/
 │   ├── app/                   # Next.js App Router
 │   ├── lib/                   # Shared utilities
 │   └── prisma/                # Prisma schema (auto-generated)
-└── conductor/                 # Gemini Conductor workflow (Context-Driven Development)
-    └── tracks/                # Development tracks with specs and plans
+└── docs/                      # Documentation and implementation plans
+    └── plans/                 # Phase-by-phase implementation plans
 ```
 
 ## Development Commands
@@ -209,27 +209,26 @@ connectors = lens.get_connectors_for_query(query, features)
 - `engine/orchestration/planner.py`: Uses Lens rules for connector routing
 - Both are **Lens-driven**, not hardcoded
 
-## Conductor Workflow (Context-Driven Development)
+## Development Workflow
 
-This project uses **Gemini Conductor** methodology for structured development:
+This project follows **Test-Driven Development (TDD)** with strict quality gates:
 
-- **Location:** `conductor/tracks/<track_id>/` contains `spec.md`, `plan.md`, `metadata.json`
-- **Active Track:** Check `conductor/tracks.md` for current track
-- **Workflow:** All tasks follow strict TDD lifecycle (see `conductor/workflow.md`)
-  1. Mark task `[~]` in `plan.md` before starting
-  2. Write failing tests (Red)
-  3. Implement to pass (Green)
-  4. Refactor
-  5. Commit with git notes
-  6. Update `plan.md` with commit SHA
-- **Phase Completion:** Triggers verification protocol (automated tests + manual verification + checkpoint commit)
-- **Quality Gates:** All tests pass, >80% coverage, no linting errors, docs updated
+**TDD Cycle (Red → Green → Refactor):**
+1. **Red:** Write failing tests first
+2. **Green:** Implement minimum code to pass tests
+3. **Refactor:** Improve code while keeping tests green
+4. **Commit:** Use conventional commits with co-author attribution
 
-**When working on tasks:**
-- Always check the current track's `plan.md` for next available task
-- Follow the 11-step Standard Task Workflow in `conductor/workflow.md`
-- Phase completions trigger the full checkpointing protocol
-- Tech stack changes must update `conductor/tech-stack.md` BEFORE implementation
+**Quality Gates (All Required):**
+- ✅ All tests pass (`pytest` for backend, `npm run build` for frontend)
+- ✅ >80% test coverage (`pytest --cov=engine`)
+- ✅ No linting errors (`npm run lint` for frontend)
+- ✅ Schema validation passes (`python -m engine.schema.generate --validate`)
+
+**Implementation Plans:**
+- Plans live in `docs/plans/` (e.g., `2026-01-28-end-to-end-extraction-implementation.md`)
+- Each plan defines architectural decisions, phases, and acceptance criteria
+- Follow phase-by-phase approach with validation checkpoints
 
 ## Tech Stack
 
@@ -311,7 +310,7 @@ Mark slow tests with `@pytest.mark.slow` decorator.
 
 Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
 ```
-Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `conductor(plan)`, `conductor(checkpoint)`
+Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
 
 ### 6. Orchestration Registry
 When adding a new connector to the orchestration system:
@@ -321,12 +320,10 @@ When adding a new connector to the orchestration system:
 
 ## Key Files to Reference
 
-- **Architecture:** `ARCHITECTURE.md` (system design, component interactions, data flows)
-- **Product Mission:** `conductor/product.md` (core mission, USP, target audience)
-- **Tech Stack:** `conductor/tech-stack.md` (deliberate technology choices)
-- **Workflow:** `conductor/workflow.md` (TDD workflow, phase protocols, quality gates)
-- **Design Guidelines:** `conductor/product-guidelines.md` (tone, UX principles, quality standards)
-- **Current Work:** `conductor/tracks.md` → active track → `plan.md`
+- **Architecture:** `VISION.md` (architectural principles, design decisions, success criteria)
+- **Implementation Plans:** `docs/plans/` (phase-by-phase implementation strategy)
+- **Schema Definitions:** `engine/config/schemas/*.yaml` (single source of truth for data models)
+- **Lens Configurations:** `lenses/<lens_id>/lens.yaml` (vertical-specific domain knowledge)
 
 ## Testing Strategy
 
@@ -353,8 +350,7 @@ pytest --cov=engine --cov-report=html  # Generate HTML coverage report
 2. **Run tests:** `pytest` (backend), `cd web && npm run build` (frontend)
 3. **Check linting:** `cd web && npm run lint`
 4. **Verify coverage:** `pytest --cov=engine` (should be >80%)
-5. **Update plan:** If working on Conductor task, update `plan.md` with commit SHA
-6. **Git notes:** Attach task summary to commit using `git notes add -m "..." <commit_hash>`
+5. **Update docs:** If implementation affects architecture or plans, update relevant documentation
 
 ## Environment Setup
 
@@ -387,6 +383,7 @@ npx prisma migrate dev  # Create migration (production)
 
 ## Support Resources
 
-- **Conductor Tracks:** `conductor/tracks.md` lists all development tracks
+- **Implementation Plans:** `docs/plans/` contains phase-by-phase implementation strategies
 - **Documentation:** `engine/docs/` contains detailed guides for extraction, ingestion, schema management
 - **Test Examples:** Browse `tests/engine/` for testing patterns and fixtures
+- **Architecture Reference:** `VISION.md` defines all architectural principles and design decisions

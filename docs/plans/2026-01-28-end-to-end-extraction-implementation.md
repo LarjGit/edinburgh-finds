@@ -113,7 +113,7 @@ Before any implementation, these architectural decisions must be resolved to pre
 1. CLI loads and validates lens.yaml once at bootstrap (fail-fast)
 2. ExecutionContext created with entire lens.yaml as plain dict
 3. Context passed explicitly through pipeline (no globals)
-4. Extractors call `self.apply_lens_contract(raw_data, basic_fields, ctx=ctx)`
+4. Extractors call `self.apply_lens_contract(raw_data, ctx=ctx)` to get lens-derived fields
 5. Purity enforced: Extractors NEVER import LensRegistry or load files
 
 **Files to Create:**
@@ -131,41 +131,174 @@ Before any implementation, these architectural decisions must be resolved to pre
 
 ---
 
-### Decision 2: Complete Edinburgh Finds Lens Specification
+### Decision 2: Define and Validate the Edinburgh Finds Lens Contract ✅ RESOLVED
 
-**Problem:** `lens.yaml` doesn't exist, extractors have nothing to consume
+**Problem:** `lens.yaml` doesn't exist, and its structure must be defined as a strict runtime contract, not a free-form configuration.
 
-**Required Sections:**
+**DECISION:** Lens as a compiled, validated, evidence-driven contract
 
-**2.1 Query Vocabulary**
+**Reference:** VISION.md Section: "Lens Authoring Contract & Canonical Registry (Decision 2)"
+
+**Core Principles:**
+1. Lens is a **compiled runtime contract** (deterministic, versioned, hashable)
+2. **Canonical registry** is single source of truth (no orphaned references)
+3. **Structured mapping rules** with explicit metadata (id, confidence, applicability)
+4. **Evidence-driven expansion** (every rule backed by real payload fixture)
+5. **Minimal viable lens first** (one entity, then expand incrementally)
+6. **Validation gates fail-fast** (broken lens aborts at bootstrap)
+
+#### Deliverable 2.1: Canonical Registry Definition
+
+**Objective:** Define the initial canonical registry for all four dimensions, ensuring internal consistency and validation.
+
+**Canonical Values to Define:**
+
+**Activities (Edinburgh-Specific):**
+- Minimal set for validation entity: `football`, `padel`
+- Expansion driven by observed payloads
+- Each value requires: display_name, seo_slug, icon, description
+
+**Roles (Universal Function Keys):**
+- Minimal set: `provides_facility`
+- Universal across verticals (same keys for sports, wine, restaurants)
+- Expansion as new entity types observed
+
+**Place Types (Edinburgh-Specific but Engine-Opaque):**
+- Minimal set: `sports_centre`
+- Edinburgh interpretation, but engine stores opaque strings
+- Expansion based on real facility observations
+
+**Access Models (Universal):**
+- Minimal set: `pay_and_play`
+- Largely universal (membership, free, booking_required, etc.)
+- Expansion as needed
+
+**Registry Structure:**
 ```yaml
-vocabulary:
-  activity_keywords:
-    - padel
-    - tennis
-    - football
-    - swimming
-    - gym
-    - yoga
-    # ... all Edinburgh activities
+canonical_values:
+  # Activities (minimal for Powerleague validation)
+  football:
+    display_name: "Football"
+    seo_slug: "football"
+    icon: "football"
+    description: "Football pitches and venues"
 
-  location_indicators:
-    - edinburgh
-    - portobello
-    - leith
-    - morningside
-    # ... all Edinburgh areas
+  padel:
+    display_name: "Padel"
+    seo_slug: "padel"
+    icon: "padel-racquet"
+    description: "Padel courts and facilities"
 
-  facility_keywords:
-    - centre
-    - club
-    - pitch
-    - court
-    - pool
-    - venue
+  # Roles (universal)
+  provides_facility:
+    display_name: "Sports Facility"
+    seo_slug: "facilities"
+    description: "Provides sports facilities"
+
+  # Place Types
+  sports_centre:
+    display_name: "Sports Centre"
+    seo_slug: "sports-centres"
+    description: "Multi-sport facility"
+
+  # Access
+  pay_and_play:
+    display_name: "Pay & Play"
+    icon: "credit-card"
+    description: "No membership required"
 ```
 
-**2.2 Connector Routing Rules**
+**Validation:**
+- No mapping rule may introduce canonical values not in registry
+- All references resolve during lens validation
+- Fail-fast if orphaned reference detected
+
+**Acceptance Criteria:**
+- ✅ Registry contains minimum viable set for validation entity
+- ✅ All four dimensions represented
+- ✅ Each value has complete display metadata
+- ✅ Validation passes (no orphaned references)
+
+#### Deliverable 2.2: Structured Mapping Rule Framework
+
+**Objective:** Define mapping rules that reference canonical registry values with explicit structure and metadata.
+
+**Rule Structure Requirements:**
+- **id:** Unique identifier (enables duplicate detection)
+- **pattern:** Regex pattern (Python `re` module syntax)
+- **dimension:** Target canonical dimension
+- **value:** Canonical registry reference (MUST exist in canonical_values)
+- **source_fields:** Which raw data fields to inspect
+- **confidence:** Extraction confidence (0.0-1.0)
+- **applicability** (optional): Entity class constraints
+
+**Minimal Mapping Rules (For Validation Entity):**
+```yaml
+mapping_rules:
+  # Activities
+  - id: activity_football_explicit
+    pattern: "(?i)\\bfootball\\b|5.?a.?side|7.?a.?side"  # Python re syntax
+    dimension: canonical_activities
+    value: football
+    source_fields: [raw_categories, types, name]
+    confidence: 0.95
+
+  - id: activity_padel_explicit
+    pattern: "(?i)\\bpadel\\b|pádel"  # Python re syntax
+    dimension: canonical_activities
+    value: padel
+    source_fields: [raw_categories, types, name]
+    confidence: 0.98
+
+  # Roles
+  - id: role_facility_provider
+    pattern: "(?i)facility|venue|centre"
+    dimension: canonical_roles
+    value: provides_facility
+    source_fields: [raw_categories, types]
+    confidence: 0.90
+
+  # Place Types
+  - id: place_type_sports_complex
+    pattern: "(?i)sports.?complex|sports.?centre"
+    dimension: canonical_place_types
+    value: sports_centre
+    source_fields: [types, raw_categories]
+    confidence: 0.95
+
+  # Access
+  - id: access_pay_and_play
+    pattern: "(?i)pay.?and.?play|casual|drop.?in"
+    dimension: canonical_access
+    value: pay_and_play
+    source_fields: [raw_categories, description]
+    confidence: 0.90
+```
+
+**Evidence Requirement:**
+- Each rule must be justified by a real raw ingestion payload (recorded connector response, not mock)
+- Fixture stored: `tests/fixtures/raw_ingestions/<connector>/<entity>.json`
+- Test validates rule matches fixture correctly
+- Fixtures are captured real payloads, not hand-crafted test data
+
+**Acceptance Criteria:**
+- ✅ All mapping rule `value` fields exist in canonical_values
+- ✅ Each rule has unique `id` (no duplicates)
+- ✅ Rules are small and composable (not monolithic)
+- ✅ Each rule backed by real payload fixture
+- ✅ Validation entity produces non-empty canonical dimensions
+
+#### Deliverable 2.3: Connector Routing Rules
+
+**Objective:** Lens defines routing rules only for connectors it intends to use. Validation must fail if lens references an unknown connector.
+
+**Connector Routing Requirements:**
+- Lens defines rules ONLY for connectors it uses (not all registered connectors)
+- Referenced connectors MUST exist in engine connector registry (fail-fast validation)
+- No requirement to enumerate every connector in the engine
+- Unknown connector references cause immediate validation failure
+
+**Routing Rules (Edinburgh Finds Uses 5 Connectors):**
 ```yaml
 connector_rules:
   google_places:
@@ -174,51 +307,50 @@ connector_rules:
       - type: always
     budget_limit: 100
 
+  serper:
+    priority: medium
+    triggers:
+      - type: always
+    budget_limit: 50
+
   sport_scotland:
     priority: high
     triggers:
       - type: any_keyword_match
-        keywords: [football, tennis, padel, swimming]
+        keywords: [football, tennis, padel, squash, swimming, rugby]
 
-  # ... rules for all 6 connectors
+  edinburgh_council:
+    priority: high
+    triggers:
+      - type: location_match
+        locations: [edinburgh]
+
+  openstreetmap:
+    priority: medium
+    triggers:
+      - type: location_match
+        locations: [edinburgh]
+
+# Note: open_charge_map not included (EV charging not relevant to Edinburgh Finds)
+# No requirement to enumerate all registered connectors
 ```
 
-**2.3 Mapping Rules**
-```yaml
-mapping_rules:
-  # Activities
-  - pattern: "(?i)padel|pádel"
-    dimension: canonical_activities
-    value: padel
-    confidence: 0.98
+**Validation:**
+- Lens validator checks all referenced connectors exist in engine registry
+- Unknown connector references cause validation failure
+- Fail-fast with clear error: "Connector 'xyz' not found in registry"
 
-  - pattern: "(?i)football|5.?a.?side|7.?a.?side"
-    dimension: canonical_activities
-    value: football
-    confidence: 0.95
+**Acceptance Criteria:**
+- ✅ All connectors used by this lens have routing rules; no unknown connectors referenced
+- ✅ Validation passes (no unknown connector references)
+- ✅ Test query selects appropriate subset
+- ✅ No requirement to address every registered connector
 
-  # Place Types
-  - pattern: "(?i)sports? centre|multi.?sport"
-    dimension: canonical_place_types
-    value: sports_centre
-    confidence: 0.95
+#### Deliverable 2.4: Module Registry and Trigger Definition
 
-  # Roles
-  - pattern: "(?i)facility|venue|centre"
-    dimension: canonical_roles
-    value: provides_facility
-    confidence: 0.90
+**Objective:** Domain modules declared centrally in lens, triggers reference declared modules and canonical values deterministically.
 
-  # Access
-  - pattern: "(?i)pay.?and.?play|casual"
-    dimension: canonical_access
-    value: pay_and_play
-    confidence: 0.90
-
-  # ... comprehensive mapping rules
-```
-
-**2.4 Module Definitions**
+**Module Registry:**
 ```yaml
 modules:
   sports_facility:
@@ -234,9 +366,6 @@ modules:
               indoor: integer
               outdoor: integer
               surface: array[string]
-          seven_a_side:
-            type: object
-            # ...
 
       padel_courts:
         type: object
@@ -245,185 +374,699 @@ modules:
           indoor: integer
           outdoor: integer
 
-      # ... all facility types
+    # Field extraction rules (Decision 3)
+    field_rules:
+      - rule_id: football_pitch_total_sport_scotland
+        target_path: football_pitches.five_a_side.total
+        source_fields: [NumPitches]
+        extractor: numeric_parser
+        confidence: 0.95
+        applicability:
+          source: [sport_scotland]
+          entity_class: [place]
+
+      - rule_id: football_pitch_surface
+        target_path: football_pitches.five_a_side.surface
+        source_fields: [Surface]
+        extractor: regex_capture
+        pattern: "(?i)(3G|4G|grass|artificial)"
+        confidence: 0.85
 ```
 
-**2.5 Module Triggers**
+**Module Triggers:**
 ```yaml
 module_triggers:
-  - when:
+  - id: attach_sports_facility_football
+    when:
       dimension: canonical_activities
       values: [football, padel, tennis, squash]
     add_modules: [sports_facility]
     conditions:
       - entity_class: place
+
+  - id: attach_sports_facility_swimming
+    when:
+      dimension: canonical_activities
+      values: [swimming]
+    add_modules: [sports_facility]
+    conditions:
+      - entity_class: place
 ```
 
-**2.6 Canonical Value Metadata**
-```yaml
-canonical_values:
-  padel:
-    display_name: "Padel"
-    display_name_plural: "Padel"
-    seo_slug: "padel"
-    icon: "padel-racquet"
-    description: "Padel courts and facilities"
-    search_keywords: [padel, pádel]
+**Trigger Validation:**
+- All `add_modules` values must exist in `modules` registry
+- All `values` in `when` clause must exist in canonical registry
+- Triggers are deterministic (same input = same modules attached)
 
-  football:
-    display_name: "Football"
-    display_name_plural: "Football"
-    seo_slug: "football"
-    icon: "football"
-    description: "Football pitches and venues"
-    search_keywords: [football, soccer, 5-a-side, 7-a-side]
+**Acceptance Criteria:**
+- ✅ Module registry defines sports_facility structure
+- ✅ All triggers reference declared modules only
+- ✅ Triggers reference canonical values only
+- ✅ Validation entity has sports_facility module attached
+- ✅ Module structure validated by ModuleValidator
 
-  # ... all canonical values
-```
+#### Deliverable 2.5: Validation & Quality Gates
 
-**Decision Needed:** Author complete lens.yaml with real Edinburgh Finds data
+**Objective:** Implement comprehensive validation gates that fail-fast before any extraction occurs.
 
-**Impact:** Everything else consumes this specification
+**Required Validation Gates:**
 
----
+**Gate 1: Schema Validation**
+- YAML structure matches lens schema
+- All required sections present
+- Field types correct
 
-### Decision 3: Module Field Extraction Algorithm
+**Gate 2: Canonical Reference Integrity**
+- All mapping rule `value` fields exist in `canonical_values`
+- All module trigger `add_modules` exist in `modules`
+- No orphaned references
 
-**Problem:** How do we populate module fields from raw source data?
+**Gate 3: Connector Reference Validation**
+- All connectors in `connector_rules` exist in engine registry
+- Clear error listing missing connectors
 
-**Current State:**
+**Gate 4: Duplicate Identifier Validation**
+- All mapping rule `id` fields unique
+- All module trigger `id` fields unique
+- Prevents conflicts and ambiguity
+
+**Gate 5: Pattern Compilation Validation**
+- All mapping rule `pattern` fields compile as valid Python regex
+- Patterns validated at lens load time using `re.compile()`
+- Fails with rule `id` and regex error if pattern invalid
+- Prevents runtime regex compilation errors
+
+**Gate 6: Smoke Coverage Validation**
+- At least one fixture for each mapping rule
+- Validation entity produces non-empty canonical dimensions
+- At least one module trigger fires
+
+**Gate 7: Fail-Fast Enforcement**
+- ANY validation failure aborts execution immediately
+- Clear error messages indicating which gate failed
+- No silent fallback behavior
+
+**Implementation:**
 ```python
-# extract_with_lens_contract() - line ~180 in base.py
-for module_name in required_modules:
-    module_def = modules_config.get(module_name, {})
-    modules_data[module_name] = {}  # ← Empty! No extraction logic
+# engine/lenses/loader.py
+def load_lens(lens_id: str) -> VerticalLens:
+    # Lens content lives at: lenses/<lens_id>/lens.yaml
+    # (NOT engine/lenses/ - engine owns loader code only)
+    raw_yaml = load_yaml_file(f"lenses/{lens_id}/lens.yaml")
+
+    # Gate 1: Schema validation
+    validate_lens_schema(raw_yaml)
+
+    # Gate 2: Canonical reference integrity
+    validate_canonical_references(raw_yaml)
+
+    # Gate 3: Connector reference validation
+    # Fail if lens references connectors not in engine registry
+    validate_connector_references(raw_yaml)
+
+    # Gate 4: Duplicate identifier validation
+    validate_unique_rule_ids(raw_yaml)
+
+    # Gate 5: Pattern compilation validation
+    # All mapping rule patterns must compile as valid Python regex
+    validate_pattern_compilation(raw_yaml)
+
+    # Gate 6: Smoke coverage validation (performed via tests)
+
+    # Create lens object (Gate 7: fail-fast on any error)
+    return VerticalLens.from_dict(raw_yaml)
 ```
 
-**Need to Design:**
-1. How to map raw_data fields to module structure
-2. How to handle nested module fields (football_pitches.five_a_side.total)
-3. How to handle source-specific field names (Google vs Sport Scotland)
-4. How to handle missing/null fields gracefully
-5. What confidence scores to assign to extracted module fields
+**Acceptance Criteria:**
+- ✅ All validation gates implemented (1-7)
+- ✅ Lens validation failures abort at bootstrap
+- ✅ Clear error messages for each gate failure (includes rule `id` for pattern errors)
+- ✅ No silent fallback behavior
+- ✅ Pattern compilation validated at load time (Python `re.compile()`)
+- ✅ Powerleague validation entity passes smoke coverage validation (Gate 6)
 
-**Example Design Question:**
-Raw Google Places data: `{"types": ["sports_complex", "point_of_interest"], "formatted_address": "..."}`
-Sport Scotland WFS data: `{"FacilityType": "Football Pitches", "NumPitches": 4, "Surface": "3G"}`
+**End-to-End Acceptance Criteria:**
+```sql
+-- After running: python -m engine.orchestration.cli run "Powerleague Portobello"
+SELECT
+  entity_name,
+  canonical_activities,      -- Expected: non-empty array
+  canonical_roles,           -- Expected: non-empty array
+  canonical_place_types,     -- Expected: non-empty array
+  canonical_access,          -- Expected: non-empty array
+  modules->'sports_facility' -- Expected: non-empty object
+FROM entities
+WHERE slug = 'powerleague-portobello';
 
-How should we extract:
-```json
-{
-  "sports_facility": {
-    "football_pitches": {
-      "five_a_side": {
-        "total": 4,
-        "surface": ["3G"]
-      }
-    }
-  }
-}
+-- PASS if all canonical dimensions contain at least 1 value
+-- PASS if sports_facility module attached and non-empty
 ```
 
-**Decision Needed:**
-- Design extraction rule format (declarative YAML? imperative Python?)
-- Define module field binding strategy
-- Document extraction confidence scoring
+#### Deliverable 2.6: Evidence-Driven Expansion Policy
 
-**Impact:** Determines richness of extracted facility data
+**Objective:** Document that new mapping rules, vocabulary, or canonical values require real payload evidence.
+
+**Evidence Requirements:**
+- **Real Raw Payload:** New rule must be justified by observed connector payload (recorded response, not mock)
+- **Fixture Storage:** Payload stored as `tests/fixtures/raw_ingestions/<connector>/<entity>.json`
+- **Explicit Justification:** Fixture documents what pattern was observed and why rule needed
+- **Real Connector Response:** Fixtures are captured real data, not hand-crafted test data
+
+**Expansion Workflow:**
+```
+1. Run query, collect raw ingestions
+2. Inspect payloads for new categories/patterns
+3. Create fixture from real payload
+4. Write mapping rule to handle observed pattern
+5. Add canonical value to registry (with metadata)
+6. Write test validating rule matches fixture
+7. Commit fixture + rule + test together
+```
+
+**Anti-Patterns (Forbidden):**
+- ❌ Adding canonical values without observed payloads
+- ❌ Creating mapping rules for hypothetical data
+- ❌ Expanding vocabulary based on speculation
+
+**Acceptance Criteria:**
+- ✅ Policy documented in lens README
+- ✅ All initial mapping rules backed by fixtures
+- ✅ Test coverage for each rule
+- ✅ No speculative taxonomy expansion
+
+**Impact:** Ensures lens contract is production-quality, validated, and scales safely
 
 ---
 
-### Decision 4: Field Name Reconciliation
+### Decision 3: Module Field Extraction Algorithm ✅ RESOLVED
+
+**Problem:** How do we populate module fields from raw source data while maintaining engine purity and lens-driven architecture?
+
+**DECISION:** Declarative, lens-owned, schema-driven extraction with generic engine interpreter
+
+**Reference:** VISION.md Section 5: Module Architecture → Module Field Extraction (Decision 3)
+
+**Summary:**
+
+**Core Principle:**
+- Module field extraction is **declarative, lens-owned, schema-driven**
+- Lens defines extraction rules, engine executes them generically
+- No module-specific or domain-specific logic in engine code
+- Engine remains domain-blind
+
+**Module Field Rule Structure:**
+
+Each module declares structured field rules with:
+- **rule_id:** Unique identifier
+- **target_path:** Dot path inside module JSON (e.g., `football_pitches.five_a_side.total`)
+- **source_fields:** Raw payload fields the rule may read
+- **extractor:** From generic engine-owned vocabulary
+- **confidence:** Extraction confidence score
+- **applicability:** Optional (source, entity_class constraints)
+- **normalizers:** Optional field transformations
+- **llm_config:** Optional (only for LLM extractors)
+
+**Extractor Vocabulary (Small, Stable, Generic):**
+
+**Deterministic Extractors:**
+- `numeric_parser`: Extract numbers from strings or numeric fields
+- `regex_capture`: Extract values matching regex pattern
+- `json_path`: Extract value at JSON path
+- `boolean_coercion`: Convert values to boolean
+- `coalesce`: Try multiple source fields, use first non-null
+- `normalize`: Apply normalization functions
+- `array_builder`: Construct array from multiple fields
+
+**LLM Extractors:**
+- `llm_structured`: Schema-bound structured extraction via Instructor
+- Used only when deterministic insufficient
+- Must include Pydantic schema for validation
+
+**LLM/Instructor Constraints (Mandatory):**
+1. Schema-bound only (Instructor validation, no free-form JSON)
+2. Evidence anchored where possible
+3. Deterministic-first (LLM fills only missing fields)
+4. Batch per module (max one LLM call per module per source payload)
+5. Confidence caps (LLM weaker than official sources in merge)
+6. Full provenance (rule_id, source, confidence, method)
+
+**Execution Semantics:**
+
+For each entity and required module:
+1. Select applicable field rules (based on source, entity_class)
+2. Run deterministic rules first and populate fields
+3. Identify remaining fields needing LLM extraction
+4. Build schema for only those fields if needed
+5. Execute single Instructor call per module if needed
+6. Validate, normalize, enforce evidence and confidence constraints
+7. Write results into module using target_path
+8. Cross-source conflicts resolved during merge (not here)
+
+**Source Awareness (Required):**
+- Module extraction path must receive `source_name` or full `ExecutionContext`
+- This is the only required touch to `extract_with_lens_contract()` for Decision 3
+
+**Purity Rules (Non-Negotiable):**
+- Engine code must NOT contain domain concepts, module-specific branching, or hardcoded field semantics
+- All semantics live in the Lens contract
+- Lens treated as opaque configuration by engine
+
+**Implementation Specifications:**
+
+**Canonical Function Signature:**
+```python
+# engine/extraction/base.py
+def extract_with_lens_contract(
+    raw_data: dict,
+    lens_contract: dict,
+    *,
+    source_name: str  # REQUIRED for field_rules applicability
+) -> dict
+```
+
+**BaseExtractor Interface Alignment:**
+```python
+class BaseExtractor(ABC):
+    source_name: str  # Class attribute for connector name
+
+    @abstractmethod
+    def extract(self, raw_data: Dict, *, ctx: ExecutionContext) -> Dict:
+        """Extract entity from raw data with lens context"""
+
+    def apply_lens_contract(
+        self,
+        raw_data: Dict,
+        *,
+        ctx: ExecutionContext,
+        source_name: str  # Required for applicability filtering
+    ) -> Dict:
+        """Apply lens mapping + module extraction"""
+        return extract_with_lens_contract(
+            raw_data,
+            ctx.lens_contract,
+            source_name=source_name
+        )
+```
+
+**Mapping Rules Execution:**
+- Mapping runs over **union of declared source_fields** per rule (NOT hardcoded to raw_categories)
+- Engine iterates: `for field in rule["source_fields"]: check raw_data.get(field)`
+- All rules execute, each may contribute to canonical dimensions
+
+**LLM Integration Point:**
+- `llm_structured` extractor runs ONLY inside `extract_module_fields()` (module_extractor.py)
+- NOT inside per-source extractors, NOT per-field
+- Batch ≤ 1 Instructor call per module per payload
+
+**Error Handling:** Graceful degradation (log with rule_id/source, skip field, continue)
+
+**Rule Conflict Resolution:** First-match wins; conditions prevent re-extraction
+
+**Normalizer Pipeline:** Ordered execution (trim → lowercase → list_wrap)
+
+**Condition Vocabulary:** `field_not_populated`, `any_field_missing`, `source_has_field`, `value_present`
+
+**Extractor Vocabulary:** 8 deterministic + 1 LLM (see VISION.md Module Field Extraction section for full list)
+
+**Implementation Sequencing:** Deterministic-only MVP first (5–10 rules), then add LLM
+
+**Validation/Acceptance:**
+
+Decision 3 is complete when:
+- ✅ Modules are no longer empty placeholders
+- ✅ **At least one field_rules rule produces a non-null value persisted under target_path in modules JSONB for a real fixture/entity** (explicit non-empty requirement)
+- ✅ Deterministic extraction works for structured sources (Sport Scotland fixture)
+- ✅ LLM-assisted extraction works under constraints (Google Places fixture)
+- ✅ No engine purity violations (no domain logic in module_extractor.py)
+- ✅ Tests exist using real payload fixtures (not mocks)
+- ✅ Source awareness properly implemented (applicability filtering works)
+- ✅ Error handling gracefully degrades (partial data succeeds)
+- ✅ ≤ 1 LLM call per module per payload (batch efficiency verified)
+
+**Files to Create:**
+- `engine/extraction/module_extractor.py` (generic field rule executor)
+- `engine/extraction/extractors/` (vocabulary implementations)
+
+**Files to Update:**
+- `engine/extraction/base.py` (wire up module field extraction)
+- `lenses/edinburgh_finds/lens.yaml` (add field_rules to sports_facility module)
+
+**Impact:** Enables rich facility data extraction while maintaining architectural purity
+
+---
+
+### Decision 4: Field Name Reconciliation ✅ RESOLVED
 
 **Problem:** Field name mismatch between extraction output and Entity schema
 
-**Current Mismatches:**
+**DECISION:** Entity schema field names are canonical across entire pipeline
 
-| Extractor Output | EntityFinalizer Expects | Entity Schema |
-|------------------|------------------------|---------------|
-| `entity_name` | `name` | `entity_name` |
-| `latitude` | `location_lat` | `latitude` |
-| `longitude` | `location_lng` | `longitude` |
-| `street_address` | `address_full` | `street_address` |
-| `phone` | `contact_phone` | `phone` |
-| `email` | `contact_email` | `email` |
-| `website_url` | `contact_website` | `website_url` |
+**Reference:** VISION.md Section 5: Module Architecture → Field Name Reconciliation (Decision 4)
 
-**Options:**
-- A. Change extractors to match EntityFinalizer expectations
-- B. Change EntityFinalizer to match extractor output
-- C. Create field mapping layer between extraction and finalization
-- D. Align both to Entity schema as canonical names
+**Summary:**
 
-**Decision Needed:** Choose canonical field names throughout pipeline
+**Core Principle:**
+- Schema (`engine/config/schemas/entity.yaml`) is sole authority for universal field names
+- All extractors emit schema-aligned field names
+- EntityFinalizer consumes schema-aligned field names
+- No translation layers, no legacy naming, no connector-specific names
 
-**Impact:** All extractors and EntityFinalizer need updates
+**Implementation Reality:**
+- Most extractors already emit correct schema names (entity_name, latitude, longitude, street_address, phone, email)
+- Primary fix: Update EntityFinalizer to read schema names instead of legacy names (location_lat, contact_phone, etc.)
+- Global fix: Standardize `website` → `website_url` everywhere
+
+**What Extractors Emit:**
+- **Schema primitives:** Refer to `engine/config/schemas/entity.yaml` for authoritative list (entity_name, lat/lng, address, contact fields)
+- **Raw observations:** Source-specific fields allowed for downstream use (e.g., NumPitches, facility_type)
+- **NOT lens/module semantics:** canonical_*, modules, or any derived data
+
+**Boundary Clarity:**
+- Schema primitives (extractors) vs. Lens dimensions (mapping rules) vs. Module data (field rules)
+- Schema is sole authority - do not maintain separate field lists in code/docs
+
+**Validation Strategy:**
+- Permissive: Only warn on legacy patterns (location_*, contact_*, address_*)
+- Allow unknown fields (may be legitimate raw observations)
+- Incremental rollout: Warn during migration, error in CI post-migration
+- Test validates schema field preservation using real fixtures
+
+**Files to Update:**
+- `engine/orchestration/entity_finalizer.py` (_finalize_single method)
+- All 6 extractors (website → website_url)
+- `engine/extraction/validation.py` (add field name validation)
+- `tests/engine/orchestration/test_field_name_alignment.py` (new regression test)
+
+**Impact:** Eliminates silent data loss, simplifies future connector additions, establishes schema as unambiguous authority
 
 ---
 
-### Decision 5: Multi-Source Merge Algorithm
+### Decision 5: Multi-Source Merge Algorithm ✅ RESOLVED
 
-**Problem:** When Google Places and Sport Scotland both return "Powerleague Portobello", how do we merge?
+**Problem:** When Google Places and Sport Scotland both return "Powerleague Portobello", how do we merge field-level conflicts, union canonical dimensions, and deep-merge modules while maintaining determinism and engine purity?
 
-**Design Requirements:**
+**DECISION:** Deterministic, field-aware merge contract that runs after deduplication grouping and before persistence, using connector-metadata-driven trust model
 
-**5.1 Trust Hierarchy**
-```yaml
-# Connector trust levels
-sport_scotland:
-  trust_level: official
-  priority: 1
+**Reference:** VISION.md Section 5: Module Architecture → Deterministic Multi-Source Entity Merge (Decision 5)
 
-edinburgh_leisure_api:
-  trust_level: official
-  priority: 1
+**Summary:**
 
-google_places:
-  trust_level: crowdsourced
-  priority: 2
+**Core Principle:**
+- Merge is **deterministic, field-aware, and metadata-driven**
+- Runs **after deduplication grouping** (entities already grouped by real-world identity)
+- Runs **before persistence** (EntityFinalizer receives merged entities)
+- Uses connector registry metadata (`trust_tier`, `default_priority`) - never hardcodes connector names
+- Domain-blind (no vertical-specific branching in merge logic)
+- Idempotent (same inputs always produce identical output)
 
-serper:
-  trust_level: crowdsourced
-  priority: 3
-```
+**Trust Model (Metadata-Driven):**
 
-**5.2 Field-Level Conflict Resolution**
+Trust hierarchy comes from connector registry metadata:
 
-Example conflict:
-- **Google Places:** `phone: "+441316696000"`, `website: "https://powerleague.co.uk"`
-- **Sport Scotland:** `phone: null`, `website: "https://www.powerleague.co.uk/venues/portobello"`
-
-Resolution strategy:
-- Universal fields (name, address): Higher trust wins
-- Contact fields: Most complete + higher trust wins
-- Module fields: Official sources only (ignore crowdsourced for facility counts)
-- Canonical dimensions: Union of all sources (merge arrays, deduplicate)
-
-**5.3 Merge Algorithm**
 ```python
-def merge_entities(entities: List[ExtractedEntity]) -> ExtractedEntity:
-    """
-    Merge multiple extracted entities into single canonical entity
+# engine/orchestration/registry.py
+ConnectorSpec(
+    name="sport_scotland",
+    trust_tier="high",           # official/authoritative sources
+    default_priority=1,          # Lower number = higher priority
+    ...
+)
 
-    Rules:
-    1. Sort by trust level (official > verified > crowdsourced)
-    2. For each field:
-       - If only one source has value, use it
-       - If multiple sources, use highest trust
-       - If same trust, use most complete (longest string, most array elements)
-       - If tie, use alphabetically first source name
-    3. canonical_* dimensions: Union all values, deduplicate
-    4. modules: Deep merge with trust-based field selection
-    """
+ConnectorSpec(
+    name="google_places",
+    trust_tier="medium",         # verified crowdsourced
+    default_priority=2,
+    ...
+)
+
+ConnectorSpec(
+    name="serper",
+    trust_tier="low",            # unverified crowdsourced
+    default_priority=3,
+    ...
+)
 ```
 
-**Decision Needed:**
-- Document complete merge algorithm
-- Define trust level assignment per connector
-- Define field-by-field merge strategy
-- Define conflict resolution tie-breakers
+**Key Design Point:** Merge logic consumes `trust_tier` and `default_priority` values from registry, never references connector names directly (except as tie-breaker).
 
-**Impact:** Determines accuracy and completeness of final entities
+**Field-Group Merge Strategy:**
+
+Different field types require different strategies to avoid sparsity and maximize completeness:
+
+**1. Identity/Core Display Fields** (entity_name, summary, street_address):
+- **Strategy:** Prefer higher `trust_tier` unless empty or less usable
+- **Quality heuristic:** Non-null > longer/more complete > title-cased
+- **Tie-break:** `trust_tier` → quality → `default_priority` → lexicographic `source_name`
+- **Example:** `"Powerleague Portobello"` (concise) preferred over `"Powerleague Edinburgh - Portobello Branch"` (verbose)
+
+**2. Geo Primitives** (latitude, longitude):
+- **Strategy:** Prefer most precise/authoritative coordinates
+- **Precision measurement:**
+  1. If connector provides explicit `precision` or `accuracy` metadata → use higher precision
+  2. Else prefer higher `trust_tier`
+  3. Else prefer coordinates with more decimal precision (more decimals = more precise)
+  4. Else deterministic tie-break
+- **NO CENTROID:** Do NOT compute geographic centroid or averages (can produce invalid midpoints)
+- **Tie-break:** precision → `trust_tier` → decimal precision → `default_priority` → lexicographic `source_name`
+- **Example:** 55.954123, -3.115678 (8 decimals, precise) preferred over 55.9541, -3.1157 (4 decimals)
+
+**3. Contact & Presence Fields** (phone, email, website_url, social_media URLs):
+- **Strategy:** Allow higher-quality crowdsourced to win if official is null/sparse
+- **Quality scoring (deterministic, structure-based only):**
+
+  **Phone quality signals (descending priority):**
+  1. Parseable international format (e.g., E.164 or equivalent)
+  2. Contains country code
+  3. Greater digit count after normalization
+  4. Non-empty
+
+  **Email quality signals:**
+  1. Valid RFC-style format
+  2. Domain not in common free-email provider list (optional but acceptable)
+  3. Longer normalized length (capped at reasonable max)
+  4. Non-empty
+
+  **Website/URL quality signals:**
+  1. HTTPS preferred over HTTP
+  2. Path depth preferred (entity-specific pages over homepage)
+  3. Absence of tracking parameters
+  4. Longer normalized URL (capped at reasonable max)
+  5. Non-empty
+
+- **Rule:** Quality scoring must be deterministic and based only on string structure (no network calls)
+- **Tie-break:** quality score → `trust_tier` → `default_priority` → lexicographic `source_name`
+- **Example:** Crowdsourced `"+441316696000"` (formatted, international) beats official `null`
+
+**4. Canonical Dimension Arrays** (canonical_activities, canonical_roles, canonical_place_types, canonical_access):
+- **Strategy:** Union + dedupe + stable sort
+- **Algorithm:**
+  1. Collect all values from all sources (union)
+  2. Deduplicate exact matches (case-sensitive)
+  3. Sort lexicographically (stable ordering for idempotency)
+- **No weighting or ranking logic** (all values equal after union)
+- **Example:**
+  ```python
+  Source A: ["football", "padel"]
+  Source B: ["football", "tennis"]
+  Source C: ["padel"]
+  → Union: ["football", "padel", "tennis"]  # Lexicographic order
+  ```
+
+**5. Modules JSONB** (core, location, contact, hours, sports_facility, etc.):
+- **Strategy:** Deep merge recursively with per-leaf selection
+- **Structural conflict resolution:**
+  - `object` vs `object` → deep merge recursively
+  - `array` vs `array`:
+    - **Arrays of scalars** (strings, numbers, booleans) → concatenate + deduplicate + lexicographic sort
+    - **Arrays of objects** → selected wholesale from winner using deterministic cascade (no partial deep merge without explicit stable IDs)
+  - Type mismatch (object vs array vs scalar) → higher `trust_tier` wins wholesale
+- **Per-leaf selection (when both sources have compatible types):**
+  1. Compare `trust_tier` (high > medium > low)
+  2. If tie, compare `confidence` (if present in extraction metadata, normalized to 0.0–1.0)
+  3. If tie, compare completeness (non-null > more nested fields > longer values)
+  4. If tie, use `default_priority` → lexicographic `source_name`
+- **Confidence usage clarification:** Confidence is used only when present in extraction metadata (attached to ExtractedEntity or field-level provenance). If confidence is absent, merger skips this tie-breaker and proceeds to completeness. The system does not assume confidence is universally available.
+- **Confidence normalization:** When confidence is present, normalize to 0.0–1.0 internally before comparison
+- **Provenance tracking:** Record `source_name` if structural conflict occurs (optional but encouraged)
+- **Example:**
+  ```python
+  Source A (trust=high): {"football_pitches": {"total": 6}}
+  Source B (trust=medium): {"football_pitches": {"total": 8, "indoor": 4}}
+  → Merged: {"football_pitches": {"total": 6, "indoor": 4}}  # total from A (higher trust), indoor from B (only source)
+  ```
+
+**6. Provenance/External IDs** (source_info, external_ids, discovered_by):
+- **Strategy:** Always union, never overwrite
+- **Fields:**
+  - `discovered_by`: Union of all `source_name` values (array)
+  - `primary_source`: Source with highest `trust_tier` (string)
+  - `external_ids`: Union all connector-specific IDs (object with source keys)
+- **Example:**
+  ```python
+  Source A: {"discovered_by": ["google_places"], "external_ids": {"google_places": "ChIJabc..."}}
+  Source B: {"discovered_by": ["sport_scotland"], "external_ids": {"sport_scotland": "EH-PAD-001"}}
+  → Merged: {
+      "discovered_by": ["google_places", "sport_scotland"],
+      "primary_source": "sport_scotland",  # Assuming trust_tier=high
+      "external_ids": {
+          "google_places": "ChIJabc...",
+          "sport_scotland": "EH-PAD-001"
+      }
+  }
+  ```
+
+**Deterministic Tie-Breakers (Cascade for Idempotency):**
+
+When multiple sources have identical trust/quality/completeness, cascade through:
+
+1. **Trust tier** (`trust_tier` metadata: high > medium > low)
+2. **Quality score** (for contact fields: structure-based quality metrics)
+3. **Completeness** (non-null > longer string > more array elements > more nested fields)
+4. **Connector default_priority** (from registry metadata, lower number = higher priority)
+5. **Lexicographic source_name** (alphabetical order, ensures stable output)
+
+**Canonical Function Signature:**
+
+```python
+# engine/orchestration/entity_merger.py
+def merge_entity_group(
+    entity_group: List[ExtractedEntity],
+    *,
+    connector_registry: ConnectorRegistry
+) -> Entity:
+    """
+    Merge grouped entities (same real-world entity) into single canonical entity.
+
+    Args:
+        entity_group: Entities already grouped by deduplication
+        connector_registry: Provides trust_tier and default_priority metadata
+
+    Returns:
+        Entity: Merged entity with best data from all sources
+
+    Guarantees:
+        - Idempotent: Same inputs always produce identical output
+        - Domain-blind: No vertical-specific logic
+        - Metadata-driven: Uses connector registry, not hardcoded names
+        - Deterministic: All conflicts resolved via cascading tie-breakers
+    """
+    # Implementation follows field-group strategies above
+```
+
+**Implementation Sequencing:**
+
+**Phase 1: Core Merge Infrastructure**
+1. Create `engine/orchestration/entity_merger.py` with base merge logic
+2. Implement deterministic field selectors (identity, geo, contact)
+3. Implement canonical array union + sort
+4. Wire into EntityFinalizer (receives merged entities, not groups)
+
+**Phase 2: Module Deep Merge**
+1. Implement recursive module merger
+2. Handle object/array/type mismatches
+3. Normalize confidence scores (0.0–1.0)
+4. Track structural conflict provenance
+
+**Phase 3: Quality Scoring**
+1. Implement contact field quality scoring (phone, email, URL)
+2. Structure-based only (no network calls)
+3. Deterministic and testable
+
+**Validation & Acceptance Criteria:**
+
+Decision 5 is complete when:
+
+**Core Functionality:**
+- ✅ Merge runs after deduplication grouping and before persistence
+- ✅ Trust model uses connector registry metadata (no hardcoded connector names in merge logic beyond examples)
+- ✅ All 6 field-group strategies implemented (identity, geo, contact, canonical arrays, modules, provenance)
+- ✅ Deterministic tie-breakers cascade correctly (trust → quality → completeness → priority → lexicographic)
+
+**Contact Field Quality:**
+- ✅ Phone quality: international format > country code > digit count > non-empty
+- ✅ Email quality: RFC format > non-free-provider > length > non-empty
+- ✅ URL quality: HTTPS > path depth > no tracking params > length > non-empty
+- ✅ Quality scoring is deterministic and structure-based only (no network calls)
+
+**Geo Precision:**
+- ✅ Precision metadata preferred if provided
+- ✅ Else trust tier, else decimal precision
+- ✅ NO centroid calculation (deterministic selection only)
+
+**Canonical Arrays:**
+- ✅ Union all sources
+- ✅ Deduplicate exact matches
+- ✅ Lexicographically sorted (stable ordering)
+
+**Modules Deep Merge:**
+- ✅ object vs object: deep merge recursively
+- ✅ array vs array (scalars): concatenate + dedupe + lexicographic sort
+- ✅ array vs array (objects): selected wholesale from winner (trust → confidence → completeness → priority → lex source)
+- ✅ No partial deep merge of object arrays without explicit stable IDs
+- ✅ Type mismatch: higher trust wins wholesale
+- ✅ Confidence used only when present in extraction metadata (skipped if absent)
+- ✅ Confidence scores normalized to 0.0–1.0 when present before comparison
+- ✅ Structural conflicts logged (provenance tracked)
+
+**Test Scenarios (Real Fixtures):**
+
+Using Powerleague Portobello group (Google Places + Sport Scotland):
+
+**Test 1: Contact Override**
+- **Setup:** Official source has null phone/website, crowdsourced has quality values
+- **Expected:** Crowdsourced contact fields fill official nulls
+- **Verification:** Entity has phone/website from crowdsourced source
+
+**Test 2: Inventory Conflict**
+- **Setup:** Official says 6 courts, crowdsourced says 8 courts
+- **Expected:** Official count beats crowdsourced
+- **Verification:** `sports_facility.football_pitches.total = 6`
+
+**Test 3: Canonical Union**
+- **Setup:** Source A has `["football", "padel"]`, Source B has `["football", "tennis"]`
+- **Expected:** Union: `["football", "padel", "tennis"]` (lexicographic order)
+- **Verification:** Canonical array is stable and deduped
+
+**Test 4: Tie-Break Determinism**
+- **Setup:** Run merge twice with same inputs
+- **Expected:** Identical output both times
+- **Verification:** SHA-256 hash of merged entity matches across runs
+
+**Test 5: Same-Trust Conflict**
+- **Setup:** Two sources both have `trust_tier=high`, different field values
+- **Expected:** `default_priority` cascade, then lexicographic
+- **Verification:** Correct source wins based on priority metadata
+
+**Test 6: All-Null Inputs**
+- **Setup:** All sources have null for a particular field
+- **Expected:** Merged entity has null (graceful handling)
+- **Verification:** No crash, null preserved
+
+**Test 7: Module Structural Mismatch**
+- **Setup:** Source A has `{"total": 6}`, Source B has `[{"type": "indoor", "count": 4}]` (object vs array)
+- **Expected:** Higher trust source wins wholesale (no partial merge)
+- **Verification:** Merged module uses higher-trust structure
+
+**Files to Create:**
+- `engine/orchestration/entity_merger.py` (merge logic)
+- `engine/orchestration/field_selectors.py` (field-group strategies)
+- `engine/orchestration/quality_scoring.py` (contact field quality)
+- `tests/engine/orchestration/test_entity_merger.py` (test suite with real fixtures)
+
+**Files to Update:**
+- `engine/orchestration/entity_finalizer.py` (wire up merger, receives merged entities)
+- `engine/orchestration/registry.py` (ensure trust_tier and default_priority metadata present)
+
+**Non-Goals:**
+
+- ❌ Do NOT introduce domain-specific branching in merge logic ("if padel then...")
+- ❌ Do NOT hardcode connector names in merge rules (use metadata only, examples OK)
+- ❌ Do NOT compute geographic centroids (prefer deterministic selection)
+- ❌ Do NOT introduce permanent naming translation layer (Decision 4 stands)
+- ❌ Do NOT make network calls for quality validation (structure-based only)
+- ❌ Do NOT block on field-level provenance schema changes (optional enhancement)
+
+**Impact:** Enables accurate, complete entity records from multiple imperfect sources while maintaining engine purity, idempotency, and architectural scalability. Resolves the "winner-take-all" problem where valuable data from secondary sources was discarded.
 
 ---
 
@@ -455,7 +1098,7 @@ def merge_entities(entities: List[ExtractedEntity]) -> ExtractedEntity:
 **Objective:** Prove query interpretation extracts correct features
 
 **Implementation:**
-1. Write `edinburgh_finds/query_vocabulary.yaml` (activities, locations, facilities)
+1. Write `lenses/edinburgh_finds/query_vocabulary.yaml` (activities, locations, facilities)
 2. Test: QueryLens correctly parses "5-a-side football in Portobello"
    - Expected: activity_keywords match ["football"]
    - Expected: location_indicators match ["portobello"]
@@ -478,14 +1121,14 @@ def merge_entities(entities: List[ExtractedEntity]) -> ExtractedEntity:
 **Objective:** Prove orchestration selects correct connectors for query
 
 **Implementation:**
-1. Write `edinburgh_finds/connector_rules.yaml` (routing rules for 6 connectors)
+1. Write `lenses/edinburgh_finds/connector_rules.yaml` (routing rules for connectors lens uses)
 2. Test: Orchestration selects correct connectors for "Powerleague Portobello"
    - Expected: Google Places (always), Sport Scotland (football keyword), OSM (location)
    - Not Expected: Open Charge Map (no EV charging query)
 
 **Quality Gates:**
 - ✅ Connector selection driven by lens rules, not hardcoded
-- ✅ All 6 connectors have routing rules
+- ✅ All connectors used by this lens have routing rules; no unknown connectors referenced
 - ✅ Test query selects appropriate subset
 
 **Deliverable:** Working connector routing configuration
@@ -652,22 +1295,182 @@ Output:
 ### Phase 8: Module Field Extraction
 
 **Duration:** 2 days
-**Scope:** Populate module fields from raw data
-**Dependencies:** Phase 7 (modules attached), Phase 0 (module extraction design)
+**Scope:** Implement declarative module field extraction using lens-defined rules
+**Dependencies:** Phase 7 (modules attached), Decision 3 (extraction algorithm resolved)
 
-**Objective:** Prove sports_facility module populated with facility inventory
+**Objective:** Prove sports_facility module populated with facility inventory using declarative field rules
 
 **Implementation:**
-1. Implement extract_module_fields(raw_data, module_def) function
-2. Extract facility-specific data (court counts, surfaces, equipment)
-3. Handle source-specific field names (Google vs Sport Scotland)
-4. Populate nested module structure
+
+**8.1 Create Generic Module Extractor (Engine)**
+```python
+# engine/extraction/module_extractor.py
+def extract_module_fields(
+    raw_data: dict,
+    module_def: dict,
+    *,
+    source_name: str,
+    entity_class: str
+) -> dict:
+    """
+    Generic module field extractor - executes lens-defined rules.
+
+    Args:
+        raw_data: Raw payload from connector
+        module_def: Module definition from lens contract (includes field_rules)
+        source_name: Which connector this data came from
+        entity_class: Entity class (place, person, etc.)
+
+    Returns:
+        dict: Extracted module fields
+    """
+    # Phase 1: Deterministic extraction
+    # Phase 2: LLM extraction (if needed)
+    # Returns populated module dict
+```
+
+**8.2 Implement Extractor Vocabulary**
+```python
+# engine/extraction/extractors/deterministic.py
+class NumericParser:
+    """Extract numeric values from strings or numbers"""
+
+class RegexCapture:
+    """Extract values matching regex pattern"""
+
+class JsonPath:
+    """Extract value at JSON path"""
+
+class BooleanCoercion:
+    """Convert values to boolean"""
+
+# engine/extraction/extractors/llm.py
+class LLMStructured:
+    """Schema-bound structured extraction via Instructor"""
+```
+
+**8.3 Update Lens with Field Rules**
+```yaml
+# lenses/edinburgh_finds/lens.yaml
+modules:
+  sports_facility:
+    description: "Sports facility inventory"
+    field_rules:
+      # Deterministic extraction from Sport Scotland
+      - rule_id: football_pitch_total_sport_scotland
+        target_path: football_pitches.five_a_side.total
+        source_fields: [NumPitches, pitches_total]
+        extractor: numeric_parser
+        confidence: 0.95
+        applicability:
+          source: [sport_scotland]
+          entity_class: [place]
+
+      - rule_id: football_pitch_surface
+        target_path: football_pitches.five_a_side.surface
+        source_fields: [Surface, surface_type]
+        extractor: regex_capture
+        pattern: "(?i)(3G|4G|grass|artificial)"
+        confidence: 0.85
+        normalizers: [lowercase, list_wrap]
+        applicability:
+          source: [sport_scotland]
+
+      # LLM extraction from unstructured descriptions
+      - rule_id: football_pitch_llm_google
+        target_path: football_pitches.five_a_side
+        source_fields: [description, editorial_summary]
+        extractor: llm_structured
+        schema:
+          total: integer
+          indoor: integer
+          outdoor: integer
+        confidence: 0.70
+        applicability:
+          source: [google_places, serper]
+        conditions:
+          - field_not_populated: football_pitches.five_a_side.total
+```
+
+**8.4 Wire Up in BaseExtractor**
+```python
+# engine/extraction/base.py
+def extract_with_lens_contract(
+    raw_data: dict,
+    lens_contract: dict,
+    *,
+    source_name: str  # REQUIRED for module extraction applicability
+) -> dict:
+    """
+    Apply lens mapping rules and module field extraction.
+
+    CANONICAL SIGNATURE - used everywhere this function is called.
+
+    Args:
+        raw_data: Complete raw payload (NOT subset)
+        lens_contract: Full lens.yaml as dict
+        source_name: Connector name (e.g., "sport_scotland")
+
+    Returns:
+        dict: canonical dimensions + modules populated per lens rules
+    """
+    # Step 1: Extract canonical dimensions using mapping_rules
+    # (runs over union of source_fields, NOT hardcoded to raw_categories)
+    canonical_dimensions = apply_mapping_rules(
+        raw_data,
+        lens_contract["mapping_rules"],
+        source_name=source_name
+    )
+
+    # Step 2: Determine which modules to attach using module_triggers
+    entity_class = resolve_entity_class(raw_data)
+    required_modules = evaluate_module_triggers(
+        canonical_dimensions,
+        entity_class,
+        lens_contract["module_triggers"]
+    )
+
+    # Step 3: Extract module fields using field_rules
+    modules_data = {}
+    for module_name in required_modules:
+        module_def = lens_contract["modules"].get(module_name, {})
+
+        modules_data[module_name] = extract_module_fields(
+            raw_data,
+            module_def,
+            source_name=source_name,  # For applicability filtering
+            entity_class=entity_class
+        )
+
+    return {
+        **canonical_dimensions,
+        "modules": modules_data
+    }
+```
+
+**Extractor Usage:**
+```python
+# engine/extraction/extractors/sport_scotland.py
+class SportScotlandExtractor(BaseExtractor):
+    source_name = "sport_scotland"  # Class attribute
+
+    def extract(self, raw_data: Dict, *, ctx: ExecutionContext) -> Dict:
+        # Basic fields
+        basic = {...}
+
+        # Lens-derived fields
+        lens_fields = self.apply_lens_contract(
+            raw_data,
+            ctx=ctx,
+            source_name=self.source_name  # Pass for applicability
+        )
+
+        return {**basic, **lens_fields}
+```
 
 **Test Case - Powerleague Portobello:**
-```
-Input (Google Places):
-  raw_data: {...types, name, formatted_address...}
 
+```
 Input (Sport Scotland WFS):
   raw_data: {
     "FacilityType": "Football Pitches",
@@ -676,6 +1479,21 @@ Input (Sport Scotland WFS):
     "Indoor": 0,
     "Outdoor": 6
   }
+  source_name: "sport_scotland"
+
+Lens Field Rules Applied:
+  1. rule: football_pitch_total_sport_scotland
+     - source_fields: [NumPitches] → 6
+     - extractor: numeric_parser
+     - target_path: football_pitches.five_a_side.total
+     - result: 6
+
+  2. rule: football_pitch_surface
+     - source_fields: [Surface] → "3G Artificial"
+     - extractor: regex_capture, pattern: "(3G|4G|grass)"
+     - normalizers: [lowercase, list_wrap]
+     - target_path: football_pitches.five_a_side.surface
+     - result: ["3g"]
 
 Output:
   modules: {
@@ -685,12 +1503,8 @@ Output:
           "total": 6,
           "indoor": 0,
           "outdoor": 6,
-          "surface": ["3G"]
+          "surface": ["3g"]
         }
-      },
-      "padel_courts": {
-        "total": 4,
-        "indoor": 4
       }
     }
   }
@@ -698,12 +1512,17 @@ Output:
 
 **Quality Gates:**
 - ✅ Module fields populated with actual data (not empty)
+- ✅ Extraction driven by lens field rules (no hardcoded logic)
 - ✅ Nested structure preserved (football_pitches.five_a_side.total)
-- ✅ Source-specific extraction rules handled
+- ✅ Source-specific extraction rules work (applicability filtering)
+- ✅ Deterministic extractors work for structured sources
+- ✅ LLM extraction works under constraints (schema-bound, confidence-capped)
 - ✅ Null/missing fields handled gracefully
 - ✅ ModuleValidator passes (structure correct)
+- ✅ Engine purity maintained (no domain logic)
+- ✅ Tests use real payload fixtures
 
-**Deliverable:** Rich facility data in modules JSONB
+**Deliverable:** Rich facility data in modules JSONB, extracted using declarative lens rules
 
 ---
 
