@@ -256,6 +256,35 @@ class BaseExtractor(ABC):
         )
 ```
 
+**Implementation Pattern:**
+
+The `extract_with_lens_contract(raw_data, lens_contract)` function produces **lens-derived fields only**:
+- Canonical dimensions: `canonical_activities`, `canonical_roles`, `canonical_place_types`, `canonical_access`
+- Domain modules: Lens-triggered modules (e.g., `sports_facility`) with populated fields
+
+Each extractor is responsible for:
+1. Extracting **basic fields** (entity_name, latitude, longitude, street_address, phone, etc.)
+2. Calling `apply_lens_contract(raw_data, ctx=ctx)` to get lens-derived fields
+3. **Merging** both outputs before returning
+
+**Example extractor implementation:**
+```python
+def extract(self, raw_data: Dict, *, ctx: ExecutionContext) -> Dict:
+    # Step 1: Extract basic fields (source-specific logic)
+    basic_fields = {
+        "entity_name": raw_data.get("name"),
+        "latitude": raw_data.get("lat"),
+        "longitude": raw_data.get("lng"),
+        # ... other basic fields
+    }
+
+    # Step 2: Get lens-derived fields (canonical dimensions + modules)
+    lens_fields = self.apply_lens_contract(raw_data, ctx=ctx)
+
+    # Step 3: Merge and return
+    return {**basic_fields, **lens_fields}
+```
+
 **Migration:** All 6 extractors (GooglePlacesExtractor, SportScotlandExtractor, EdinburghCouncilExtractor, OSMExtractor, SerperExtractor, OpenChargeMapExtractor) updated in single pass to accept `ctx` parameter.
 
 #### Enforcement and Validation
@@ -1724,6 +1753,14 @@ If adding a new vertical requires engine code changes, the architecture has fail
 2. Update extractors to populate raw_categories
 3. Apply lens mapping_rules during extraction/finalization
 4. Validate canonical dimension arrays populated
+
+**Definition of Done:** Running a real query results in non-empty `canonical_*` arrays in the Entity table. Validation query:
+```sql
+SELECT canonical_activities, canonical_roles, canonical_place_types, canonical_access
+FROM entities
+LIMIT 10;
+-- Expected: Populated arrays where data is available (not empty {})
+```
 
 **Phase 2: Module Population (High Priority)**
 1. Update extractors to organize extracted data into module structure
