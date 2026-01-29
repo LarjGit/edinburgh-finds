@@ -1,6 +1,8 @@
 """Tests for lens mapping engine."""
 import pytest
-from engine.lenses.mapping_engine import match_rule_against_entity, execute_mapping_rules, stabilize_canonical_dimensions
+from pathlib import Path
+from engine.lenses.loader import VerticalLens
+from engine.lenses.mapping_engine import match_rule_against_entity, execute_mapping_rules, stabilize_canonical_dimensions, apply_lens_mapping
 
 
 def test_simple_pattern_match_returns_dimension_and_value():
@@ -112,3 +114,41 @@ def test_canonical_dimensions_deduplicated_and_sorted():
     assert result["canonical_activities"].count("tennis") == 1
     # Sorted lexicographically
     assert result["canonical_activities"] == ["badminton", "padel", "tennis"]
+
+
+class MockExecutionContext:
+    """Mock ExecutionContext for testing."""
+    def __init__(self, lens):
+        self.lens = lens
+        self.source = "serper"
+
+
+def test_apply_lens_mapping_populates_canonical_dimensions():
+    """End-to-end: apply_lens_mapping should populate canonical dimensions."""
+    # Load real Edinburgh Finds lens
+    lens_path = Path("engine/lenses/edinburgh_finds/lens.yaml")
+    lens = VerticalLens(lens_path)
+
+    # Create entity with raw data
+    entity = {
+        "entity_name": "Powerleague Padel Edinburgh",
+        "description": "Premier sports facility with 5 padel courts",
+        "raw_categories": ["Sports Centre", "Leisure Facility"]
+    }
+
+    # Create mock context
+    ctx = MockExecutionContext(lens)
+
+    # Apply lens mapping
+    result = apply_lens_mapping(entity, ctx)
+
+    # Should populate canonical_activities
+    assert "canonical_activities" in result
+    assert "padel" in result["canonical_activities"]
+
+    # Should populate canonical_place_types
+    assert "canonical_place_types" in result
+    assert "sports_facility" in result["canonical_place_types"]
+
+    # Should preserve original entity fields
+    assert result["entity_name"] == "Powerleague Padel Edinburgh"

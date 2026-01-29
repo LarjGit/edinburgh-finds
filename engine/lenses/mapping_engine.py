@@ -136,3 +136,80 @@ def stabilize_canonical_dimensions(dimensions: Dict[str, List[str]]) -> Dict[str
         stabilized[dimension] = unique_values
 
     return stabilized
+
+
+def apply_lens_mapping(entity: Dict[str, Any], ctx: Any) -> Dict[str, Any]:
+    """
+    Main entry point: Apply lens mapping rules to populate canonical dimensions.
+
+    Called after Phase 1 extraction (primitives), before classification.
+
+    Per architecture.md Section 4.2 (Extraction Boundary):
+    - Phase 1: Source extractors return primitives only
+    - Phase 2: Lens application populates canonical_* dimensions
+
+    Args:
+        entity: Entity dict with raw field values (from Phase 1 extractor)
+        ctx: ExecutionContext with lens configuration
+
+    Returns:
+        Entity dict with canonical dimensions populated
+
+    Example:
+        >>> entity = {"entity_name": "Padel Club", "description": "..."}
+        >>> ctx = ExecutionContext(lens=vertical_lens)
+        >>> result = apply_lens_mapping(entity, ctx)
+        >>> result["canonical_activities"]
+        ["padel"]
+    """
+    # Get lens from context
+    lens = ctx.lens
+
+    # Get mapping rules from lens config
+    mapping_rules = lens.mapping_rules
+
+    # Build enhanced rules with dimension and source_fields
+    enhanced_rules = []
+    for rule in mapping_rules:
+        # Determine dimension from canonical value's facet
+        canonical = rule.get("canonical")
+
+        # Find value definition in lens
+        value_obj = None
+        for value in lens.values:
+            if value.get("key") == canonical:
+                value_obj = value
+                break
+
+        if not value_obj:
+            continue
+
+        # Get facet
+        facet = value_obj.get("facet")
+
+        # Get dimension from facet definition
+        facet_def = lens.facets.get(facet)
+        if not facet_def:
+            continue
+
+        dimension = facet_def.get("dimension_source")
+
+        # Add dimension and default source_fields to rule
+        enhanced_rule = dict(rule)
+        enhanced_rule["dimension"] = dimension
+        if "source_fields" not in enhanced_rule:
+            enhanced_rule["source_fields"] = ["entity_name", "description", "raw_categories"]
+
+        enhanced_rules.append(enhanced_rule)
+
+    # Execute mapping rules
+    dimensions = execute_mapping_rules(enhanced_rules, entity)
+
+    # Stabilize dimensions (dedupe + sort)
+    dimensions = stabilize_canonical_dimensions(dimensions)
+
+    # Merge dimensions into entity
+    result = dict(entity)
+    result.update(dimensions)
+
+    return result
