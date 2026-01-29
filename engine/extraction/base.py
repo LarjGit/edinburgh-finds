@@ -17,6 +17,7 @@ from engine.extraction.logging_config import (
     log_extraction_failure,
 )
 from engine.extraction.entity_classifier import resolve_entity_class, get_engine_modules
+from engine.lenses.mapping_engine import execute_mapping_rules, stabilize_canonical_dimensions
 
 
 class BaseExtractor(ABC):
@@ -256,87 +257,65 @@ def extract_with_lens_contract(raw_data: Dict[str, Any], lens_contract: Dict[str
     if not isinstance(raw_categories, list):
         raw_categories = [raw_categories] if raw_categories else []
 
-    # Step 2: Map to canonical values using LensContract mapping rules
-    # Access mapping_rules from lens_contract["mapping_rules"]
+    # Step 2: Map to canonical values using NEW mapping engine
     mapping_rules = lens_contract.get("mapping_rules", [])
-    confidence_threshold = lens_contract.get("confidence_threshold", 0.7)  # Configurable, defaults to 0.7
-    canonical_values = []
 
-    for raw_category in raw_categories:
-        for rule in mapping_rules:
-            pattern = rule.get("pattern")
-            canonical = rule.get("canonical")
-            confidence = rule.get("confidence", 1.0)
-
-            if not pattern or not canonical:
-                continue
-
-            # Apply regex pattern
-            if re.search(pattern, str(raw_category)):
-                # Filter by confidence threshold
-                if confidence >= confidence_threshold:
-                    canonical_values.append(canonical)
-
-    # Step 2a: Dedupe canonical_values to avoid repeated trigger evaluation
-    canonical_values = dedupe_preserve_order(canonical_values)
-
-    # Step 3: Distribute canonical values to dimensions by facet
-    # Initialize dimensions dict with actual DB column names
-    dimensions = {
-        "canonical_activities": [],
-        "canonical_roles": [],
-        "canonical_place_types": [],
-        "canonical_access": []
+    # Build entity dict for mapping engine
+    entity_for_mapping = {
+        "entity_name": raw_data.get("entity_name", ""),
+        "description": raw_data.get("description", ""),
+        "raw_categories": raw_categories
     }
 
-    # Build facet_to_dimension lookup from lens_contract["facets"]
-    # Maps facet key to dimension_source (actual DB column name)
+    # Build enhanced rules with dimension and source_fields
     facets_config = lens_contract.get("facets", {})
+    values_list = lens_contract.get("values", [])
+    values_by_key = {value["key"]: value for value in values_list if "key" in value}
+
+    enhanced_rules = []
+    for rule in mapping_rules:
+        canonical = rule.get("canonical")
+        value_obj = values_by_key.get(canonical)
+
+        if not value_obj:
+            continue
+
+        facet = value_obj.get("facet")
+        facet_def = facets_config.get(facet)
+
+        if not facet_def:
+            continue
+
+        dimension = facet_def.get("dimension_source")
+
+        enhanced_rule = dict(rule)
+        enhanced_rule["dimension"] = dimension
+        if "source_fields" not in enhanced_rule:
+            enhanced_rule["source_fields"] = ["entity_name", "description", "raw_categories"]
+
+        enhanced_rules.append(enhanced_rule)
+
+    # Execute mapping rules
+    dimensions = execute_mapping_rules(enhanced_rules, entity_for_mapping)
+
+    # Stabilize dimensions
+    dimensions = stabilize_canonical_dimensions(dimensions)
+
+    # Build canonical_values_by_facet for module trigger matching
+    # Build facet_to_dimension lookup
     facet_to_dimension = {}
     for facet_key, facet_data in facets_config.items():
         dimension_source = facet_data.get("dimension_source")
         if dimension_source:
             facet_to_dimension[facet_key] = dimension_source
 
-    # Build values_by_key index from lens_contract["values"] list for efficient lookups
-    values_list = lens_contract.get("values", [])
-    values_by_key = {value["key"]: value for value in values_list if "key" in value}
-
-    # Initialize canonical_values_by_facet with EMPTY LISTS for all facets from lens_contract["facets"]
+    # Initialize canonical_values_by_facet with EMPTY LISTS
     canonical_values_by_facet = {facet_key: [] for facet_key in facets_config.keys()}
 
-    # Iterate through canonical_values and distribute to dimensions
-    for value_key in canonical_values:
-        # Find value in values_by_key index (built from lens_contract["values"])
-        value_obj = values_by_key.get(value_key)
-        if not value_obj:
-            continue
-
-        # Get facet from value["facet"]
-        facet_key = value_obj.get("facet")
-        if not facet_key:
-            continue
-
-        # Get dimension column name from facet_to_dimension lookup
-        dimension_col = facet_to_dimension.get(facet_key)
-        if not dimension_col:
-            continue
-
-        # Append value key to dimension array
-        if dimension_col in dimensions:
-            dimensions[dimension_col].append(value_key)
-
-        # Track by facet key in canonical_values_by_facet dict
-        if facet_key in canonical_values_by_facet:
-            canonical_values_by_facet[facet_key].append(value_key)
-
-    # Deduplicate dimension arrays before persistence
-    for dim_key in dimensions:
-        dimensions[dim_key] = dedupe_preserve_order(dimensions[dim_key])
-
-    # Deduplicate canonical_values_by_facet dict
-    for facet_key in canonical_values_by_facet:
-        canonical_values_by_facet[facet_key] = dedupe_preserve_order(canonical_values_by_facet[facet_key])
+    # Populate canonical_values_by_facet from dimensions
+    for facet_key, dimension_source in facet_to_dimension.items():
+        if dimension_source in dimensions:
+            canonical_values_by_facet[facet_key] = dimensions[dimension_source][:]
 
     # Step 4: Resolve entity_class (deterministic, engine rules - no lens dependency)
     classification_result = resolve_entity_class(raw_data)
