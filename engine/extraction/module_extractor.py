@@ -11,6 +11,10 @@ Architecture: Per architecture.md Section 7.5
 """
 from typing import Dict, List, Any
 
+from engine.lenses.extractors.regex_capture import extract_regex_capture
+from engine.lenses.extractors.numeric_parser import extract_numeric
+from engine.lenses.extractors.normalizers import apply_normalizers
+
 
 def evaluate_module_triggers(triggers: List[Dict[str, Any]], entity: Dict[str, Any]) -> List[str]:
     """
@@ -73,3 +77,113 @@ def evaluate_module_triggers(triggers: List[Dict[str, Any]], entity: Dict[str, A
 
     # Deduplicate
     return list(set(modules))
+
+
+def execute_field_rules(
+    rules: List[Dict[str, Any]],
+    entity: Dict[str, Any],
+    source: str
+) -> Dict[str, Any]:
+    """
+    Execute field extraction rules with applicability filtering.
+
+    Per architecture.md 7.5:
+    - Deterministic extractors only (Phase 2 scope)
+    - Source-aware applicability filtering
+    - Normalizers applied after extraction
+
+    Args:
+        rules: List of field rule definitions from module config
+        entity: Entity dict with raw field values
+        source: Data source name (e.g., "serper", "google_places")
+
+    Returns:
+        Dict with extracted module fields (nested structure from target_path)
+
+    Example:
+        >>> rules = [{"target_path": "courts.total", "extractor": "regex_capture",
+        ...           "pattern": r"(\\d+)\\s*courts", "source_fields": ["description"]}]
+        >>> entity = {"description": "5 courts available"}
+        >>> execute_field_rules(rules, entity, source="serper")
+        {"courts": {"total": 5}}
+    """
+    result = {}
+
+    for rule in rules:
+        # Check applicability
+        applicability = rule.get("applicability", {})
+
+        # Filter by source
+        allowed_sources = applicability.get("source", [])
+        if allowed_sources and source not in allowed_sources:
+            continue
+
+        # Filter by entity_class
+        allowed_classes = applicability.get("entity_class", [])
+        if allowed_classes and entity.get("entity_class") not in allowed_classes:
+            continue
+
+        # Execute extractor
+        extractor = rule.get("extractor")
+        source_fields = rule.get("source_fields", [])
+
+        extracted_value = None
+
+        if extractor == "regex_capture":
+            pattern = rule.get("pattern")
+
+            # Search across source fields
+            for field_name in source_fields:
+                field_value = entity.get(field_name)
+                if field_value:
+                    extracted_value = extract_regex_capture(str(field_value), pattern)
+                    if extracted_value:
+                        break
+
+        elif extractor == "numeric_parser":
+            # Search across source fields
+            for field_name in source_fields:
+                field_value = entity.get(field_name)
+                if field_value:
+                    extracted_value = extract_numeric(str(field_value))
+                    if extracted_value:
+                        break
+
+        # Apply normalizers
+        if extracted_value is not None:
+            normalizers = rule.get("normalizers", [])
+            if normalizers:
+                extracted_value = apply_normalizers(extracted_value, normalizers)
+
+        # Set value at target_path
+        if extracted_value is not None:
+            target_path = rule.get("target_path")
+            _set_nested_value(result, target_path, extracted_value)
+
+    return result
+
+
+def _set_nested_value(data: Dict[str, Any], path: str, value: Any) -> None:
+    """
+    Set value at nested path in dict.
+
+    Args:
+        data: Target dictionary
+        path: Dot-separated path (e.g., "courts.total")
+        value: Value to set
+
+    Example:
+        >>> data = {}
+        >>> _set_nested_value(data, "courts.total", 5)
+        >>> data
+        {"courts": {"total": 5}}
+    """
+    keys = path.split(".")
+    current = data
+
+    for key in keys[:-1]:
+        if key not in current:
+            current[key] = {}
+        current = current[key]
+
+    current[keys[-1]] = value
