@@ -1,0 +1,63 @@
+# Edinburgh Finds Lens Configuration
+# Defines domain knowledge for sports discovery in Edinburgh
+
+# Facets define how dimensions are interpreted and displayed
+facets:
+  activity:
+    dimension_source: canonical_activities
+    ui_label: "Activities"
+    display_mode: tags
+    order: 1
+    show_in_filters: true
+    show_in_navigation: true
+    icon: "activity"
+
+  place_type:
+    dimension_source: canonical_place_types
+    ui_label: "Venue Type"
+    display_mode: badge
+    order: 2
+    show_in_filters: true
+    show_in_navigation: false
+    icon: "building"
+
+# Canonical values registry
+values:
+  - key: padel
+    facet: activity
+    display_name: "Padel"
+    description: "Racquet sport combining elements of tennis and squash"
+    seo_slug: "padel"
+    search_keywords: ["padel", "racket sport", "racquet sport"]
+    icon_url: "/icons/padel.svg"
+    color: "#10B981"
+
+  - key: sports_facility
+    facet: place_type
+    display_name: "Sports Facility"
+    description: "Venue providing sports courts, pitches, or equipment"
+    seo_slug: "sports-facility"
+    search_keywords: ["sports centre", "sports facility", "leisure centre"]
+    icon_url: "/icons/facility.svg"
+    color: "#3B82F6"
+
+# Mapping rules (raw data → canonical values)
+mapping_rules:
+  - id: map_padel_from_name
+    pattern: "(?i)padel"
+    canonical: "padel"
+    confidence: 0.95
+
+  - id: map_sports_facility_type
+    pattern: "(?i)sports centre|sports facility|leisure centre"
+    canonical: "sports_facility"
+    confidence: 0.85
+
+# Module triggers (when to attach domain modules)
+module_triggers: []
+
+# Module definitions (empty for Phase 1)
+modules: {}
+
+# Confidence threshold for mapping
+confidence_threshold: 0.7
