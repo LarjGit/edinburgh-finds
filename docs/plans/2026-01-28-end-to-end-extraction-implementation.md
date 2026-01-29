@@ -92,19 +92,42 @@ Prove the Edinburgh Finds architecture end-to-end with ONE perfect entity flowin
 
 Before any implementation, these architectural decisions must be resolved to prevent refactoring:
 
-### Decision 1: Lens Injection Pattern
+### Decision 1: Lens Injection Pattern ✅ RESOLVED
 
 **Problem:** How does VerticalLens configuration reach extractors during extraction?
 
-**Options:**
-- A. Orchestration context carries lens_id → extractor loads lens
-- B. LensRegistry.get_lens("edinburgh_finds") called during extract_entity()
-- C. Lens config passed through orchestration ExecutionContext
-- D. Global context (threading local or dependency injection container)
+**DECISION:** Orchestrator-owned, context injection pattern
 
-**Decision Needed:** Choose injection pattern and document interface
+**Reference:** VISION.md Section 3: Lens Injection Architecture
 
-**Impact:** All extractors and orchestration code depends on this
+**Summary:**
+- **Who loads lens:** Only CLI/bootstrap (never extractors)
+- **How it flows:** CLI → Planner → extraction_integration → extractors
+- **What gets passed:** ExecutionContext with lens_id, lens_contract dict, lens_hash
+- **Lens selection precedence:** CLI flag → env var → app.yaml config → hardcoded fallback
+- **Config file:** `engine/config/app.yaml` with `default_lens: edinburgh_finds`
+- **Extractor API:** `extract(raw_data, *, ctx: ExecutionContext)` with mandatory ctx parameter
+- **All 6 extractors:** Updated in single pass to accept ctx
+
+**Key Design Points:**
+1. CLI loads and validates lens.yaml once at bootstrap (fail-fast)
+2. ExecutionContext created with entire lens.yaml as plain dict
+3. Context passed explicitly through pipeline (no globals)
+4. Extractors call `self.apply_lens_contract(raw_data, basic_fields, ctx=ctx)`
+5. Purity enforced: Extractors NEVER import LensRegistry or load files
+
+**Files to Create:**
+- `engine/config/app.yaml` (default lens configuration)
+- `engine/orchestration/context.py` (ExecutionContext dataclass)
+
+**Files to Update:**
+- `engine/extraction/base.py` (BaseExtractor.extract signature, apply_lens_contract helper)
+- All 6 extractor implementations (add ctx parameter)
+- `engine/orchestration/cli.py` (load lens, create context)
+- `engine/orchestration/planner.py` (receive and pass context)
+- `engine/orchestration/extraction_integration.py` (pass context to extractors)
+
+**Impact:** Foundation for all subsequent extraction work - implements once, scales forever
 
 ---
 
