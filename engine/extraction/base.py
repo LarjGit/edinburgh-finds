@@ -18,6 +18,7 @@ from engine.extraction.logging_config import (
 )
 from engine.extraction.entity_classifier import resolve_entity_class, get_engine_modules
 from engine.lenses.mapping_engine import execute_mapping_rules, stabilize_canonical_dimensions
+from engine.extraction.module_extractor import execute_field_rules
 
 
 class BaseExtractor(ABC):
@@ -381,14 +382,23 @@ def extract_with_lens_contract(raw_data: Dict[str, Any], lens_contract: Dict[str
     modules_config = lens_contract.get("modules", {})
 
     for module_name in required_modules:
-        # For now, create empty module structure
-        # In a real implementation, this would extract fields from raw_data
-        # based on module_def field definitions
         module_def = modules_config.get(module_name, {})
 
-        # Initialize module with empty fields structure
-        # Real implementation would populate from raw_data based on module_def["fields"]
-        modules_data[module_name] = {}
+        # Get field rules for module
+        field_rules = module_def.get("field_rules", [])
+
+        # Execute field rules to extract module data
+        # Pass source from raw_data metadata
+        source = raw_data.get("source", "unknown")
+
+        # Build entity dict for field extraction
+        entity_for_extraction = dict(raw_data)
+        entity_for_extraction["entity_class"] = entity_class
+
+        module_fields = execute_field_rules(field_rules, entity_for_extraction, source)
+
+        # Store module data
+        modules_data[module_name] = module_fields
 
     # Step 8: Return structured entity with deduplicated text[] arrays for dimensions
     return {
