@@ -28,6 +28,29 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 If uncertain, **read system-vision.md first**. It defines what must remain true.
 
+## Development Workflow (READ THIS SECOND)
+
+**CRITICAL:** This project uses a strict reality-based incremental alignment methodology to prevent AI agent drift and ensure golden-doc compliance.
+
+**Primary Reference:** `docs/development-methodology.md`
+
+**Key Points:**
+- Work in ultra-small, testable chunks (1-2 files max)
+- Always read actual code before planning (no assumptions)
+- User approves micro-plan before execution (Checkpoint 1)
+- User validates result after execution (Checkpoint 2)
+- All work tracked in `docs/progress/audit-catalog.md`
+- 8 mandatory constraints prevent drift (Section 6)
+- 6 validation gates ensure quality (Section 7)
+
+**Before starting ANY work:**
+1. Read `docs/development-methodology.md` (15 min)
+2. Check if `docs/progress/audit-catalog.md` exists
+3. If exists: Follow Decision Logic (methodology Section 8) to select next item
+4. If not exists: Run initial audit (methodology Section 12, Step 2) to create catalog
+
+**When uncertain about process:** Re-read methodology Section 5 (Micro-Iteration Process)
+
 ## Documentation Lookup Strategy
 
 **ALWAYS use Context7 for library documentation lookups.** Before implementing features or debugging issues with external libraries (Next.js, React, Prisma, Pydantic, pytest, Tailwind, shadcn/ui, Anthropic SDK, etc.), use the Context7 MCP tools to retrieve up-to-date documentation and code examples:
