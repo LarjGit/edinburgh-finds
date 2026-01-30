@@ -23,3 +23,9 @@ engine/config/sources.yaml
 
 # Raw Data - ingestion artifacts
 engine/data/raw/**/*.json
+
+# Test coverage reports
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
