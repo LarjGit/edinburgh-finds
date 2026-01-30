@@ -5,8 +5,7 @@ Transforms raw Sport Scotland WFS GeoJSON responses into structured entity field
 Uses deterministic extraction (clean, structured WFS data).
 
 Sport Scotland provides official sports facility data via WFS (Web Feature Service)
-in GeoJSON format, including tennis courts, pitches, swimming pools, and other
-sports facilities across Scotland.
+in GeoJSON format, including various sports facilities across Scotland.
 """
 
 from typing import Dict, Tuple, Optional
@@ -27,14 +26,14 @@ class SportScotlandExtractor(BaseExtractor):
     GeoJSON Structure:
     {
       "type": "Feature",
-      "id": "tennis_courts.1",
+      "id": "sports_facility.1",
       "geometry": {
         "type": "Point",
         "coordinates": [longitude, latitude]  # Note: GeoJSON order
       },
       "properties": {
         "name": "Facility Name",
-        "facility_type": "Tennis Courts",
+        "facility_type": "Sports Facility",
         "address": "Street Address",
         ...
       }
@@ -48,13 +47,16 @@ class SportScotlandExtractor(BaseExtractor):
     - website: from properties.website
     - postcode: from properties.postcode
     - external_id: from feature id
-    - tennis: inferred from facility_type
-    - tennis_total_courts: from properties.number_of_courts
-    - tennis_outdoor_courts: inferred from indoor_outdoor
-    - tennis_floodlit_courts: inferred from floodlit
     - facility_type: stored in discovered_attributes
     - surface_type: stored in discovered_attributes
     - ownership: stored in discovered_attributes
+    - number_of_courts: stored in discovered_attributes
+    - indoor_outdoor: stored in discovered_attributes
+    - floodlit: stored in discovered_attributes
+
+    Per architecture.md Section 4.2 (Extraction Boundary Contract), this extractor
+    outputs ONLY schema primitives and raw observations. Domain interpretation
+    (e.g., facility-specific fields) is handled by Phase 2 (Lens Application).
     """
 
     @property
@@ -127,30 +129,18 @@ class SportScotlandExtractor(BaseExtractor):
         if "ownership" in properties:
             extracted["ownership"] = properties["ownership"]
 
-        # Infer tennis-specific fields from facility data
-        if "tennis" in facility_type.lower():
-            extracted["tennis"] = True
+        # Capture connector-native fields as raw observations
+        # These fields (number_of_courts, indoor_outdoor, floodlit) will be stored
+        # in discovered_attributes and interpreted by Phase 2 (Lens Application)
+        # per architecture.md Section 4.2 - Extraction Boundary Contract
+        if "number_of_courts" in properties:
+            extracted["number_of_courts"] = properties["number_of_courts"]
 
-            # Number of courts
-            if "number_of_courts" in properties:
-                try:
-                    num_courts = int(properties["number_of_courts"])
-                    extracted["tennis_total_courts"] = num_courts
+        if "indoor_outdoor" in properties:
+            extracted["indoor_outdoor"] = properties["indoor_outdoor"]
 
-                    # Infer indoor/outdoor courts
-                    indoor_outdoor = properties.get("indoor_outdoor", "").lower()
-                    if "outdoor" in indoor_outdoor:
-                        extracted["tennis_outdoor_courts"] = num_courts
-                    elif "indoor" in indoor_outdoor:
-                        extracted["tennis_indoor_courts"] = num_courts
-
-                    # Infer floodlit courts
-                    floodlit = properties.get("floodlit", "").lower()
-                    if floodlit in ["yes", "true", "1"]:
-                        extracted["tennis_floodlit_courts"] = num_courts
-
-                except (ValueError, TypeError):
-                    pass
+        if "floodlit" in properties:
+            extracted["floodlit"] = properties["floodlit"]
 
         # Opening hours
         # Check various possible field names for opening hours
