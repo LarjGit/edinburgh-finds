@@ -172,20 +172,29 @@ class GooglePlacesExtractor(BaseExtractor):
         extracted = {}
 
         # Required fields
-        extracted["entity_name"] = raw_data.get("displayName", {}).get("text", "")
+        # Support both API v1 (displayName.text) and legacy format (name)
+        display_name = raw_data.get("displayName", {}).get("text") if isinstance(raw_data.get("displayName"), dict) else None
+        extracted["entity_name"] = display_name or raw_data.get("name", "")
 
         # Address and location
-        if "formattedAddress" in raw_data:
-            extracted["street_address"] = raw_data["formattedAddress"]
+        # Support both API v1 (formattedAddress) and legacy (formatted_address)
+        address = raw_data.get("formattedAddress") or raw_data.get("formatted_address")
+        if address:
+            extracted["street_address"] = address
 
             # Extract postcode from address
-            postcode = extract_postcode_from_address(raw_data["formattedAddress"])
+            postcode = extract_postcode_from_address(address)
             if postcode:
                 extracted["postcode"] = postcode
 
+        # Support both API v1 (location.latitude/longitude) and legacy (geometry.location.lat/lng)
         if "location" in raw_data:
             extracted["latitude"] = raw_data["location"].get("latitude")
             extracted["longitude"] = raw_data["location"].get("longitude")
+        elif "geometry" in raw_data and "location" in raw_data["geometry"]:
+            location = raw_data["geometry"]["location"]
+            extracted["latitude"] = location.get("lat")
+            extracted["longitude"] = location.get("lng")
 
         # Contact information
         # Prefer internationalPhoneNumber, fallback to nationalPhoneNumber

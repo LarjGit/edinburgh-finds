@@ -143,11 +143,46 @@ async def extract_entity(
         # Validate fields
         validated = extractor.validate(extracted)
 
-        # Split into schema-defined and discovered attributes
-        attributes, discovered_attributes = extractor.split_attributes(validated)
+        # Split Phase 1 output into schema-defined and discovered attributes BEFORE Phase 2
+        # This prevents Phase 2 fields (canonical_*, modules) from being filtered by split_attributes
+        phase1_attributes, discovered_attributes = extractor.split_attributes(validated)
 
-        # Get entity_class from validated data
-        entity_class = validated.get("entity_class")
+        # Phase 2: Apply lens mapping and module extraction (if context provided)
+        entity_class = None
+        phase2_fields = {}
+        if context and hasattr(context, 'lens_contract') and context.lens_contract:
+            from engine.extraction.lens_integration import apply_lens_contract
+            from engine.extraction.entity_classifier import resolve_entity_class
+
+            # Classify entity (needed for module triggers)
+            classification_result = resolve_entity_class(validated)
+            entity_class = classification_result.get("entity_class", "thing")
+
+            # Apply lens contract to enrich with canonical dimensions and modules
+            # Note: apply_lens_contract receives dict(context.lens_contract) to unwrap
+            # the immutable MappingProxyType into a plain dict for processing
+            enriched = apply_lens_contract(
+                extracted_primitives=validated,
+                lens_contract=dict(context.lens_contract),  # Unwrap MappingProxyType
+                source=source,
+                entity_class=entity_class
+            )
+
+            # Extract Phase 2 fields (canonical_* and modules)
+            phase2_fields = {
+                'canonical_activities': enriched.get('canonical_activities', []),
+                'canonical_roles': enriched.get('canonical_roles', []),
+                'canonical_place_types': enriched.get('canonical_place_types', []),
+                'canonical_access': enriched.get('canonical_access', []),
+                'modules': enriched.get('modules', {})
+            }
+
+        # Merge Phase 1 and Phase 2 attributes
+        attributes = {**phase1_attributes, **phase2_fields}
+
+        # Get entity_class from validated data (if not already set by Phase 2)
+        if entity_class is None:
+            entity_class = validated.get("entity_class")
 
         # Prepare external IDs if present
         external_ids = {}
