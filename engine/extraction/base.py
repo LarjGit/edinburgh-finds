@@ -19,6 +19,7 @@ from engine.extraction.logging_config import (
 from engine.extraction.entity_classifier import resolve_entity_class, get_engine_modules
 from engine.lenses.mapping_engine import execute_mapping_rules, stabilize_canonical_dimensions
 from engine.extraction.module_extractor import execute_field_rules
+from engine.orchestration.execution_context import ExecutionContext
 
 
 class BaseExtractor(ABC):
@@ -42,15 +43,16 @@ class BaseExtractor(ABC):
         pass
 
     @abstractmethod
-    def extract(self, raw_data: Dict) -> Dict:
+    def extract(self, raw_data: dict, *, ctx: ExecutionContext) -> dict:
         """
         Transform raw data into extracted entity fields.
 
         Args:
             raw_data: Raw ingestion payload for a single record
+            ctx: Execution context with lens contract and execution metadata
 
         Returns:
-            Dict: Extracted fields mapped to schema names
+            dict: Extracted fields mapped to schema names
         """
         pass
 
@@ -109,6 +111,8 @@ class BaseExtractor(ABC):
         raw_data: Dict,
         record_id: str,
         confidence_score: Optional[float] = None,
+        *,
+        ctx: ExecutionContext,
     ) -> Dict:
         """
         Wrapper method that executes extraction with structured logging.
@@ -120,6 +124,7 @@ class BaseExtractor(ABC):
             raw_data: Raw ingestion payload for a single record
             record_id: RawIngestion record ID for tracking
             confidence_score: Optional confidence score for this extraction
+            ctx: Execution context with lens contract and execution metadata
 
         Returns:
             Dict: Extracted fields mapped to schema names
@@ -140,7 +145,7 @@ class BaseExtractor(ABC):
         start_time = time.time()
 
         try:
-            extracted = self.extract(raw_data)
+            extracted = self.extract(raw_data, ctx=ctx)
             duration = time.time() - start_time
 
             # Count non-null fields
