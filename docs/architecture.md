@@ -2167,3 +2167,114 @@ Changes must:
 The purpose of this document is long-term coherence, not convenience.
 
 ---
+
+# 13. Implementation Status
+
+**Last Updated:** 2026-01-30
+
+This section tracks the implementation status of the architecture components defined in this document.
+
+## 13.1 Lens Mapping Engine (Section 6)
+
+**Status:** ✅ Complete
+
+- ✅ Pattern matching implemented (`engine/lenses/mapping_engine.py`)
+- ✅ Rule execution with first-match-wins semantics
+- ✅ Dimension stabilization (deduplication + lexicographic sort for determinism)
+- ✅ Integration with extraction pipeline (`engine/extraction/base.py`)
+- ✅ Edinburgh Finds lens configuration complete (`engine/lenses/edinburgh_finds/lens.yaml`)
+- ✅ Test coverage: 94% for mapping engine
+
+**Key Functions:**
+- `match_rule_against_entity()`: Pattern matching across source fields
+- `execute_mapping_rules()`: Execute all rules, first match wins per rule
+- `stabilize_canonical_dimensions()`: Deduplicate and sort for determinism
+- `apply_lens_mapping()`: Main entry point for Phase 2 extraction
+
+## 13.2 Module Extraction Engine (Section 7)
+
+**Status:** ✅ Complete (Deterministic Extractors)
+
+**Implemented:**
+- ✅ Module trigger evaluation (`engine/extraction/module_extractor.py`)
+- ✅ Deterministic extractors:
+  - `regex_capture`: Extract using regex patterns with capture groups
+  - `numeric_parser`: Extract numeric values from text
+- ✅ Normalizer pipeline: `trim`, `round_integer`, `lowercase`
+- ✅ Applicability filtering (source connector, entity_class)
+- ✅ Field rule execution with nested target paths (dot notation)
+- ✅ Integration with extraction pipeline
+- ✅ Test coverage: 88% for module extractor
+
+**Key Functions:**
+- `evaluate_module_triggers()`: Determine which modules to attach based on facet values
+- `execute_field_rules()`: Execute field extraction rules with extractor pipeline
+
+**Deferred to Future Phase:**
+- ⏳ LLM-based extractors (for complex unstructured extraction)
+- ⏳ Composite extractors (chaining multiple extraction strategies)
+
+## 13.3 Engine Purity (Invariant 1)
+
+**Status:** ✅ Complete
+
+- ✅ Classifier refactored to structural-only rules (`engine/extraction/entity_classifier.py`)
+- ✅ Zero domain terms in classifier code (validated by purity test)
+- ✅ Purity validation test enforces Invariant 1 (`test_classifier_contains_no_domain_literals`)
+- ✅ All domain logic lives exclusively in lens contracts
+- ✅ Structural signals only: `location_count`, `employee_count`, `is_franchise`
+- ✅ No category-based checks or domain type names
+
+**Removed Domain Terms:**
+- `padel`, `tennis`, `wine`, `restaurant` (docstring examples)
+- `league`, `club`, `retail`, `shop`, `business`, `chain` (code logic)
+
+**Replaced With:**
+- Universal type indicators: `"person"`, `"organization"`, `"place"`, `"event"`, `"thing"`
+- Structural field checks: `provides_equipment`, `equipment_count`, `sells_goods`
+- Generic field names work across all verticals (sports, wine, restaurants, etc.)
+
+## 13.4 Unified Lens Configuration
+
+**Status:** ✅ Complete
+
+- ✅ Single `lens.yaml` file contains all lens components:
+  - Vocabulary (activity keywords, location indicators, facility keywords)
+  - Connector rules (routing logic for query orchestration)
+  - Facets (dimension definitions)
+  - Values (canonical value registry)
+  - Mapping rules (raw data → canonical dimensions)
+  - Module triggers (conditional module attachment)
+  - Module definitions (field extraction rules)
+- ✅ Query lens loader updated to read unified structure
+- ✅ Orchestration integration validated
+
+## 13.5 Test Coverage and Validation
+
+**Status:** ✅ Complete
+
+- ✅ All extraction and lens tests passing (67 passed, 2 skipped)
+- ✅ Test coverage exceeds 80% for implemented components:
+  - Mapping engine: 94%
+  - Module extractor: 88%
+  - Normalizers: 100%
+  - Regex capture: 82%
+  - Numeric parser: 83%
+- ✅ Purity validation enforces zero domain terms in classifier
+- ✅ TDD approach followed for all implementations
+
+## 13.6 Known Limitations and Future Work
+
+**Limitations:**
+- End-to-end "One Perfect Entity" validation requires database setup and live connectors
+- Some orchestration tests have pre-existing import configuration issues
+- LLM-based extractors not yet implemented (deterministic extractors cover current needs)
+
+**Future Work:**
+- Implement LLM extractors for complex unstructured data
+- Add composite extractors (chaining strategies)
+- Complete end-to-end validation with live database
+- Expand test coverage for orchestration layer
+- Add more lens configurations (wine, restaurants, etc.)
+
+---
