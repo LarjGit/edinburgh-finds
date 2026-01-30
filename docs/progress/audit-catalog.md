@@ -39,7 +39,7 @@
   - **Location:** All 6 extractors in `engine/extraction/extractors/*.py`
   - **Description:** Update all 6 extractor implementations to accept ctx parameter in their extract() methods. Mechanical signature changes to match BaseExtractor interface.
   - **Completed:** 2026-01-30
-  - **Commit:** (pending)
+  - **Commit:** b62bac5
   - **Executable Proof:**
     - `pytest tests/engine/extraction/test_base.py::TestExtractorInterfaceContract::test_all_extractors_accept_ctx_parameter -v` ✅ PASSED
     - All 58 extraction tests pass (no regressions)
