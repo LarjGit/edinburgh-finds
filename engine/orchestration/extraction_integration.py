@@ -67,7 +67,11 @@ def needs_extraction(source: str) -> bool:
     return True
 
 
-async def extract_entity(raw_ingestion_id: str, db: Prisma) -> Dict[str, Any]:
+async def extract_entity(
+    raw_ingestion_id: str,
+    db: Prisma,
+    context: Optional[Any] = None
+) -> Dict[str, Any]:
     """
     Extract entity data from a RawIngestion record using the hybrid extraction engine.
 
@@ -77,6 +81,7 @@ async def extract_entity(raw_ingestion_id: str, db: Prisma) -> Dict[str, Any]:
     Args:
         raw_ingestion_id: ID of the RawIngestion record to extract
         db: Prisma database client
+        context: Optional ExecutionContext with lens contract
 
     Returns:
         Dict with extracted entity data:

@@ -106,7 +106,7 @@ async def test_deduplication_runs_before_persistence():
     )
 
     # Mock persistence to return count matching accepted entities
-    async def mock_persist_func(accepted_entities, errors, orchestration_run_id=None):
+    async def mock_persist_func(accepted_entities, errors, orchestration_run_id=None, context=None):
         return {
             "persisted_count": len(accepted_entities),
             "persistence_errors": [],
@@ -190,7 +190,7 @@ async def test_persist_creates_correct_extracted_entity_structure():
     # Capture the accepted_entities passed to persist function
     captured_entities = []
 
-    async def capture_persist(accepted_entities, errors, orchestration_run_id=None):
+    async def capture_persist(accepted_entities, errors, orchestration_run_id=None, context=None):
         captured_entities.extend(accepted_entities)
         return {
             "persisted_count": len(accepted_entities),
@@ -237,7 +237,7 @@ async def test_persist_handles_database_errors_gracefully():
     )
 
     # Mock persistence to raise an error
-    async def failing_persist(accepted_entities, errors, orchestration_run_id=None):
+    async def failing_persist(accepted_entities, errors, orchestration_run_id=None, context=None):
         raise Exception("Database connection failed")
 
     # Act: Execute orchestration

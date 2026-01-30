@@ -19,10 +19,12 @@ Adding a new vertical (Wine, Restaurants) requires ZERO planner code changes.
 
 import asyncio
 import os
+from pathlib import Path
 from typing import Dict, List, Any
 
 from prisma import Prisma
 
+from engine.lenses.loader import VerticalLens, LensConfigError
 from engine.orchestration.adapters import ConnectorAdapter
 from engine.orchestration.execution_context import ExecutionContext
 from engine.orchestration.execution_plan import ConnectorSpec, ExecutionPhase
@@ -204,8 +206,57 @@ async def orchestrate(request: IngestRequest) -> Dict[str, Any]:
                 "message": "⚠ Serper extraction will fail without ANTHROPIC_API_KEY",
             })
 
-        # 3. Create execution context
-        context = ExecutionContext()
+        # 3. Load lens and create execution context with compiled contract
+        # Resolve lens_id with fail-fast for missing lens
+        # Per architecture.md §3.1: Dev/test fallback requires explicit flag
+        lens_id = request.lens or os.getenv("LENS_ID")
+
+        if not lens_id:
+            # FATAL ERROR: No lens specified and no dev/test fallback enabled
+            # This prevents silent misconfiguration in production
+            error_msg = (
+                "No lens specified. Set request.lens or LENS_ID environment variable. "
+                "For dev/test environments, enable explicit fallback in configuration."
+            )
+            return {
+                "query": request.query,
+                "candidates_found": 0,
+                "accepted_entities": 0,
+                "connectors": {},
+                "errors": [{"connector": "lens_resolution", "error": error_msg}],
+            }
+
+        # Bootstrap: Load and validate lens configuration ONCE
+        # This is the bootstrap boundary - lens loading permitted ONLY here
+        lens_contract = None
+        try:
+            lens_path = Path(__file__).parent.parent / "lenses" / lens_id / "lens.yaml"
+            vertical_lens = VerticalLens(lens_path)
+
+            # Extract compiled, immutable lens contract (plain dict)
+            # Shallow copy for defensive programming
+            lens_contract = {
+                "mapping_rules": list(vertical_lens.mapping_rules),  # Copy list
+                "module_triggers": list(vertical_lens.module_triggers),  # Copy list
+                "modules": dict(vertical_lens.domain_modules),  # Copy dict
+                "facets": dict(vertical_lens.facets),  # Copy dict for facet→dimension lookup
+                "values": list(vertical_lens.values),  # Copy list for canonical value lookup
+                "confidence_threshold": vertical_lens.confidence_threshold,
+                "lens_id": lens_id,
+            }
+        except LensConfigError as e:
+            # Fail fast on invalid lens (per architecture.md 3.2)
+            # Context doesn't exist yet, so accumulate error and return early
+            return {
+                "query": request.query,
+                "candidates_found": 0,
+                "accepted_entities": 0,
+                "connectors": {},
+                "errors": [{"connector": "lens_bootstrap", "error": f"Lens validation failed: {e}"}],
+            }
+
+        # Create context with lens contract (immutability enforced by ExecutionContext)
+        context = ExecutionContext(lens_contract=lens_contract)
 
         # 4. Execute connectors via adapters
         for connector_name in connector_names:
@@ -269,7 +320,8 @@ async def orchestrate(request: IngestRequest) -> Dict[str, Any]:
                     persistence_result = await persistence.persist_entities(
                         context.accepted_entities,
                         context.errors,
-                        orchestration_run_id=orchestration_run_id
+                        orchestration_run_id=orchestration_run_id,
+                        context=context
                     )
                     persisted_count = persistence_result["persisted_count"]
                     persistence_errors = persistence_result["persistence_errors"]

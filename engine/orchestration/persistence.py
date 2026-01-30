@@ -60,7 +60,8 @@ class PersistenceManager:
         self,
         accepted_entities: List[Dict[str, Any]],
         errors: List[Dict[str, Any]],
-        orchestration_run_id: Optional[str] = None
+        orchestration_run_id: Optional[str] = None,
+        context: Optional[Any] = None
     ) -> Dict[str, Any]:
         """
         Persist accepted entities to the database.
@@ -72,6 +73,7 @@ class PersistenceManager:
             accepted_entities: List of accepted (deduplicated) candidate dicts
             errors: List to append persistence errors to
             orchestration_run_id: Optional ID of OrchestrationRun to link RawIngestions to
+            context: Optional ExecutionContext with lens contract
 
         Returns:
             Dict with persistence statistics:
@@ -133,7 +135,7 @@ class PersistenceManager:
                     )
 
                     # Use extraction engine to properly extract and structure the data
-                    extracted_data = await extract_entity(raw_ingestion.id, self.db)
+                    extracted_data = await extract_entity(raw_ingestion.id, self.db, context)
 
                     # Log extraction success with details
                     entity_class = extracted_data["entity_class"]
