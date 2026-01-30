@@ -98,27 +98,34 @@ def is_individual(raw_data: Dict[str, Any]) -> bool:
 
 def is_organization_like(raw_data: Dict[str, Any]) -> bool:
     """
-    Check if entity represents an organization/group/business.
+    Check if entity represents an organization using STRUCTURAL rules only.
+
+    VERTICAL-AGNOSTIC: Uses only universal type indicators and structural signals.
+    No domain-specific category checks allowed (violates engine purity).
 
     Args:
         raw_data: Raw entity data dictionary
 
     Returns:
-        True if entity is organization-like, False otherwise
+        True if entity has organizational structure, False otherwise
 
     Priority: 4 - see classification_rules.md
     """
+    # Check universal type indicator
     entity_type = raw_data.get("type", "").lower()
-    org_types = {"retailer", "shop", "business", "organization", "league", "club", "association"}
-
-    if entity_type in org_types:
+    if entity_type == "organization":
         return True
 
-    categories = raw_data.get("categories", [])
-    if isinstance(categories, list):
-        category_str = " ".join(categories).lower()
-        if any(term in category_str for term in ["retail", "shop", "business", "league", "chain"]):
-            return True
+    # Structural signals for organizations (vertical-agnostic)
+    # - Multiple locations indicates organizational structure
+    # - Employee count indicates organization vs individual
+    # - Franchise indicator (structural, not domain-specific)
+    has_multiple_locations = raw_data.get("location_count", 0) > 1
+    has_employee_count = raw_data.get("employee_count", 0) > 0
+    is_franchise = raw_data.get("is_franchise", False)
+
+    if has_multiple_locations or has_employee_count or is_franchise:
+        return True
 
     return False
 
@@ -136,7 +143,7 @@ def extract_roles(raw_data: Dict[str, Any]) -> List[str]:
     - provides_instruction: Boolean - educational/training services offered
     - membership_required: Boolean - membership organization
     - is_members_only: Boolean - alternative membership indicator
-    - sells_goods: Boolean - retail function
+    - sells_goods: Boolean - goods sales function
 
     Args:
         raw_data: Raw entity data dictionary with GENERIC field names
@@ -158,13 +165,13 @@ def extract_roles(raw_data: Dict[str, Any]) -> List[str]:
     if raw_data.get("membership_required") or raw_data.get("is_members_only"):
         roles.append("membership_org")
 
-    # Check for instruction provision (already generic - sports coaching, wine education, etc.)
+    # Check for instruction provision (already generic - coaching, education, etc.)
     if raw_data.get("provides_instruction"):
         roles.append("provides_instruction")
 
-    # Check for retail/goods sales - use type hints only
-    entity_type = raw_data.get("type", "").lower()
-    if entity_type in {"retailer", "shop"} or raw_data.get("sells_goods"):
+    # Check for goods sales - use STRUCTURAL field only
+    # Domain-specific type names removed (violates engine purity)
+    if raw_data.get("sells_goods"):
         roles.append("sells_goods")
 
     # Deduplicate
@@ -179,7 +186,7 @@ def extract_activities(raw_data: Dict[str, Any]) -> List[str]:
         raw_data: Raw entity data dictionary
 
     Returns:
-        List of activity strings (e.g., ["tennis", "padel"])
+        List of activity strings (e.g., ["activity_a", "activity_b"])
     """
     activities = raw_data.get("activities", [])
     if not isinstance(activities, list):
@@ -254,44 +261,44 @@ def resolve_entity_class(raw_data: Dict[str, Any]) -> Dict[str, Any]:
     See: engine/docs/classification_rules.md for complete specification
 
     Examples:
-        >>> # Club with courts → place + roles
+        >>> # Facility with membership → place + roles
         >>> resolve_entity_class({
-        ...     "name": "Tennis Club",
-        ...     "address": "123 Court St",
-        ...     "has_courts": True,
+        ...     "name": "Sport Activity Center",
+        ...     "address": "123 Main St",
+        ...     "provides_equipment": True,
         ...     "membership_required": True,
-        ...     "activities": ["tennis"]
+        ...     "activities": ["activity_a"]
         ... })
         {
             'entity_class': 'place',
             'canonical_roles': ['provides_facility', 'membership_org'],
-            'canonical_activities': ['tennis'],
-            'canonical_place_types': ['sports_centre']
+            'canonical_activities': ['activity_a'],
+            'canonical_place_types': []
         }
 
-        >>> # Freelance coach → person + role
+        >>> # Freelance instructor → person + role
         >>> resolve_entity_class({
         ...     "name": "Sarah Wilson",
-        ...     "type": "coach",
-        ...     "activities": ["tennis"]
+        ...     "type": "instructor",
+        ...     "activities": ["activity_b"]
         ... })
         {
             'entity_class': 'person',
             'canonical_roles': ['provides_instruction'],
-            'canonical_activities': ['tennis'],
+            'canonical_activities': ['activity_b'],
             'canonical_place_types': []
         }
 
         >>> # Tournament → event + no roles
         >>> resolve_entity_class({
-        ...     "name": "Padel Open",
+        ...     "name": "Annual Championship",
         ...     "start_datetime": "2024-05-15T09:00:00Z",
-        ...     "activities": ["padel"]
+        ...     "activities": ["activity_c"]
         ... })
         {
             'entity_class': 'event',
             'canonical_roles': [],
-            'canonical_activities': ['padel'],
+            'canonical_activities': ['activity_c'],
             'canonical_place_types': []
         }
     """
@@ -304,7 +311,7 @@ def resolve_entity_class(raw_data: Dict[str, Any]) -> Dict[str, Any]:
     elif has_location(raw_data):
         entity_class = "place"
 
-    # Priority 3: Organization/group/business → organization
+    # Priority 3: Organization/group entity → organization
     # Organizations can have addresses, so check before person
     elif is_organization_like(raw_data):
         entity_class = "organization"
