@@ -12,10 +12,12 @@ during orchestration execution. It serves as a container for:
 All containers are mutable to allow state updates during orchestration.
 """
 
+import copy
 import hashlib
 import json
 import re
-from typing import Any, Dict, List, Optional, Set, Tuple
+from types import MappingProxyType
+from typing import Any, Dict, List, Mapping, Optional, Set, Tuple
 
 from fuzzywuzzy import fuzz
 
@@ -37,13 +39,22 @@ class ExecutionContext:
         confidence: Current confidence score (0.0-1.0)
         metrics: Dict of per-connector execution metrics
         errors: List of errors that occurred during execution
+        lens_contract: Immutable lens contract (mapping_rules, module_triggers, modules, facets, values)
     """
 
     # Fuzzy matching threshold (0-100): names above this similarity are considered duplicates
     FUZZY_MATCH_THRESHOLD = 85
 
-    def __init__(self) -> None:
-        """Initialize ExecutionContext with empty containers."""
+    def __init__(self, lens_contract: Optional[Mapping[str, Any]] = None) -> None:
+        """
+        Initialize ExecutionContext with empty containers.
+
+        Args:
+            lens_contract: Optional lens contract (mapping) with mapping_rules,
+                          module_triggers, modules, facets, values.
+                          Treated as immutable: set once at construction,
+                          never mutated. Protected via shallow copy + MappingProxyType.
+        """
         self.candidates: List[Any] = []
         self.accepted_entities: List[Any] = []
         self.accepted_entity_keys: Set[str] = set()
@@ -53,6 +64,16 @@ class ExecutionContext:
         self.confidence: float = 0.0
         self.metrics: Dict[str, Any] = {}
         self.errors: List[Dict[str, Any]] = []
+
+        # Lens contract treated as immutable for lens data:
+        # Create defensive shallow copy and wrap in MappingProxyType to prevent mutation
+        # Runtime consumers call dict(context.lens_contract) to get a mutable copy
+        if lens_contract is not None:
+            # Convert to dict if needed (handles both dict and Mapping inputs)
+            contract_dict = dict(lens_contract) if not isinstance(lens_contract, dict) else lens_contract
+            self.lens_contract: Mapping[str, Any] = MappingProxyType(copy.copy(contract_dict))
+        else:
+            self.lens_contract: Mapping[str, Any] = MappingProxyType({})
 
     def _normalize_name(self, name: str) -> str:
         """
