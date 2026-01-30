@@ -2,7 +2,7 @@
 
 **Current Phase:** Foundation (Phase 1)
 **Validation Entity:** Powerleague Portobello Edinburgh (when in Phase 2+)
-**Last Updated:** 2026-01-30 (EP-001 completed)
+**Last Updated:** 2026-01-30 (EP-001, CP-001a completed)
 
 ---
 
@@ -22,16 +22,31 @@
     - All 55 extraction tests pass (no regressions)
   - **Fix Applied:** Removed domain-specific tennis logic (lines 131-153), replaced with raw observation capture. Extractor now outputs ONLY schema primitives + raw observations per architecture.md 4.2 Phase 1 contract.
 
-- [ ] **CP-001: Context Propagation - All extractors missing ctx parameter**
+- [x] **CP-001a: Context Propagation - BaseExtractor Interface (Part 1 of 3)**
+  - **Principle:** Extractor Interface Contract (architecture.md 3.8)
+  - **Location:** `engine/extraction/base.py`
+  - **Description:** Updated BaseExtractor abstract method to require ExecutionContext parameter per architecture.md 3.8. Added ctx parameter to extract() and extract_with_logging().
+  - **Completed:** 2026-01-30
+  - **Commit:** c30cb67
+  - **Executable Proof:**
+    - `pytest tests/engine/extraction/test_base.py::TestExtractorInterfaceContract::test_base_extractor_requires_ctx_parameter -v` ✅ PASSED
+    - `pytest tests/engine/extraction/test_base.py::TestExtractorInterfaceContract::test_extract_with_logging_accepts_ctx -v` ✅ PASSED
+    - All 57 extraction tests pass (no regressions in interface-compliant code)
+  - **Fix Applied:** BaseExtractor.extract() signature now matches architecture.md 3.8 exactly: `def extract(self, raw_data: dict, *, ctx: ExecutionContext) -> dict:`
+
+- [ ] **CP-001b: Context Propagation - Extractor Implementations (Part 2 of 3)**
   - **Principle:** Extractor Interface Contract (architecture.md 3.8)
   - **Location:** All 6 extractors in `engine/extraction/extractors/*.py`
-  - **Description:** Extractors use signature `def extract(self, raw_data: Dict) -> Dict` but architecture.md 3.8 requires `def extract(self, raw_data: dict, *, ctx: ExecutionContext) -> dict`. ExecutionContext must be threaded through all extractors to provide lens contract access and maintain boundary purity.
-  - **Evidence:** `grep "def extract(self, raw_data" engine/extraction/extractors/*.py`
-  - **Estimated Scope:** 6 files, signature changes + BaseExtractor abstract method
-  - **Fix Strategy:**
-    1. Update BaseExtractor.extract() signature to require ctx parameter
-    2. Update all 6 extractor implementations to accept and use ctx
-    3. Update all callsites to pass ctx
+  - **Description:** Update all 6 extractor implementations to accept ctx parameter in their extract() methods. Mechanical signature changes to match BaseExtractor interface.
+  - **Estimated Scope:** 6 files, signature changes only (~6 lines total)
+  - **Files:** serper_extractor.py, osm_extractor.py, edinburgh_council_extractor.py, open_charge_map_extractor.py, google_places_extractor.py, sport_scotland_extractor.py
+
+- [ ] **CP-001c: Context Propagation - Callsite Updates (Part 3 of 3)**
+  - **Principle:** Extractor Interface Contract (architecture.md 3.8)
+  - **Location:** `engine/extraction/run.py`, `engine/orchestration/extraction_integration.py`, `engine/extraction/quarantine.py`
+  - **Description:** Update all callsites to pass ExecutionContext to extractor.extract() calls. Some callsites already have context available (extraction_integration.py), others will need context plumbed through.
+  - **Estimated Scope:** 3 files, callsite updates
+  - **Callsites:** run.py:167,348,547 | extraction_integration.py:141 | quarantine.py:282
 
 - [ ] **LB-001: Lens Loading Boundary - planner.py:233-246**
   - **Principle:** Lens Loading Lifecycle (architecture.md 3.2, 3.7)
