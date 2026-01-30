@@ -122,7 +122,8 @@ class QueryLens:
         connectors = []
         normalized_query = query.lower()
 
-        connector_rules = self.config.connector_rules.get("connectors", {})
+        # connector_rules directly contains connector definitions
+        connector_rules = self.config.connector_rules
 
         for connector_name, rules in connector_rules.items():
             if self._matches_triggers(normalized_query, query_features, rules.get("triggers", [])):
