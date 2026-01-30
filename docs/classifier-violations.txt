@@ -1,0 +1,33 @@
+Classifier Purity Violations - 2026-01-29
+==========================================
+
+Source: engine/extraction/entity_classifier.py
+
+VIOLATIONS FOUND:
+-----------------
+Line 112: org_types = {"retailer", "shop", "business", "organization", "league", "club", "association"}
+  - Domain-specific organization type checks
+  - Should use structural signals only
+
+Line 120: if any(term in category_str for term in ["retail", "shop", "business", "league", "chain"]):
+  - Category-based domain checking
+  - Violates engine purity (Invariant 1)
+
+Line 167: if entity_type in {"retailer", "shop"} or raw_data.get("sells_goods"):
+  - Domain-specific type names in extract_roles
+  - Should use structural/universal types only
+
+DOCSTRING EXAMPLES (Lines 182-294):
+  - Contains "tennis", "padel", "wine" in examples
+  - These are acceptable as documentation examples
+  - Not actual domain logic violations
+
+REFACTORING PLAN:
+-----------------
+1. Replace is_organization_like with structural-only rules
+   - Use: location_count, employee_count, is_franchise
+   - Remove: category-based checks, domain type names
+
+2. Update extract_roles to use universal types only
+   - Keep: structural field checks (provides_equipment, etc.)
+   - Remove: domain-specific type checks

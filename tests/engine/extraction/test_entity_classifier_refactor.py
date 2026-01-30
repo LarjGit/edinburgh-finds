@@ -1,6 +1,8 @@
 """Test entity_classifier refactor (generic fields, TDD)."""
 
 import pytest
+import inspect
+from engine.extraction import entity_classifier
 from engine.extraction.entity_classifier import extract_roles
 
 
@@ -59,3 +61,38 @@ def test_extract_roles_is_members_only():
     roles = extract_roles(raw_data)
 
     assert "membership_org" in roles
+
+
+def test_classifier_contains_no_domain_literals():
+    """
+    Classifier must not contain domain-specific terms (engine purity).
+
+    Per system-vision.md Invariant 1: Engine is vertical-agnostic.
+    All domain semantics belong in lens contracts.
+    """
+    # Get classifier source code
+    source = inspect.getsource(entity_classifier)
+    source_lower = source.lower()
+
+    # Forbidden domain terms
+    forbidden_terms = [
+        "padel",
+        "tennis",
+        "wine",
+        "restaurant",
+        "league",
+        "club",
+        "retail",
+        "shop",
+        "business",
+        "chain"
+    ]
+
+    violations = []
+    for term in forbidden_terms:
+        if term in source_lower:
+            violations.append(term)
+
+    assert len(violations) == 0, \
+        f"Classifier contains forbidden domain terms: {violations}. " \
+        f"Domain logic must live in lens contracts only."
