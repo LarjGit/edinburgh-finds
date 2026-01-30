@@ -13,6 +13,7 @@ from engine.extraction.base import BaseExtractor
 from engine.extraction.schema_utils import get_extraction_fields, is_field_in_schema
 from engine.extraction.extractors.google_places_extractor import format_phone_uk, format_postcode_uk
 from engine.extraction.utils.opening_hours import parse_opening_hours
+from engine.orchestration.execution_context import ExecutionContext
 
 
 class EdinburghCouncilExtractor(BaseExtractor):
@@ -74,7 +75,7 @@ class EdinburghCouncilExtractor(BaseExtractor):
         """
         return "edinburgh_council"
 
-    def extract(self, raw_data: Dict) -> Dict:
+    def extract(self, raw_data: Dict, *, ctx: ExecutionContext) -> Dict:
         """
         Transform raw Edinburgh Council GeoJSON feature into extracted entity fields.
 

@@ -60,6 +60,7 @@ from engine.extraction.models.entity_extraction import EntityExtraction
 from engine.extraction.attribute_splitter import split_attributes as split_attrs
 from engine.extraction.schema_utils import get_extraction_fields
 from engine.extraction.utils.opening_hours import parse_opening_hours
+from engine.orchestration.execution_context import ExecutionContext
 
 
 class OSMExtractor(BaseExtractor):
@@ -233,7 +234,7 @@ class OSMExtractor(BaseExtractor):
 
         return f"{element_type}/{element_id}"
 
-    def extract(self, raw_data: Dict) -> Dict:
+    def extract(self, raw_data: Dict, *, ctx: ExecutionContext) -> Dict:
         """
         Transform raw OSM Overpass API response into extracted entity fields.
 

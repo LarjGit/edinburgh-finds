@@ -43,7 +43,7 @@ class TestEnginePurity:
 class TestExtractionBoundary:
     """Validates architecture.md Section 4.2: Extraction Boundary Contract"""
 
-    def test_extractor_outputs_only_primitives_and_raw_observations(self):
+    def test_extractor_outputs_only_primitives_and_raw_observations(self, mock_ctx):
         """
         Validates: architecture.md Section 4.2 (Extraction Boundary)
 
@@ -81,7 +81,7 @@ class TestExtractionBoundary:
             }
         }
 
-        extracted = extractor.extract(raw_data)
+        extracted = extractor.extract(raw_data, ctx=mock_ctx)
 
         # Forbidden: Domain-specific interpreted fields
         forbidden_prefixes = ["tennis_", "padel_", "wine_", "restaurant_"]
@@ -131,7 +131,7 @@ class TestExtractionCorrectness:
             }
         }
 
-    def test_extract_schema_primitives(self, sample_geojson_feature):
+    def test_extract_schema_primitives(self, sample_geojson_feature, mock_ctx):
         """
         Validates extractor outputs schema primitives correctly
 
@@ -139,7 +139,7 @@ class TestExtractionCorrectness:
         postcode, phone, website, external_id
         """
         extractor = SportScotlandExtractor()
-        extracted = extractor.extract(sample_geojson_feature)
+        extracted = extractor.extract(sample_geojson_feature, ctx=mock_ctx)
 
         # Verify schema primitives extracted
         assert extracted["entity_name"] == "Meadowbank Sports Centre"
@@ -151,7 +151,7 @@ class TestExtractionCorrectness:
         assert extracted["website"] == "https://www.edinburghleisure.co.uk/venues/meadowbank-sports-centre"
         assert extracted["external_id"] == "facility.456"
 
-    def test_extract_raw_observations(self, sample_geojson_feature):
+    def test_extract_raw_observations(self, sample_geojson_feature, mock_ctx):
         """
         Validates extractor captures connector-native fields as raw observations
 
@@ -159,7 +159,7 @@ class TestExtractionCorrectness:
         These will be interpreted by Phase 2 (Lens Application)
         """
         extractor = SportScotlandExtractor()
-        extracted = extractor.extract(sample_geojson_feature)
+        extracted = extractor.extract(sample_geojson_feature, ctx=mock_ctx)
 
         # Verify raw observations captured (connector-native fields)
         assert extracted["facility_type"] == "Sports Centre"

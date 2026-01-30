@@ -12,6 +12,7 @@ from typing import Dict, Tuple, Optional, List
 from engine.extraction.base import BaseExtractor
 from engine.extraction.schema_utils import is_field_in_schema
 from engine.extraction.extractors.google_places_extractor import format_phone_uk, format_postcode_uk
+from engine.orchestration.execution_context import ExecutionContext
 
 
 class OpenChargeMapExtractor(BaseExtractor):
@@ -50,7 +51,7 @@ class OpenChargeMapExtractor(BaseExtractor):
         """
         return "open_charge_map"
 
-    def extract(self, raw_data: Dict) -> Dict:
+    def extract(self, raw_data: Dict, *, ctx: ExecutionContext) -> Dict:
         """
         Transform raw OpenChargeMap data into extracted entity fields.
 

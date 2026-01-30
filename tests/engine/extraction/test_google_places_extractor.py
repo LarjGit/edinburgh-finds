@@ -9,7 +9,7 @@ import pytest
 from engine.extraction.extractors.google_places_extractor import GooglePlacesExtractor
 
 
-def test_extract_entity_name_from_legacy_format():
+def test_extract_entity_name_from_legacy_format(mock_ctx):
     """
     Verify extractor maps 'name' field to 'entity_name' (legacy/v0 API format).
 
@@ -30,13 +30,13 @@ def test_extract_entity_name_from_legacy_format():
         'formatted_address': '15 Stanley St, Edinburgh EH6 4SW, UK'
     }
 
-    extracted = extractor.extract(raw_data)
+    extracted = extractor.extract(raw_data, ctx=mock_ctx)
 
     assert 'entity_name' in extracted
     assert extracted['entity_name'] == 'Powerleague Portobello'
 
 
-def test_extract_entity_name_from_api_v1_format():
+def test_extract_entity_name_from_api_v1_format(mock_ctx):
     """
     Verify extractor maps 'displayName.text' to 'entity_name' (API v1 format).
 
@@ -57,13 +57,13 @@ def test_extract_entity_name_from_api_v1_format():
         'formattedAddress': '15 Stanley St, Edinburgh EH6 4SW, UK'
     }
 
-    extracted = extractor.extract(raw_data)
+    extracted = extractor.extract(raw_data, ctx=mock_ctx)
 
     assert 'entity_name' in extracted
     assert extracted['entity_name'] == 'Powerleague Portobello'
 
 
-def test_extract_prefers_display_name_over_name():
+def test_extract_prefers_display_name_over_name(mock_ctx):
     """
     Verify extractor prefers displayName.text over name when both present.
 
@@ -83,7 +83,7 @@ def test_extract_prefers_display_name_over_name():
         }
     }
 
-    extracted = extractor.extract(raw_data)
+    extracted = extractor.extract(raw_data, ctx=mock_ctx)
 
     assert extracted['entity_name'] == 'Correct Name'
 
@@ -105,7 +105,7 @@ def test_validate_requires_entity_name():
         extractor.validate({'entity_name': ''})
 
 
-def test_extract_and_validate_complete_legacy_payload():
+def test_extract_and_validate_complete_legacy_payload(mock_ctx):
     """
     Verify complete extraction and validation pipeline for legacy format.
 
@@ -131,7 +131,7 @@ def test_extract_and_validate_complete_legacy_payload():
     }
 
     # Phase 1: Extract
-    extracted = extractor.extract(raw_data)
+    extracted = extractor.extract(raw_data, ctx=mock_ctx)
 
     # Phase 1: Validate
     validated = extractor.validate(extracted)

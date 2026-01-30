@@ -2,7 +2,7 @@
 
 **Current Phase:** Foundation (Phase 1)
 **Validation Entity:** Powerleague Portobello Edinburgh (when in Phase 2+)
-**Last Updated:** 2026-01-30 (EP-001, CP-001a completed)
+**Last Updated:** 2026-01-30 (EP-001, CP-001a, CP-001b completed)
 
 ---
 
@@ -34,12 +34,16 @@
     - All 57 extraction tests pass (no regressions in interface-compliant code)
   - **Fix Applied:** BaseExtractor.extract() signature now matches architecture.md 3.8 exactly: `def extract(self, raw_data: dict, *, ctx: ExecutionContext) -> dict:`
 
-- [ ] **CP-001b: Context Propagation - Extractor Implementations (Part 2 of 3)**
+- [x] **CP-001b: Context Propagation - Extractor Implementations (Part 2 of 3)**
   - **Principle:** Extractor Interface Contract (architecture.md 3.8)
   - **Location:** All 6 extractors in `engine/extraction/extractors/*.py`
   - **Description:** Update all 6 extractor implementations to accept ctx parameter in their extract() methods. Mechanical signature changes to match BaseExtractor interface.
-  - **Estimated Scope:** 6 files, signature changes only (~6 lines total)
-  - **Files:** serper_extractor.py, osm_extractor.py, edinburgh_council_extractor.py, open_charge_map_extractor.py, google_places_extractor.py, sport_scotland_extractor.py
+  - **Completed:** 2026-01-30
+  - **Commit:** (pending)
+  - **Executable Proof:**
+    - `pytest tests/engine/extraction/test_base.py::TestExtractorInterfaceContract::test_all_extractors_accept_ctx_parameter -v` ✅ PASSED
+    - All 58 extraction tests pass (no regressions)
+  - **Fix Applied:** Updated all 6 extractors to signature `def extract(self, raw_data: Dict, *, ctx: ExecutionContext) -> Dict:`. Added ExecutionContext import to each file. Created mock_ctx test fixture and updated 9 test callsites to pass ctx parameter.
 
 - [ ] **CP-001c: Context Propagation - Callsite Updates (Part 3 of 3)**
   - **Principle:** Extractor Interface Contract (architecture.md 3.8)

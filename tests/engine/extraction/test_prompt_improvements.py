@@ -74,7 +74,7 @@ class TestPromptStructure:
 class TestUncertaintyHandling:
     """Test that extractors properly handle uncertain data with null values"""
 
-    def test_serper_returns_null_for_ambiguous_address(self):
+    def test_serper_returns_null_for_ambiguous_address(self, mock_ctx):
         """When address fragments are ambiguous, should return null instead of guessing"""
         mock_llm_client = Mock()
 
@@ -107,7 +107,7 @@ class TestUncertaintyHandling:
             ]
         }
 
-        extracted = extractor.extract(raw_data)
+        extracted = extractor.extract(raw_data, ctx=mock_ctx)
 
         # Should use null for missing/uncertain fields
         assert extracted["street_address"] is None, \
@@ -115,7 +115,7 @@ class TestUncertaintyHandling:
         assert extracted["postcode"] is None, \
             "Should return null for missing postcode"
 
-    def test_serper_returns_null_for_uncertain_phone(self):
+    def test_serper_returns_null_for_uncertain_phone(self, mock_ctx):
         """When phone number is unclear or incomplete, should return null"""
         mock_llm_client = Mock()
 
@@ -144,7 +144,7 @@ class TestUncertaintyHandling:
             ]
         }
 
-        extracted = extractor.extract(raw_data)
+        extracted = extractor.extract(raw_data, ctx=mock_ctx)
 
         # Should use null for incomplete/uncertain phone
         assert extracted["phone"] is None, \

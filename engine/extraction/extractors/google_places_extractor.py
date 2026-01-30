@@ -13,6 +13,7 @@ from phonenumbers import NumberParseException
 from engine.extraction.base import BaseExtractor
 from engine.extraction.schema_utils import get_extraction_fields, is_field_in_schema
 from engine.extraction.utils.opening_hours import parse_opening_hours
+from engine.orchestration.execution_context import ExecutionContext
 
 
 def format_phone_uk(phone: Optional[str]) -> Optional[str]:
@@ -152,7 +153,7 @@ class GooglePlacesExtractor(BaseExtractor):
         """
         return "google_places"
 
-    def extract(self, raw_data: Dict) -> Dict:
+    def extract(self, raw_data: Dict, *, ctx: ExecutionContext) -> Dict:
         """
         Transform raw Google Places data into extracted entity fields.
 
