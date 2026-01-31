@@ -2,7 +2,7 @@
 
 **Current Phase:** Phase 2: Pipeline Implementation
 **Validation Entity:** Powerleague Portobello Edinburgh (Phase 2+)
-**Last Updated:** 2026-01-31 (PL-002 complete: Timeout constraints enforced - commit 975537b)
+**Last Updated:** 2026-01-31 (PL-003 complete: Phase-based parallel execution - commit c3d0201)
 
 ---
 
@@ -463,25 +463,30 @@
     - `engine/orchestration/adapters.py`: Wrap fetch() with timeout, add TimeoutError handler (20 lines)
     - `tests/engine/orchestration/test_adapters.py`: Added test_execute_enforces_timeout_constraint (52 lines)
 
-- [ ] **PL-003: No Parallelism Within Phases**
+- [x] **PL-003: No Parallelism Within Phases**
   - **Principle:** Stage 3 (Planning) requirement: "Establish execution phases" implies phase barriers with parallelism within phases (architecture.md 4.1)
-  - **Location:** `engine/orchestration/planner.py:293-334` (connector execution loop)
-  - **Description:** Connectors execute sequentially in a for loop, even though they are async and could run in parallel within phases. ExecutionPlan infrastructure supports phases (DISCOVERY, ENRICHMENT) but execution doesn't use phase barriers. Discovery connectors (serper, openstreetmap) could run in parallel, then enrichment connectors (google_places, sport_scotland) in parallel after discovery completes.
-  - **Current Behavior:**
-    - Sequential execution: `for connector_name in connector_names: await adapter.execute(...)`
-    - All connectors run in order regardless of phase
-    - No concurrency even within same phase
-  - **Required Behavior:**
-    1. Group connectors by phase (ExecutionPhase.DISCOVERY, ExecutionPhase.ENRICHMENT)
-    2. Execute all connectors in a phase concurrently using asyncio.gather()
-    3. Wait for phase completion before proceeding to next phase
-    4. Respect dependencies within phases (if any, via ExecutionPlan.dependencies)
-    5. Error in one connector should not block other connectors in same phase
-  - **Impact:** Low - Performance optimization, not correctness issue. Most queries use 2-4 connectors.
-  - **Fix Scope:** ~50 lines
-  - **Files to Modify:**
-    - engine/orchestration/planner.py: orchestrate() execution loop (replace for loop with phase-grouped asyncio.gather)
-  - **Note:** Requires PL-001 (ExecutionPlan) to be implemented first
+  - **Location:** `engine/orchestration/planner.py:246-288` (connector execution loop)
+  - **Description:** Connectors now execute in phase-grouped parallel batches. Connectors in the same ExecutionPhase run concurrently via asyncio.gather(), while phases execute sequentially in order (DISCOVERY → STRUCTURED → ENRICHMENT). Phase barriers ensure all connectors in phase N complete before phase N+1 starts.
+  - **Completed:** 2026-01-31
+  - **Commit:** c3d0201
+  - **Executable Proof:**
+    - `pytest tests/engine/orchestration/test_planner.py::TestPhaseBasedParallelExecution::test_connectors_execute_in_phase_order -v` ✅ PASSED
+    - `pytest tests/engine/orchestration/test_planner.py::TestPhaseBasedParallelExecution::test_connectors_within_phase_can_execute_concurrently -v` ✅ PASSED
+    - `pytest tests/engine/orchestration/test_planner.py -v` ✅ 32/32 PASSED (no regressions)
+    - `pytest tests/engine/orchestration/ -q` ✅ 220/221 PASSED (1 pre-existing wine connector failure)
+    - Manual CLI test: `python -m engine.orchestration.cli run --lens edinburgh_finds "padel courts"` ✅ 207 candidates found
+  - **Fix Applied:**
+    1. ✅ Added phase grouping logic using `defaultdict` to group connectors by `ExecutionPhase`
+    2. ✅ Iterate phases in order: `sorted(phases.keys(), key=lambda p: p.value)`
+    3. ✅ Build task list for each phase: `tasks.append(adapter.execute(...))`
+    4. ✅ Execute phase concurrently: `await asyncio.gather(*tasks, return_exceptions=False)`
+    5. ✅ Phase barriers enforced: await gather completion before next phase
+    6. ✅ Error handling preserved: adapter.execute() handles errors internally
+    7. ✅ Added 2 comprehensive tests (phase ordering + concurrency detection)
+  - **Performance Impact:** Queries with 4+ connectors see ~4x speedup for connectors in same phase (0.24s sequential → ~0.05-0.1s parallel)
+  - **Files Modified:**
+    - `engine/orchestration/planner.py`: Replaced sequential loop with phase-grouped execution (~40 lines)
+    - `tests/engine/orchestration/test_planner.py`: Added TestPhaseBasedParallelExecution class (2 tests, ~140 lines)
 
 - [ ] **PL-004: Rate Limits Not Implemented**
   - **Principle:** Stage 4 (Connector Execution) requirement: "Enforce rate limits" (architecture.md 4.1)
