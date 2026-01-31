@@ -1,7 +1,7 @@
 """
 Tests for orchestration-level deduplication logic.
 
-Validates the multi-tier deduplication strategy in ExecutionContext:
+Validates the multi-tier deduplication strategy in OrchestratorState:
 - Tier 1: Strong IDs (google_place_id, osm_id, etc.)
 - Tier 2: Geo-based (normalized name + rounded coordinates)
 - Tier 2.5: Name-based fuzzy matching (NEW - for candidates without IDs or coords)
@@ -14,7 +14,7 @@ The Tier 2.5 fuzzy matching addresses the limitation where:
 """
 
 import pytest
-from engine.orchestration.execution_context import ExecutionContext
+from engine.orchestration.orchestrator_state import OrchestratorState
 
 
 class TestTier1StrongIDs:
@@ -22,7 +22,7 @@ class TestTier1StrongIDs:
 
     def test_duplicate_detected_by_google_place_id(self):
         """Two candidates with same Google Place ID should be detected as duplicates."""
-        context = ExecutionContext()
+        state = OrchestratorState()
 
         candidate1 = {
             "name": "Oriam Scotland",
@@ -33,8 +33,8 @@ class TestTier1StrongIDs:
             "ids": {"google_place_id": "ChIJ123abc"}  # Same ID
         }
 
-        accepted1, key1, _ = context.accept_entity(candidate1)
-        accepted2, key2, reason2 = context.accept_entity(candidate2)
+        accepted1, key1, _ = state.accept_entity(candidate1)
+        accepted2, key2, reason2 = state.accept_entity(candidate2)
 
         assert accepted1 is True, "First candidate should be accepted"
         assert accepted2 is False, "Second candidate should be rejected as duplicate"
@@ -43,7 +43,7 @@ class TestTier1StrongIDs:
 
     def test_no_duplicate_with_different_ids(self):
         """Two candidates with different IDs should not be duplicates."""
-        context = ExecutionContext()
+        state = OrchestratorState()
 
         candidate1 = {
             "name": "Venue A",
@@ -54,8 +54,8 @@ class TestTier1StrongIDs:
             "ids": {"google_place_id": "ChIJ456"}  # Different ID
         }
 
-        accepted1, key1, _ = context.accept_entity(candidate1)
-        accepted2, key2, _ = context.accept_entity(candidate2)
+        accepted1, key1, _ = state.accept_entity(candidate1)
+        accepted2, key2, _ = state.accept_entity(candidate2)
 
         assert accepted1 is True
         assert accepted2 is True, "Different IDs = different entities"
@@ -67,7 +67,7 @@ class TestTier2GeoBased:
 
     def test_duplicate_detected_by_name_and_coords(self):
         """Two candidates with same name and coords should be duplicates."""
-        context = ExecutionContext()
+        state = OrchestratorState()
 
         candidate1 = {
             "name": "Oriam Scotland",
@@ -80,8 +80,8 @@ class TestTier2GeoBased:
             "lng": -3.1234
         }
 
-        accepted1, key1, _ = context.accept_entity(candidate1)
-        accepted2, key2, reason2 = context.accept_entity(candidate2)
+        accepted1, key1, _ = state.accept_entity(candidate1)
+        accepted2, key2, reason2 = state.accept_entity(candidate2)
 
         assert accepted1 is True
         assert accepted2 is False, "Should be detected as duplicate"
@@ -90,7 +90,7 @@ class TestTier2GeoBased:
 
     def test_case_insensitive_name_matching(self):
         """Name normalization should be case-insensitive."""
-        context = ExecutionContext()
+        state = OrchestratorState()
 
         candidate1 = {
             "name": "Oriam Scotland",
@@ -103,8 +103,8 @@ class TestTier2GeoBased:
             "lng": -3.1234
         }
 
-        accepted1, key1, _ = context.accept_entity(candidate1)
-        accepted2, key2, reason2 = context.accept_entity(candidate2)
+        accepted1, key1, _ = state.accept_entity(candidate1)
+        accepted2, key2, reason2 = state.accept_entity(candidate2)
 
         assert accepted2 is False, "Case-insensitive match should detect duplicate"
         assert key1 == key2
@@ -120,7 +120,7 @@ class TestTier25FuzzyMatching:
 
         This is the key test case for Phase 3 enhancement.
         """
-        context = ExecutionContext()
+        state = OrchestratorState()
 
         # Serper result: name only, no IDs, no coords
         candidate1 = {
@@ -134,8 +134,8 @@ class TestTier25FuzzyMatching:
             "address": "Heriot-Watt University, Edinburgh"
         }
 
-        accepted1, key1, _ = context.accept_entity(candidate1)
-        accepted2, key2, reason2 = context.accept_entity(candidate2)
+        accepted1, key1, _ = state.accept_entity(candidate1)
+        accepted2, key2, reason2 = state.accept_entity(candidate2)
 
         # EXPECTED TO FAIL - this is what we're implementing
         assert accepted2 is False, "Fuzzy matching should detect similar names as duplicates"
@@ -146,7 +146,7 @@ class TestTier25FuzzyMatching:
         Fuzzy matching should only trigger above similarity threshold (e.g., 85%).
         Below threshold = different entities.
         """
-        context = ExecutionContext()
+        state = OrchestratorState()
 
         candidate1 = {
             "name": "Edinburgh Sports Centre"
@@ -155,8 +155,8 @@ class TestTier25FuzzyMatching:
             "name": "Glasgow Sports Centre"  # Similar structure but different city
         }
 
-        accepted1, _, _ = context.accept_entity(candidate1)
-        accepted2, _, _ = context.accept_entity(candidate2)
+        accepted1, _, _ = state.accept_entity(candidate1)
+        accepted2, _, _ = state.accept_entity(candidate2)
 
         # EXPECTED TO FAIL initially
         assert accepted1 is True
@@ -166,7 +166,7 @@ class TestTier25FuzzyMatching:
         """
         Fuzzy matching should handle minor variations like punctuation and spacing.
         """
-        context = ExecutionContext()
+        state = OrchestratorState()
 
         candidate1 = {
             "name": "St. Andrews Sports Centre"
@@ -175,8 +175,8 @@ class TestTier25FuzzyMatching:
             "name": "St Andrews Sports Centre"  # Missing period
         }
 
-        accepted1, _, _ = context.accept_entity(candidate1)
-        accepted2, key2, reason2 = context.accept_entity(candidate2)
+        accepted1, _, _ = state.accept_entity(candidate1)
+        accepted2, key2, reason2 = state.accept_entity(candidate2)
 
         # EXPECTED TO FAIL - this is what we're implementing
         assert accepted2 is False, "Minor punctuation differences should match"
@@ -186,7 +186,7 @@ class TestTier25FuzzyMatching:
         """
         Fuzzy matching should handle article differences (The/A/An).
         """
-        context = ExecutionContext()
+        state = OrchestratorState()
 
         candidate1 = {
             "name": "The Edinburgh Tennis Club"
@@ -195,8 +195,8 @@ class TestTier25FuzzyMatching:
             "name": "Edinburgh Tennis Club"  # Missing "The"
         }
 
-        accepted1, _, _ = context.accept_entity(candidate1)
-        accepted2, _, reason2 = context.accept_entity(candidate2)
+        accepted1, _, _ = state.accept_entity(candidate1)
+        accepted2, _, reason2 = state.accept_entity(candidate2)
 
         # EXPECTED TO FAIL - this is what we're implementing
         assert accepted2 is False, "Article differences should match"
@@ -216,7 +216,7 @@ class TestCrossSourceDeduplication:
         Before Tier 2.5: These generate different keys → no deduplication
         After Tier 2.5: Fuzzy name matching detects duplicate
         """
-        context = ExecutionContext()
+        state = OrchestratorState()
 
         # Simulate Serper result
         serper_result = {
@@ -233,8 +233,8 @@ class TestCrossSourceDeduplication:
             "source": "google_places"
         }
 
-        accepted1, _, _ = context.accept_entity(serper_result)
-        accepted2, _, reason2 = context.accept_entity(google_result)
+        accepted1, _, _ = state.accept_entity(serper_result)
+        accepted2, _, reason2 = state.accept_entity(google_result)
 
         # EXPECTED TO FAIL - this is the core issue we're fixing
         assert accepted2 is False, "Cross-source deduplication should work with fuzzy matching"
@@ -252,7 +252,7 @@ class TestCrossSourceDeduplication:
         Since #2 is rejected, #3 compares only against #1 (score 69) and is accepted.
         This is expected behavior - fuzzy matching has limits.
         """
-        context = ExecutionContext()
+        state = OrchestratorState()
 
         # Serper
         candidate1 = {"name": "Edinburgh Leisure Craiglockhart"}
@@ -263,9 +263,9 @@ class TestCrossSourceDeduplication:
         # OpenStreetMap
         candidate3 = {"name": "Craiglockhart Sports Centre"}
 
-        accepted1, _, _ = context.accept_entity(candidate1)
-        accepted2, _, reason2 = context.accept_entity(candidate2)
-        accepted3, _, _ = context.accept_entity(candidate3)
+        accepted1, _, _ = state.accept_entity(candidate1)
+        accepted2, _, reason2 = state.accept_entity(candidate2)
+        accepted3, _, _ = state.accept_entity(candidate3)
 
         assert accepted1 is True, "First entity should be accepted"
         assert accepted2 is False, "Second source should fuzzy match first (score 100)"
@@ -282,7 +282,7 @@ class TestTier3SHA1Fallback:
         """
         When no IDs or coords available, should use SHA1 hash of canonical fields.
         """
-        context = ExecutionContext()
+        state = OrchestratorState()
 
         candidate1 = {
             "name": "Unknown Venue",
@@ -293,8 +293,8 @@ class TestTier3SHA1Fallback:
             "address": "123 Main St"
         }
 
-        accepted1, key1, _ = context.accept_entity(candidate1)
-        accepted2, key2, reason2 = context.accept_entity(candidate2)
+        accepted1, key1, _ = state.accept_entity(candidate1)
+        accepted2, key2, reason2 = state.accept_entity(candidate2)
 
         assert accepted1 is True
         assert accepted2 is False, "Identical fields should generate same hash"
@@ -307,13 +307,13 @@ class TestDeduplicationEdgeCases:
 
     def test_empty_name_handling(self):
         """Empty names should not cause crashes."""
-        context = ExecutionContext()
+        state = OrchestratorState()
 
         candidate1 = {"name": ""}
         candidate2 = {"name": ""}
 
-        accepted1, _, _ = context.accept_entity(candidate1)
-        accepted2, _, _ = context.accept_entity(candidate2)
+        accepted1, _, _ = state.accept_entity(candidate1)
+        accepted2, _, _ = state.accept_entity(candidate2)
 
         # Both should be accepted (no meaningful data to deduplicate on)
         # Or both rejected - depends on validation strategy
@@ -332,7 +332,7 @@ class TestDeduplicationEdgeCases:
         - But candidate 2 fuzzy matches candidate 1 (same name, 100% match)
         - Result: Both treated as duplicates (correct for same-name entities)
         """
-        context = ExecutionContext()
+        state = OrchestratorState()
 
         candidate1 = {
             "name": "Venue at Origin",
@@ -345,8 +345,8 @@ class TestDeduplicationEdgeCases:
             "lng": None
         }
 
-        accepted1, key1, _ = context.accept_entity(candidate1)
-        accepted2, key2, reason2 = context.accept_entity(candidate2)
+        accepted1, key1, _ = state.accept_entity(candidate1)
+        accepted2, key2, reason2 = state.accept_entity(candidate2)
 
         # Candidate 1 generates geo-based key
         assert "venue at origin:0.0:0.0" in key1
