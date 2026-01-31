@@ -1,6 +1,9 @@
 # Edinburgh Finds Lens Configuration
 # Defines domain knowledge for sports discovery in Edinburgh
 
+# Schema version (required by architecture.md 6.7 Gate 1)
+schema: lens/v1
+
 # Query vocabulary for orchestration
 vocabulary:
   activity_keywords:

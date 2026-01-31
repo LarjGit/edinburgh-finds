@@ -1,6 +1,9 @@
 # Wine Lens Configuration
 # Minimal fixture for testing multi-vertical lens capability
 
+# Schema version (required by architecture.md 6.7 Gate 1)
+schema: lens/v1
+
 # Query vocabulary for orchestration
 vocabulary:
   activity_keywords:

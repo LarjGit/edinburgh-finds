@@ -1,8 +1,8 @@
 # Architectural Audit Catalog
 
-**Current Phase:** Foundation (Phase 1)
-**Validation Entity:** Powerleague Portobello Edinburgh (when in Phase 2+)
-**Last Updated:** 2026-01-31 (EP-001, CP-001a/b/c, LB-001, EC-001a/b, EC-001b2-1, EC-001b2-2 Part 1, EC-001b2-3, EC-001b2-4, TF-001, CR-001 completed)
+**Current Phase:** Phase 1 Complete → Transition to Phase 2
+**Validation Entity:** Powerleague Portobello Edinburgh (Phase 2+)
+**Last Updated:** 2026-01-31 (All Phase 1 items completed: EP-001, CP-001a/b/c, LB-001, EC-001a/b/b2-1/b2-2/b2-3/b2-4, TF-001, CR-001, MC-001)
 
 ---
 
@@ -230,13 +230,35 @@
     - Fixed test_planner_refactor.py to use lens="edinburgh_finds" (actual lens name, not "padel")
     - All domain knowledge remains in lens configuration per Invariant 2 (engine code unchanged)
 
-- [ ] **MC-001: Missing Lens Validation Gates**
+- [x] **MC-001: Missing Lens Validation Gates**
   - **Principle:** Lens Validation Gates (architecture.md 6.7)
-  - **Location:** `engine/lenses/loader.py` and bootstrap entry points
-  - **Description:** Architecture.md 6.7 requires 7 validation gates at lens load time: (1) Schema validation, (2) Canonical reference integrity, (3) Connector reference validation, (4) Identifier uniqueness, (5) Regex compilation validation, (6) Smoke coverage validation, (7) Fail-fast enforcement. Need to verify all gates are implemented and enforced.
-  - **Evidence:** Review lenses/loader.py and lenses/validator.py for gate coverage
-  - **Estimated Scope:** 2 files, add missing validation gates
-  - **Fix Strategy:** Audit existing validation in lenses/validator.py, add missing gates, ensure fail-fast behavior
+  - **Location:** `engine/lenses/validator.py`, `engine/lenses/edinburgh_finds/lens.yaml`, `engine/lenses/wine/lens.yaml`
+  - **Description:** Architecture.md 6.7 requires 7 validation gates at lens load time. Previously only gates 2 (partial), 4 (partial), and 7 were implemented. Added missing gates: 1 (schema validation), 2 (complete canonical integrity), 3 (connector validation), 5 (regex compilation), 6 (smoke coverage).
+  - **Completed:** 2026-01-31
+  - **Commit:** (pending)
+  - **Executable Proof:**
+    - `pytest tests/engine/lenses/test_validator_gates.py -v` ✅ 21/21 PASSED
+    - `pytest tests/engine/lenses/ -v` ✅ 53 passed, 2 skipped (no regressions)
+    - `pytest tests/engine/orchestration/ -q` ✅ 208 passed, 3 skipped (no regressions)
+    - All 7 gates now enforced at lens load time with comprehensive test coverage
+  - **Fix Applied:**
+    - **Gate 1 (Schema validation):** Added `_validate_required_sections()` to enforce schema, facets, values, mapping_rules sections
+    - **Gate 2 (Canonical reference integrity - gaps filled):**
+      - Added `_validate_module_trigger_references()` for module_triggers.when.facet and add_modules validation
+      - Added `_validate_derived_grouping_references()` for derived_groupings.rules.entity_class validation
+      - Existing validations for facets/values/mapping_rules already covered
+    - **Gate 3 (Connector validation):** Added `_validate_connector_references()` to validate against CONNECTOR_REGISTRY
+    - **Gate 4 (Identifier uniqueness):** Already implemented for value.key and facet keys
+    - **Gate 5 (Regex compilation):** Added `_validate_regex_patterns()` to compile all mapping_rules.pattern at load time
+    - **Gate 6 (Smoke coverage):** Added `_validate_facet_coverage()` to ensure every facet has at least one value
+    - **Gate 7 (Fail-fast):** Already implemented - all validators raise ValidationError immediately
+    - Updated `validate_lens_config()` to call all 7 gates in correct order
+    - Fixed lens YAML files to include required "schema: lens/v1" field
+  - **Files Modified:**
+    - `engine/lenses/validator.py`: Added 6 new validation functions, updated docstrings (~180 lines added)
+    - `tests/engine/lenses/test_validator_gates.py`: Comprehensive test suite (300 lines, 21 tests)
+    - `engine/lenses/edinburgh_finds/lens.yaml`: Added schema field
+    - `engine/lenses/wine/lens.yaml`: Added schema field
 
 ---
 
@@ -285,4 +307,4 @@ Every completed item MUST document executable proof:
 
 ---
 
-**Next Action:** CR-001 complete! Fixed sport_scotland connector routing by expanding sports keywords in edinburgh_finds lens configuration. Test failures reduced from 3 to 0. All Phase 1 Level-2 connector routing issues resolved. Test status: 208 passed, 0 failed, 3 skipped. Next item: MC-001 (Missing Lens Validation Gates) - final Level-2 item before Phase 1 completion.
+**Next Action:** MC-001 complete! Implemented all 7 required validation gates per architecture.md 6.7. All gates now enforced at lens load time with fail-fast behavior. Test status: Lens tests 53 passed, orchestration tests 208 passed. **PHASE 1 FOUNDATION COMPLETE** - All Level-1 (Critical) and Level-2 (Important) violations resolved. Ready to transition to Phase 2: Pipeline Implementation.
