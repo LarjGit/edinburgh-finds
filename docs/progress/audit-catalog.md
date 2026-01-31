@@ -345,7 +345,23 @@
     3. Emit prominent warning to stderr: "WARNING: Using fallback lens 'edinburgh_finds' (dev/test only)"
     4. Add `fallback_used: true` metadata to ExecutionContext or orchestration report
   - **Impact:** Low - Dev/test convenience feature, not production-critical
-  - **Fix Scope:** ~20 lines (add CLI arg, conditional logic, warning)
+  - **Fix Scope:** ~40 lines (add CLI arg, conditional logic, warning, 4 tests)
+  - **Approved Micro-Plan (2026-01-31):**
+    - **Decision:** Fallback lens always "edinburgh_finds" (not configurable, matches architecture.md example)
+    - **Decision:** Use stderr warning only (no ExecutionContext metadata, simpler for dev/test use case)
+    - **Implementation:**
+      1. Add `--allow-default-lens` boolean flag to run_parser (action="store_true", default=False)
+      2. Add Level 4 fallback logic after config loading: if not lens_id and args.allow_default_lens, set to "edinburgh_finds"
+      3. Emit warning to stderr with colorize(Colors.YELLOW): "WARNING: Using fallback lens 'edinburgh_finds' (dev/test only)"
+      4. Add 4 tests to test_lens_resolution.py:
+         - test_allow_default_lens_flag_enables_fallback
+         - test_fallback_emits_warning_to_stderr
+         - test_fallback_not_used_without_flag
+         - test_fallback_respects_precedence
+    - **Files to Modify:**
+      - engine/orchestration/cli.py (~15 lines)
+      - tests/engine/orchestration/test_lens_resolution.py (~60 lines, 4 new tests)
+    - **Status:** Plan approved, implementation pending
 
 - [ ] **LR-003: Fallback Bootstrap Path in Planner (Architectural Debt)**
   - **Principle:** Lens Loading Lifecycle (architecture.md 3.2 - "Lens loading occurs only during engine bootstrap")
