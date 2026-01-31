@@ -21,6 +21,7 @@ from engine.extraction.extractors import (
     OSMExtractor,
 )
 from engine.ingestion.deduplication import compute_content_hash
+from engine.orchestration.execution_context import ExecutionContext
 
 
 DEFAULT_EXTRACTOR_REGISTRY: Dict[str, Callable[[], Any]] = {
@@ -31,6 +32,19 @@ DEFAULT_EXTRACTOR_REGISTRY: Dict[str, Callable[[], Any]] = {
     "serper": SerperExtractor,
     "openstreetmap": OSMExtractor,
 }
+
+
+def _create_minimal_context() -> ExecutionContext:
+    """Create minimal ExecutionContext for extraction without full lens contract."""
+    return ExecutionContext(
+        lens_contract={
+            "facets": {},
+            "values": [],
+            "mapping_rules": [],
+            "modules": {},
+            "module_triggers": []
+        }
+    )
 
 
 def now_utc() -> datetime:
@@ -279,7 +293,7 @@ class ExtractionRetryHandler:
 
         for index, item in enumerate(items):
             try:
-                extracted = extractor.extract(item)
+                extracted = extractor.extract(item, ctx=_create_minimal_context())
                 validated = extractor.validate(extracted)
                 normalized, external_ids = _normalize_external_ids(validated, failure.source)
                 attributes, discovered = extractor.split_attributes(normalized)

@@ -30,9 +30,23 @@ from engine.extraction.logging_config import (
     log_extraction_failure,
 )
 from engine.extraction.quarantine import record_failed_extraction
+from engine.orchestration.execution_context import ExecutionContext
 
 
 logger = get_extraction_logger()
+
+
+def _create_minimal_context() -> ExecutionContext:
+    """Create minimal ExecutionContext for extraction without full lens contract."""
+    return ExecutionContext(
+        lens_contract={
+            "facets": {},
+            "values": [],
+            "mapping_rules": [],
+            "modules": {},
+            "module_triggers": []
+        }
+    )
 
 
 def get_extractor_for_source(source: str) -> BaseExtractor:
@@ -164,7 +178,7 @@ async def run_single_extraction(
         log_extraction_start(logger, raw.source, raw_id, extractor_name)
 
         # Extract fields
-        extracted = extractor.extract(raw_data)
+        extracted = extractor.extract(raw_data, ctx=_create_minimal_context())
         logger.info(f"Extracted {len(extracted)} fields")
 
         # Validate fields
@@ -345,7 +359,7 @@ async def run_source_extraction(
                 extractor = get_extractor_for_source(raw_record.source)
 
                 # Extract
-                extracted = extractor.extract(raw_data)
+                extracted = extractor.extract(raw_data, ctx=_create_minimal_context())
                 validated = extractor.validate(extracted)
                 attributes, discovered_attributes = extractor.split_attributes(validated)
 
@@ -544,7 +558,7 @@ async def run_all_extraction(
                     extractor = get_extractor_for_source(raw_record.source)
 
                     # Extract
-                    extracted = extractor.extract(raw_data)
+                    extracted = extractor.extract(raw_data, ctx=_create_minimal_context())
                     validated = extractor.validate(extracted)
                     attributes, discovered_attributes = extractor.split_attributes(validated)
 

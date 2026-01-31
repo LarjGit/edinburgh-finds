@@ -12,6 +12,7 @@ from typing import Dict, Any, Optional
 
 from prisma import Prisma
 from engine.extraction.run import get_extractor_for_source
+from engine.orchestration.execution_context import ExecutionContext
 
 
 # Structured sources with deterministic extractors (skip LLM extraction)
@@ -27,6 +28,19 @@ UNSTRUCTURED_SOURCES = {
     "serper",            # Web search snippets - varying HTML fragments
     "openstreetmap",     # OSM - free-form tags with no standard schema
 }
+
+
+def _create_minimal_context() -> ExecutionContext:
+    """Create minimal ExecutionContext for extraction without full lens contract."""
+    return ExecutionContext(
+        lens_contract={
+            "facets": {},
+            "values": [],
+            "mapping_rules": [],
+            "modules": {},
+            "module_triggers": []
+        }
+    )
 
 
 def needs_extraction(source: str) -> bool:
@@ -138,7 +152,7 @@ async def extract_entity(
     # Step 4: Run extraction pipeline
     try:
         # Extract raw fields
-        extracted = extractor.extract(raw_data)
+        extracted = extractor.extract(raw_data, ctx=context or _create_minimal_context())
 
         # Validate fields
         validated = extractor.validate(extracted)
