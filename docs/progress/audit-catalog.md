@@ -114,7 +114,7 @@
   - **Location:** `engine/orchestration/planner.py`, `engine/orchestration/adapters.py`, `engine/orchestration/extraction_integration.py`
   - **Description:** Migrate all callsites that access mutable state (context.candidates, context.errors, etc.) to use OrchestratorState instead of ExecutionContext. ExecutionContext should only carry immutable lens contract.
   - **Completed:** 2026-01-31
-  - **Commit:** [PENDING]
+  - **Commit:** 0a2371f
   - **Executable Proof:**
     - `pytest tests/engine/orchestration/test_cli.py::TestCLIIntegration::test_cli_run_executes_orchestration -v` ✅ PASSED
     - `pytest tests/engine/orchestration/test_adapters.py::TestConnectorAdapterExecute -v` ✅ 5/5 PASSED
