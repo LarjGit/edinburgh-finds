@@ -2,7 +2,7 @@
 
 **Current Phase:** Foundation (Phase 1)
 **Validation Entity:** Powerleague Portobello Edinburgh (when in Phase 2+)
-**Last Updated:** 2026-01-31 (EP-001, CP-001a, CP-001b, CP-001c, LB-001 completed)
+**Last Updated:** 2026-01-31 (EP-001, CP-001a/b/c, LB-001, EC-001 Phase A completed)
 
 ---
 
@@ -89,17 +89,39 @@
 
 ### Important (Level 2) - Missing Contracts
 
-- [ ] **EC-001: ExecutionContext Structure Mismatch**
+- [x] **EC-001: ExecutionContext Structure Mismatch (Phase A - Contract Compliance)**
   - **Principle:** ExecutionContext Contract (architecture.md 3.6)
-  - **Location:** `engine/orchestration/execution_context.py:25-76`
-  - **Description:** Current ExecutionContext doesn't match architecture.md 3.6 specification. Architecture requires frozen dataclass with `lens_id: str`, `lens_contract: dict`, `lens_hash: Optional[str]`. Current implementation is mutable class with different structure. Missing lens_id and lens_hash fields for reproducibility.
-  - **Evidence:** Compare execution_context.py:25-76 with architecture.md 3.6
-  - **Estimated Scope:** 1 file, class restructure
+  - **Location:** `engine/orchestration/execution_context.py`, `engine/orchestration/orchestrator_state.py`
+  - **Description:** Align ExecutionContext with architecture.md 3.6 specification: frozen dataclass with lens_id, lens_contract, lens_hash. Separate mutable orchestrator state into OrchestratorState class.
+  - **Completed:** 2026-01-31 (Phase A)
+  - **Commit:** fe80384
+  - **Executable Proof:**
+    - `pytest tests/engine/orchestration/test_execution_context_contract.py -v` ✅ 7/7 PASSED (contract compliance tests)
+    - `pytest tests/engine/orchestration/test_cli.py::TestBootstrapLens -v` ✅ 5/5 PASSED (bootstrap tests)
+    - ExecutionContext is now frozen dataclass with required fields (lens_id, lens_contract, lens_hash)
+    - OrchestratorState created with mutable state (candidates, accepted_entities, metrics, errors) and business logic
+    - Bootstrap (cli.py) creates ExecutionContext with lens_hash for reproducibility
+  - **Fix Applied (Phase A):**
+    1. ✅ Created OrchestratorState class with all mutable state and deduplication logic
+    2. ✅ Converted ExecutionContext to frozen dataclass with lens_id, lens_contract, lens_hash
+    3. ✅ Updated bootstrap_lens() to compute lens_hash and create compliant ExecutionContext
+    4. ✅ Updated planner.py fallback bootstrap path to use new signature
+    5. ✅ All contract tests passing (12/12)
+  - **Note:** Phase B (EC-001b) required to migrate callsites to OrchestratorState
+
+- [ ] **EC-001b: Migrate Callsites to OrchestratorState (Phase B - Implementation)**
+  - **Principle:** Separation of Concerns (architecture.md 3.6)
+  - **Location:** `engine/orchestration/planner.py`, `engine/orchestration/adapters.py`, test files
+  - **Description:** Migrate all callsites that access mutable state (context.candidates, context.errors, etc.) to use OrchestratorState instead of ExecutionContext. ExecutionContext should only carry immutable lens contract.
+  - **Evidence:** Integration test `test_cli_run_executes_orchestration` fails with AttributeError: 'ExecutionContext' object has no attribute 'errors'
+  - **Estimated Scope:** 2-3 files (planner.py, adapters.py, tests), ~16 callsite updates in planner.py alone
   - **Fix Strategy:**
-    1. Change ExecutionContext to frozen dataclass per architecture spec
-    2. Add lens_id and lens_hash fields
-    3. Remove mutable collections (candidates, accepted_entities, etc.) - these belong in orchestrator state, not context
-    4. Context should only carry lens contract and metadata, not execution state
+    1. Create OrchestratorState instance in orchestrate() function
+    2. Update all context.candidates → state.candidates
+    3. Update all context.errors → state.errors
+    4. Update all context.metrics → state.metrics
+    5. Update adapters to accept both ExecutionContext and OrchestratorState
+    6. Update tests to create both ExecutionContext and OrchestratorState
 
 - [ ] **MC-001: Missing Lens Validation Gates**
   - **Principle:** Lens Validation Gates (architecture.md 6.7)
@@ -156,4 +178,4 @@ Every completed item MUST document executable proof:
 
 ---
 
-**Next Action:** All Level-1 (Critical) items complete! Select EC-001 (first Level-2 item) and begin micro-iteration process per development-methodology.md Section 5.
+**Next Action:** EC-001 Phase A complete! Select EC-001b (Phase B callsite migration) OR MC-001 (Missing Lens Validation Gates) per development-methodology.md Section 5.
