@@ -246,27 +246,46 @@ async def orchestrate(
         # Create mutable orchestrator state (separate from immutable context per architecture.md 3.6)
         state = OrchestratorState()
 
-        # 4. Execute connectors via adapters (using ExecutionPlan)
+        # 4. Execute connectors via adapters (phase-aware with parallelism per PL-003)
+        # Per architecture.md 4.1 Stage 3: "Establish execution phases" implies
+        # phase barriers with parallelism within phases
+        from collections import defaultdict
+
+        # Group connectors by phase
+        phases = defaultdict(list)
         for node in plan.connectors:
-            connector_name = node.spec.name
+            phases[node.spec.phase].append(node)
 
-            # Get connector instance
-            try:
-                connector = get_connector_instance(connector_name)
+        # Execute phases in order: DISCOVERY → STRUCTURED → ENRICHMENT
+        for phase in sorted(phases.keys(), key=lambda p: p.value):
+            phase_nodes = phases[phase]
 
-                # Create adapter using spec from execution plan
-                adapter = ConnectorAdapter(connector, node.spec)
+            # Execute all connectors in this phase concurrently
+            tasks = []
+            for node in phase_nodes:
+                connector_name = node.spec.name
 
-                # Execute connector (adapter handles errors internally)
-                await adapter.execute(request, query_features, context, state)
+                try:
+                    connector = get_connector_instance(connector_name)
+                    adapter = ConnectorAdapter(connector, node.spec)
 
-            except Exception as e:
-                # Unexpected error during adapter creation
-                state.errors.append({
-                    "connector": connector_name,
-                    "error": f"Failed to create connector: {str(e)}",
-                    "execution_time_ms": 0,
-                })
+                    # Create task for concurrent execution
+                    task = adapter.execute(request, query_features, context, state)
+                    tasks.append(task)
+
+                except Exception as e:
+                    # Unexpected error during adapter creation
+                    state.errors.append({
+                        "connector": connector_name,
+                        "error": f"Failed to create connector: {str(e)}",
+                        "execution_time_ms": 0,
+                    })
+
+            # Wait for all connectors in this phase to complete
+            # Note: adapter.execute() handles exceptions internally,
+            # so gather should not raise exceptions
+            if tasks:
+                await asyncio.gather(*tasks, return_exceptions=False)
 
         # 5. Apply deduplication
         # Process all candidates through accept_entity to deduplicate
