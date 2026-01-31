@@ -1,8 +1,8 @@
 # Architectural Audit Catalog
 
-**Current Phase:** Phase 1 Complete → Transition to Phase 2
+**Current Phase:** Phase 2: Pipeline Implementation
 **Validation Entity:** Powerleague Portobello Edinburgh (Phase 2+)
-**Last Updated:** 2026-01-31 (All Phase 1 items completed: EP-001, CP-001a/b/c, LB-001, EC-001a/b/b2-1/b2-2/b2-3/b2-4, TF-001, CR-001, MC-001)
+**Last Updated:** 2026-01-31 (Phase 1 complete: All architectural compliance tests pass - 319 passed, 5 skipped, 0 failures)
 
 ---
 
@@ -260,6 +260,23 @@
     - `engine/lenses/edinburgh_finds/lens.yaml`: Added schema field
     - `engine/lenses/wine/lens.yaml`: Added schema field
 
+- [x] **EC-001b2-5: Fix Extraction Test Fixture (Phase 1 completion blocker)**
+  - **Principle:** Test Infrastructure Alignment (EC-001 follow-up)
+  - **Location:** `tests/engine/extraction/conftest.py:17`, `tests/engine/orchestration/test_integration.py:192`
+  - **Description:** Fixed mock_ctx fixture in extraction tests to include required lens_id and lens_hash parameters. Fixed test_category_search_uses_multiple_sources to include lens parameter in IngestRequest.
+  - **Completed:** 2026-01-31
+  - **Commit:** (pending)
+  - **Executable Proof:**
+    - `pytest tests/engine/extraction/ -v` ✅ 58/58 PASSED (was 9 errors)
+    - `pytest tests/engine/orchestration/ tests/engine/lenses/ tests/engine/extraction/ -q` ✅ 319 passed, 5 skipped, 0 failures
+    - Full architectural compliance test suite passes
+  - **Fix Applied:**
+    - Updated `tests/engine/extraction/conftest.py` mock_ctx fixture to include lens_id="test_lens" and lens_hash="test_hash"
+    - Updated `tests/engine/orchestration/test_integration.py:192` to include lens="edinburgh_finds" in IngestRequest
+  - **Files Modified:**
+    - tests/engine/extraction/conftest.py:17-25 (added lens_id and lens_hash)
+    - tests/engine/orchestration/test_integration.py:192 (added lens parameter)
+
 ---
 
 ## Phase 2: Pipeline Implementation
@@ -307,4 +324,11 @@ Every completed item MUST document executable proof:
 
 ---
 
-**Next Action:** MC-001 complete! Implemented all 7 required validation gates per architecture.md 6.7. All gates now enforced at lens load time with fail-fast behavior. Test status: Lens tests 53 passed, orchestration tests 208 passed. **PHASE 1 FOUNDATION COMPLETE** - All Level-1 (Critical) and Level-2 (Important) violations resolved. Ready to transition to Phase 2: Pipeline Implementation.
+**Phase 1 Completion Summary:**
+- All Level-1 (Critical) violations resolved: EP-001, CP-001a/b/c, LB-001
+- All Level-2 (Important) violations resolved: EC-001a/b/b2-1/b2-2/b2-3/b2-4/b2-5, TF-001, CR-001, MC-001
+- All 7 lens validation gates implemented (architecture.md 6.7)
+- Full architectural compliance achieved: 319 tests passed, 5 skipped, 0 failures
+- Foundation is solid and permanent
+
+**Next Action:** Begin Phase 2 - Audit architecture.md Section 4.1 (11 pipeline stages) to create detailed implementation catalog items.

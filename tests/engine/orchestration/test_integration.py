@@ -190,6 +190,7 @@ class TestRealWorldQueryScenarios:
         request = IngestRequest(
             ingestion_mode=IngestionMode.DISCOVER_MANY,
             query="padel courts in Edinburgh",
+            lens="edinburgh_finds",
         )
 
         selected = select_connectors(request)

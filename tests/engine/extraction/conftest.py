@@ -15,11 +15,13 @@ def mock_ctx():
     without requiring full lens contract setup.
     """
     return ExecutionContext(
+        lens_id="test_lens",
         lens_contract={
             "facets": {},
             "values": [],
             "mapping_rules": [],
             "modules": {},
             "module_triggers": []
-        }
+        },
+        lens_hash="test_hash"
     )
