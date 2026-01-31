@@ -83,15 +83,19 @@ class TestCLIUsesAsyncioRun:
                 with patch("engine.orchestration.cli.bootstrap_lens") as mock_bootstrap:
                     # Mock bootstrap to return minimal context
                     from engine.orchestration.execution_context import ExecutionContext
-                    mock_bootstrap.return_value = ExecutionContext(lens_contract={
-                        "mapping_rules": [],
-                        "module_triggers": [],
-                        "modules": {},
-                        "facets": {},
-                        "values": [],
-                        "confidence_threshold": 0.7,
-                        "lens_id": "edinburgh_finds",
-                    })
+                    mock_bootstrap.return_value = ExecutionContext(
+                        lens_id="edinburgh_finds",
+                        lens_contract={
+                            "mapping_rules": [],
+                            "module_triggers": [],
+                            "modules": {},
+                            "facets": {},
+                            "values": [],
+                            "confidence_threshold": 0.7,
+                            "lens_id": "edinburgh_finds",
+                        },
+                        lens_hash="test_hash"
+                    )
 
                     with patch("asyncio.run") as mock_asyncio_run:
                         # Set up mock to actually execute the coroutine

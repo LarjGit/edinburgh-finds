@@ -549,7 +549,11 @@ class TestLensLoadingBoundary:
         }
 
         # Create context with lens contract
-        ctx = ExecutionContext(lens_contract=lens_contract)
+        ctx = ExecutionContext(
+            lens_id="edinburgh_finds",
+            lens_contract=lens_contract,
+            lens_hash="test_hash"
+        )
 
         # Create request
         request = IngestRequest(
@@ -587,7 +591,11 @@ class TestLensLoadingBoundary:
             "lens_id": "test_lens",
         }
 
-        ctx = ExecutionContext(lens_contract=lens_contract)
+        ctx = ExecutionContext(
+            lens_id="test_lens",
+            lens_contract=lens_contract,
+            lens_hash="test_hash"
+        )
 
         request = IngestRequest(
             ingestion_mode=IngestionMode.DISCOVER_MANY,
