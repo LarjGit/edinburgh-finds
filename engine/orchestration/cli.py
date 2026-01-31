@@ -292,6 +292,12 @@ def main():
         default=None,
         help="Lens ID to use (default: from LENS_ID environment variable)",
     )
+    run_parser.add_argument(
+        "--allow-default-lens",
+        action="store_true",
+        default=False,
+        help="Allow fallback to default lens 'edinburgh_finds' for dev/test (default: False)",
+    )
 
     # Parse arguments
     args = parser.parse_args()
@@ -329,12 +335,23 @@ def main():
                     print(f"YAML parsing error: {e}")
                     sys.exit(1)
 
-        # If still not resolved, error (LR-002 will add fallback here)
+        # Level 4: Dev/Test fallback (LR-002)
+        # Per architecture.md 3.1: "Must be explicitly enabled with --allow-default-lens"
         if not lens_id:
-            print(colorize("ERROR: No lens specified", Colors.RED))
-            print("Provide lens via --lens argument or LENS_ID environment variable")
-            print("Example: python -m engine.orchestration.cli run --lens edinburgh_finds \"your query\"")
-            sys.exit(1)
+            if args.allow_default_lens:
+                # Use fallback lens with prominent warning
+                lens_id = "edinburgh_finds"
+                warning_msg = colorize(
+                    "WARNING: Using fallback lens 'edinburgh_finds' (dev/test only)",
+                    Colors.YELLOW
+                )
+                print(warning_msg, file=sys.stderr)
+            else:
+                # No fallback allowed - fail fast per Invariant 6
+                print(colorize("ERROR: No lens specified", Colors.RED))
+                print("Provide lens via --lens argument or LENS_ID environment variable")
+                print("Example: python -m engine.orchestration.cli run --lens edinburgh_finds \"your query\"")
+                sys.exit(1)
 
         try:
             # Bootstrap lens and create ExecutionContext

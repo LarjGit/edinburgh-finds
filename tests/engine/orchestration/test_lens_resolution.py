@@ -240,3 +240,149 @@ def test_invalid_yaml_in_config_fails_gracefully(monkeypatch, capsys):
                 captured = capsys.readouterr()
                 assert "config" in captured.out.lower() or "yaml" in captured.out.lower(), \
                     "Should mention config/YAML error"
+
+
+# LR-002: Dev/Test Fallback Tests
+
+
+def test_allow_default_lens_flag_enables_fallback(monkeypatch):
+    """
+    --allow-default-lens flag should enable fallback to edinburgh_finds.
+
+    Precedence: CLI > environment > config > fallback (with flag)
+    """
+    # Ensure environment variable is NOT set
+    monkeypatch.delenv("LENS_ID", raising=False)
+
+    # Simulate CLI args WITH --allow-default-lens flag
+    test_args = [
+        "cli.py", "run",
+        "--allow-default-lens",
+        "test query"
+    ]
+
+    with patch.object(sys, 'argv', test_args):
+        from engine.orchestration.cli import main
+
+        # Mock Path.exists() to return False (no config file)
+        with patch('engine.orchestration.cli.bootstrap_lens') as mock_bootstrap:
+            with patch('engine.orchestration.cli.asyncio.run'):
+                with patch.object(Path, 'exists', return_value=False):
+                    mock_bootstrap.return_value = MagicMock()
+
+                    try:
+                        main()
+                    except SystemExit:
+                        pass  # CLI exits successfully
+
+                    # Verify bootstrap was called with fallback lens
+                    mock_bootstrap.assert_called_once()
+                    call_args = mock_bootstrap.call_args[0]
+                    assert call_args[0] == "edinburgh_finds", "Fallback lens should be edinburgh_finds"
+
+
+def test_fallback_emits_warning_to_stderr(monkeypatch, capsys):
+    """
+    When fallback is used, should emit warning to stderr.
+
+    Warning message: "WARNING: Using fallback lens 'edinburgh_finds' (dev/test only)"
+    """
+    # Ensure environment variable is NOT set
+    monkeypatch.delenv("LENS_ID", raising=False)
+
+    # Simulate CLI args WITH --allow-default-lens flag
+    test_args = [
+        "cli.py", "run",
+        "--allow-default-lens",
+        "test query"
+    ]
+
+    with patch.object(sys, 'argv', test_args):
+        from engine.orchestration.cli import main
+
+        # Mock Path.exists() to return False (no config file)
+        with patch('engine.orchestration.cli.bootstrap_lens') as mock_bootstrap:
+            with patch('engine.orchestration.cli.asyncio.run'):
+                with patch.object(Path, 'exists', return_value=False):
+                    mock_bootstrap.return_value = MagicMock()
+
+                    try:
+                        main()
+                    except SystemExit:
+                        pass  # CLI exits successfully
+
+                    # Verify warning was emitted to stderr
+                    captured = capsys.readouterr()
+                    assert "WARNING" in captured.err, "Warning should be in stderr"
+                    assert "fallback" in captured.err.lower(), "Should mention fallback"
+                    assert "edinburgh_finds" in captured.err, "Should mention lens name"
+                    assert "dev/test" in captured.err.lower(), "Should mention dev/test context"
+
+
+def test_fallback_not_used_without_flag(monkeypatch, capsys):
+    """
+    Without --allow-default-lens flag, should error (not use fallback).
+
+    Preserves fail-fast validation per system-vision.md Invariant 6.
+    """
+    # Ensure environment variable is NOT set
+    monkeypatch.delenv("LENS_ID", raising=False)
+
+    # Simulate CLI args WITHOUT --allow-default-lens flag
+    test_args = [
+        "cli.py", "run",
+        "test query"
+    ]
+
+    with patch.object(sys, 'argv', test_args):
+        from engine.orchestration.cli import main
+
+        # Mock Path.exists() to return False (no config file)
+        with patch.object(Path, 'exists', return_value=False):
+            # Should exit with error, not use fallback
+            with pytest.raises(SystemExit) as exc_info:
+                main()
+
+            # Should exit with error code 1
+            assert exc_info.value.code == 1, "Should exit with error code"
+
+            # Should print clear error message (not fallback warning)
+            captured = capsys.readouterr()
+            assert "ERROR: No lens specified" in captured.out, "Should show error, not fallback"
+
+
+def test_fallback_respects_precedence(monkeypatch):
+    """
+    Fallback should only be used when CLI, environment, and config all unavailable.
+
+    If any higher precedence source provides lens_id, fallback should NOT be used.
+    """
+    # Ensure environment variable is NOT set
+    monkeypatch.delenv("LENS_ID", raising=False)
+
+    # Simulate CLI args WITH both --lens and --allow-default-lens
+    test_args = [
+        "cli.py", "run",
+        "--lens", "wine",
+        "--allow-default-lens",
+        "test query"
+    ]
+
+    with patch.object(sys, 'argv', test_args):
+        from engine.orchestration.cli import main
+
+        # Mock Path.exists() to return False (no config file)
+        with patch('engine.orchestration.cli.bootstrap_lens') as mock_bootstrap:
+            with patch('engine.orchestration.cli.asyncio.run'):
+                with patch.object(Path, 'exists', return_value=False):
+                    mock_bootstrap.return_value = MagicMock()
+
+                    try:
+                        main()
+                    except SystemExit:
+                        pass  # CLI exits successfully
+
+                    # Verify bootstrap was called with CLI value, not fallback
+                    mock_bootstrap.assert_called_once()
+                    call_args = mock_bootstrap.call_args[0]
+                    assert call_args[0] == "wine", "CLI override should beat fallback"
