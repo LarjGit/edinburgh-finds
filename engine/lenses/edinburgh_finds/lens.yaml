@@ -41,7 +41,11 @@ connector_rules:
     priority: high
     triggers:
       - type: any_keyword_match
-        keywords: [padel, tennis, squash, sports]
+        keywords: [
+          padel, tennis, squash, badminton, pickleball,
+          football, rugby, swimming,
+          sports, facilities, pools, clubs, centres, centers
+        ]
 
   google_places:
     priority: medium

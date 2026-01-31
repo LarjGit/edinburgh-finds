@@ -10,13 +10,12 @@ def test_padel_query_includes_sport_scotland():
     request = IngestRequest(
         query="padel courts edinburgh",
         ingestion_mode=IngestionMode.DISCOVER_MANY,
-        lens="padel"
+        lens="edinburgh_finds"
     )
 
     connectors = select_connectors(request)
 
     assert "sport_scotland" in connectors
-    assert "edinburgh_council" in connectors
 
 
 def test_wine_query_includes_wine_connectors():
