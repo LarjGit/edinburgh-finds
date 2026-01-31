@@ -281,8 +281,9 @@
 
 ## Phase 2: Pipeline Implementation
 
-**Status:** Stage 3 (Planning) audit complete - 4 gaps identified (3 gaps from Stage 2 remain)
+**Status:** Stage 5 (Raw Ingestion Persistence) audit complete - 2 gaps identified ✅
 **Validation Entity:** Powerleague Portobello Edinburgh (requires complete pipeline)
+**Progress:** Stages 1-5 audited (2 deferred gaps: PL-004, RI-001/RI-002), Stages 6-11 pending
 
 ### Stage 1: Input (architecture.md 4.1)
 
@@ -488,50 +489,263 @@
     - `engine/orchestration/planner.py`: Replaced sequential loop with phase-grouped execution (~40 lines)
     - `tests/engine/orchestration/test_planner.py`: Added TestPhaseBasedParallelExecution class (2 tests, ~140 lines)
 
-- [ ] **PL-004: Rate Limits Not Implemented**
+- [ ] **PL-004: Rate Limits Not Implemented** (In Progress - 1/3 micro-iterations complete)
   - **Principle:** Stage 4 (Connector Execution) requirement: "Enforce rate limits" (architecture.md 4.1)
-  - **Location:** `engine/orchestration/registry.py` (missing rate_limit field), `engine/orchestration/adapters.py` (no rate limiting logic)
-  - **Description:** Architecture.md 4.1 Stage 4 and connector metadata spec (architecture.md end notes) mention rate_limit enforcement, but CONNECTOR_REGISTRY doesn't define it and no rate limiting logic exists. External APIs often have rate limits (e.g., Google Places 1000 requests/day, Serper various tiers) that should be tracked and enforced to prevent quota exhaustion.
-  - **Current Behavior:** No rate limiting at all - connectors can be called unlimited times
-  - **Required Behavior:**
-    1. Add rate_limit field to ConnectorSpec (requests per time window, e.g., "1000/day")
-    2. Track connector usage across orchestration runs (requires persistence - OrchestrationRun or separate table)
-    3. Check rate limit before executing connector
-    4. Skip or delay connector if rate limit exceeded
-    5. Include rate limit status in orchestration report
-  - **Impact:** Low - Most connectors used infrequently in development, but could cause API quota exhaustion in production
-  - **Fix Scope:** ~100 lines (requires state persistence and usage tracking)
-  - **Note:** Likely Phase C work - not critical for initial pipeline validation
-  - **Files to Modify:**
-    - engine/orchestration/registry.py: Add rate_limit field to ConnectorSpec
-    - engine/orchestration/adapters.py: Add rate limit check before execute()
-    - Database schema: Add connector_usage tracking table or extend OrchestrationRun
+  - **Location:** `engine/orchestration/registry.py`, `engine/orchestration/adapters.py`, `web/prisma/schema.prisma`
+  - **Description:** Architecture.md 4.1 Stage 4 mentions rate_limit enforcement. External APIs have rate limits (Google Places 1000 req/day, Serper 2500 req/day free tier) that should be tracked and enforced to prevent quota exhaustion.
+  - **Implementation Strategy:** 3 micro-iterations (ultra-small, independent chunks)
+
+  - **Micro-Iteration 1: Add Rate Limit Metadata (COMPLETE ✅)**
+    - **Completed:** 2026-01-31
+    - **Commit:** d858dac
+    - **Executable Proof:**
+      - `pytest tests/engine/orchestration/test_registry.py::TestRateLimitMetadata -v` ✅ 4/4 PASSED
+      - `pytest tests/engine/orchestration/test_planner.py::TestRateLimitMetadataFlow -v` ✅ 2/2 PASSED
+      - `pytest tests/engine/orchestration/test_registry.py tests/engine/orchestration/test_planner.py tests/engine/orchestration/test_adapters.py -q` ✅ 100/100 PASSED
+    - **Changes:**
+      - Added `rate_limit_per_day: int` field to registry.ConnectorSpec (registry.py:47)
+      - Added rate limits to all 6 connectors in CONNECTOR_REGISTRY:
+        - serper: 2500/day, google_places: 1000/day, osm: 10000/day
+        - sport_scotland: 10000/day, edinburgh_council: 10000/day, open_charge_map: 10000/day
+      - Added `rate_limit_per_day: int` field to execution_plan.ConnectorSpec (execution_plan.py:73)
+      - Updated planner.py:125 to pass rate_limit_per_day from registry to execution plan
+      - Added 6 tests (TestRateLimitMetadata + TestRateLimitMetadataFlow)
+    - **Files Modified:** registry.py, execution_plan.py, planner.py, test_registry.py, test_planner.py (5 files, 87 lines)
+
+  - **Micro-Iteration 2: Add Connector Usage Tracking (PENDING)**
+    - **Status:** Not started
+    - **Scope:** Add ConnectorUsage model to Prisma schemas (web + engine)
+    - **Files to Modify:**
+      - web/prisma/schema.prisma: Add ConnectorUsage model
+      - engine/prisma/schema.prisma: Add ConnectorUsage model
+    - **Schema:**
+      ```prisma
+      model ConnectorUsage {
+        id             String   @id @default(cuid())
+        connector_name String
+        date           DateTime @db.Date
+        request_count  Int      @default(0)
+        createdAt      DateTime @default(now())
+        updatedAt      DateTime @updatedAt
+        @@unique([connector_name, date])
+        @@index([connector_name])
+        @@index([date])
+      }
+      ```
+    - **Expected Lines:** ~20 (schema only, then migration)
+
+  - **Micro-Iteration 3: Implement Rate Limit Enforcement (PENDING)**
+    - **Status:** Blocked by Micro-Iteration 2
+    - **Scope:** Add rate limit checking to adapters.py execute() method
+    - **Files to Modify:** engine/orchestration/adapters.py
+    - **Logic:**
+      1. Add `_check_rate_limit()` helper to ConnectorAdapter
+      2. Query ConnectorUsage for today's count
+      3. If at/over limit: skip connector, log to state.errors
+      4. If under limit: increment usage, execute connector
+      5. Add rate limit status to state.metrics
+    - **Expected Lines:** ~40 (logic + 3-4 tests)
 
 ---
-
 ### Stage 4: Connector Execution (architecture.md 4.1)
 
-**Status:** Audit pending
+**Status:** Audit complete - Substantially compliant, 1 deferred gap (PL-004)
 
 **Requirements:**
 - Execute connectors according to the plan
 - Enforce rate limits, timeouts, and budgets
 - Collect raw payloads and connector metadata
 
-(Audit pending)
+**Audit Findings (2026-01-31):**
+
+**✅ COMPLIANT:**
+
+**1. Execute connectors according to the plan**
+- ✅ ExecutionPlan infrastructure wired up (PL-001 complete)
+- ✅ Phase-based parallel execution implemented (PL-003 complete)
+- ✅ Connectors execute in phase order: DISCOVERY → STRUCTURED → ENRICHMENT (planner.py:254-288)
+- ✅ Within-phase parallelism via asyncio.gather() (planner.py:288)
+- ✅ Execution loop iterates over plan.connectors (planner.py:256-257)
+- ✅ ConnectorAdapter bridges async connectors to orchestration (adapters.py:62-547)
+- ✅ Deterministic phase ordering via sorted(phases.keys(), key=lambda p: p.value)
+
+**2a. Enforce timeouts**
+- ✅ Timeout enforcement implemented (PL-002 complete)
+- ✅ asyncio.wait_for() wraps connector.fetch() with timeout (adapters.py:132-134)
+- ✅ Timeout values flow: registry.timeout_seconds → execution_plan.ConnectorSpec → adapter (planner.py:124, adapters.py:134)
+- ✅ TimeoutError caught and handled gracefully (adapters.py:163-182)
+- ✅ Timeout errors recorded in state.errors and state.metrics with descriptive messages
+
+**2b. Enforce budgets**
+- ✅ Budget gating at planning stage: _apply_budget_gating() filters connectors by budget before execution (planner.py:133-171)
+- ✅ Budget tracking: state.metrics[connector]["cost_usd"] tracks per-connector costs (adapters.py:160)
+- ✅ Budget reporting: OrchestrationRun.budget_spent_usd persisted to database (planner.py:377, 385)
+- ✅ IngestRequest.budget_usd accepted as input parameter (types.py:88)
+- ✅ Budget-aware connector selection prioritizes high-trust connectors when budget is tight (planner.py:141)
+- ⚠️ **Note:** No runtime budget enforcement DURING execution (only at planning stage)
+  - This is acceptable: Budget gating prevents expensive connectors from being selected upfront
+  - All selected connectors execute to completion (no mid-execution early stopping)
+  - Total cost is deterministic based on selected connector set
+
+**2c. Enforce rate limits**
+- ❌ Not implemented (PL-004 - already documented as deferred "Phase C work")
+
+**3. Collect raw payloads and connector metadata**
+
+**3a. Raw Payloads** ✅ COMPLIANT
+- ✅ Raw payloads collected in candidate.raw field (adapters.py:348, 384, 455, 493, 537)
+- ✅ normalize_for_json() ensures JSON serialization of all connector responses (adapters.py:25-59)
+  - Handles datetime, Decimal, set, tuple, custom objects deterministically
+- ✅ Payloads persisted to RawIngestion table via PersistenceManager (persistence.py:111-127)
+- ✅ File-based storage: engine/data/raw/\<timestamp\>_\<hash\>.json (persistence.py:100-105)
+- ✅ Content hash computed for deduplication (SHA-256, first 16 chars) (persistence.py:100, 116)
+- ✅ RawIngestion metadata includes:
+  - source (connector name)
+  - source_url (extracted from raw item, connector-specific)
+	  - file_path (relative path to JSON file)
+  - status ("success" or error)
+  - hash (content hash for deduplication)
+  - metadata_json (ingestion_mode, candidate_name)
+  - orchestration_run_id (links to OrchestrationRun)
+
+**3b. Connector Metadata** ✅ COMPLIANT
+- ✅ Per-connector metrics tracked in state.metrics dict (adapters.py:154-161, 177-182, 197-202)
+- ✅ Metrics include:
+  - executed: bool (success/failure)
+  - items_received: int (results from connector)
+  - candidates_added: int (successfully mapped to canonical schema)
+  - mapping_failures: int (items that failed schema mapping)
+  - execution_time_ms: int (connector execution latency)
+  - cost_usd: float (actual cost from ConnectorSpec.estimated_cost_usd)
+  - error: str (error message on failure)
+- ✅ OrchestrationRun record tracks orchestration-level metadata (planner.py:216-222, 379-387):
+  - query, ingestion_mode, status
+  - candidates_found (total candidates before deduplication)
+  - accepted_entities (after deduplication)
+  - budget_spent_usd (sum of all connector costs)
+- ✅ RawIngestion records linked to OrchestrationRun via orchestration_run_id (persistence.py:125)
+- ✅ Full provenance chain: OrchestrationRun → RawIngestion → ExtractedEntity → Entity
+
+**❌ GAPS IDENTIFIED:**
+
+(None - PL-004 rate limiting already documented in catalog as deferred work)
 
 ---
 
 ### Stage 5: Raw Ingestion Persistence (architecture.md 4.1)
 
-**Status:** Audit pending
+**Status:** Audit complete - 2 implementation gaps identified
 
 **Requirements:**
 - Persist raw payload artifacts and metadata (source, timestamp, hash)
 - Perform ingestion-level deduplication of identical payloads
 - Raw artifacts become immutable inputs for downstream stages
 
-(Audit pending)
+**Additional Requirements (Ingestion Boundary - architecture.md 4.2):**
+- Raw artifacts must be persisted before any extraction begins
+- Downstream stages must never mutate raw artifacts
+- Artifact identity is stable across replays
+
+**Audit Findings (2026-01-31):**
+
+**✅ COMPLIANT:**
+
+**1. Persist raw payload artifacts and metadata**
+- ✅ File-based storage: `engine/data/raw/<source>/<timestamp>_<hash>.json` (persistence.py:94-105)
+- ✅ Directory structure created per source (persistence.py:94)
+- ✅ Raw JSON written to disk (persistence.py:105)
+- ✅ RawIngestion database record created with metadata (persistence.py:111-127):
+  - source (connector name)
+  - source_url (extracted from raw item, connector-specific)
+  - file_path (relative path to JSON file)
+  - status ("success" or error)
+  - hash (content hash for deduplication)
+  - metadata_json (ingestion_mode, candidate_name)
+  - orchestration_run_id (links to OrchestrationRun)
+  - ingested_at (timestamp, auto-set by database)
+- ✅ Database schema has indexes for efficient queries (schema.prisma:203-209)
+
+**2. Content hash computation**
+- ✅ SHA-256 hash computed from JSON string representation (persistence.py:100)
+- ✅ Hash truncated to first 16 characters for storage
+- ✅ Deterministic: same content → same hash
+- ✅ Hash stored in RawIngestion.hash field for deduplication queries
+
+**3. Raw artifacts persisted before extraction**
+- ✅ Sequencing enforced in persist_entities() method:
+  1. Save raw payload to disk (persistence.py:88-105)
+  2. Create RawIngestion record (persistence.py:111-127)
+  3. Only then: extract entity (persistence.py:130-138)
+  4. Link ExtractedEntity to RawIngestion via raw_ingestion_id (persistence.py:154)
+- ✅ Ingestion Boundary contract satisfied
+
+**4. Immutability of raw artifacts**
+- ✅ File-based storage: write once at persistence.py:105, never modified
+- ✅ RawIngestion database record: created once, never updated in codebase
+- ✅ No mutation logic visible in persistence.py or related files
+- ✅ ExtractedEntity references RawIngestion but doesn't modify it
+
+**5. Deduplication infrastructure exists**
+- ✅ Dedicated module: engine/ingestion/deduplication.py
+- ✅ Functions: compute_content_hash(), check_duplicate()
+- ✅ Database support: RawIngestion.hash field with index (schema.prisma:205)
+- ✅ Standalone ingestion connectors use deduplication (serper.py:244-266)
+
+**❌ GAPS IDENTIFIED:**
+
+- [ ] **RI-001: Ingestion-Level Deduplication Not Enforced in Orchestration Path**
+  - **Principle:** Stage 5 requirement: "Perform ingestion-level deduplication of identical payloads" (architecture.md 4.1)
+  - **Location:** `engine/orchestration/persistence.py:59-205` (persist_entities method)
+  - **Description:** Architecture requires deduplication of identical raw payloads before creating RawIngestion records. Deduplication infrastructure exists (engine/ingestion/deduplication.py with compute_content_hash() and check_duplicate() functions), and standalone ingestion connectors use it (serper.py:266 calls check_duplicate). However, orchestration persistence path does NOT check for duplicates before creating RawIngestion records. Same raw payload ingested multiple times creates duplicate RawIngestion records with same hash but different IDs and timestamps.
+  - **Current Behavior:**
+    - persistence.py:100 computes content hash
+    - persistence.py:127 creates RawIngestion record WITHOUT checking if hash already exists
+    - No import from engine.ingestion.deduplication
+    - No call to check_duplicate() before database insert
+  - **Required Behavior:**
+    1. Import check_duplicate from engine.ingestion.deduplication
+    2. After computing content_hash (line 100), call check_duplicate(db, content_hash)
+    3. If duplicate exists: skip RawIngestion creation, return existing raw_ingestion.id
+    4. If not duplicate: create RawIngestion record as normal
+    5. Continue with extraction using existing or new raw_ingestion_id
+  - **Impact:** Medium - Wastes storage with duplicate raw payloads, creates redundant RawIngestion records, but doesn't break correctness (entity-level deduplication still works)
+  - **Files to Modify:**
+    - engine/orchestration/persistence.py: Add deduplication check in persist_entities()
+  - **Test Verification:**
+    - Test ingesting same candidate twice, verify only one RawIngestion created
+    - Test hash collision handling (same hash from different sources)
+
+- [ ] **RI-002: Artifact Identity Not Stable Across Replays**
+  - **Principle:** Ingestion Boundary requirement: "Artifact identity is stable across replays" (architecture.md 4.2)
+  - **Location:** `engine/orchestration/persistence.py:98-102` (filename generation)
+  - **Description:** Architecture requires deterministic artifact identity for reproducibility. Current implementation includes timestamp in filename: `{timestamp}_{hash}.json` (line 101). Same raw payload ingested at different times produces different filenames and different file_path values in RawIngestion records, violating replay stability requirement. For true replay stability, filename should be deterministic based solely on content hash.
+  - **Current Behavior:**
+    - Line 98: `timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")`
+    - Line 101: `file_name = f"{timestamp}_{content_hash}.json"`
+    - Same content at T1 → `20260131_120000_abc123.json`
+    - Same content at T2 → `20260131_130000_abc123.json`
+    - Different file_path stored in RawIngestion
+  - **Required Behavior:**
+    - **Option A (Pure Hash):** Use hash-only filename: `{hash}.json`
+      - Pros: Perfect determinism, simple
+      - Cons: Loses chronological ordering in filesystem
+    - **Option B (Deduplication Check):** Keep timestamp filename but check for existing file before creating new one
+      - If hash exists in RawIngestion: reuse existing file_path
+      - If new hash: create new timestamped file
+      - Pros: Preserves chronological filesystem layout, deduplication ensures stability
+      - Cons: Requires deduplication (RI-001) to work correctly
+  - **Recommended Approach:** Option B (pairs naturally with RI-001 fix)
+    1. Implement RI-001 deduplication first
+    2. When duplicate detected, reuse existing RawIngestion.file_path
+    3. Timestamp filename OK because deduplication prevents creating new files for same content
+  - **Impact:** Low - Primarily affects reproducibility and debugging (different file paths for same content), doesn't break functionality
+  - **Files to Modify:**
+    - engine/orchestration/persistence.py: Modify filename generation logic (coupled with RI-001 fix)
+  - **Test Verification:**
+    - Test ingesting same candidate at different times, verify same file_path returned
+    - Test replay: same query → same RawIngestion file_path references
+
+**Note:** RI-002 fix should be implemented AFTER RI-001, as the deduplication mechanism naturally solves the replay stability issue.
 
 ---
 
@@ -646,6 +860,54 @@ This catalog was created by systematically auditing system-vision.md Invariants 
   - Verified Planning Boundary compliance: no network calls, extraction, or persistence in select_connectors()
   - Result: 4 implementation gaps (PL-001, PL-002, PL-003, PL-004)
 
+- **Stage 4 Audit (2026-01-31):** Connector Execution
+  - Read architecture.md 4.1 Stage 4 requirements (execute plan, enforce limits, collect metadata)
+  - Verified ExecutionPlan usage in orchestrate() (PL-001 already complete)
+  - Verified phase-based parallel execution (PL-003 already complete)
+  - Analyzed adapters.py ConnectorAdapter.execute() method (lines 96-203):
+    - Verified timeout enforcement via asyncio.wait_for() (PL-002 complete)
+    - Verified raw payload collection in candidate.raw field
+    - Verified connector metadata tracking in state.metrics
+  - Analyzed budget enforcement:
+    - Verified budget gating at planning stage: planner.py:133-171 (_apply_budget_gating)
+    - Verified budget tracking: adapters.py:160 (cost_usd in metrics)
+    - Verified budget reporting: planner.py:377, 385 (OrchestrationRun.budget_spent_usd)
+  - Analyzed raw payload persistence:
+    - Read persistence.py:100-127 (RawIngestion creation with file storage)
+    - Verified normalize_for_json() handles all connector response types (adapters.py:25-59)
+    - Verified content hash computation for deduplication (persistence.py:100)
+  - Analyzed connector metadata collection:
+    - Verified state.metrics structure (adapters.py:154-161, 177-182, 197-202)
+    - Verified OrchestrationRun metadata (planner.py:216-222, 379-387)
+    - Verified RawIngestion linking via orchestration_run_id (persistence.py:125)
+  - Verified provenance chain: OrchestrationRun → RawIngestion → ExtractedEntity → Entity
+  - Result: Substantially compliant, no new gaps (PL-004 rate limiting already documented as deferred)
+
+- **Stage 5 Audit (2026-01-31):** Raw Ingestion Persistence
+  - Read architecture.md 4.1 Stage 5 requirements (persist artifacts, deduplication, immutability)
+  - Read architecture.md 4.2 Ingestion Boundary (artifacts before extraction, no mutation, stable identity)
+  - Analyzed persistence.py persist_entities() method (lines 59-205):
+    - Verified file-based storage: engine/data/raw/<source>/{timestamp}_{hash}.json (lines 94-105)
+    - Verified RawIngestion record creation with metadata (lines 111-127)
+    - Verified content hash computation: SHA-256 of JSON string (line 100)
+    - Verified sequencing: raw artifact → RawIngestion → extract_entity (lines 88-138)
+  - Analyzed RawIngestion schema (schema.prisma:188-210):
+    - Fields: id, source, source_url, file_path, status, hash, metadata_json, orchestration_run_id, ingested_at
+    - Indexes on: source, status, hash, ingested_at, orchestration_run_id
+  - Searched for deduplication logic:
+    - Found deduplication module: engine/ingestion/deduplication.py (compute_content_hash, check_duplicate)
+    - Verified standalone connectors use deduplication (serper.py:244-266)
+    - Confirmed orchestration path does NOT use deduplication (no import in persistence.py)
+  - Verified immutability:
+    - File write-once at persistence.py:105
+    - No RawIngestion update logic in codebase
+    - ExtractedEntity references RawIngestion via raw_ingestion_id, no mutations
+  - Analyzed replay stability:
+    - Filename includes timestamp: {timestamp}_{hash}.json (line 101)
+    - Same content at different times → different filenames → different file_path
+    - Violates "Artifact identity is stable across replays" requirement
+  - Result: 2 implementation gaps identified (RI-001: deduplication not enforced, RI-002: replay instability)
+
 ### Progress Rules
 - Items worked in order (top to bottom within each level)
 - Discovered violations added to appropriate section immediately
@@ -673,6 +935,8 @@ Every completed item MUST document executable proof:
 - Foundation is solid and permanent
 
 **Next Action:**
-- **Stage 2 Audit Complete:** 3 implementation gaps identified (LR-001, LR-002, LR-003)
-- **Stage 3 Audit Complete:** 4 implementation gaps identified (PL-001, PL-002, PL-003, PL-004)
-- **Stage 4 Audit Pending:** Continue pipeline audit with Stage 4 (Connector Execution) next
+- **Stage 2 Audit Complete:** 3 implementation gaps identified (LR-001, LR-002, LR-003) — all resolved ✅
+- **Stage 3 Audit Complete:** 4 implementation gaps identified (PL-001, PL-002, PL-003, PL-004) — 3 resolved ✅, 1 deferred (PL-004)
+- **Stage 4 Audit Complete:** Substantially compliant, no new gaps identified ✅
+- **Stage 5 Audit Complete:** 2 implementation gaps identified (RI-001, RI-002) ✅
+- **Stage 6 Audit Pending:** Continue pipeline audit with Stage 6 (Source Extraction) next
