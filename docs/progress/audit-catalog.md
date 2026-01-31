@@ -2,7 +2,7 @@
 
 **Current Phase:** Foundation (Phase 1)
 **Validation Entity:** Powerleague Portobello Edinburgh (when in Phase 2+)
-**Last Updated:** 2026-01-31 (EP-001, CP-001a/b/c, LB-001, EC-001a/b, EC-001b2-1, EC-001b2-2 Part 1, EC-001b2-3, EC-001b2-4 completed)
+**Last Updated:** 2026-01-31 (EP-001, CP-001a/b/c, LB-001, EC-001a/b, EC-001b2-1, EC-001b2-2 Part 1, EC-001b2-3, EC-001b2-4, TF-001 completed)
 
 ---
 
@@ -201,14 +201,17 @@
     - tests/engine/orchestration/test_persistence.py:164
     - tests/engine/orchestration/test_planner.py:552, 590
 
-- [ ] **TF-001: Handle Wine Lens Test Dependencies**
-  - **Principle:** Test Infrastructure Completeness
-  - **Location:** `engine/lenses/wine/` (missing) and 2 test files
-  - **Description:** Tests reference wine lens but wine lens YAML doesn't exist. Two options: (1) Create minimal wine lens fixture for testing, OR (2) Mark tests with @pytest.mark.skip until wine lens implemented.
-  - **Estimated Scope:** Either create 1 minimal lens.yaml file OR add skip decorators to 2 tests
-  - **Affected Tests:**
-    - tests/engine/orchestration/test_planner_refactor.py::test_wine_query_includes_wine_connectors
-    - tests/engine/orchestration/test_query_features_refactor.py::test_query_features_uses_wine_lens
+- [x] **TF-001: Handle Wine Lens Test Dependencies**
+  - **Principle:** Test Infrastructure Completeness + Engine Purity (validates new vertical = new YAML only)
+  - **Location:** `engine/lenses/wine/lens.yaml` (created)
+  - **Description:** Created minimal wine lens fixture for testing multi-vertical capability. Wine lens YAML validates architectural principle: adding new vertical (Wine) requires ZERO engine code changes, only lens configuration.
+  - **Completed:** 2026-01-31
+  - **Executable Proof:**
+    - `pytest tests/engine/orchestration/test_planner_refactor.py::test_wine_query_includes_wine_connectors -v` ✅ PASSED
+    - `pytest tests/engine/orchestration/test_query_features_refactor.py::test_query_features_uses_wine_lens -v` ✅ PASSED
+    - `pytest tests/engine/orchestration/ -q` ✅ 3 failed, 205 passed, 3 skipped (down from 5 failed)
+    - 2 wine lens tests now passing, test failures reduced from 5 to 3
+  - **Fix Applied:** Created `engine/lenses/wine/lens.yaml` (130 lines) with minimal wine-specific vocabulary (wineries, vineyards), connector rules (wine_searcher), facets, values, mapping rules, and module definitions. Structure mirrors edinburgh_finds lens but with wine domain knowledge. Zero engine code changes required.
 
 - [ ] **CR-001: Investigate sport_scotland Connector Routing**
   - **Principle:** Connector Selection Logic (architecture.md 4.1 Stage 3)
@@ -275,4 +278,4 @@ Every completed item MUST document executable proof:
 
 ---
 
-**Next Action:** EC-001b2-4 complete! 4 ExecutionContext test fixtures fixed, failures reduced from 9 to 5. Remaining 5 failures are from TF-001 (Wine/Padel lens missing - 3 tests) and CR-001 (sport_scotland routing - 2 tests). Next items: TF-001 (Handle lens test dependencies), CR-001 (Investigate sport_scotland routing), or MC-001 (Missing Lens Validation Gates).
+**Next Action:** TF-001 complete! Created wine lens fixture (engine/lenses/wine/lens.yaml), test failures reduced from 5 to 3. Validates architectural principle: new vertical = YAML only, zero engine code changes. Remaining 3 failures: CR-001 (sport_scotland/padel lens routing). Next item: CR-001 (Investigate sport_scotland connector routing) or MC-001 (Missing Lens Validation Gates).

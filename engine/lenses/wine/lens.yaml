@@ -1,0 +1,136 @@
+# Wine Lens Configuration
+# Minimal fixture for testing multi-vertical lens capability
+
+# Query vocabulary for orchestration
+vocabulary:
+  activity_keywords:
+    - wine
+    - winery
+    - vineyard
+    - wine tasting
+    - wine tour
+    - sommelier
+
+  location_indicators:
+    - scotland
+    - highlands
+    - speyside
+    - islay
+    - borders
+    - edinburgh
+    - in
+    - near
+    - around
+
+  facility_keywords:
+    - winery
+    - vineyard
+    - distillery
+    - wine bar
+    - wine shop
+    - tasting room
+
+# Connector selection rules for query orchestration
+connector_rules:
+  wine_searcher:
+    priority: high
+    triggers:
+      - type: any_keyword_match
+        keywords: [wine, winery, vineyard]
+
+  edinburgh_council:
+    priority: medium
+    triggers:
+      - type: location_present
+      - type: facility_search
+
+  google_places:
+    priority: medium
+    triggers:
+      - type: location_present
+      - type: facility_search
+
+  serper:
+    priority: medium
+    triggers:
+      - type: always
+
+# Facets define how dimensions are interpreted and displayed
+facets:
+  activity:
+    dimension_source: canonical_activities
+    ui_label: "Wine Activities"
+    display_mode: tags
+    order: 1
+    show_in_filters: true
+    show_in_navigation: true
+    icon: "wine"
+
+  place_type:
+    dimension_source: canonical_place_types
+    ui_label: "Venue Type"
+    display_mode: badge
+    order: 2
+    show_in_filters: true
+    show_in_navigation: false
+    icon: "building"
+
+# Canonical values registry
+values:
+  - key: wine_tasting
+    facet: activity
+    display_name: "Wine Tasting"
+    description: "Wine tasting experiences and tours"
+    seo_slug: "wine-tasting"
+    search_keywords: ["wine tasting", "wine tour", "vineyard tour"]
+    icon_url: "/icons/wine.svg"
+    color: "#7C3AED"
+
+  - key: winery
+    facet: place_type
+    display_name: "Winery"
+    description: "Wine production facility or vineyard"
+    seo_slug: "winery"
+    search_keywords: ["winery", "vineyard", "wine estate"]
+    icon_url: "/icons/winery.svg"
+    color: "#7C3AED"
+
+# Mapping rules (raw data → canonical values)
+mapping_rules:
+  - id: map_wine_from_name
+    pattern: "(?i)wine|winery|vineyard"
+    canonical: "wine_tasting"
+    confidence: 0.95
+
+  - id: map_winery_type
+    pattern: "(?i)winery|vineyard|wine estate"
+    canonical: "winery"
+    confidence: 0.85
+
+# Module triggers (when to attach domain modules)
+module_triggers:
+  - when:
+      facet: activity
+      value: wine_tasting
+    add_modules: [wine_venue]
+    conditions:
+      - entity_class: place
+
+# Module definitions
+modules:
+  wine_venue:
+    description: "Wine venue with tasting facilities"
+    field_rules:
+      - rule_id: extract_wine_varieties
+        target_path: wine_varieties
+        extractor: regex_capture
+        pattern: "(?i)(chardonnay|merlot|cabernet|pinot)"
+        source_fields: [description, entity_name]
+        confidence: 0.80
+        applicability:
+          source: [serper, google_places, wine_searcher]
+          entity_class: [place]
+        normalizers: [lowercase]
+
+# Confidence threshold for mapping
+confidence_threshold: 0.7
