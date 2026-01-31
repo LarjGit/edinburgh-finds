@@ -2,7 +2,7 @@
 
 **Current Phase:** Foundation (Phase 1)
 **Validation Entity:** Powerleague Portobello Edinburgh (when in Phase 2+)
-**Last Updated:** 2026-01-31 (EP-001, CP-001a/b/c, LB-001, EC-001a/b, EC-001b2-1 completed)
+**Last Updated:** 2026-01-31 (EP-001, CP-001a/b/c, LB-001, EC-001a/b, EC-001b2-1, EC-001b2-2 Part 1 completed)
 
 ---
 
@@ -147,19 +147,33 @@
     - `grep "context = ExecutionContext()" tests/engine/orchestration/test_deduplication.py` → no matches (old pattern removed)
   - **Fix Applied:** Updated 84 lines (42 insertions, 42 deletions). Changed import from ExecutionContext to OrchestratorState. All deduplication tests now use mutable OrchestratorState instead of attempting to mutate immutable ExecutionContext.
 
-- [ ] **EC-001b2-2: Update Remaining Test Fixtures (Part 2 of EC-001b2)**
+- [x] **EC-001b2-2: Update Remaining Test Fixtures - Part 1 (test_execution_context.py)**
   - **Principle:** Test Infrastructure Alignment (EC-001b follow-up)
+  - **Location:** `tests/engine/orchestration/test_execution_context.py`
+  - **Description:** Deleted test_execution_context.py (169 lines, 12 tests) which tested obsolete mutable ExecutionContext interface. All mutable state tests belong in OrchestratorState, and lens_contract immutability is already tested in test_execution_context_contract.py.
+  - **Completed:** 2026-01-31
+  - **Commit:** 4b0b8e6
+  - **Executable Proof:**
+    - `pytest tests/engine/orchestration/ -q` ✅ 199 passed, 9 failed (down from 21 failed)
+    - Eliminated 12 failures from deleted obsolete tests
+    - `ls tests/engine/orchestration/test_execution_context.py` → file not found (deleted)
+    - No regressions: all previously passing tests still pass
+  - **Fix Applied:** Deleted entire file. Tests for mutable state (candidates, metrics, errors) are obsolete because ExecutionContext is now frozen dataclass per architecture.md 3.6. Lens contract immutability already covered by test_execution_context_contract.py.
+  - **Note:** Remaining 9 test failures are NOT fixture-related. Investigation shows they are lens-related failures (sport_scotland, wine lens), not ExecutionContext/OrchestratorState issues. These belong in a separate catalog item.
+
+- [ ] **EC-001b2-3: Investigate Remaining 9 Test Failures (lens-related)**
+  - **Principle:** Test Infrastructure Alignment (follow-up investigation)
   - **Location:** Multiple test files in `tests/engine/orchestration/`
-  - **Description:** Update remaining ~23 test failures across other test files to use new ExecutionContext (immutable) and OrchestratorState (mutable) architecture.
-  - **Evidence:** 23 remaining test failures due to old fixture patterns (not functional regressions)
-  - **Estimated Scope:** ~14 test files, mechanical fixture updates
-  - **Fix Strategy:**
-    1. test_execution_context.py (12 failures): Migrate mutable state tests to test_orchestrator_state.py
-    2. Integration tests (11 failures): Update fixtures to create both ctx and state
-    3. Use conftest.py fixtures (mock_context, mock_state) in all tests
-  - **Test Categories:**
-    - Execution context tests (12 failures): Remove or update tests for old interface
-    - Integration tests (11 failures): Update fixtures to create both ctx and state
+  - **Description:** 9 remaining test failures after EC-001b2-2 Part 1. Initial investigation shows these are lens-related (sport_scotland connector, wine lens) rather than ExecutionContext/OrchestratorState fixture issues.
+  - **Evidence:** Test failures in:
+    - test_async_refactor.py (1 failure)
+    - test_integration.py (1 failure: sport_scotland)
+    - test_persistence.py (1 failure: CLI persist flag)
+    - test_planner.py (3 failures: 1 sport_scotland, 2 lens loading)
+    - test_planner_refactor.py (2 failures: sport_scotland, wine lens)
+    - test_query_features_refactor.py (1 failure: wine lens)
+  - **Estimated Scope:** Investigation required to determine root cause
+  - **Fix Strategy:** TBD after investigation
 
 - [ ] **MC-001: Missing Lens Validation Gates**
   - **Principle:** Lens Validation Gates (architecture.md 6.7)
@@ -216,4 +230,4 @@ Every completed item MUST document executable proof:
 
 ---
 
-**Next Action:** EC-001b2-1 complete! Select EC-001b2-2 (Remaining Test Fixtures) OR MC-001 (Missing Lens Validation Gates) per development-methodology.md Section 8.
+**Next Action:** EC-001b2-2 Part 1 complete! Select EC-001b2-3 (Investigate 9 lens-related test failures) OR MC-001 (Missing Lens Validation Gates) per development-methodology.md Section 8.
