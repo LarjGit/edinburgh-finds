@@ -10,7 +10,9 @@ Validates the CLI entry point and report formatting:
 import pytest
 from io import StringIO
 from unittest.mock import patch
-from engine.orchestration.cli import main, format_report
+from pathlib import Path
+from engine.orchestration.cli import main, format_report, bootstrap_lens
+from engine.lenses.loader import LensConfigError
 
 
 class TestFormatReport:
@@ -212,8 +214,8 @@ class TestCLIMain:
 
     def test_main_run_command_with_query(self):
         """main() run command should accept query argument."""
-        # Mock orchestrate as async function
-        async def mock_async_orchestrate(request):
+        # Mock orchestrate as async function (with ctx parameter)
+        async def mock_async_orchestrate(request, *, ctx=None):
             return {
                 "query": request.query,
                 "candidates_found": 15,
@@ -222,20 +224,33 @@ class TestCLIMain:
                 "errors": [],
             }
 
-        with patch("sys.argv", ["cli.py", "run", "tennis courts Edinburgh"]):
+        with patch("sys.argv", ["cli.py", "run", "--lens", "edinburgh_finds", "tennis courts Edinburgh"]):
             with patch("engine.orchestration.cli.orchestrate", side_effect=mock_async_orchestrate):
-                # Should not raise
-                try:
-                    main()
-                except SystemExit as e:
-                    # Exit code 0 is success
-                    assert e.code == 0, "main() should exit successfully"
+                with patch("engine.orchestration.cli.bootstrap_lens") as mock_bootstrap:
+                    # Mock bootstrap to return minimal context
+                    from engine.orchestration.execution_context import ExecutionContext
+                    mock_bootstrap.return_value = ExecutionContext(lens_contract={
+                        "mapping_rules": [],
+                        "module_triggers": [],
+                        "modules": {},
+                        "facets": {},
+                        "values": [],
+                        "confidence_threshold": 0.7,
+                        "lens_id": "edinburgh_finds",
+                    })
+
+                    # Should not raise
+                    try:
+                        main()
+                    except SystemExit as e:
+                        # Exit code 0 is success
+                        assert e.code == 0, "main() should exit successfully"
 
     @patch("sys.stdout", new_callable=StringIO)
     def test_main_prints_formatted_report(self, mock_stdout):
         """main() should print formatted report to stdout."""
-        # Mock orchestrate as async function
-        async def mock_async_orchestrate(request):
+        # Mock orchestrate as async function (with ctx parameter)
+        async def mock_async_orchestrate(request, *, ctx=None):
             return {
                 "query": request.query,
                 "candidates_found": 15,
@@ -244,16 +259,29 @@ class TestCLIMain:
                 "errors": [],
             }
 
-        with patch("sys.argv", ["cli.py", "run", "tennis courts Edinburgh"]):
+        with patch("sys.argv", ["cli.py", "run", "--lens", "edinburgh_finds", "tennis courts Edinburgh"]):
             with patch("engine.orchestration.cli.orchestrate", side_effect=mock_async_orchestrate):
-                try:
-                    main()
-                except SystemExit:
-                    pass
+                with patch("engine.orchestration.cli.bootstrap_lens") as mock_bootstrap:
+                    # Mock bootstrap to return minimal context
+                    from engine.orchestration.execution_context import ExecutionContext
+                    mock_bootstrap.return_value = ExecutionContext(lens_contract={
+                        "mapping_rules": [],
+                        "module_triggers": [],
+                        "modules": {},
+                        "facets": {},
+                        "values": [],
+                        "confidence_threshold": 0.7,
+                        "lens_id": "edinburgh_finds",
+                    })
 
-                output = mock_stdout.getvalue()
-                assert len(output) > 0, "main() should print output"
-                assert "tennis courts Edinburgh" in output, "output should include query"
+                    try:
+                        main()
+                    except SystemExit:
+                        pass
+
+                    output = mock_stdout.getvalue()
+                    assert len(output) > 0, "main() should print output"
+                    assert "tennis courts Edinburgh" in output, "output should include query"
 
 
 class TestCLIIntegration:
@@ -270,3 +298,93 @@ class TestCLIIntegration:
             except SystemExit as e:
                 # Should exit successfully (code 0)
                 assert e.code == 0, "CLI should complete successfully"
+
+
+class TestBootstrapLens:
+    """Test lens bootstrap function (LB-001 compliance)."""
+
+    def test_bootstrap_lens_returns_execution_context(self):
+        """
+        bootstrap_lens() should return ExecutionContext with lens contract.
+
+        Per architecture.md 3.2: Bootstrap loads lens once and creates context.
+        """
+        from engine.orchestration.execution_context import ExecutionContext
+
+        # Bootstrap lens (assuming edinburgh_finds exists)
+        ctx = bootstrap_lens("edinburgh_finds")
+
+        # Should return ExecutionContext
+        assert isinstance(ctx, ExecutionContext), "bootstrap_lens should return ExecutionContext"
+
+        # Should have lens_contract
+        assert hasattr(ctx, "lens_contract"), "ExecutionContext should have lens_contract"
+        assert ctx.lens_contract is not None, "lens_contract should not be None"
+
+    def test_bootstrap_lens_contract_contains_required_fields(self):
+        """
+        Lens contract should contain all required fields per architecture.md.
+
+        Required fields: mapping_rules, module_triggers, modules, facets,
+        values, confidence_threshold, lens_id.
+        """
+        ctx = bootstrap_lens("edinburgh_finds")
+
+        # Verify all required fields present
+        required_fields = [
+            "mapping_rules",
+            "module_triggers",
+            "modules",
+            "facets",
+            "values",
+            "confidence_threshold",
+            "lens_id",
+        ]
+
+        for field in required_fields:
+            assert field in ctx.lens_contract, f"lens_contract should contain {field}"
+
+        # Verify lens_id matches
+        assert ctx.lens_contract["lens_id"] == "edinburgh_finds"
+
+    def test_bootstrap_lens_fails_fast_on_invalid_lens(self):
+        """
+        bootstrap_lens() should fail fast on invalid lens (LensConfigError).
+
+        Per architecture.md 3.2: "Fail fast on invalid lens."
+        """
+        with pytest.raises((LensConfigError, FileNotFoundError)):
+            bootstrap_lens("nonexistent_lens")
+
+    def test_bootstrap_lens_contract_is_immutable(self):
+        """
+        Lens contract should be immutable (MappingProxyType).
+
+        Per architecture.md 3.6: ExecutionContext wraps lens_contract in
+        MappingProxyType for immutability.
+        """
+        from types import MappingProxyType
+
+        ctx = bootstrap_lens("edinburgh_finds")
+
+        # lens_contract should be wrapped in MappingProxyType
+        assert isinstance(ctx.lens_contract, MappingProxyType), \
+            "lens_contract should be MappingProxyType for immutability"
+
+        # Attempting to mutate should raise TypeError
+        with pytest.raises(TypeError):
+            ctx.lens_contract["lens_id"] = "modified"
+
+    def test_bootstrap_lens_loads_from_correct_path(self):
+        """
+        bootstrap_lens() should load from engine/lenses/<lens_id>/lens.yaml.
+        """
+        # Bootstrap should succeed if file exists
+        ctx = bootstrap_lens("edinburgh_finds")
+
+        # Verify lens_id in contract matches
+        assert ctx.lens_contract["lens_id"] == "edinburgh_finds"
+
+        # Verify lens file exists at expected path
+        expected_path = Path(__file__).parent.parent.parent.parent / "engine" / "lenses" / "edinburgh_finds" / "lens.yaml"
+        assert expected_path.exists(), f"Lens file should exist at {expected_path}"

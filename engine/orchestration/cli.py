@@ -23,6 +23,56 @@ load_dotenv(Path(__file__).parent.parent.parent / ".env")
 
 from engine.orchestration.planner import orchestrate
 from engine.orchestration.types import IngestRequest, IngestionMode
+from engine.orchestration.execution_context import ExecutionContext
+from engine.lenses.loader import VerticalLens, LensConfigError
+
+import os
+
+
+def bootstrap_lens(lens_id: str) -> ExecutionContext:
+    """
+    Bootstrap: Load and validate lens configuration ONCE at CLI entry point.
+
+    Per architecture.md 3.2: "Lens loading occurs only during engine bootstrap."
+    This function enforces the bootstrap boundary by loading the lens exactly
+    once and creating an ExecutionContext for runtime use.
+
+    Args:
+        lens_id: The lens identifier (e.g., "edinburgh_finds")
+
+    Returns:
+        ExecutionContext with validated lens contract
+
+    Raises:
+        LensConfigError: If lens validation fails (fail-fast per architecture)
+        FileNotFoundError: If lens file doesn't exist
+    """
+    # Load lens from disk
+    lens_path = Path(__file__).parent.parent / "lenses" / lens_id / "lens.yaml"
+
+    if not lens_path.exists():
+        raise FileNotFoundError(
+            f"Lens file not found: {lens_path}\n"
+            f"Available lenses should be in: engine/lenses/<lens_id>/lens.yaml"
+        )
+
+    # Load and validate lens (fail-fast on validation errors)
+    vertical_lens = VerticalLens(lens_path)
+
+    # Extract compiled, immutable lens contract (plain dict)
+    # Shallow copy for defensive programming
+    lens_contract = {
+        "mapping_rules": list(vertical_lens.mapping_rules),
+        "module_triggers": list(vertical_lens.module_triggers),
+        "modules": dict(vertical_lens.domain_modules),
+        "facets": dict(vertical_lens.facets),
+        "values": list(vertical_lens.values),
+        "confidence_threshold": vertical_lens.confidence_threshold,
+        "lens_id": lens_id,
+    }
+
+    # Create and return ExecutionContext with lens contract
+    return ExecutionContext(lens_contract=lens_contract)
 
 
 # ANSI color codes for terminal output
@@ -227,6 +277,12 @@ def main():
         action="store_true",
         help="Persist accepted entities to database (default: False)",
     )
+    run_parser.add_argument(
+        "--lens",
+        type=str,
+        default=None,
+        help="Lens ID to use (default: from LENS_ID environment variable)",
+    )
 
     # Parse arguments
     args = parser.parse_args()
@@ -238,6 +294,26 @@ def main():
 
     # Execute command
     if args.command == "run":
+        # Bootstrap: Load lens configuration ONCE at entry point
+        # Per architecture.md 3.2: Lens loading occurs only during bootstrap
+        lens_id = args.lens or os.getenv("LENS_ID")
+
+        if not lens_id:
+            print(colorize("ERROR: No lens specified", Colors.RED))
+            print("Provide lens via --lens argument or LENS_ID environment variable")
+            print("Example: python -m engine.orchestration.cli run --lens edinburgh_finds \"your query\"")
+            sys.exit(1)
+
+        try:
+            # Bootstrap lens and create ExecutionContext
+            ctx = bootstrap_lens(lens_id)
+        except LensConfigError as e:
+            print(colorize(f"ERROR: Lens validation failed: {e}", Colors.RED))
+            sys.exit(1)
+        except FileNotFoundError as e:
+            print(colorize(f"ERROR: {e}", Colors.RED))
+            sys.exit(1)
+
         # Create ingestion request
         ingestion_mode = IngestionMode.DISCOVER_MANY
         if args.mode == "resolve_one":
@@ -249,8 +325,8 @@ def main():
             persist=args.persist,
         )
 
-        # Execute orchestration (async)
-        report = asyncio.run(orchestrate(request))
+        # Execute orchestration with bootstrapped context (async)
+        report = asyncio.run(orchestrate(request, ctx=ctx))
 
         # Format and print report
         formatted = format_report(report)

@@ -2,7 +2,7 @@
 
 **Current Phase:** Foundation (Phase 1)
 **Validation Entity:** Powerleague Portobello Edinburgh (when in Phase 2+)
-**Last Updated:** 2026-01-31 (EP-001, CP-001a, CP-001b, CP-001c completed)
+**Last Updated:** 2026-01-31 (EP-001, CP-001a, CP-001b, CP-001c, LB-001 completed)
 
 ---
 
@@ -58,17 +58,34 @@
     - All 5 callsites verified to pass ctx parameter (grep confirmed)
   - **Fix Applied:** Updated all 5 callsites to pass ExecutionContext. Added `_create_minimal_context()` helper function in each of the 3 files to create minimal ExecutionContext when full lens contract not available. Callsites: extraction_integration.py:155 (uses context parameter or minimal), run.py:181,362,561 (minimal context), quarantine.py:296 (minimal context).
 
-- [ ] **LB-001: Lens Loading Boundary - planner.py:233-246**
+- [x] **LB-001: Lens Loading Boundary - planner.py:233-246**
   - **Principle:** Lens Loading Lifecycle (architecture.md 3.2, 3.7)
-  - **Location:** `engine/orchestration/planner.py:233-246`
-  - **Description:** Lens is loaded from disk during orchestration execution (`lens_path = Path(...) / "lenses" / lens_id / "lens.yaml"` then `VerticalLens(lens_path)`). Architecture requires lens loading to occur only during bootstrap, then be injected via ExecutionContext. "Direct imports of lens loaders or registries outside bootstrap are forbidden."
-  - **Evidence:** Read planner.py lines 233-246
-  - **Estimated Scope:** 1 file (planner.py), refactor bootstrap/orchestration boundary
-  - **Fix Strategy:**
-    1. Create proper bootstrap entry point (CLI or orchestrator bootstrap)
-    2. Load and validate lens once at bootstrap
-    3. Create ExecutionContext with validated lens contract
-    4. Pass context to planner instead of loading lens inside planner
+  - **Location:** `engine/orchestration/planner.py:233-246`, `engine/orchestration/cli.py`
+  - **Description:** Lens was loaded from disk during orchestration execution. Architecture requires lens loading to occur only during bootstrap, then be injected via ExecutionContext. "Direct imports of lens loaders or registries outside bootstrap are forbidden."
+  - **Completed:** 2026-01-31
+  - **Commit:** (pending)
+  - **Executable Proof:**
+    - `pytest tests/engine/orchestration/test_planner.py::TestLensLoadingBoundary -v` ✅ 2/2 PASSED
+    - `pytest tests/engine/orchestration/test_cli.py::TestBootstrapLens -v` ✅ 5/5 PASSED
+    - CLI manual test: `python -m engine.orchestration.cli run --lens edinburgh_finds "test query"` ✅ SUCCESS
+    - Test `test_orchestrate_accepts_execution_context_parameter` proves orchestrate() accepts ctx parameter
+    - Test `test_orchestrate_uses_lens_from_context_not_disk` proves VerticalLens NOT instantiated when ctx provided
+    - Test `test_bootstrap_lens_returns_execution_context` proves bootstrap creates valid ExecutionContext
+    - Test `test_bootstrap_lens_contract_is_immutable` proves lens_contract wrapped in MappingProxyType
+  - **Fix Applied:**
+    1. Added `bootstrap_lens(lens_id)` function to cli.py (loads lens once at bootstrap)
+    2. Modified `orchestrate()` signature to accept optional `ctx: ExecutionContext` parameter
+    3. orchestrate() uses provided ctx if available, skipping lens loading (respects bootstrap boundary)
+    4. CLI main() calls bootstrap_lens() once before orchestration
+    5. ExecutionContext passed to orchestrate() via ctx parameter
+    6. Added --lens CLI argument for lens selection
+  - **Files Modified:**
+    - `engine/orchestration/planner.py`: Added ctx parameter, conditional lens loading
+    - `engine/orchestration/cli.py`: Added bootstrap_lens(), --lens argument, bootstrap in main()
+    - `tests/engine/orchestration/test_planner.py`: Added TestLensLoadingBoundary class (2 tests)
+    - `tests/engine/orchestration/test_cli.py`: Added TestBootstrapLens class (5 tests), fixed 2 existing tests
+    - `tests/engine/orchestration/test_async_refactor.py`: Fixed 1 test for ctx parameter
+    - `tests/engine/orchestration/test_persistence.py`: Fixed 1 test for ctx parameter
 
 ### Important (Level 2) - Missing Contracts
 
@@ -139,4 +156,4 @@ Every completed item MUST document executable proof:
 
 ---
 
-**Next Action:** Select CP-001 (next Level-1 item) and begin micro-iteration process per development-methodology.md Section 5.
+**Next Action:** All Level-1 (Critical) items complete! Select EC-001 (first Level-2 item) and begin micro-iteration process per development-methodology.md Section 5.

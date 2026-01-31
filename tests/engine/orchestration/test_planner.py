@@ -521,3 +521,87 @@ class TestOrchestrateIntegration:
         # Note: This test requires API keys and network access
         # In CI/CD, mock the connectors or skip with pytest.mark.skipif
         assert report["candidates_found"] >= 0, "Should complete without error"
+
+
+class TestLensLoadingBoundary:
+    """Test lens loading boundary compliance (architecture.md 3.2)."""
+
+    @pytest.mark.asyncio
+    async def test_orchestrate_accepts_execution_context_parameter(self):
+        """
+        orchestrate() must accept ExecutionContext parameter (LB-001).
+
+        Per architecture.md 3.2: "Lens contracts enter runtime exclusively
+        through ExecutionContext." The orchestrate() function should receive
+        lens contract via ctx parameter, not load it internally.
+        """
+        from engine.orchestration.execution_context import ExecutionContext
+
+        # Create minimal lens contract
+        lens_contract = {
+            "mapping_rules": [],
+            "module_triggers": [],
+            "modules": {},
+            "facets": {},
+            "values": [],
+            "confidence_threshold": 0.7,
+            "lens_id": "edinburgh_finds",
+        }
+
+        # Create context with lens contract
+        ctx = ExecutionContext(lens_contract=lens_contract)
+
+        # Create request
+        request = IngestRequest(
+            ingestion_mode=IngestionMode.DISCOVER_MANY,
+            query="tennis courts Edinburgh",
+        )
+
+        # orchestrate() should accept ctx parameter
+        report = await orchestrate(request, ctx=ctx)
+
+        # Should return valid report
+        assert isinstance(report, dict), "orchestrate should return report"
+        assert "query" in report, "report should include query"
+
+    @pytest.mark.asyncio
+    async def test_orchestrate_uses_lens_from_context_not_disk(self):
+        """
+        orchestrate() must NOT load lens from disk (LB-001).
+
+        Per architecture.md 3.2: "No runtime component may load, reload, or
+        mutate lens configuration." The lens should be provided via context,
+        not loaded from filesystem inside orchestrate().
+        """
+        from engine.orchestration.execution_context import ExecutionContext
+        from unittest.mock import patch
+
+        # Create minimal lens contract
+        lens_contract = {
+            "mapping_rules": [],
+            "module_triggers": [],
+            "modules": {},
+            "facets": {},
+            "values": [],
+            "confidence_threshold": 0.7,
+            "lens_id": "test_lens",
+        }
+
+        ctx = ExecutionContext(lens_contract=lens_contract)
+
+        request = IngestRequest(
+            ingestion_mode=IngestionMode.DISCOVER_MANY,
+            query="tennis courts Edinburgh",
+        )
+
+        # Patch VerticalLens to detect if it's instantiated
+        with patch("engine.orchestration.planner.VerticalLens") as mock_lens_class:
+            report = await orchestrate(request, ctx=ctx)
+
+            # VerticalLens should NOT be instantiated inside orchestrate()
+            # when context is provided
+            mock_lens_class.assert_not_called()
+
+            # Should still return valid report
+            assert isinstance(report, dict)
+            assert "query" in report

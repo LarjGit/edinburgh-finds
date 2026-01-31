@@ -64,10 +64,10 @@ class TestCLIUsesAsyncioRun:
 
     def test_cli_calls_orchestrate_with_asyncio_run(self):
         """CLI main() should call orchestrate via asyncio.run()."""
-        test_args = ["cli.py", "run", "tennis courts", "--persist"]
+        test_args = ["cli.py", "run", "--lens", "edinburgh_finds", "tennis courts", "--persist"]
 
-        # Create a mock async orchestrate that returns a report
-        async def mock_async_orchestrate(request):
+        # Create a mock async orchestrate that returns a report (with ctx parameter)
+        async def mock_async_orchestrate(request, *, ctx=None):
             return {
                 "query": request.query,
                 "candidates_found": 5,
@@ -80,25 +80,38 @@ class TestCLIUsesAsyncioRun:
         # Mock asyncio.run to capture the call
         with patch("sys.argv", test_args):
             with patch("engine.orchestration.cli.orchestrate", side_effect=mock_async_orchestrate) as mock_orch:
-                with patch("asyncio.run") as mock_asyncio_run:
-                    # Set up mock to actually execute the coroutine
-                    def run_coro(coro):
-                        loop = asyncio.new_event_loop()
-                        try:
-                            return loop.run_until_complete(coro)
-                        finally:
-                            loop.close()
+                with patch("engine.orchestration.cli.bootstrap_lens") as mock_bootstrap:
+                    # Mock bootstrap to return minimal context
+                    from engine.orchestration.execution_context import ExecutionContext
+                    mock_bootstrap.return_value = ExecutionContext(lens_contract={
+                        "mapping_rules": [],
+                        "module_triggers": [],
+                        "modules": {},
+                        "facets": {},
+                        "values": [],
+                        "confidence_threshold": 0.7,
+                        "lens_id": "edinburgh_finds",
+                    })
 
-                    mock_asyncio_run.side_effect = run_coro
+                    with patch("asyncio.run") as mock_asyncio_run:
+                        # Set up mock to actually execute the coroutine
+                        def run_coro(coro):
+                            loop = asyncio.new_event_loop()
+                            try:
+                                return loop.run_until_complete(coro)
+                            finally:
+                                loop.close()
 
-                    with pytest.raises(SystemExit) as exc_info:
-                        main()
+                        mock_asyncio_run.side_effect = run_coro
 
-                    assert exc_info.value.code == 0
+                        with pytest.raises(SystemExit) as exc_info:
+                            main()
 
-                    # Verify asyncio.run was called
-                    assert mock_asyncio_run.called, \
-                        "CLI should call asyncio.run() to execute async orchestrate"
+                        assert exc_info.value.code == 0
+
+                        # Verify asyncio.run was called
+                        assert mock_asyncio_run.called, \
+                            "CLI should call asyncio.run() to execute async orchestrate"
 
 
 class TestPersistenceWithoutSyncWrapper:

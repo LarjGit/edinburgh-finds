@@ -142,10 +142,10 @@ def test_cli_accepts_persist_flag():
     - Report shows persistence status
     """
     # Arrange: Mock sys.argv to simulate CLI call
-    test_args = ["cli.py", "run", "tennis courts", "--persist"]
+    test_args = ["cli.py", "run", "--lens", "edinburgh_finds", "tennis courts", "--persist"]
 
-    # Mock orchestrate function as async
-    async def mock_async_orchestrate(request):
+    # Mock orchestrate function as async (with ctx parameter)
+    async def mock_async_orchestrate(request, *, ctx=None):
         return {
             "query": request.query,
             "candidates_found": 5,
@@ -158,15 +158,28 @@ def test_cli_accepts_persist_flag():
     # Act & Assert: Run CLI with --persist flag
     with patch("sys.argv", test_args):
         with patch("engine.orchestration.cli.orchestrate", side_effect=mock_async_orchestrate) as mock_orch:
-            with pytest.raises(SystemExit) as exc_info:
-                main()
+            with patch("engine.orchestration.cli.bootstrap_lens") as mock_bootstrap:
+                # Mock bootstrap to return minimal context
+                from engine.orchestration.execution_context import ExecutionContext
+                mock_bootstrap.return_value = ExecutionContext(lens_contract={
+                    "mapping_rules": [],
+                    "module_triggers": [],
+                    "modules": {},
+                    "facets": {},
+                    "values": [],
+                    "confidence_threshold": 0.7,
+                    "lens_id": "edinburgh_finds",
+                })
 
-            # Verify exit code is success
-            assert exc_info.value.code == 0
+                with pytest.raises(SystemExit) as exc_info:
+                    main()
 
-            # Verify orchestrate was called with persist=True
-            call_args = mock_orch.call_args[0][0]
-            assert call_args.persist is True
+                # Verify exit code is success
+                assert exc_info.value.code == 0
+
+                # Verify orchestrate was called with persist=True
+                call_args = mock_orch.call_args[0][0]
+                assert call_args.persist is True
 
 
 @pytest.mark.asyncio
