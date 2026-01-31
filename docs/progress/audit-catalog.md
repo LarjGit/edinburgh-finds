@@ -2,7 +2,7 @@
 
 **Current Phase:** Foundation (Phase 1)
 **Validation Entity:** Powerleague Portobello Edinburgh (when in Phase 2+)
-**Last Updated:** 2026-01-31 (EP-001, CP-001a/b/c, LB-001, EC-001a/b, EC-001b2-1, EC-001b2-2 Part 1, EC-001b2-3, EC-001b2-4, TF-001 completed)
+**Last Updated:** 2026-01-31 (EP-001, CP-001a/b/c, LB-001, EC-001a/b, EC-001b2-1, EC-001b2-2 Part 1, EC-001b2-3, EC-001b2-4, TF-001, CR-001 completed)
 
 ---
 
@@ -213,15 +213,22 @@
     - 2 wine lens tests now passing, test failures reduced from 5 to 3
   - **Fix Applied:** Created `engine/lenses/wine/lens.yaml` (130 lines) with minimal wine-specific vocabulary (wineries, vineyards), connector rules (wine_searcher), facets, values, mapping rules, and module definitions. Structure mirrors edinburgh_finds lens but with wine domain knowledge. Zero engine code changes required.
 
-- [ ] **CR-001: Investigate sport_scotland Connector Routing**
-  - **Principle:** Connector Selection Logic (architecture.md 4.1 Stage 3)
-  - **Location:** `engine/orchestration/planner.py`, `engine/orchestration/query_features.py`
+- [x] **CR-001: Investigate sport_scotland Connector Routing**
+  - **Principle:** Connector Selection Logic (architecture.md 4.1 Stage 3), Lens Ownership (system-vision.md Invariant 2)
+  - **Location:** `engine/lenses/edinburgh_finds/lens.yaml`, `tests/engine/orchestration/test_planner_refactor.py`
   - **Description:** Query planner not selecting sport_scotland connector for sports-related queries. Tests expect queries like "rugby clubs" and "football facilities" to route to sport_scotland but only generic connectors (serper, google_places, openstreetmap) are selected.
-  - **Estimated Scope:** Investigation of query feature extraction and connector selection logic
-  - **Affected Tests:**
-    - tests/engine/orchestration/test_integration.py::test_sports_query_includes_domain_specific_source
-    - tests/engine/orchestration/test_planner.py::test_sports_query_includes_sport_scotland
-    - tests/engine/orchestration/test_planner_refactor.py::test_padel_query_includes_sport_scotland
+  - **Completed:** 2026-01-31
+  - **Commit:** 9b4b85c
+  - **Executable Proof:**
+    - `pytest tests/engine/orchestration/test_planner.py::TestSelectConnectorsPhaseB::test_sports_query_includes_sport_scotland -v` ✅ PASSED
+    - `pytest tests/engine/orchestration/test_integration.py::TestRealWorldQueryScenarios::test_sports_query_includes_domain_specific_source -v` ✅ PASSED
+    - `pytest tests/engine/orchestration/test_planner_refactor.py::test_padel_query_includes_sport_scotland -v` ✅ PASSED
+    - `pytest tests/engine/orchestration/ -q` ✅ 208 passed, 0 failed, 3 skipped (was 205 passed, 3 failed)
+  - **Root Cause:** Lens configuration had incomplete sports vocabulary in sport_scotland connector triggers. Only included [padel, tennis, squash, sports] but tests expected football, rugby, swimming, etc.
+  - **Fix Applied:**
+    - Expanded sport_scotland trigger keywords to include: football, rugby, swimming, badminton, pickleball, facilities, pools, clubs, centres, centers
+    - Fixed test_planner_refactor.py to use lens="edinburgh_finds" (actual lens name, not "padel")
+    - All domain knowledge remains in lens configuration per Invariant 2 (engine code unchanged)
 
 - [ ] **MC-001: Missing Lens Validation Gates**
   - **Principle:** Lens Validation Gates (architecture.md 6.7)
@@ -278,4 +285,4 @@ Every completed item MUST document executable proof:
 
 ---
 
-**Next Action:** TF-001 complete! Created wine lens fixture (engine/lenses/wine/lens.yaml), test failures reduced from 5 to 3. Validates architectural principle: new vertical = YAML only, zero engine code changes. Remaining 3 failures: CR-001 (sport_scotland/padel lens routing). Next item: CR-001 (Investigate sport_scotland connector routing) or MC-001 (Missing Lens Validation Gates).
+**Next Action:** CR-001 complete! Fixed sport_scotland connector routing by expanding sports keywords in edinburgh_finds lens configuration. Test failures reduced from 3 to 0. All Phase 1 Level-2 connector routing issues resolved. Test status: 208 passed, 0 failed, 3 skipped. Next item: MC-001 (Missing Lens Validation Gates) - final Level-2 item before Phase 1 completion.
