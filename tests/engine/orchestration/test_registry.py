@@ -34,6 +34,7 @@ class TestConnectorSpec:
             cost_per_call_usd=0.01,
             trust_level=0.8,
             timeout_seconds=30,
+            rate_limit_per_day=1000,
         )
 
         # Attempting to modify should raise FrozenInstanceError
@@ -49,6 +50,7 @@ class TestConnectorSpec:
             cost_per_call_usd=0.01,
             trust_level=0.75,
             timeout_seconds=30,
+            rate_limit_per_day=2500,
         )
 
         assert spec.name == "serper"
@@ -57,6 +59,7 @@ class TestConnectorSpec:
         assert spec.cost_per_call_usd == 0.01
         assert spec.trust_level == 0.75
         assert spec.timeout_seconds == 30
+        assert spec.rate_limit_per_day == 2500
 
 
 class TestConnectorRegistry:
@@ -172,6 +175,40 @@ class TestConnectorRegistry:
             assert (
                 spec.phase in valid_phases
             ), f"{connector_name} has invalid phase: {spec.phase}"
+
+
+class TestRateLimitMetadata:
+    """Test rate limit metadata for PL-004 implementation."""
+
+    def test_all_connectors_have_rate_limit_per_day(self):
+        """All connectors should have rate_limit_per_day field defined (PL-004)."""
+        for connector_name, spec in CONNECTOR_REGISTRY.items():
+            assert hasattr(spec, 'rate_limit_per_day'), \
+                f"{connector_name} missing rate_limit_per_day field"
+            assert isinstance(spec.rate_limit_per_day, int), \
+                f"{connector_name} rate_limit_per_day should be int, got {type(spec.rate_limit_per_day)}"
+            assert spec.rate_limit_per_day > 0, \
+                f"{connector_name} rate_limit_per_day should be positive, got {spec.rate_limit_per_day}"
+
+    def test_serper_rate_limit_reflects_api_tier(self):
+        """Serper rate limit should reflect free tier limit (2500 req/day)."""
+        spec = CONNECTOR_REGISTRY["serper"]
+        assert spec.rate_limit_per_day == 2500
+
+    def test_google_places_rate_limit_is_conservative(self):
+        """Google Places rate limit should be conservative (1000 req/day)."""
+        spec = CONNECTOR_REGISTRY["google_places"]
+        assert spec.rate_limit_per_day == 1000
+
+    def test_free_apis_have_generous_rate_limits(self):
+        """Free APIs (OSM, Sport Scotland, etc.) should have generous rate limits."""
+        free_connectors = ["openstreetmap", "sport_scotland", "edinburgh_council", "open_charge_map"]
+
+        for connector_name in free_connectors:
+            spec = CONNECTOR_REGISTRY[connector_name]
+            # Free APIs should have at least 10k/day for fair use
+            assert spec.rate_limit_per_day >= 10000, \
+                f"{connector_name} should have generous rate limit, got {spec.rate_limit_per_day}"
 
 
 class TestGetConnectorInstance:

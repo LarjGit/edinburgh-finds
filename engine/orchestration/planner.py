@@ -122,6 +122,7 @@ def select_connectors(request: IngestRequest) -> ExecutionPlan:
             supports_query_only=True,
             estimated_cost_usd=registry_spec.cost_per_call_usd,
             timeout_seconds=registry_spec.timeout_seconds,  # PL-002: Pass timeout constraint
+            rate_limit_per_day=registry_spec.rate_limit_per_day,  # PL-004: Pass rate limit constraint
         )
 
         # Add to plan (automatic dependency inference)

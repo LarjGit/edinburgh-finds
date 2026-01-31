@@ -59,6 +59,45 @@ class TestSelectConnectors:
         assert names_1 == names_2, "Selection should be deterministic"
 
 
+class TestRateLimitMetadataFlow:
+    """Test that rate_limit_per_day flows from registry to execution plan (PL-004)."""
+
+    def test_rate_limit_flows_from_registry_to_execution_plan(self):
+        """Rate limits should flow from CONNECTOR_REGISTRY to ExecutionPlan ConnectorSpecs."""
+        from engine.orchestration.registry import CONNECTOR_REGISTRY
+
+        request = IngestRequest(
+            ingestion_mode=IngestionMode.DISCOVER_MANY,
+            query="tennis courts Edinburgh",
+        )
+        plan = select_connectors(request)
+
+        # Verify each connector in plan has rate_limit_per_day from registry
+        for node in plan.connectors:
+            connector_name = node.spec.name
+            registry_spec = CONNECTOR_REGISTRY[connector_name]
+
+            assert hasattr(node.spec, 'rate_limit_per_day'), \
+                f"ExecutionPlan ConnectorSpec for {connector_name} should have rate_limit_per_day"
+            assert node.spec.rate_limit_per_day == registry_spec.rate_limit_per_day, \
+                f"{connector_name} rate_limit_per_day mismatch: plan={node.spec.rate_limit_per_day}, registry={registry_spec.rate_limit_per_day}"
+
+    def test_serper_has_correct_rate_limit_in_plan(self):
+        """Serper connector in plan should have 2500 req/day rate limit."""
+        request = IngestRequest(
+            ingestion_mode=IngestionMode.DISCOVER_MANY,
+            query="test query",
+        )
+        plan = select_connectors(request)
+
+        serper_nodes = [node for node in plan.connectors if node.spec.name == "serper"]
+        assert len(serper_nodes) == 1, "Should have exactly one serper connector"
+
+        serper_spec = serper_nodes[0].spec
+        assert serper_spec.rate_limit_per_day == 2500, \
+            f"Serper should have 2500 req/day limit, got {serper_spec.rate_limit_per_day}"
+
+
 class TestOrchestrate:
     """Test orchestrate() main execution flow."""
 

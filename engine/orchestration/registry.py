@@ -36,6 +36,7 @@ class ConnectorSpec:
         cost_per_call_usd: Average cost in USD per API call
         trust_level: Trust score from 0.0 to 1.0 (1.0 = authoritative)
         timeout_seconds: Maximum execution timeout for this connector
+        rate_limit_per_day: Maximum requests allowed per day (PL-004)
     """
 
     name: str
@@ -44,6 +45,7 @@ class ConnectorSpec:
     cost_per_call_usd: float
     trust_level: float  # 0.0 to 1.0
     timeout_seconds: int
+    rate_limit_per_day: int
 
 
 # Global connector registry - Phase 3 includes 6 connectors
@@ -55,6 +57,7 @@ CONNECTOR_REGISTRY: Dict[str, ConnectorSpec] = {
         cost_per_call_usd=0.01,  # Serper API pricing
         trust_level=0.75,  # Web search results, moderate trust
         timeout_seconds=30,
+        rate_limit_per_day=2500,  # Serper free tier limit
     ),
     "google_places": ConnectorSpec(
         name="google_places",
@@ -63,6 +66,7 @@ CONNECTOR_REGISTRY: Dict[str, ConnectorSpec] = {
         cost_per_call_usd=0.017,  # Google Places API pricing (Text Search)
         trust_level=0.95,  # Authoritative Google data, very high trust
         timeout_seconds=30,
+        rate_limit_per_day=1000,  # Conservative limit for Google Places free tier
     ),
     "openstreetmap": ConnectorSpec(
         name="openstreetmap",
@@ -71,6 +75,7 @@ CONNECTOR_REGISTRY: Dict[str, ConnectorSpec] = {
         cost_per_call_usd=0.0,  # Free API
         trust_level=0.70,  # Crowdsourced data, moderate-good trust
         timeout_seconds=60,
+        rate_limit_per_day=10000,  # OSM Nominatim fair use policy
     ),
     "sport_scotland": ConnectorSpec(
         name="sport_scotland",
@@ -79,6 +84,7 @@ CONNECTOR_REGISTRY: Dict[str, ConnectorSpec] = {
         cost_per_call_usd=0.0,  # Free API
         trust_level=0.90,  # Official government data, high trust
         timeout_seconds=60,
+        rate_limit_per_day=10000,  # Conservative estimate (no published limit)
     ),
     "edinburgh_council": ConnectorSpec(
         name="edinburgh_council",
@@ -87,6 +93,7 @@ CONNECTOR_REGISTRY: Dict[str, ConnectorSpec] = {
         cost_per_call_usd=0.0,  # Free government API
         trust_level=0.90,  # Official Edinburgh Council data, high trust
         timeout_seconds=60,
+        rate_limit_per_day=10000,  # Conservative estimate (no published limit)
     ),
     "open_charge_map": ConnectorSpec(
         name="open_charge_map",
@@ -95,6 +102,7 @@ CONNECTOR_REGISTRY: Dict[str, ConnectorSpec] = {
         cost_per_call_usd=0.0,  # Free API
         trust_level=0.80,  # Crowdsourced but specialized domain data
         timeout_seconds=60,
+        rate_limit_per_day=10000,  # Conservative estimate (no published limit)
     ),
 }
 
