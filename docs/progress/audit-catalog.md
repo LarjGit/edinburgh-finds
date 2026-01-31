@@ -63,7 +63,7 @@
   - **Location:** `engine/orchestration/planner.py:233-246`, `engine/orchestration/cli.py`
   - **Description:** Lens was loaded from disk during orchestration execution. Architecture requires lens loading to occur only during bootstrap, then be injected via ExecutionContext. "Direct imports of lens loaders or registries outside bootstrap are forbidden."
   - **Completed:** 2026-01-31
-  - **Commit:** (pending)
+  - **Commit:** 6992f5c
   - **Executable Proof:**
     - `pytest tests/engine/orchestration/test_planner.py::TestLensLoadingBoundary -v` ✅ 2/2 PASSED
     - `pytest tests/engine/orchestration/test_cli.py::TestBootstrapLens -v` ✅ 5/5 PASSED
