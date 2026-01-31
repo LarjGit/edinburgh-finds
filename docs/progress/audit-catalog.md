@@ -312,7 +312,7 @@
   - **Location:** `engine/orchestration/cli.py:308-337`, `engine/config/app.yaml`
   - **Description:** Architecture requires 4-level precedence: CLI → environment → config → fallback. Implemented config file loading as 3rd precedence level. Config file is engine-generic (default_lens: null) and establishes schema without deployment opinion.
   - **Completed:** 2026-01-31
-  - **Commit:** (pending)
+  - **Commit:** 6d55033
   - **Executable Proof:**
     - `pytest tests/engine/orchestration/test_lens_resolution.py -v` ✅ 6/6 PASSED
     - `pytest tests/engine/orchestration/ -q` ✅ 214 passed, 3 skipped (no regressions)
