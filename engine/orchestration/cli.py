@@ -68,11 +68,20 @@ def bootstrap_lens(lens_id: str) -> ExecutionContext:
         "facets": dict(vertical_lens.facets),
         "values": list(vertical_lens.values),
         "confidence_threshold": vertical_lens.confidence_threshold,
-        "lens_id": lens_id,
     }
 
-    # Create and return ExecutionContext with lens contract
-    return ExecutionContext(lens_contract=lens_contract)
+    # Compute deterministic content hash for reproducibility
+    import hashlib
+    import json
+    canonical_contract = json.dumps(lens_contract, sort_keys=True)
+    lens_hash = hashlib.sha256(canonical_contract.encode("utf-8")).hexdigest()
+
+    # Create and return ExecutionContext with lens metadata per architecture.md 3.6
+    return ExecutionContext(
+        lens_id=lens_id,
+        lens_contract=lens_contract,
+        lens_hash=lens_hash
+    )
 
 
 # ANSI color codes for terminal output

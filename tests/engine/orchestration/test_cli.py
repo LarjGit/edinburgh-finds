@@ -229,15 +229,18 @@ class TestCLIMain:
                 with patch("engine.orchestration.cli.bootstrap_lens") as mock_bootstrap:
                     # Mock bootstrap to return minimal context
                     from engine.orchestration.execution_context import ExecutionContext
-                    mock_bootstrap.return_value = ExecutionContext(lens_contract={
-                        "mapping_rules": [],
-                        "module_triggers": [],
-                        "modules": {},
-                        "facets": {},
-                        "values": [],
-                        "confidence_threshold": 0.7,
-                        "lens_id": "edinburgh_finds",
-                    })
+                    mock_bootstrap.return_value = ExecutionContext(
+                        lens_id="edinburgh_finds",
+                        lens_contract={
+                            "mapping_rules": [],
+                            "module_triggers": [],
+                            "modules": {},
+                            "facets": {},
+                            "values": [],
+                            "confidence_threshold": 0.7,
+                        },
+                        lens_hash="test_hash"
+                    )
 
                     # Should not raise
                     try:
@@ -264,15 +267,18 @@ class TestCLIMain:
                 with patch("engine.orchestration.cli.bootstrap_lens") as mock_bootstrap:
                     # Mock bootstrap to return minimal context
                     from engine.orchestration.execution_context import ExecutionContext
-                    mock_bootstrap.return_value = ExecutionContext(lens_contract={
-                        "mapping_rules": [],
-                        "module_triggers": [],
-                        "modules": {},
-                        "facets": {},
-                        "values": [],
-                        "confidence_threshold": 0.7,
-                        "lens_id": "edinburgh_finds",
-                    })
+                    mock_bootstrap.return_value = ExecutionContext(
+                        lens_id="edinburgh_finds",
+                        lens_contract={
+                            "mapping_rules": [],
+                            "module_triggers": [],
+                            "modules": {},
+                            "facets": {},
+                            "values": [],
+                            "confidence_threshold": 0.7,
+                        },
+                        lens_hash="test_hash"
+                    )
 
                     try:
                         main()
@@ -331,6 +337,10 @@ class TestBootstrapLens:
         ctx = bootstrap_lens("edinburgh_finds")
 
         # Verify all required fields present
+        # Verify ExecutionContext has lens_id as top-level field per architecture.md 3.6
+        assert ctx.lens_id == "edinburgh_finds", "ExecutionContext should have lens_id field"
+
+        # Verify lens_contract contains required fields (but NOT lens_id, which is top-level)
         required_fields = [
             "mapping_rules",
             "module_triggers",
@@ -338,14 +348,10 @@ class TestBootstrapLens:
             "facets",
             "values",
             "confidence_threshold",
-            "lens_id",
         ]
 
         for field in required_fields:
             assert field in ctx.lens_contract, f"lens_contract should contain {field}"
-
-        # Verify lens_id matches
-        assert ctx.lens_contract["lens_id"] == "edinburgh_finds"
 
     def test_bootstrap_lens_fails_fast_on_invalid_lens(self):
         """
@@ -358,22 +364,22 @@ class TestBootstrapLens:
 
     def test_bootstrap_lens_contract_is_immutable(self):
         """
-        Lens contract should be immutable (MappingProxyType).
+        ExecutionContext should be immutable (frozen dataclass).
 
-        Per architecture.md 3.6: ExecutionContext wraps lens_contract in
-        MappingProxyType for immutability.
+        Per architecture.md 3.6: ExecutionContext is a frozen dataclass
+        that cannot be mutated.
         """
-        from types import MappingProxyType
+        from dataclasses import FrozenInstanceError
 
         ctx = bootstrap_lens("edinburgh_finds")
 
-        # lens_contract should be wrapped in MappingProxyType
-        assert isinstance(ctx.lens_contract, MappingProxyType), \
-            "lens_contract should be MappingProxyType for immutability"
+        # ExecutionContext should be frozen (attempting to modify raises FrozenInstanceError)
+        with pytest.raises(FrozenInstanceError):
+            ctx.lens_id = "modified"
 
-        # Attempting to mutate should raise TypeError
-        with pytest.raises(TypeError):
-            ctx.lens_contract["lens_id"] = "modified"
+        # lens_contract should also be immutable via frozen dataclass
+        with pytest.raises(FrozenInstanceError):
+            ctx.lens_contract = {}
 
     def test_bootstrap_lens_loads_from_correct_path(self):
         """
@@ -382,8 +388,8 @@ class TestBootstrapLens:
         # Bootstrap should succeed if file exists
         ctx = bootstrap_lens("edinburgh_finds")
 
-        # Verify lens_id in contract matches
-        assert ctx.lens_contract["lens_id"] == "edinburgh_finds"
+        # Verify lens_id field matches (top-level field per architecture.md 3.6)
+        assert ctx.lens_id == "edinburgh_finds"
 
         # Verify lens file exists at expected path
         expected_path = Path(__file__).parent.parent.parent.parent / "engine" / "lenses" / "edinburgh_finds" / "lens.yaml"

@@ -258,8 +258,14 @@ async def orchestrate(
                     "facets": dict(vertical_lens.facets),  # Copy dict for facet→dimension lookup
                     "values": list(vertical_lens.values),  # Copy list for canonical value lookup
                     "confidence_threshold": vertical_lens.confidence_threshold,
-                    "lens_id": lens_id,
                 }
+
+                # Compute deterministic content hash for reproducibility
+                import hashlib
+                import json
+                canonical_contract = json.dumps(lens_contract, sort_keys=True)
+                lens_hash = hashlib.sha256(canonical_contract.encode("utf-8")).hexdigest()
+
             except LensConfigError as e:
                 # Fail fast on invalid lens (per architecture.md 3.2)
                 # Context doesn't exist yet, so accumulate error and return early
@@ -271,8 +277,13 @@ async def orchestrate(
                     "errors": [{"connector": "lens_bootstrap", "error": f"Lens validation failed: {e}"}],
                 }
 
-            # Create context with lens contract (immutability enforced by ExecutionContext)
-            context = ExecutionContext(lens_contract=lens_contract)
+            # Create context with lens metadata per architecture.md 3.6
+            # NOTE: This fallback bootstrap path should be removed in Phase B - only cli.bootstrap_lens should create context
+            context = ExecutionContext(
+                lens_id=lens_id,
+                lens_contract=lens_contract,
+                lens_hash=lens_hash
+            )
 
         # 4. Execute connectors via adapters
         for connector_name in connector_names:
