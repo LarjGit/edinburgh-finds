@@ -718,3 +718,53 @@ class TestConnectorAdapterExecute:
         assert metrics["items_received"] == 3
         assert metrics["candidates_added"] == 2
         assert metrics["mapping_failures"] == 1
+
+    @pytest.mark.asyncio
+    async def test_execute_enforces_timeout_constraint(self, mock_context, mock_state):
+        """execute should enforce timeout_seconds from ConnectorSpec (PL-002)."""
+        mock_connector = Mock(spec=BaseConnector)
+        mock_connector.source_name = "slow_connector"
+
+        # Mock async fetch that takes longer than timeout
+        async def slow_fetch(query):
+            await asyncio.sleep(2.0)  # Sleep for 2 seconds
+            return {"organic": [{"title": "Should not reach here"}]}
+
+        mock_connector.fetch = AsyncMock(side_effect=slow_fetch)
+
+        spec = ConnectorSpec(
+            name="slow_connector",
+            phase=ExecutionPhase.DISCOVERY,
+            trust_level=75,
+            requires=["request.query"],
+            provides=["context.candidates"],
+            supports_query_only=True,
+            estimated_cost_usd=0.0,
+            timeout_seconds=1,  # Timeout after 1 second
+        )
+
+        adapter = ConnectorAdapter(mock_connector, spec)
+
+        request = IngestRequest(
+            ingestion_mode=IngestionMode.DISCOVER_MANY, query="test query"
+        )
+        query_features = QueryFeatures.extract(query="test query", request=request)
+
+        # Should not raise exception (timeout handled gracefully)
+        await adapter.execute(request, query_features, mock_context, mock_state)
+
+        # No candidates should be added
+        assert len(mock_state.candidates) == 0
+
+        # Timeout error should be recorded
+        assert len(mock_state.errors) == 1
+        error = mock_state.errors[0]
+        assert error["connector"] == "slow_connector"
+        assert "timeout" in error["error"].lower() or "timed out" in error["error"].lower()
+
+        # Failure metrics should be recorded
+        assert "slow_connector" in mock_state.metrics
+        metrics = mock_state.metrics["slow_connector"]
+        assert metrics["executed"] is False
+        assert "error" in metrics
+        assert metrics["cost_usd"] == 0.0  # No cost on timeout

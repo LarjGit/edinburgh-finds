@@ -121,6 +121,7 @@ def select_connectors(request: IngestRequest) -> ExecutionPlan:
             provides=["context.candidates"],
             supports_query_only=True,
             estimated_cost_usd=registry_spec.cost_per_call_usd,
+            timeout_seconds=registry_spec.timeout_seconds,  # PL-002: Pass timeout constraint
         )
 
         # Add to plan (automatic dependency inference)

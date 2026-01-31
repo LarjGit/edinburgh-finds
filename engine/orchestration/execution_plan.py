@@ -59,6 +59,7 @@ class ConnectorSpec:
         provides: List of output keys this connector produces
         supports_query_only: True if connector can run without geographic constraints
         estimated_cost_usd: Estimated cost in USD (optional, defaults to 0.0)
+        timeout_seconds: Maximum execution timeout in seconds (PL-002)
     """
 
     name: str
@@ -68,6 +69,7 @@ class ConnectorSpec:
     provides: List[str]
     supports_query_only: bool
     estimated_cost_usd: float = 0.0
+    timeout_seconds: int = 30  # Default 30 seconds if not specified
 
 
 @dataclass

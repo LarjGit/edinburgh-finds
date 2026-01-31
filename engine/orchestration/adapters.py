@@ -128,8 +128,11 @@ class ConnectorAdapter:
             # (e.g., Sport Scotland needs layer names, not natural language)
             translated_query = self._translate_query(request.query, query_features)
 
-            # Call connector.fetch() directly (now async-native)
-            results = await self.connector.fetch(translated_query)
+            # Call connector.fetch() with timeout enforcement (PL-002)
+            results = await asyncio.wait_for(
+                self.connector.fetch(translated_query),
+                timeout=self.spec.timeout_seconds
+            )
 
             # Extract items from connector-specific response format
             items = self._extract_items(results)
@@ -155,6 +158,27 @@ class ConnectorAdapter:
                 "mapping_failures": mapping_failures,
                 "execution_time_ms": elapsed_ms,
                 "cost_usd": self.spec.estimated_cost_usd,
+            }
+
+        except asyncio.TimeoutError:
+            # Timeout error: Connector exceeded timeout_seconds (PL-002)
+            elapsed_ms = int((time.time() - start_time) * 1000)
+            error_msg = f"Connector timed out after {self.spec.timeout_seconds}s"
+
+            state.errors.append(
+                {
+                    "connector": self.spec.name,
+                    "error": error_msg,
+                    "execution_time_ms": elapsed_ms,
+                }
+            )
+
+            # Record failure metrics
+            state.metrics[self.spec.name] = {
+                "executed": False,
+                "error": error_msg,
+                "execution_time_ms": elapsed_ms,
+                "cost_usd": 0.0,  # No cost on timeout
             }
 
         except Exception as e:
