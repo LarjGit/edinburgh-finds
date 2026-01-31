@@ -235,7 +235,7 @@
   - **Location:** `engine/lenses/validator.py`, `engine/lenses/edinburgh_finds/lens.yaml`, `engine/lenses/wine/lens.yaml`
   - **Description:** Architecture.md 6.7 requires 7 validation gates at lens load time. Previously only gates 2 (partial), 4 (partial), and 7 were implemented. Added missing gates: 1 (schema validation), 2 (complete canonical integrity), 3 (connector validation), 5 (regex compilation), 6 (smoke coverage).
   - **Completed:** 2026-01-31
-  - **Commit:** (pending)
+  - **Commit:** 595a6e3
   - **Executable Proof:**
     - `pytest tests/engine/lenses/test_validator_gates.py -v` ✅ 21/21 PASSED
     - `pytest tests/engine/lenses/ -v` ✅ 53 passed, 2 skipped (no regressions)
