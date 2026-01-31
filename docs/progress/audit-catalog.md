@@ -2,7 +2,7 @@
 
 **Current Phase:** Phase 2: Pipeline Implementation
 **Validation Entity:** Powerleague Portobello Edinburgh (Phase 2+)
-**Last Updated:** 2026-01-31 (Phase 1 complete: All architectural compliance tests pass - 319 passed, 5 skipped, 0 failures)
+**Last Updated:** 2026-01-31 (LR-002 complete: Dev/test lens fallback implemented - commit 018e44a)
 
 ---
 
@@ -334,34 +334,27 @@
     - `engine/orchestration/cli.py` (MODIFIED - added config loading at lines 315-327)
     - `tests/engine/orchestration/test_lens_resolution.py` (NEW - 180 lines, 6 tests)
 
-- [ ] **LR-002: Missing Dev/Test Fallback Mechanism**
+- [x] **LR-002: Missing Dev/Test Fallback Mechanism**
   - **Principle:** Lens Resolution Precedence (architecture.md 3.1 item 4)
   - **Location:** `engine/orchestration/cli.py:310-314`
   - **Description:** Architecture requires dev/test fallback with explicit opt-in: "Must be explicitly enabled (e.g., dev-mode config or `--allow-default-lens`). When used, it must emit a prominent warning and persist metadata indicating fallback occurred." Current implementation raises fatal error when no lens specified.
-  - **Current Behavior:** cli.py:310-314 prints error and exits when lens_id is None
-  - **Required Behavior:**
-    1. Add `--allow-default-lens` CLI flag (default: False)
-    2. When flag set and lens_id is None, use "edinburgh_finds" as fallback
-    3. Emit prominent warning to stderr: "WARNING: Using fallback lens 'edinburgh_finds' (dev/test only)"
-    4. Add `fallback_used: true` metadata to ExecutionContext or orchestration report
-  - **Impact:** Low - Dev/test convenience feature, not production-critical
-  - **Fix Scope:** ~40 lines (add CLI arg, conditional logic, warning, 4 tests)
-  - **Approved Micro-Plan (2026-01-31):**
-    - **Decision:** Fallback lens always "edinburgh_finds" (not configurable, matches architecture.md example)
-    - **Decision:** Use stderr warning only (no ExecutionContext metadata, simpler for dev/test use case)
-    - **Implementation:**
-      1. Add `--allow-default-lens` boolean flag to run_parser (action="store_true", default=False)
-      2. Add Level 4 fallback logic after config loading: if not lens_id and args.allow_default_lens, set to "edinburgh_finds"
-      3. Emit warning to stderr with colorize(Colors.YELLOW): "WARNING: Using fallback lens 'edinburgh_finds' (dev/test only)"
-      4. Add 4 tests to test_lens_resolution.py:
-         - test_allow_default_lens_flag_enables_fallback
-         - test_fallback_emits_warning_to_stderr
-         - test_fallback_not_used_without_flag
-         - test_fallback_respects_precedence
-    - **Files to Modify:**
-      - engine/orchestration/cli.py (~15 lines)
-      - tests/engine/orchestration/test_lens_resolution.py (~60 lines, 4 new tests)
-    - **Status:** Plan approved, implementation pending
+  - **Completed:** 2026-01-31
+  - **Commit:** 018e44a
+  - **Executable Proof:**
+    - `pytest tests/engine/orchestration/test_lens_resolution.py::test_allow_default_lens_flag_enables_fallback -v` ✅ PASSED
+    - `pytest tests/engine/orchestration/test_lens_resolution.py::test_fallback_emits_warning_to_stderr -v` ✅ PASSED
+    - `pytest tests/engine/orchestration/test_lens_resolution.py::test_fallback_not_used_without_flag -v` ✅ PASSED
+    - `pytest tests/engine/orchestration/test_lens_resolution.py::test_fallback_respects_precedence -v` ✅ PASSED
+    - `pytest tests/engine/orchestration/test_lens_resolution.py -v` ✅ 10/10 PASSED (all lens resolution tests)
+  - **Fix Applied:**
+    - Added `--allow-default-lens` boolean flag to run_parser (cli.py:295-300)
+    - Added Level 4 fallback logic with conditional check (cli.py:332-347)
+    - Fallback uses "edinburgh_finds" and emits YELLOW warning to stderr
+    - Added 4 comprehensive tests to test_lens_resolution.py (130 lines)
+    - Preserves fail-fast validation (Invariant 6) - fallback only when flag explicitly set
+  - **Files Modified:**
+    - engine/orchestration/cli.py: +13 lines (flag definition + fallback logic)
+    - tests/engine/orchestration/test_lens_resolution.py: +130 lines (4 new tests)
 
 - [ ] **LR-003: Fallback Bootstrap Path in Planner (Architectural Debt)**
   - **Principle:** Lens Loading Lifecycle (architecture.md 3.2 - "Lens loading occurs only during engine bootstrap")
