@@ -2,7 +2,7 @@
 
 **Current Phase:** Foundation (Phase 1)
 **Validation Entity:** Powerleague Portobello Edinburgh (when in Phase 2+)
-**Last Updated:** 2026-01-31 (EP-001, CP-001a/b/c, LB-001, EC-001a/b completed)
+**Last Updated:** 2026-01-31 (EP-001, CP-001a/b/c, LB-001, EC-001a/b, EC-001b2-1 completed)
 
 ---
 
@@ -135,21 +135,31 @@
     - `tests/engine/orchestration/test_adapters.py`: Fixed 5 adapter tests
   - **Note:** Test fixture updates for remaining 36 tests moved to EC-001b2
 
-- [ ] **EC-001b2: Update Remaining Test Fixtures (Phase B - Test Infrastructure)**
+- [x] **EC-001b2-1: Migrate test_deduplication.py to OrchestratorState (Part 1 of EC-001b2)**
+  - **Principle:** Test Infrastructure Alignment (architecture.md 3.6)
+  - **Location:** `tests/engine/orchestration/test_deduplication.py`
+  - **Description:** Migrated all 13 deduplication tests from old ExecutionContext (mutable) to OrchestratorState pattern. Mechanical substitution: ExecutionContext() → OrchestratorState(), context.accept_entity() → state.accept_entity().
+  - **Completed:** 2026-01-31
+  - **Commit:** 720227b
+  - **Executable Proof:**
+    - `pytest tests/engine/orchestration/test_deduplication.py -v` ✅ 13/13 PASSED
+    - `pytest tests/engine/orchestration/test_cli.py tests/engine/orchestration/test_adapters.py -v` ✅ 48/48 PASSED (no regressions)
+    - `grep "context = ExecutionContext()" tests/engine/orchestration/test_deduplication.py` → no matches (old pattern removed)
+  - **Fix Applied:** Updated 84 lines (42 insertions, 42 deletions). Changed import from ExecutionContext to OrchestratorState. All deduplication tests now use mutable OrchestratorState instead of attempting to mutate immutable ExecutionContext.
+
+- [ ] **EC-001b2-2: Update Remaining Test Fixtures (Part 2 of EC-001b2)**
   - **Principle:** Test Infrastructure Alignment (EC-001b follow-up)
   - **Location:** Multiple test files in `tests/engine/orchestration/`
-  - **Description:** Update remaining 36 test fixtures to use new ExecutionContext (immutable) and OrchestratorState (mutable) architecture. Tests currently use old ExecutionContext interface with mutable state.
-  - **Evidence:** 36 test failures due to old fixture patterns (not functional regressions)
-  - **Estimated Scope:** ~15 test files, mechanical fixture updates
+  - **Description:** Update remaining ~23 test failures across other test files to use new ExecutionContext (immutable) and OrchestratorState (mutable) architecture.
+  - **Evidence:** 23 remaining test failures due to old fixture patterns (not functional regressions)
+  - **Estimated Scope:** ~14 test files, mechanical fixture updates
   - **Fix Strategy:**
-    1. Use conftest.py fixtures (mock_context, mock_state) in all tests
-    2. Update test assertions: context.candidates → state.candidates
-    3. Update test assertions: context.errors → state.errors
-    4. Update test assertions: context.metrics → state.metrics
+    1. test_execution_context.py (12 failures): Migrate mutable state tests to test_orchestrator_state.py
+    2. Integration tests (11 failures): Update fixtures to create both ctx and state
+    3. Use conftest.py fixtures (mock_context, mock_state) in all tests
   - **Test Categories:**
-    - Deduplication tests (11 failures): Update to use OrchestratorState
     - Execution context tests (12 failures): Remove or update tests for old interface
-    - Integration tests (13 failures): Update fixtures to create both ctx and state
+    - Integration tests (11 failures): Update fixtures to create both ctx and state
 
 - [ ] **MC-001: Missing Lens Validation Gates**
   - **Principle:** Lens Validation Gates (architecture.md 6.7)
@@ -206,4 +216,4 @@ Every completed item MUST document executable proof:
 
 ---
 
-**Next Action:** EC-001b complete! Select EC-001b2 (Test Fixture Updates) OR MC-001 (Missing Lens Validation Gates) per development-methodology.md Section 8.
+**Next Action:** EC-001b2-1 complete! Select EC-001b2-2 (Remaining Test Fixtures) OR MC-001 (Missing Lens Validation Gates) per development-methodology.md Section 8.
