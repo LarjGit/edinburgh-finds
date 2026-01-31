@@ -2,7 +2,7 @@
 
 **Current Phase:** Phase 2: Pipeline Implementation
 **Validation Entity:** Powerleague Portobello Edinburgh (Phase 2+)
-**Last Updated:** 2026-01-31 (PL-001 complete: ExecutionPlan infrastructure wired up - commit 1752809)
+**Last Updated:** 2026-01-31 (PL-002 complete: Timeout constraints enforced - commit 975537b)
 
 ---
 
@@ -438,24 +438,30 @@
     - tests/engine/orchestration/test_diagnostic_logging.py: Updated 2 mocked tests
   - **Note:** ExecutionPlan infrastructure now ready for PL-002 (timeout enforcement), PL-003 (parallelism), and PL-004 (rate limiting)
 
-- [ ] **PL-002: Timeout Constraints Not Enforced**
+- [x] **PL-002: Timeout Constraints Not Enforced**
   - **Principle:** Stage 4 (Connector Execution) requirement: "Enforce rate limits, timeouts, and budgets" (architecture.md 4.1)
   - **Location:** `engine/orchestration/adapters.py:96-178` (execute method), `engine/orchestration/registry.py:38,46` (timeout_seconds field)
   - **Description:** CONNECTOR_REGISTRY defines timeout_seconds for each connector (30-60s), but these timeouts are not enforced during connector execution. Connector.fetch() is called without asyncio.wait_for() timeout wrapper (adapters.py:132). Long-running or stuck connectors could block the entire orchestration.
-  - **Current Behavior:**
-    - ConnectorSpec.timeout_seconds defined in registry (30-60s per connector)
-    - adapter.execute() calls `results = await self.connector.fetch(translated_query)` without timeout
-    - Only constraint is underlying HTTP client timeouts (varies by library)
-  - **Required Behavior:**
-    1. Wrap connector.fetch() in `asyncio.wait_for(self.connector.fetch(...), timeout=timeout_seconds)`
-    2. Catch asyncio.TimeoutError and record as error in state.errors
-    3. Pass timeout_seconds from CONNECTOR_REGISTRY to adapter
-    4. Include timeout information in error metrics
-  - **Impact:** Low-Medium - Could cause orchestration hangs, but HTTP timeouts provide some safety
-  - **Fix Scope:** ~20 lines
-  - **Files to Modify:**
-    - engine/orchestration/adapters.py: execute() method (add timeout wrapper)
-    - engine/orchestration/planner.py: Pass timeout_seconds when creating ConnectorSpec (line 307-315)
+  - **Completed:** 2026-01-31
+  - **Commit:** 975537b
+  - **Executable Proof:**
+    - `pytest tests/engine/orchestration/test_adapters.py::TestConnectorAdapterExecute::test_execute_enforces_timeout_constraint -v` ✅ PASSED
+    - `pytest tests/engine/orchestration/test_adapters.py -v` ✅ 32/32 PASSED
+    - `pytest tests/engine/orchestration/test_adapters.py tests/engine/orchestration/test_planner.py -v` ✅ 62/62 PASSED
+    - Manual verification: `python -c "from engine.orchestration.planner import select_connectors; ..."` confirms timeout values flow registry → execution plan
+    - Test mocks 2-second fetch with 1-second timeout, verifies TimeoutError caught, error recorded, metrics updated
+  - **Fix Applied:**
+    1. ✅ Added `timeout_seconds: int = 30` field to execution_plan.ConnectorSpec dataclass
+    2. ✅ Updated planner.py:124 to pass `timeout_seconds=registry_spec.timeout_seconds`
+    3. ✅ Wrapped connector.fetch() with `asyncio.wait_for(..., timeout=self.spec.timeout_seconds)` in adapters.py:131-134
+    4. ✅ Added specific asyncio.TimeoutError handler before generic Exception handler (adapters.py:163-181)
+    5. ✅ Timeout errors include descriptive message: "Connector timed out after {N}s"
+    6. ✅ Added comprehensive test with mocked slow connector (tests timeout enforcement, error recording, graceful failure)
+  - **Files Modified:**
+    - `engine/orchestration/execution_plan.py`: Added timeout_seconds field (2 lines)
+    - `engine/orchestration/planner.py`: Pass timeout_seconds to ConnectorSpec (1 line)
+    - `engine/orchestration/adapters.py`: Wrap fetch() with timeout, add TimeoutError handler (20 lines)
+    - `tests/engine/orchestration/test_adapters.py`: Added test_execute_enforces_timeout_constraint (52 lines)
 
 - [ ] **PL-003: No Parallelism Within Phases**
   - **Principle:** Stage 3 (Planning) requirement: "Establish execution phases" implies phase barriers with parallelism within phases (architecture.md 4.1)
