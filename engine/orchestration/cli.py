@@ -305,8 +305,31 @@ def main():
     if args.command == "run":
         # Bootstrap: Load lens configuration ONCE at entry point
         # Per architecture.md 3.2: Lens loading occurs only during bootstrap
+        # Lens resolution precedence per architecture.md 3.1:
+        # 1. CLI override (--lens)
+        # 2. Environment variable (LENS_ID)
+        # 3. Application config (engine/config/app.yaml → default_lens)
+        # 4. Dev/Test fallback (LR-002 - not implemented yet)
+
         lens_id = args.lens or os.getenv("LENS_ID")
 
+        # Level 3: Load from config file if not resolved
+        if not lens_id:
+            config_path = Path(__file__).parent.parent / "config" / "app.yaml"
+            if config_path.exists():
+                try:
+                    # Local import to avoid mandatory dependency
+                    import yaml
+                    with open(config_path, "r") as f:
+                        config = yaml.safe_load(f)
+                        if config and isinstance(config, dict):
+                            lens_id = config.get("default_lens")
+                except Exception as e:
+                    print(colorize(f"ERROR: Failed to load config file: {config_path}", Colors.RED))
+                    print(f"YAML parsing error: {e}")
+                    sys.exit(1)
+
+        # If still not resolved, error (LR-002 will add fallback here)
         if not lens_id:
             print(colorize("ERROR: No lens specified", Colors.RED))
             print("Provide lens via --lens argument or LENS_ID environment variable")

@@ -281,17 +281,290 @@
 
 ## Phase 2: Pipeline Implementation
 
-(Populated when Phase 1 complete - After all Level-1 violations resolved and bootstrap gates enforced)
+**Status:** Stage 3 (Planning) audit complete - 4 gaps identified (3 gaps from Stage 2 remain)
+**Validation Entity:** Powerleague Portobello Edinburgh (requires complete pipeline)
 
-Placeholder items based on architecture.md 4.1 (11 pipeline stages):
-- Lens Resolution validation (Stage 2)
-- Planning stage completeness (Stage 3)
-- Source Extraction boundary enforcement (Stage 6)
-- Lens Application wiring (Stage 7)
-- Classification correctness (Stage 8)
-- Cross-Source Deduplication (Stage 9)
-- Deterministic Merge implementation (Stage 10)
-- Finalization validation (Stage 11)
+### Stage 1: Input (architecture.md 4.1)
+
+**Status:** Skipped as trivial (agreement with user)
+
+**Requirements:**
+- Accept a natural-language query or explicit entity identifier
+
+**Implementation:**
+- CLI: `cli.py` accepts query via `args.query`
+- API: `IngestRequest.query` field in `types.py`
+- No gaps identified - basic string input acceptance works
+
+---
+
+### Stage 2: Lens Resolution and Validation (architecture.md 4.1, 3.1)
+
+**Requirements:**
+1. Resolve lens_id by precedence (CLI → environment → config → fallback)
+2. Load lens configuration exactly once at bootstrap
+3. Validate schema, references, and invariants
+4. Compute lens hash for reproducibility
+5. Inject validated lens contract into ExecutionContext
+
+- [x] **LR-001: Missing Config File Precedence (engine/config/app.yaml)**
+  - **Principle:** Lens Resolution Precedence (architecture.md 3.1)
+  - **Location:** `engine/orchestration/cli.py:308-337`, `engine/config/app.yaml`
+  - **Description:** Architecture requires 4-level precedence: CLI → environment → config → fallback. Implemented config file loading as 3rd precedence level. Config file is engine-generic (default_lens: null) and establishes schema without deployment opinion.
+  - **Completed:** 2026-01-31
+  - **Commit:** (pending)
+  - **Executable Proof:**
+    - `pytest tests/engine/orchestration/test_lens_resolution.py -v` ✅ 6/6 PASSED
+    - `pytest tests/engine/orchestration/ -q` ✅ 214 passed, 3 skipped (no regressions)
+    - `pytest tests/engine/orchestration/ tests/engine/lenses/ tests/engine/extraction/ -q` ✅ 325 passed, 5 skipped (full architectural compliance)
+    - Test `test_cli_override_takes_precedence_over_config` proves CLI beats config
+    - Test `test_environment_variable_takes_precedence_over_config` proves LENS_ID beats config
+    - Test `test_config_file_used_when_cli_and_env_not_set` proves config used as fallback
+    - Test `test_missing_config_file_does_not_crash` proves graceful handling
+    - Test `test_config_with_null_default_lens_does_not_crash` proves null config handling
+    - Test `test_invalid_yaml_in_config_fails_gracefully` proves YAML error handling
+  - **Fix Applied:**
+    1. ✅ Created `engine/config/app.yaml` with `default_lens: null` (engine-generic, no vertical opinion)
+    2. ✅ Added config file loading in cli.py:315-327 with local YAML import
+    3. ✅ Precedence order: args.lens → LENS_ID env → app.yaml default_lens → error (LR-002 will add fallback)
+    4. ✅ Graceful error handling for missing config, null values, and invalid YAML
+    5. ✅ YAML import is local to avoid mandatory dependency
+  - **Files Modified:**
+    - `engine/config/app.yaml` (NEW - 14 lines with documentation)
+    - `engine/orchestration/cli.py` (MODIFIED - added config loading at lines 315-327)
+    - `tests/engine/orchestration/test_lens_resolution.py` (NEW - 180 lines, 6 tests)
+
+- [ ] **LR-002: Missing Dev/Test Fallback Mechanism**
+  - **Principle:** Lens Resolution Precedence (architecture.md 3.1 item 4)
+  - **Location:** `engine/orchestration/cli.py:310-314`
+  - **Description:** Architecture requires dev/test fallback with explicit opt-in: "Must be explicitly enabled (e.g., dev-mode config or `--allow-default-lens`). When used, it must emit a prominent warning and persist metadata indicating fallback occurred." Current implementation raises fatal error when no lens specified.
+  - **Current Behavior:** cli.py:310-314 prints error and exits when lens_id is None
+  - **Required Behavior:**
+    1. Add `--allow-default-lens` CLI flag (default: False)
+    2. When flag set and lens_id is None, use "edinburgh_finds" as fallback
+    3. Emit prominent warning to stderr: "WARNING: Using fallback lens 'edinburgh_finds' (dev/test only)"
+    4. Add `fallback_used: true` metadata to ExecutionContext or orchestration report
+  - **Impact:** Low - Dev/test convenience feature, not production-critical
+  - **Fix Scope:** ~20 lines (add CLI arg, conditional logic, warning)
+
+- [ ] **LR-003: Fallback Bootstrap Path in Planner (Architectural Debt)**
+  - **Principle:** Lens Loading Lifecycle (architecture.md 3.2 - "Lens loading occurs only during engine bootstrap")
+  - **Location:** `engine/orchestration/planner.py:232-287`
+  - **Description:** Planner contains fallback bootstrap path that duplicates cli.bootstrap_lens logic. Comment at line 282 acknowledges: "This fallback bootstrap path should be removed in Phase B - only cli.bootstrap_lens should create context." Violates single-bootstrap contract if planner.orchestrate() called without ctx parameter. Creates two bootstrap code paths instead of one.
+  - **Current Behavior:** orchestrate() accepts optional ctx parameter. If None, loads lens from disk inside orchestrate()
+  - **Required Behavior:** orchestrate() should REQUIRE ctx parameter (not optional). All callers must bootstrap lens before calling orchestrate().
+  - **Impact:** Medium - Architectural purity + prevents accidental multi-load bugs
+  - **Fix Scope:** ~15 lines (make ctx required, remove fallback logic, update tests)
+  - **Note:** Already flagged as Phase B work by original implementer
+
+---
+
+### Stage 3: Planning (architecture.md 4.1)
+
+**Status:** Audit complete - 4 implementation gaps identified
+
+**Requirements:**
+- Derive query features deterministically
+- Select connector execution plan from lens routing rules
+- Establish execution phases, budgets, ordering, and constraints
+
+**Planning Boundary (architecture.md 4.2):**
+- Produces connector execution plan derived exclusively from lens routing rules and query features
+- Must not perform network calls, extraction, or persistence
+- Must be deterministic
+
+**Audit Findings (2026-01-31):**
+
+**✅ COMPLIANT:**
+- Query features extraction is deterministic (QueryFeatures.extract() - frozen dataclass, rule-based)
+- Uses lens vocabulary for domain-specific terms (vertical-agnostic)
+- Connector selection uses lens routing rules (lens.get_connectors_for_query())
+- Budget gating partially implemented (_apply_budget_gating())
+- No network calls, extraction, or persistence in planning stage
+- Deterministic connector selection (rule-based keyword matching)
+
+**❌ GAPS IDENTIFIED:**
+
+- [ ] **PL-001: ExecutionPlan Infrastructure Not Wired Up**
+  - **Principle:** Planning Boundary (architecture.md 4.2), Stage 3 requirements (architecture.md 4.1 - "Establish execution phases, budgets, ordering, and constraints")
+  - **Location:** `engine/orchestration/planner.py:40-108` (select_connectors), `planner.py:293-334` (execution loop)
+  - **Description:** ExecutionPlan class exists with full infrastructure for phases, dependencies, trust levels, and conditional execution (execution_plan.py:91-252), but is not used in production orchestration flow. select_connectors() returns List[str] instead of ExecutionPlan object. Connector execution uses simple for loop instead of phase-aware execution with dependency tracking. ExecutionPlan is only used in tests (orchestrator_test.py, execution_plan_test.py).
+  - **Current Behavior:**
+    - select_connectors() returns List[str] (connector names)
+    - Execution loop: `for connector_name in connector_names: await adapter.execute(...)`
+    - Phase ordering implicit via list concatenation (discovery_connectors + enrichment_connectors)
+    - No use of ExecutionPlan.should_run_connector() conditional gating
+    - ConnectorSpec created on-the-fly during execution (planner.py:307-315)
+  - **Required Behavior:**
+    1. select_connectors() should build ExecutionPlan object with add_connector() calls
+    2. Execution loop should iterate over ExecutionPlan.connectors
+    3. Use ExecutionPlan.should_run_connector() for conditional execution
+    4. Explicit phase tracking from CONNECTOR_REGISTRY.phase field
+    5. Leverage dependency inference and trust-based provider selection
+  - **Impact:** Medium - Missing explicit phase barriers, parallelism opportunities, and dependency-aware gating
+  - **Fix Scope:** ~100 lines (refactor select_connectors to build ExecutionPlan, update execution loop)
+  - **Files to Modify:**
+    - engine/orchestration/planner.py: select_connectors() signature and implementation
+    - engine/orchestration/planner.py: orchestrate() execution loop (lines 293-334)
+
+- [ ] **PL-002: Timeout Constraints Not Enforced**
+  - **Principle:** Stage 4 (Connector Execution) requirement: "Enforce rate limits, timeouts, and budgets" (architecture.md 4.1)
+  - **Location:** `engine/orchestration/adapters.py:96-178` (execute method), `engine/orchestration/registry.py:38,46` (timeout_seconds field)
+  - **Description:** CONNECTOR_REGISTRY defines timeout_seconds for each connector (30-60s), but these timeouts are not enforced during connector execution. Connector.fetch() is called without asyncio.wait_for() timeout wrapper (adapters.py:132). Long-running or stuck connectors could block the entire orchestration.
+  - **Current Behavior:**
+    - ConnectorSpec.timeout_seconds defined in registry (30-60s per connector)
+    - adapter.execute() calls `results = await self.connector.fetch(translated_query)` without timeout
+    - Only constraint is underlying HTTP client timeouts (varies by library)
+  - **Required Behavior:**
+    1. Wrap connector.fetch() in `asyncio.wait_for(self.connector.fetch(...), timeout=timeout_seconds)`
+    2. Catch asyncio.TimeoutError and record as error in state.errors
+    3. Pass timeout_seconds from CONNECTOR_REGISTRY to adapter
+    4. Include timeout information in error metrics
+  - **Impact:** Low-Medium - Could cause orchestration hangs, but HTTP timeouts provide some safety
+  - **Fix Scope:** ~20 lines
+  - **Files to Modify:**
+    - engine/orchestration/adapters.py: execute() method (add timeout wrapper)
+    - engine/orchestration/planner.py: Pass timeout_seconds when creating ConnectorSpec (line 307-315)
+
+- [ ] **PL-003: No Parallelism Within Phases**
+  - **Principle:** Stage 3 (Planning) requirement: "Establish execution phases" implies phase barriers with parallelism within phases (architecture.md 4.1)
+  - **Location:** `engine/orchestration/planner.py:293-334` (connector execution loop)
+  - **Description:** Connectors execute sequentially in a for loop, even though they are async and could run in parallel within phases. ExecutionPlan infrastructure supports phases (DISCOVERY, ENRICHMENT) but execution doesn't use phase barriers. Discovery connectors (serper, openstreetmap) could run in parallel, then enrichment connectors (google_places, sport_scotland) in parallel after discovery completes.
+  - **Current Behavior:**
+    - Sequential execution: `for connector_name in connector_names: await adapter.execute(...)`
+    - All connectors run in order regardless of phase
+    - No concurrency even within same phase
+  - **Required Behavior:**
+    1. Group connectors by phase (ExecutionPhase.DISCOVERY, ExecutionPhase.ENRICHMENT)
+    2. Execute all connectors in a phase concurrently using asyncio.gather()
+    3. Wait for phase completion before proceeding to next phase
+    4. Respect dependencies within phases (if any, via ExecutionPlan.dependencies)
+    5. Error in one connector should not block other connectors in same phase
+  - **Impact:** Low - Performance optimization, not correctness issue. Most queries use 2-4 connectors.
+  - **Fix Scope:** ~50 lines
+  - **Files to Modify:**
+    - engine/orchestration/planner.py: orchestrate() execution loop (replace for loop with phase-grouped asyncio.gather)
+  - **Note:** Requires PL-001 (ExecutionPlan) to be implemented first
+
+- [ ] **PL-004: Rate Limits Not Implemented**
+  - **Principle:** Stage 4 (Connector Execution) requirement: "Enforce rate limits" (architecture.md 4.1)
+  - **Location:** `engine/orchestration/registry.py` (missing rate_limit field), `engine/orchestration/adapters.py` (no rate limiting logic)
+  - **Description:** Architecture.md 4.1 Stage 4 and connector metadata spec (architecture.md end notes) mention rate_limit enforcement, but CONNECTOR_REGISTRY doesn't define it and no rate limiting logic exists. External APIs often have rate limits (e.g., Google Places 1000 requests/day, Serper various tiers) that should be tracked and enforced to prevent quota exhaustion.
+  - **Current Behavior:** No rate limiting at all - connectors can be called unlimited times
+  - **Required Behavior:**
+    1. Add rate_limit field to ConnectorSpec (requests per time window, e.g., "1000/day")
+    2. Track connector usage across orchestration runs (requires persistence - OrchestrationRun or separate table)
+    3. Check rate limit before executing connector
+    4. Skip or delay connector if rate limit exceeded
+    5. Include rate limit status in orchestration report
+  - **Impact:** Low - Most connectors used infrequently in development, but could cause API quota exhaustion in production
+  - **Fix Scope:** ~100 lines (requires state persistence and usage tracking)
+  - **Note:** Likely Phase C work - not critical for initial pipeline validation
+  - **Files to Modify:**
+    - engine/orchestration/registry.py: Add rate_limit field to ConnectorSpec
+    - engine/orchestration/adapters.py: Add rate limit check before execute()
+    - Database schema: Add connector_usage tracking table or extend OrchestrationRun
+
+---
+
+### Stage 4: Connector Execution (architecture.md 4.1)
+
+**Status:** Audit pending
+
+**Requirements:**
+- Execute connectors according to the plan
+- Enforce rate limits, timeouts, and budgets
+- Collect raw payloads and connector metadata
+
+(Audit pending)
+
+---
+
+### Stage 5: Raw Ingestion Persistence (architecture.md 4.1)
+
+**Status:** Audit pending
+
+**Requirements:**
+- Persist raw payload artifacts and metadata (source, timestamp, hash)
+- Perform ingestion-level deduplication of identical payloads
+- Raw artifacts become immutable inputs for downstream stages
+
+(Audit pending)
+
+---
+
+### Stage 6: Source Extraction (architecture.md 4.1, 4.2)
+
+**Status:** Audit pending
+
+**Requirements:**
+- For each raw artifact, run source-specific extractor
+- Extractors emit schema primitives + raw observations only
+- No lens interpretation at this stage (Phase 1 contract)
+
+(Audit pending)
+
+---
+
+### Stage 7: Lens Application (architecture.md 4.1, 4.2)
+
+**Status:** Audit pending
+
+**Requirements:**
+- Apply lens mapping rules to populate canonical dimensions
+- Evaluate module triggers
+- Execute module field rules using generic module extraction engine
+- Deterministic rules before LLM extraction
+
+(Audit pending)
+
+---
+
+### Stage 8: Classification (architecture.md 4.1)
+
+**Status:** Audit pending
+
+**Requirements:**
+- Determine entity_class using deterministic universal rules
+
+(Audit pending)
+
+---
+
+### Stage 9: Cross-Source Deduplication (architecture.md 4.1)
+
+**Status:** Audit pending
+
+**Requirements:**
+- Group extracted entities representing same real-world entity
+- Multi-tier strategies (external IDs, geo similarity, name similarity, fingerprints)
+
+(Audit pending)
+
+---
+
+### Stage 10: Deterministic Merge (architecture.md 4.1)
+
+**Status:** Audit pending
+
+**Requirements:**
+- Merge each deduplication group into single canonical entity
+- Metadata-driven, field-aware deterministic rules
+
+(Audit pending)
+
+---
+
+### Stage 11: Finalization and Persistence (architecture.md 4.1)
+
+**Status:** Audit pending
+
+**Requirements:**
+- Generate stable slugs and derived identifiers
+- Upsert merged entities idempotently
+- Persist provenance and external identifiers
+
+(Audit pending)
 
 ---
 
@@ -299,11 +572,37 @@ Placeholder items based on architecture.md 4.1 (11 pipeline stages):
 
 ### Audit Methodology
 This catalog was created by systematically auditing system-vision.md Invariants 1-10 and architecture.md contracts against the codebase:
+
+**Phase 1 (Foundation):**
 - Searched engine code for domain terms using: `grep -ri "padel|tennis|wine|restaurant" engine/`
 - Read all extractor implementations to check extraction boundary compliance
 - Verified ExecutionContext propagation through pipeline
 - Checked lens loading locations for bootstrap boundary violations
 - Compared ExecutionContext implementation against architecture.md 3.6 specification
+
+**Phase 2 (Pipeline Implementation):**
+- **Stage 2 Audit (2026-01-31):** Lens Resolution and Validation
+  - Read architecture.md 3.1 (precedence requirements) and 4.1 Stage 2 (bootstrap requirements)
+  - Analyzed cli.py bootstrap_lens() implementation (lines 32-84)
+  - Verified lens precedence logic in main() (lines 306-324)
+  - Searched for hardcoded lens_id values: `grep -ri "lens_id|LENS_ID" engine/orchestration/`
+  - Verified validation gate invocation in loader.py:291
+  - Checked for config file existence: `engine/config/app.yaml` (not found)
+  - Identified fallback bootstrap path in planner.py:232-287
+  - Result: 3 implementation gaps (LR-001, LR-002, LR-003)
+
+- **Stage 3 Audit (2026-01-31):** Planning
+  - Read architecture.md 4.1 Stage 3 (planning requirements) and 4.2 (Planning Boundary contract)
+  - Analyzed planner.py select_connectors() implementation (lines 40-108)
+  - Read query_features.py QueryFeatures.extract() for determinism verification (lines 45-92)
+  - Read execution_plan.py ExecutionPlan class infrastructure (lines 91-252)
+  - Searched for ExecutionPlan usage: `grep -r "ExecutionPlan()" engine/orchestration/` → only in tests
+  - Analyzed connector execution loop in planner.py orchestrate() (lines 293-334)
+  - Read adapters.py execute() method for timeout enforcement (lines 96-178)
+  - Verified timeout_seconds defined in CONNECTOR_REGISTRY but not used
+  - Checked for rate limiting logic: none found
+  - Verified Planning Boundary compliance: no network calls, extraction, or persistence in select_connectors()
+  - Result: 4 implementation gaps (PL-001, PL-002, PL-003, PL-004)
 
 ### Progress Rules
 - Items worked in order (top to bottom within each level)
@@ -331,4 +630,7 @@ Every completed item MUST document executable proof:
 - Full architectural compliance achieved: 319 tests passed, 5 skipped, 0 failures
 - Foundation is solid and permanent
 
-**Next Action:** Begin Phase 2 - Audit architecture.md Section 4.1 (11 pipeline stages) to create detailed implementation catalog items.
+**Next Action:**
+- **Stage 2 Audit Complete:** 3 implementation gaps identified (LR-001, LR-002, LR-003)
+- **Stage 3 Audit Complete:** 4 implementation gaps identified (PL-001, PL-002, PL-003, PL-004)
+- **Stage 4 Audit Pending:** Continue pipeline audit with Stage 4 (Connector Execution) next

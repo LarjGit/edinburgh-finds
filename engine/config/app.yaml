@@ -1,0 +1,14 @@
+# Application-level configuration
+# Per architecture.md 3.1: Lens resolution precedence (level 3)
+#
+# Precedence order:
+#   1. CLI override (--lens flag)
+#   2. Environment variable (LENS_ID)
+#   3. Application config (this file → default_lens)
+#   4. Dev/Test fallback (LR-002 - not implemented yet)
+#
+# This file establishes schema and precedence, not deployment opinion.
+# Set default_lens to null (or omit) to require explicit lens selection.
+
+# Default lens identifier (null = no default, explicit selection required)
+default_lens: null
