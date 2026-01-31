@@ -2,7 +2,7 @@
 
 **Current Phase:** Phase 2: Pipeline Implementation
 **Validation Entity:** Powerleague Portobello Edinburgh (Phase 2+)
-**Last Updated:** 2026-01-31 (LR-003 complete: Fallback bootstrap path removed from planner - commit pending)
+**Last Updated:** 2026-01-31 (LR-003 complete: Fallback bootstrap path removed from planner - commit 38955f4)
 
 ---
 
@@ -361,7 +361,7 @@
   - **Location:** `engine/orchestration/planner.py:154,216-219`
   - **Description:** Planner contained fallback bootstrap path that duplicated cli.bootstrap_lens logic. Violated single-bootstrap contract when orchestrate() called without ctx parameter. Created two bootstrap code paths instead of one.
   - **Completed:** 2026-01-31
-  - **Commit:** (pending)
+  - **Commit:** 38955f4
   - **Executable Proof:**
     - `pytest tests/engine/orchestration/ -q` ✅ 218/218 PASSED (100% when run in isolation)
     - `pytest tests/engine/orchestration/ tests/engine/lenses/ tests/engine/extraction/ -q` ✅ 328/329 PASSED (99.7% - one flaky test pre-existing)
