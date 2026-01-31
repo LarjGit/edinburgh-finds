@@ -2,7 +2,7 @@
 
 **Current Phase:** Foundation (Phase 1)
 **Validation Entity:** Powerleague Portobello Edinburgh (when in Phase 2+)
-**Last Updated:** 2026-01-31 (EP-001, CP-001a/b/c, LB-001, EC-001a/b, EC-001b2-1, EC-001b2-2 Part 1 completed)
+**Last Updated:** 2026-01-31 (EP-001, CP-001a/b/c, LB-001, EC-001a/b, EC-001b2-1, EC-001b2-2 Part 1, EC-001b2-3, EC-001b2-4 completed)
 
 ---
 
@@ -161,19 +161,64 @@
   - **Fix Applied:** Deleted entire file. Tests for mutable state (candidates, metrics, errors) are obsolete because ExecutionContext is now frozen dataclass per architecture.md 3.6. Lens contract immutability already covered by test_execution_context_contract.py.
   - **Note:** Remaining 9 test failures are NOT fixture-related. Investigation shows they are lens-related failures (sport_scotland, wine lens), not ExecutionContext/OrchestratorState issues. These belong in a separate catalog item.
 
-- [ ] **EC-001b2-3: Investigate Remaining 9 Test Failures (lens-related)**
+- [x] **EC-001b2-3: Investigate Remaining 9 Test Failures (lens-related)**
   - **Principle:** Test Infrastructure Alignment (follow-up investigation)
   - **Location:** Multiple test files in `tests/engine/orchestration/`
-  - **Description:** 9 remaining test failures after EC-001b2-2 Part 1. Initial investigation shows these are lens-related (sport_scotland connector, wine lens) rather than ExecutionContext/OrchestratorState fixture issues.
-  - **Evidence:** Test failures in:
-    - test_async_refactor.py (1 failure)
-    - test_integration.py (1 failure: sport_scotland)
-    - test_persistence.py (1 failure: CLI persist flag)
-    - test_planner.py (3 failures: 1 sport_scotland, 2 lens loading)
-    - test_planner_refactor.py (2 failures: sport_scotland, wine lens)
-    - test_query_features_refactor.py (1 failure: wine lens)
-  - **Estimated Scope:** Investigation required to determine root cause
-  - **Fix Strategy:** TBD after investigation
+  - **Description:** 9 remaining test failures after EC-001b2-2 Part 1. Investigation reveals 3 distinct root causes requiring separate catalog items.
+  - **Completed:** 2026-01-31
+  - **Executable Proof:**
+    - `pytest tests/engine/orchestration/ -q` ✅ 9 failed, 199 passed, 3 skipped (matches catalog prediction)
+  - **Investigation Findings:**
+    - **Category 1 (4 tests):** ExecutionContext signature mismatch - tests calling `ExecutionContext(lens_contract={...})` without required `lens_id` parameter after EC-001 frozen dataclass changes
+      - test_async_refactor.py::test_cli_calls_orchestrate_with_asyncio_run
+      - test_persistence.py::test_cli_accepts_persist_flag
+      - test_planner.py::test_orchestrate_accepts_execution_context_parameter
+      - test_planner.py::test_orchestrate_uses_lens_from_context_not_disk
+    - **Category 2 (2 tests):** Missing wine lens file - tests reference wine lens but `engine/lenses/wine/lens.yaml` doesn't exist
+      - test_planner_refactor.py::test_wine_query_includes_wine_connectors
+      - test_query_features_refactor.py::test_query_features_uses_wine_lens
+    - **Category 3 (3 tests):** sport_scotland connector routing - query planner not selecting sport_scotland for sports queries
+      - test_integration.py::test_sports_query_includes_domain_specific_source
+      - test_planner.py::test_sports_query_includes_sport_scotland
+      - test_planner_refactor.py::test_padel_query_includes_sport_scotland
+  - **Follow-up Items:** EC-001b2-4 (Category 1 fixes), TF-001 (Category 2 fixes), CR-001 (Category 3 investigation)
+
+- [x] **EC-001b2-4: Fix ExecutionContext Test Fixtures (4 tests)**
+  - **Principle:** Test Infrastructure Alignment (EC-001 follow-up)
+  - **Location:** 4 test files in `tests/engine/orchestration/`
+  - **Description:** Updated test fixtures that instantiate ExecutionContext to include required lens_id and lens_hash parameters per architecture.md 3.6 frozen dataclass contract. Mechanical signature change from `ExecutionContext(lens_contract={...})` to `ExecutionContext(lens_id="edinburgh_finds", lens_contract={...}, lens_hash="test_hash")`.
+  - **Completed:** 2026-01-31
+  - **Commit:** c8387d0
+  - **Executable Proof:**
+    - `pytest tests/engine/orchestration/test_async_refactor.py::TestCLIUsesAsyncioRun::test_cli_calls_orchestrate_with_asyncio_run -v` ✅ PASSED
+    - `pytest tests/engine/orchestration/test_persistence.py::test_cli_accepts_persist_flag -v` ✅ PASSED
+    - `pytest tests/engine/orchestration/test_planner.py::TestLensLoadingBoundary::test_orchestrate_accepts_execution_context_parameter -v` ✅ PASSED
+    - `pytest tests/engine/orchestration/test_planner.py::TestLensLoadingBoundary::test_orchestrate_uses_lens_from_context_not_disk -v` ✅ PASSED
+    - `pytest tests/engine/orchestration/ -q` ✅ 5 failed, 203 passed, 3 skipped (down from 9 failed)
+  - **Fix Applied:** Updated 4 ExecutionContext instantiations in 3 test files to include lens_id and lens_hash parameters. All 4 tests now pass. Total test failures reduced from 9 to 5 as predicted.
+  - **Files Modified:**
+    - tests/engine/orchestration/test_async_refactor.py:86
+    - tests/engine/orchestration/test_persistence.py:164
+    - tests/engine/orchestration/test_planner.py:552, 590
+
+- [ ] **TF-001: Handle Wine Lens Test Dependencies**
+  - **Principle:** Test Infrastructure Completeness
+  - **Location:** `engine/lenses/wine/` (missing) and 2 test files
+  - **Description:** Tests reference wine lens but wine lens YAML doesn't exist. Two options: (1) Create minimal wine lens fixture for testing, OR (2) Mark tests with @pytest.mark.skip until wine lens implemented.
+  - **Estimated Scope:** Either create 1 minimal lens.yaml file OR add skip decorators to 2 tests
+  - **Affected Tests:**
+    - tests/engine/orchestration/test_planner_refactor.py::test_wine_query_includes_wine_connectors
+    - tests/engine/orchestration/test_query_features_refactor.py::test_query_features_uses_wine_lens
+
+- [ ] **CR-001: Investigate sport_scotland Connector Routing**
+  - **Principle:** Connector Selection Logic (architecture.md 4.1 Stage 3)
+  - **Location:** `engine/orchestration/planner.py`, `engine/orchestration/query_features.py`
+  - **Description:** Query planner not selecting sport_scotland connector for sports-related queries. Tests expect queries like "rugby clubs" and "football facilities" to route to sport_scotland but only generic connectors (serper, google_places, openstreetmap) are selected.
+  - **Estimated Scope:** Investigation of query feature extraction and connector selection logic
+  - **Affected Tests:**
+    - tests/engine/orchestration/test_integration.py::test_sports_query_includes_domain_specific_source
+    - tests/engine/orchestration/test_planner.py::test_sports_query_includes_sport_scotland
+    - tests/engine/orchestration/test_planner_refactor.py::test_padel_query_includes_sport_scotland
 
 - [ ] **MC-001: Missing Lens Validation Gates**
   - **Principle:** Lens Validation Gates (architecture.md 6.7)
@@ -230,4 +275,4 @@ Every completed item MUST document executable proof:
 
 ---
 
-**Next Action:** EC-001b2-2 Part 1 complete! Select EC-001b2-3 (Investigate 9 lens-related test failures) OR MC-001 (Missing Lens Validation Gates) per development-methodology.md Section 8.
+**Next Action:** EC-001b2-4 complete! 4 ExecutionContext test fixtures fixed, failures reduced from 9 to 5. Remaining 5 failures are from TF-001 (Wine/Padel lens missing - 3 tests) and CR-001 (sport_scotland routing - 2 tests). Next items: TF-001 (Handle lens test dependencies), CR-001 (Investigate sport_scotland routing), or MC-001 (Missing Lens Validation Gates).
