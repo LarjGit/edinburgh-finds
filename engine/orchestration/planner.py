@@ -26,7 +26,7 @@ from prisma import Prisma
 from engine.orchestration.adapters import ConnectorAdapter
 from engine.orchestration.execution_context import ExecutionContext
 from engine.orchestration.orchestrator_state import OrchestratorState
-from engine.orchestration.execution_plan import ConnectorSpec, ExecutionPhase
+from engine.orchestration.execution_plan import ConnectorSpec, ExecutionPhase, ExecutionPlan
 from engine.orchestration.query_features import QueryFeatures
 from engine.orchestration.registry import CONNECTOR_REGISTRY, get_connector_instance
 from engine.orchestration.types import IngestRequest, IngestionMode
@@ -35,7 +35,7 @@ from engine.orchestration.entity_finalizer import EntityFinalizer
 from engine.lenses.query_lens import get_active_lens
 
 
-def select_connectors(request: IngestRequest) -> List[str]:
+def select_connectors(request: IngestRequest) -> ExecutionPlan:
     """
     Select which connectors to run for the given request.
 
@@ -57,7 +57,7 @@ def select_connectors(request: IngestRequest) -> List[str]:
         request: The ingestion request containing query and parameters
 
     Returns:
-        List of connector names to execute, ordered by phase
+        ExecutionPlan with connectors to execute, ordered by phase
     """
     # Phase B: Intelligent selection based on query features
     query_features = QueryFeatures.extract(request.query, request, lens_name=request.lens)
@@ -102,8 +102,31 @@ def select_connectors(request: IngestRequest) -> List[str]:
     if request.budget_usd is not None:
         selected_connectors = _apply_budget_gating(selected_connectors, request.budget_usd)
 
-    # Return connectors ordered by phase: discovery first, then enrichment
-    return selected_connectors
+    # Build ExecutionPlan from selected connectors
+    plan = ExecutionPlan()
+    for connector_name in selected_connectors:
+        # Get connector spec from registry
+        if connector_name not in CONNECTOR_REGISTRY:
+            # Skip unknown connectors
+            continue
+
+        registry_spec = CONNECTOR_REGISTRY[connector_name]
+
+        # Convert registry spec to execution plan spec
+        connector_spec = ConnectorSpec(
+            name=registry_spec.name,
+            phase=ExecutionPhase.DISCOVERY if registry_spec.phase == "discovery" else ExecutionPhase.ENRICHMENT,
+            trust_level=int(registry_spec.trust_level * 100),  # Convert 0.0-1.0 to 0-100
+            requires=["request.query"],  # Phase A: minimal requirements
+            provides=["context.candidates"],
+            supports_query_only=True,
+            estimated_cost_usd=registry_spec.cost_per_call_usd,
+        )
+
+        # Add to plan (automatic dependency inference)
+        plan.add_connector(connector_spec)
+
+    return plan
 
 
 def _apply_budget_gating(connectors: List[str], budget_usd: float) -> List[str]:
@@ -202,11 +225,12 @@ async def orchestrate(
         # 1. Extract query features
         query_features = QueryFeatures.extract(request.query, request)
 
-        # 2. Select connectors to run
-        connector_names = select_connectors(request)
+        # 2. Select connectors to run (returns ExecutionPlan)
+        plan = select_connectors(request)
 
         # 2.5. Check API key availability and warn if Serper will be used
         warnings = []
+        connector_names = [node.spec.name for node in plan.connectors]
         if "serper" in connector_names and not os.getenv("ANTHROPIC_API_KEY"):
             warnings.append({
                 "type": "missing_api_key",
@@ -221,37 +245,16 @@ async def orchestrate(
         # Create mutable orchestrator state (separate from immutable context per architecture.md 3.6)
         state = OrchestratorState()
 
-        # 4. Execute connectors via adapters
-        for connector_name in connector_names:
-            # Get connector spec from registry
-            if connector_name not in CONNECTOR_REGISTRY:
-                # Log error but continue with other connectors
-                state.errors.append({
-                    "connector": connector_name,
-                    "error": f"Connector not found in registry: {connector_name}",
-                    "execution_time_ms": 0,
-                })
-                continue
-
-            registry_spec = CONNECTOR_REGISTRY[connector_name]
-
-            # Create ConnectorSpec for adapter (convert registry spec to execution plan spec)
-            connector_spec = ConnectorSpec(
-                name=registry_spec.name,
-                phase=ExecutionPhase.DISCOVERY if registry_spec.phase == "discovery" else ExecutionPhase.ENRICHMENT,
-                trust_level=int(registry_spec.trust_level * 100),  # Convert 0.0-1.0 to 0-100
-                requires=["request.query"],  # Phase A: minimal requirements
-                provides=["context.candidates"],
-                supports_query_only=True,
-                estimated_cost_usd=registry_spec.cost_per_call_usd,
-            )
+        # 4. Execute connectors via adapters (using ExecutionPlan)
+        for node in plan.connectors:
+            connector_name = node.spec.name
 
             # Get connector instance
             try:
                 connector = get_connector_instance(connector_name)
 
-                # Create adapter
-                adapter = ConnectorAdapter(connector, connector_spec)
+                # Create adapter using spec from execution plan
+                adapter = ConnectorAdapter(connector, node.spec)
 
                 # Execute connector (adapter handles errors internally)
                 await adapter.execute(request, query_features, context, state)

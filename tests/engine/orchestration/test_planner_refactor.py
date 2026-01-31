@@ -13,7 +13,8 @@ def test_padel_query_includes_sport_scotland():
         lens="edinburgh_finds"
     )
 
-    connectors = select_connectors(request)
+    plan = select_connectors(request)
+    connectors = [node.spec.name for node in plan.connectors]
 
     assert "sport_scotland" in connectors
 
@@ -26,7 +27,8 @@ def test_wine_query_includes_wine_connectors():
         lens="wine"
     )
 
-    connectors = select_connectors(request)
+    plan = select_connectors(request)
+    connectors = [node.spec.name for node in plan.connectors]
 
     # Wine lens should add wine-specific connectors
     assert "wine_searcher" in connectors or "edinburgh_council" in connectors
@@ -39,7 +41,8 @@ def test_generic_query_no_domain_connectors():
         ingestion_mode=IngestionMode.DISCOVER_MANY
     )
 
-    connectors = select_connectors(request)
+    plan = select_connectors(request)
+    connectors = [node.spec.name for node in plan.connectors]
 
     # Should only have base connectors
     assert "sport_scotland" not in connectors
@@ -54,7 +57,8 @@ def test_lens_defaults_to_padel():
         # No lens specified
     )
 
-    connectors = select_connectors(request)
+    plan = select_connectors(request)
+    connectors = [node.spec.name for node in plan.connectors]
 
     # Should use Padel lens by default
     assert "sport_scotland" in connectors

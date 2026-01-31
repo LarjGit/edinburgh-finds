@@ -17,14 +17,16 @@ from engine.orchestration.types import IngestRequest, IngestionMode
 class TestSelectConnectors:
     """Test connector selection logic (Phase B: intelligent selection)."""
 
-    def test_select_connectors_returns_list(self):
-        """select_connectors should return a list of connector names."""
+    def test_select_connectors_returns_execution_plan(self):
+        """select_connectors should return an ExecutionPlan object."""
+        from engine.orchestration.execution_plan import ExecutionPlan
+
         request = IngestRequest(
             ingestion_mode=IngestionMode.DISCOVER_MANY,
             query="tennis courts Edinburgh",
         )
-        connectors = select_connectors(request)
-        assert isinstance(connectors, list), "select_connectors should return a list"
+        plan = select_connectors(request)
+        assert isinstance(plan, ExecutionPlan), "select_connectors should return ExecutionPlan"
 
     def test_select_connectors_includes_base_connectors(self):
         """select_connectors should include core discovery and enrichment connectors."""
@@ -32,13 +34,14 @@ class TestSelectConnectors:
             ingestion_mode=IngestionMode.DISCOVER_MANY,
             query="tennis courts Edinburgh",
         )
-        connectors = select_connectors(request)
+        plan = select_connectors(request)
+        connector_names = [node.spec.name for node in plan.connectors]
 
         # Should always include serper (discovery) and google_places (enrichment)
-        assert "serper" in connectors, "serper should be selected for discovery"
-        assert "google_places" in connectors, "google_places should be selected for enrichment"
+        assert "serper" in connector_names, "serper should be selected for discovery"
+        assert "google_places" in connector_names, "google_places should be selected for enrichment"
         # Phase B: May include additional connectors based on query features
-        assert len(connectors) >= 2, "Should select at least base connectors"
+        assert len(connector_names) >= 2, "Should select at least base connectors"
 
     def test_select_connectors_deterministic(self):
         """select_connectors should return same connectors for same request."""
@@ -47,10 +50,13 @@ class TestSelectConnectors:
             query="tennis courts Edinburgh",
         )
 
-        connectors_1 = select_connectors(request)
-        connectors_2 = select_connectors(request)
+        plan_1 = select_connectors(request)
+        plan_2 = select_connectors(request)
 
-        assert connectors_1 == connectors_2, "Selection should be deterministic"
+        names_1 = [node.spec.name for node in plan_1.connectors]
+        names_2 = [node.spec.name for node in plan_2.connectors]
+
+        assert names_1 == names_2, "Selection should be deterministic"
 
 
 class TestOrchestrate:
@@ -177,7 +183,8 @@ class TestSelectConnectorsPhaseB:
             query="padel courts in Edinburgh",
         )
 
-        selected = select_connectors(request)
+        plan = select_connectors(request)
+        selected = [node.spec.name for node in plan.connectors]
 
         # Should include all relevant connectors
         assert "serper" in selected, "Should use serper for discovery"
@@ -211,7 +218,8 @@ class TestSelectConnectorsPhaseB:
             query="Oriam Scotland",
         )
 
-        selected = select_connectors(request)
+        plan = select_connectors(request)
+        selected = [node.spec.name for node in plan.connectors]
 
         # Should prioritize google_places for authoritative data
         assert "google_places" in selected, "Should use google_places for specific search"
@@ -238,7 +246,8 @@ class TestSelectConnectorsPhaseB:
                 query=query,
             )
 
-            selected = select_connectors(request)
+            plan = select_connectors(request)
+            selected = [node.spec.name for node in plan.connectors]
 
             assert "sport_scotland" in selected, (
                 f"Query '{query}' should include sport_scotland connector"
@@ -253,7 +262,8 @@ class TestSelectConnectorsPhaseB:
             query="coffee shops in Edinburgh",
         )
 
-        selected = select_connectors(request)
+        plan = select_connectors(request)
+        selected = [node.spec.name for node in plan.connectors]
 
         assert "sport_scotland" not in selected, (
             "Non-sports query should not include sport_scotland"
@@ -268,7 +278,8 @@ class TestSelectConnectorsPhaseB:
             query="padel",
         )
 
-        selected = select_connectors(request)
+        plan = select_connectors(request)
+        selected = [node.spec.name for node in plan.connectors]
 
         # Should include discovery connectors
         assert "serper" in selected, "Should use serper for discovery"
@@ -284,7 +295,8 @@ class TestSelectConnectorsPhaseB:
             query="tennis courts in Edinburgh",
         )
 
-        selected = select_connectors(request)
+        plan = select_connectors(request)
+        selected = [node.spec.name for node in plan.connectors]
 
         # Get indices of discovery and enrichment connectors
         discovery_connectors = ["serper", "openstreetmap"]
@@ -319,17 +331,20 @@ class TestSelectConnectorsPhaseB:
             query=query,
         )
 
-        discover_selected = select_connectors(discover_request)
-        resolve_selected = select_connectors(resolve_request)
+        discover_plan = select_connectors(discover_request)
+        resolve_plan = select_connectors(resolve_request)
 
         # RESOLVE_ONE should use fewer or equal connectors
-        assert len(resolve_selected) <= len(discover_selected), (
+        assert len(resolve_plan.connectors) <= len(discover_plan.connectors), (
             "RESOLVE_ONE should be more selective than DISCOVER_MANY"
         )
 
         # RESOLVE_ONE should prioritize high-trust connectors
-        if "google_places" in discover_selected:
-            assert "google_places" in resolve_selected, (
+        discover_names = [node.spec.name for node in discover_plan.connectors]
+        resolve_names = [node.spec.name for node in resolve_plan.connectors]
+
+        if "google_places" in discover_names:
+            assert "google_places" in resolve_names, (
                 "RESOLVE_ONE should include high-trust google_places"
             )
 
@@ -347,7 +362,8 @@ class TestSelectConnectorsBudgetAware:
             budget_usd=None,
         )
 
-        selected = select_connectors(request)
+        plan = select_connectors(request)
+        selected = [node.spec.name for node in plan.connectors]
 
         # Should include all relevant connectors for sports + category search
         assert "serper" in selected
@@ -365,7 +381,8 @@ class TestSelectConnectorsBudgetAware:
             budget_usd=0.0,
         )
 
-        selected = select_connectors(request)
+        plan = select_connectors(request)
+        selected = [node.spec.name for node in plan.connectors]
 
         # Should only include free connectors (openstreetmap, sport_scotland)
         # Should exclude paid connectors (serper, google_places)
@@ -384,7 +401,8 @@ class TestSelectConnectorsBudgetAware:
             budget_usd=0.02,  # Only enough for 1-2 paid API calls
         )
 
-        selected = select_connectors(request)
+        plan = select_connectors(request)
+        selected = [node.spec.name for node in plan.connectors]
 
         # Should include at least one discovery and one enrichment source
         # Free connectors should always be included
@@ -404,7 +422,8 @@ class TestSelectConnectorsBudgetAware:
             budget_usd=1.0,  # Plenty of budget
         )
 
-        selected = select_connectors(request)
+        plan = select_connectors(request)
+        selected = [node.spec.name for node in plan.connectors]
 
         # Should include all relevant connectors
         assert "serper" in selected
@@ -422,7 +441,8 @@ class TestSelectConnectorsBudgetAware:
             budget_usd=0.015,  # Between serper ($0.01) and google_places ($0.017)
         )
 
-        selected = select_connectors(request)
+        plan = select_connectors(request)
+        selected = [node.spec.name for node in plan.connectors]
 
         # Calculate total estimated cost
         from engine.orchestration.registry import CONNECTOR_REGISTRY
@@ -445,7 +465,8 @@ class TestSelectConnectorsBudgetAware:
             budget_usd=0.0,  # Zero budget
         )
 
-        selected = select_connectors(request)
+        plan = select_connectors(request)
+        selected = [node.spec.name for node in plan.connectors]
 
         # Free connectors should be included
         free_connector_names = ["openstreetmap", "sport_scotland"]

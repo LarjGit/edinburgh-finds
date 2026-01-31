@@ -93,7 +93,8 @@ class TestMultiConnectorOrchestration:
         )
 
         # Get selected connectors to understand expected order
-        selected = select_connectors(request)
+        plan = select_connectors(request)
+        selected = [node.spec.name for node in plan.connectors]
 
         report = await orchestrate(request, ctx=mock_context)
 
@@ -163,8 +164,29 @@ class TestErrorHandlingAndResilience:
         )
 
         # Mock select_connectors to return an invalid connector
+        from engine.orchestration.execution_plan import ExecutionPlan, ConnectorSpec, ExecutionPhase
+
         with patch("engine.orchestration.planner.select_connectors") as mock_select:
-            mock_select.return_value = ["serper", "invalid_connector", "google_places"]
+            # Create mock ExecutionPlan with invalid connector
+            mock_plan = ExecutionPlan()
+            mock_plan.connectors = [
+                type('obj', (object,), {'spec': ConnectorSpec(
+                    name="serper", phase=ExecutionPhase.DISCOVERY, trust_level=75,
+                    requires=["request.query"], provides=["context.candidates"],
+                    supports_query_only=True, estimated_cost_usd=0.01
+                )})(),
+                type('obj', (object,), {'spec': ConnectorSpec(
+                    name="invalid_connector", phase=ExecutionPhase.DISCOVERY, trust_level=50,
+                    requires=["request.query"], provides=["context.candidates"],
+                    supports_query_only=True, estimated_cost_usd=0.0
+                )})(),
+                type('obj', (object,), {'spec': ConnectorSpec(
+                    name="google_places", phase=ExecutionPhase.ENRICHMENT, trust_level=95,
+                    requires=["request.query"], provides=["context.candidates"],
+                    supports_query_only=True, estimated_cost_usd=0.017
+                )})(),
+            ]
+            mock_select.return_value = mock_plan
 
             report = await orchestrate(request, ctx=mock_context)
 
@@ -235,7 +257,8 @@ class TestRealWorldQueryScenarios:
             query="rugby clubs in Edinburgh",
         )
 
-        selected = select_connectors(request)
+        plan = select_connectors(request)
+        selected = [node.spec.name for node in plan.connectors]
 
         # Should include sport_scotland for sports queries
         assert "sport_scotland" in selected, (
@@ -252,7 +275,8 @@ class TestRealWorldQueryScenarios:
             query="restaurants in Edinburgh",
         )
 
-        selected = select_connectors(request)
+        plan = select_connectors(request)
+        selected = [node.spec.name for node in plan.connectors]
 
         # Should NOT include sport_scotland for non-sports queries
         assert "sport_scotland" not in selected, (

@@ -184,9 +184,11 @@ class TestPlannerExtractionTracking:
         )
 
         # WHEN we run orchestration
+        from engine.orchestration.execution_plan import ExecutionPlan
         with patch("engine.orchestration.planner.select_connectors") as mock_select:
             # Mock connector selection to return no connectors (avoid real API calls)
-            mock_select.return_value = []
+            mock_plan = ExecutionPlan()
+            mock_select.return_value = mock_plan
             report = await orchestrate(request, ctx=mock_context)
 
         # THEN report should include extraction counts
@@ -335,8 +337,17 @@ class TestAPIKeyValidation:
             )
 
             # WHEN we run orchestration (mock connector execution to avoid real API calls)
+            from engine.orchestration.execution_plan import ExecutionPlan, ConnectorSpec, ExecutionPhase
             with patch("engine.orchestration.planner.select_connectors") as mock_select:
-                mock_select.return_value = ["serper"]
+                mock_plan = ExecutionPlan()
+                mock_plan.connectors = [
+                    type('obj', (object,), {'spec': ConnectorSpec(
+                        name="serper", phase=ExecutionPhase.DISCOVERY, trust_level=75,
+                        requires=["request.query"], provides=["context.candidates"],
+                        supports_query_only=True, estimated_cost_usd=0.01
+                    )})(),
+                ]
+                mock_select.return_value = mock_plan
 
                 # Mock ConnectorAdapter to avoid actual connector execution
                 with patch("engine.orchestration.planner.ConnectorAdapter") as mock_adapter_class:
