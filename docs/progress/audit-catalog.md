@@ -2,7 +2,7 @@
 
 **Current Phase:** Foundation (Phase 1)
 **Validation Entity:** Powerleague Portobello Edinburgh (when in Phase 2+)
-**Last Updated:** 2026-01-30 (EP-001, CP-001a, CP-001b completed)
+**Last Updated:** 2026-01-31 (EP-001, CP-001a, CP-001b, CP-001c completed)
 
 ---
 
@@ -45,12 +45,18 @@
     - All 58 extraction tests pass (no regressions)
   - **Fix Applied:** Updated all 6 extractors to signature `def extract(self, raw_data: Dict, *, ctx: ExecutionContext) -> Dict:`. Added ExecutionContext import to each file. Created mock_ctx test fixture and updated 9 test callsites to pass ctx parameter.
 
-- [ ] **CP-001c: Context Propagation - Callsite Updates (Part 3 of 3)**
+- [x] **CP-001c: Context Propagation - Callsite Updates (Part 3 of 3)**
   - **Principle:** Extractor Interface Contract (architecture.md 3.8)
   - **Location:** `engine/extraction/run.py`, `engine/orchestration/extraction_integration.py`, `engine/extraction/quarantine.py`
   - **Description:** Update all callsites to pass ExecutionContext to extractor.extract() calls. Some callsites already have context available (extraction_integration.py), others will need context plumbed through.
-  - **Estimated Scope:** 3 files, callsite updates
-  - **Callsites:** run.py:167,348,547 | extraction_integration.py:141 | quarantine.py:282
+  - **Completed:** 2026-01-31
+  - **Commit:** 3a61f8a
+  - **Executable Proof:**
+    - `pytest tests/engine/extraction/test_base.py::TestExtractorInterfaceContract::test_all_extractors_accept_ctx_parameter -v` ✅ PASSED
+    - `pytest tests/engine/extraction/ -v` ✅ All 58 tests PASSED
+    - `pytest tests/engine/orchestration/test_extraction_integration.py -v` ✅ All 8 tests PASSED
+    - All 5 callsites verified to pass ctx parameter (grep confirmed)
+  - **Fix Applied:** Updated all 5 callsites to pass ExecutionContext. Added `_create_minimal_context()` helper function in each of the 3 files to create minimal ExecutionContext when full lens contract not available. Callsites: extraction_integration.py:155 (uses context parameter or minimal), run.py:181,362,561 (minimal context), quarantine.py:296 (minimal context).
 
 - [ ] **LB-001: Lens Loading Boundary - planner.py:233-246**
   - **Principle:** Lens Loading Lifecycle (architecture.md 3.2, 3.7)
