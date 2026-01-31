@@ -27,6 +27,7 @@ from prisma import Prisma
 from engine.lenses.loader import VerticalLens, LensConfigError
 from engine.orchestration.adapters import ConnectorAdapter
 from engine.orchestration.execution_context import ExecutionContext
+from engine.orchestration.orchestrator_state import OrchestratorState
 from engine.orchestration.execution_plan import ConnectorSpec, ExecutionPhase
 from engine.orchestration.query_features import QueryFeatures
 from engine.orchestration.registry import CONNECTOR_REGISTRY, get_connector_instance
@@ -285,12 +286,15 @@ async def orchestrate(
                 lens_hash=lens_hash
             )
 
+        # Create mutable orchestrator state (separate from immutable context per architecture.md 3.6)
+        state = OrchestratorState()
+
         # 4. Execute connectors via adapters
         for connector_name in connector_names:
             # Get connector spec from registry
             if connector_name not in CONNECTOR_REGISTRY:
                 # Log error but continue with other connectors
-                context.errors.append({
+                state.errors.append({
                     "connector": connector_name,
                     "error": f"Connector not found in registry: {connector_name}",
                     "execution_time_ms": 0,
@@ -318,11 +322,11 @@ async def orchestrate(
                 adapter = ConnectorAdapter(connector, connector_spec)
 
                 # Execute connector (adapter handles errors internally)
-                await adapter.execute(request, query_features, context)
+                await adapter.execute(request, query_features, context, state)
 
             except Exception as e:
                 # Unexpected error during adapter creation
-                context.errors.append({
+                state.errors.append({
                     "connector": connector_name,
                     "error": f"Failed to create connector: {str(e)}",
                     "execution_time_ms": 0,
@@ -330,8 +334,8 @@ async def orchestrate(
 
         # 5. Apply deduplication
         # Process all candidates through accept_entity to deduplicate
-        for candidate in context.candidates:
-            context.accept_entity(candidate)
+        for candidate in state.candidates:
+            state.accept_entity(candidate)
 
         # 6. Persist accepted entities if requested
         persisted_count = 0
@@ -345,8 +349,8 @@ async def orchestrate(
                 # Use async PersistenceManager with db connection
                 async with PersistenceManager(db=db) as persistence:
                     persistence_result = await persistence.persist_entities(
-                        context.accepted_entities,
-                        context.errors,
+                        state.accepted_entities,
+                        state.errors,
                         orchestration_run_id=orchestration_run_id,
                         context=context
                     )
@@ -369,7 +373,7 @@ async def orchestrate(
             except Exception as e:
                 # Handle persistence errors gracefully - don't crash orchestration
                 error_msg = f"Persistence failed: {str(e)}"
-                context.errors.append({
+                state.errors.append({
                     "connector": "persistence",
                     "error": error_msg,
                 })
@@ -382,10 +386,10 @@ async def orchestrate(
         # 7. Build structured report
         report = {
             "query": request.query,
-            "candidates_found": len(context.candidates),
-            "accepted_entities": len(context.accepted_entities),
-            "connectors": context.metrics,
-            "errors": context.errors,
+            "candidates_found": len(state.candidates),
+            "accepted_entities": len(state.accepted_entities),
+            "connectors": state.metrics,
+            "errors": state.errors,
         }
 
         # Add warnings if any
@@ -398,7 +402,7 @@ async def orchestrate(
             report["persistence_errors"] = persistence_errors
 
             # Add extraction statistics
-            extraction_total = len(context.accepted_entities)
+            extraction_total = len(state.accepted_entities)
             extraction_success = persisted_count  # Successfully persisted = successfully extracted
             report["extraction_total"] = extraction_total
             report["extraction_success"] = extraction_success
@@ -415,14 +419,14 @@ async def orchestrate(
         if db and orchestration_run_id:
             try:
                 # Calculate total budget spent
-                total_budget = sum(m.get("cost_usd", 0.0) for m in context.metrics.values())
+                total_budget = sum(m.get("cost_usd", 0.0) for m in state.metrics.values())
 
                 await db.orchestrationrun.update(
                     where={"id": orchestration_run_id},
                     data={
-                        "status": "completed" if not context.errors else "completed_with_errors",
-                        "candidates_found": len(context.candidates),
-                        "accepted_entities": len(context.accepted_entities),
+                        "status": "completed" if not state.errors else "completed_with_errors",
+                        "candidates_found": len(state.candidates),
+                        "accepted_entities": len(state.accepted_entities),
                         "budget_spent_usd": total_budget,
                     }
                 )

@@ -17,10 +17,33 @@ import asyncio
 
 from engine.orchestration.adapters import ConnectorAdapter, normalize_for_json
 from engine.orchestration.execution_context import ExecutionContext
+from engine.orchestration.orchestrator_state import OrchestratorState
 from engine.orchestration.execution_plan import ConnectorSpec, ExecutionPhase
 from engine.orchestration.query_features import QueryFeatures
 from engine.orchestration.types import IngestRequest, IngestionMode
 from engine.ingestion.base import BaseConnector
+
+
+@pytest.fixture
+def mock_context():
+    """Create mock ExecutionContext for tests."""
+    return ExecutionContext(
+        lens_id="test",
+        lens_contract={
+            "mapping_rules": [],
+            "module_triggers": [],
+            "modules": {},
+            "facets": {},
+            "values": [],
+            "confidence_threshold": 0.7,
+        }
+    )
+
+
+@pytest.fixture
+def mock_state():
+    """Create OrchestratorState for tests."""
+    return OrchestratorState()
 
 
 class TestNormalizeForJson:
@@ -496,7 +519,7 @@ class TestConnectorAdapterExecute:
     """Test execute method with async bridge and error handling."""
 
     @pytest.mark.asyncio
-    async def test_execute_calls_connector_fetch_via_asyncio_run(self):
+    async def test_execute_calls_connector_fetch_via_asyncio_run(self, mock_context, mock_state):
         """execute should call connector.fetch() directly (async-native)."""
         mock_connector = Mock(spec=BaseConnector)
         mock_connector.source_name = "serper"
@@ -523,16 +546,15 @@ class TestConnectorAdapterExecute:
             ingestion_mode=IngestionMode.DISCOVER_MANY, query="test query"
         )
         query_features = QueryFeatures.extract(query="test query", request=request)
-        context = ExecutionContext()
 
-        await adapter.execute(request, query_features, context)
+        await adapter.execute(request, query_features, mock_context, mock_state)
 
         # Verify fetch was called with query
         mock_connector.fetch.assert_called_once_with("test query")
 
     @pytest.mark.asyncio
-    async def test_execute_adds_candidates_to_context(self):
-        """execute should append mapped candidates to context.candidates."""
+    async def test_execute_adds_candidates_to_context(self, mock_context, mock_state):
+        """execute should append mapped candidates to state.candidates."""
         mock_connector = Mock(spec=BaseConnector)
         mock_connector.source_name = "serper"
 
@@ -557,18 +579,17 @@ class TestConnectorAdapterExecute:
             ingestion_mode=IngestionMode.DISCOVER_MANY, query="test query"
         )
         query_features = QueryFeatures.extract(query="test query", request=request)
-        context = ExecutionContext()
 
-        await adapter.execute(request, query_features, context)
+        await adapter.execute(request, query_features, mock_context, mock_state)
 
         # Should have 2 candidates added
-        assert len(context.candidates) == 2
-        assert context.candidates[0]["name"] == "Result 1"
-        assert context.candidates[1]["name"] == "Result 2"
+        assert len(mock_state.candidates) == 2
+        assert mock_state.candidates[0]["name"] == "Result 1"
+        assert mock_state.candidates[1]["name"] == "Result 2"
 
     @pytest.mark.asyncio
-    async def test_execute_records_success_metrics(self):
-        """execute should record success metrics in context.metrics."""
+    async def test_execute_records_success_metrics(self, mock_context, mock_state):
+        """execute should record success metrics in state.metrics."""
         mock_connector = Mock(spec=BaseConnector)
         mock_connector.source_name = "serper"
 
@@ -593,13 +614,12 @@ class TestConnectorAdapterExecute:
             ingestion_mode=IngestionMode.DISCOVER_MANY, query="test query"
         )
         query_features = QueryFeatures.extract(query="test query", request=request)
-        context = ExecutionContext()
 
-        await adapter.execute(request, query_features, context)
+        await adapter.execute(request, query_features, mock_context, mock_state)
 
         # Check metrics recorded
-        assert "serper" in context.metrics
-        metrics = context.metrics["serper"]
+        assert "serper" in mock_state.metrics
+        metrics = mock_state.metrics["serper"]
         assert metrics["executed"] is True
         assert metrics["items_received"] == 1
         assert metrics["candidates_added"] == 1
@@ -608,7 +628,7 @@ class TestConnectorAdapterExecute:
         assert metrics["cost_usd"] == 0.01
 
     @pytest.mark.asyncio
-    async def test_execute_handles_connector_error_gracefully(self):
+    async def test_execute_handles_connector_error_gracefully(self, mock_context, mock_state):
         """execute should handle connector errors gracefully (non-fatal)."""
         mock_connector = Mock(spec=BaseConnector)
         mock_connector.source_name = "serper"
@@ -634,26 +654,25 @@ class TestConnectorAdapterExecute:
             ingestion_mode=IngestionMode.DISCOVER_MANY, query="test query"
         )
         query_features = QueryFeatures.extract(query="test query", request=request)
-        context = ExecutionContext()
 
         # Should not raise exception
-        await adapter.execute(request, query_features, context)
+        await adapter.execute(request, query_features, mock_context, mock_state)
 
         # Check error recorded
-        assert len(context.errors) == 1
-        error = context.errors[0]
+        assert len(mock_state.errors) == 1
+        error = mock_state.errors[0]
         assert error["connector"] == "serper"
         assert "API timeout" in error["error"]
 
         # Check failure metrics
-        assert "serper" in context.metrics
-        metrics = context.metrics["serper"]
+        assert "serper" in mock_state.metrics
+        metrics = mock_state.metrics["serper"]
         assert metrics["executed"] is False
         assert "error" in metrics
         assert metrics["cost_usd"] == 0.0  # No cost on failure
 
     @pytest.mark.asyncio
-    async def test_execute_tracks_mapping_failures(self):
+    async def test_execute_tracks_mapping_failures(self, mock_context, mock_state):
         """execute should track mapping failures without crashing."""
         mock_connector = Mock(spec=BaseConnector)
         mock_connector.source_name = "serper"
@@ -686,17 +705,16 @@ class TestConnectorAdapterExecute:
             ingestion_mode=IngestionMode.DISCOVER_MANY, query="test query"
         )
         query_features = QueryFeatures.extract(query="test query", request=request)
-        context = ExecutionContext()
 
-        await adapter.execute(request, query_features, context)
+        await adapter.execute(request, query_features, mock_context, mock_state)
 
         # Should add only the 2 good results
-        assert len(context.candidates) == 2
-        assert context.candidates[0]["name"] == "Good Result"
-        assert context.candidates[1]["name"] == "Another Good Result"
+        assert len(mock_state.candidates) == 2
+        assert mock_state.candidates[0]["name"] == "Good Result"
+        assert mock_state.candidates[1]["name"] == "Another Good Result"
 
         # Metrics should track the failure
-        metrics = context.metrics["serper"]
+        metrics = mock_state.metrics["serper"]
         assert metrics["items_received"] == 3
         assert metrics["candidates_added"] == 2
         assert metrics["mapping_failures"] == 1

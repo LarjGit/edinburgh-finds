@@ -33,6 +33,7 @@ UNSTRUCTURED_SOURCES = {
 def _create_minimal_context() -> ExecutionContext:
     """Create minimal ExecutionContext for extraction without full lens contract."""
     return ExecutionContext(
+        lens_id="minimal",
         lens_contract={
             "facets": {},
             "values": [],

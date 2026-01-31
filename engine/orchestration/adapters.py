@@ -98,23 +98,25 @@ class ConnectorAdapter:
         request: IngestRequest,
         query_features: QueryFeatures,
         context: ExecutionContext,
+        state: "OrchestratorState",
     ) -> None:
         """
-        Execute connector and write results to context.
+        Execute connector and write results to state.
 
         This is the main entry point called by the Orchestrator. It:
         1. Translates query for connector-specific requirements
         2. Calls connector.fetch() directly (async)
         3. Extracts items from connector response
         4. Maps each item to canonical candidate schema
-        5. Appends candidates to context.candidates
-        6. Records metrics in context.metrics
-        7. Handles errors gracefully (logs to context.errors)
+        5. Appends candidates to state.candidates
+        6. Records metrics in state.metrics
+        7. Handles errors gracefully (logs to state.errors)
 
         Args:
             request: The ingestion request (contains query)
             query_features: Extracted query features (used for query translation)
-            context: Shared execution context (mutable)
+            context: Immutable execution context (lens contract)
+            state: Mutable orchestrator state (candidates, metrics, errors)
         """
         start_time = time.time()
         items_received = 0
@@ -137,7 +139,7 @@ class ConnectorAdapter:
             for item in items:
                 try:
                     candidate = self._map_to_candidate(item)
-                    context.candidates.append(candidate)
+                    state.candidates.append(candidate)
                     candidates_added += 1
                 except Exception as e:
                     # Track mapping failures for observability
@@ -146,7 +148,7 @@ class ConnectorAdapter:
 
             # Record success metrics
             elapsed_ms = int((time.time() - start_time) * 1000)
-            context.metrics[self.spec.name] = {
+            state.metrics[self.spec.name] = {
                 "executed": True,
                 "items_received": items_received,
                 "candidates_added": candidates_added,
@@ -159,7 +161,7 @@ class ConnectorAdapter:
             # Non-fatal error handling: Log error, don't crash orchestration
             elapsed_ms = int((time.time() - start_time) * 1000)
 
-            context.errors.append(
+            state.errors.append(
                 {
                     "connector": self.spec.name,
                     "error": str(e),
@@ -168,7 +170,7 @@ class ConnectorAdapter:
             )
 
             # Record failure metrics
-            context.metrics[self.spec.name] = {
+            state.metrics[self.spec.name] = {
                 "executed": False,
                 "error": str(e),
                 "execution_time_ms": elapsed_ms,
