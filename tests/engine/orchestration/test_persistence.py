@@ -15,7 +15,7 @@ from engine.orchestration.types import IngestRequest, IngestionMode
 
 
 @pytest.mark.asyncio
-async def test_persist_flag_saves_accepted_entities_to_database():
+async def test_persist_flag_saves_accepted_entities_to_database(mock_context):
     """
     Test that --persist flag triggers database persistence.
 
@@ -45,7 +45,7 @@ async def test_persist_flag_saves_accepted_entities_to_database():
         mock_pm_instance.persist_entities = AsyncMock(return_value=mock_persist_result)
         mock_pm_class.return_value = mock_pm_instance
 
-        report = await orchestrate(request)
+        report = await orchestrate(request, ctx=mock_context)
 
     # Assert: Verify persistence was attempted
     assert report["persisted_count"] == 3
@@ -57,7 +57,7 @@ async def test_persist_flag_saves_accepted_entities_to_database():
 
 
 @pytest.mark.asyncio
-async def test_persist_flag_false_does_not_save_to_database():
+async def test_persist_flag_false_does_not_save_to_database(mock_context):
     """
     Test that without --persist flag, entities are NOT saved to database.
 
@@ -80,7 +80,7 @@ async def test_persist_flag_false_does_not_save_to_database():
         mock_pm_instance.persist_entities = AsyncMock()
         mock_pm_class.return_value = mock_pm_instance
 
-        report = await orchestrate(request)
+        report = await orchestrate(request, ctx=mock_context)
 
     # Assert: Verify no persistence was attempted
     assert report.get("persisted_count") is None  # Key not even in report
@@ -89,7 +89,7 @@ async def test_persist_flag_false_does_not_save_to_database():
 
 
 @pytest.mark.asyncio
-async def test_deduplication_runs_before_persistence():
+async def test_deduplication_runs_before_persistence(mock_context):
     """
     Test that deduplication happens BEFORE database persistence.
 
@@ -120,7 +120,7 @@ async def test_deduplication_runs_before_persistence():
         mock_pm_instance.persist_entities = AsyncMock(side_effect=mock_persist_func)
         mock_pm_class.return_value = mock_pm_instance
 
-        report = await orchestrate(request)
+        report = await orchestrate(request, ctx=mock_context)
 
     # Assert: Verify deduplication worked correctly
     candidates_found = report["candidates_found"]
@@ -187,7 +187,7 @@ def test_cli_accepts_persist_flag():
 
 
 @pytest.mark.asyncio
-async def test_persist_creates_correct_extracted_entity_structure():
+async def test_persist_creates_correct_extracted_entity_structure(mock_context):
     """
     Test that persisted entities have correct structure in database.
 
@@ -222,7 +222,7 @@ async def test_persist_creates_correct_extracted_entity_structure():
         mock_pm_instance.persist_entities = AsyncMock(side_effect=capture_persist)
         mock_pm_class.return_value = mock_pm_instance
 
-        report = await orchestrate(request)
+        report = await orchestrate(request, ctx=mock_context)
 
     # Assert: Verify structure of entities that would be persisted
     assert len(captured_entities) > 0
@@ -237,7 +237,7 @@ async def test_persist_creates_correct_extracted_entity_structure():
 
 
 @pytest.mark.asyncio
-async def test_persist_handles_database_errors_gracefully():
+async def test_persist_handles_database_errors_gracefully(mock_context):
     """
     Test that database errors during persistence are handled gracefully.
 
@@ -265,7 +265,7 @@ async def test_persist_handles_database_errors_gracefully():
         mock_pm_instance.persist_entities = AsyncMock(side_effect=failing_persist)
         mock_pm_class.return_value = mock_pm_instance
 
-        report = await orchestrate(request)
+        report = await orchestrate(request, ctx=mock_context)
 
     # Assert: Verify error was handled
     assert "persistence_errors" in report

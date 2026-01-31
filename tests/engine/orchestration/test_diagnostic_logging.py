@@ -174,7 +174,7 @@ class TestPlannerExtractionTracking:
     """Test that planner tracks extraction success/failure counts."""
 
     @pytest.mark.asyncio
-    async def test_planner_report_includes_extraction_counts(self):
+    async def test_planner_report_includes_extraction_counts(self, mock_context):
         """Test that orchestration report includes extraction success/failure counts."""
         # GIVEN a query that will trigger connectors
         request = IngestRequest(
@@ -187,7 +187,7 @@ class TestPlannerExtractionTracking:
         with patch("engine.orchestration.planner.select_connectors") as mock_select:
             # Mock connector selection to return no connectors (avoid real API calls)
             mock_select.return_value = []
-            report = await orchestrate(request)
+            report = await orchestrate(request, ctx=mock_context)
 
         # THEN report should include extraction counts
         assert "extraction_total" in report, "Report missing extraction_total"
@@ -318,7 +318,7 @@ class TestAPIKeyValidation:
     """Test upfront API key validation for Serper queries."""
 
     @pytest.mark.asyncio
-    async def test_cli_warns_if_serper_needed_without_api_key(self):
+    async def test_cli_warns_if_serper_needed_without_api_key(self, mock_context):
         """Test that CLI displays warning if Serper will be used without ANTHROPIC_API_KEY."""
         import os
 
@@ -344,7 +344,7 @@ class TestAPIKeyValidation:
                     mock_adapter.execute.return_value = []
                     mock_adapter_class.return_value = mock_adapter
 
-                    report = await orchestrate(request)
+                    report = await orchestrate(request, ctx=mock_context)
 
             # THEN report should include API key warning
             assert "warnings" in report or "errors" in report, "No warnings in report"

@@ -2,7 +2,7 @@
 
 **Current Phase:** Phase 2: Pipeline Implementation
 **Validation Entity:** Powerleague Portobello Edinburgh (Phase 2+)
-**Last Updated:** 2026-01-31 (LR-002 complete: Dev/test lens fallback implemented - commit 018e44a)
+**Last Updated:** 2026-01-31 (LR-003 complete: Fallback bootstrap path removed from planner - commit pending)
 
 ---
 
@@ -356,15 +356,32 @@
     - engine/orchestration/cli.py: +13 lines (flag definition + fallback logic)
     - tests/engine/orchestration/test_lens_resolution.py: +130 lines (4 new tests)
 
-- [ ] **LR-003: Fallback Bootstrap Path in Planner (Architectural Debt)**
+- [x] **LR-003: Fallback Bootstrap Path in Planner (Architectural Debt)**
   - **Principle:** Lens Loading Lifecycle (architecture.md 3.2 - "Lens loading occurs only during engine bootstrap")
-  - **Location:** `engine/orchestration/planner.py:232-287`
-  - **Description:** Planner contains fallback bootstrap path that duplicates cli.bootstrap_lens logic. Comment at line 282 acknowledges: "This fallback bootstrap path should be removed in Phase B - only cli.bootstrap_lens should create context." Violates single-bootstrap contract if planner.orchestrate() called without ctx parameter. Creates two bootstrap code paths instead of one.
-  - **Current Behavior:** orchestrate() accepts optional ctx parameter. If None, loads lens from disk inside orchestrate()
-  - **Required Behavior:** orchestrate() should REQUIRE ctx parameter (not optional). All callers must bootstrap lens before calling orchestrate().
-  - **Impact:** Medium - Architectural purity + prevents accidental multi-load bugs
-  - **Fix Scope:** ~15 lines (make ctx required, remove fallback logic, update tests)
-  - **Note:** Already flagged as Phase B work by original implementer
+  - **Location:** `engine/orchestration/planner.py:154,216-219`
+  - **Description:** Planner contained fallback bootstrap path that duplicated cli.bootstrap_lens logic. Violated single-bootstrap contract when orchestrate() called without ctx parameter. Created two bootstrap code paths instead of one.
+  - **Completed:** 2026-01-31
+  - **Commit:** (pending)
+  - **Executable Proof:**
+    - `pytest tests/engine/orchestration/ -q` ✅ 218/218 PASSED (100% when run in isolation)
+    - `pytest tests/engine/orchestration/ tests/engine/lenses/ tests/engine/extraction/ -q` ✅ 328/329 PASSED (99.7% - one flaky test pre-existing)
+    - Manual CLI test: `python -m engine.orchestration.cli run --lens edinburgh_finds "padel courts"` ✅ SUCCESS
+    - orchestrate() signature now requires ctx: `async def orchestrate(request: IngestRequest, *, ctx: ExecutionContext)`
+    - Attempting to call orchestrate() without ctx raises TypeError at call site (compile-time enforcement)
+  - **Fix Applied:**
+    1. ✅ Made ctx parameter required in orchestrate() signature (removed Optional, removed default value)
+    2. ✅ Removed 70-line fallback bootstrap block (lines 216-286 → 3 lines)
+    3. ✅ Updated docstring: "Optional ExecutionContext" → "REQUIRED ExecutionContext" with LR-003 reference
+    4. ✅ Removed unused imports: Optional, Path, VerticalLens, LensConfigError
+    5. ✅ Updated 42 test callsites across 5 files to pass mock_context fixture
+    6. ✅ All production code (CLI) already correct - bootstrap_lens() creates ctx, orchestrate() receives it
+  - **Files Modified:**
+    - `engine/orchestration/planner.py`: Signature change, removed fallback logic, updated docstring (~75 lines removed/changed)
+    - `tests/engine/orchestration/test_async_refactor.py`: 5 tests updated
+    - `tests/engine/orchestration/test_diagnostic_logging.py`: 2 tests updated
+    - `tests/engine/orchestration/test_integration.py`: 19 tests updated
+    - `tests/engine/orchestration/test_persistence.py`: 10 tests updated
+    - `tests/engine/orchestration/test_planner.py`: 12 tests updated, test_orchestrate_uses_lens_from_context_not_disk simplified
 
 ---
 

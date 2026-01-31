@@ -19,12 +19,10 @@ Adding a new vertical (Wine, Restaurants) requires ZERO planner code changes.
 
 import asyncio
 import os
-from pathlib import Path
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any
 
 from prisma import Prisma
 
-from engine.lenses.loader import VerticalLens, LensConfigError
 from engine.orchestration.adapters import ConnectorAdapter
 from engine.orchestration.execution_context import ExecutionContext
 from engine.orchestration.orchestrator_state import OrchestratorState
@@ -153,7 +151,7 @@ def _apply_budget_gating(connectors: List[str], budget_usd: float) -> List[str]:
 async def orchestrate(
     request: IngestRequest,
     *,
-    ctx: Optional[ExecutionContext] = None
+    ctx: ExecutionContext
 ) -> Dict[str, Any]:
     """
     Orchestrate execution of connectors to fulfill ingestion request.
@@ -162,7 +160,7 @@ async def orchestrate(
     0. Create OrchestrationRun record (if persisting)
     1. Extract query features
     2. Select connectors to run
-    3. Create execution context (or use provided context)
+    3. Use execution context from bootstrap
     4. Execute connectors via adapters
     5. Apply deduplication
     6. Persist and extract entities
@@ -170,10 +168,10 @@ async def orchestrate(
 
     Args:
         request: The ingestion request containing query and parameters
-        ctx: Optional ExecutionContext with pre-loaded lens contract.
-             If provided, lens loading is skipped (bootstrap boundary).
-             Per architecture.md 3.2: Lens contracts should be loaded once
-             at bootstrap and injected via ExecutionContext.
+        ctx: REQUIRED ExecutionContext with pre-loaded lens contract.
+             Per architecture.md 3.2: Lens contracts are loaded once at
+             bootstrap and injected via ExecutionContext. All callers must
+             bootstrap lens before calling orchestrate() (LR-003).
 
     Returns:
         Structured report dict with keys:
@@ -215,76 +213,10 @@ async def orchestrate(
                 "message": "⚠ Serper extraction will fail without ANTHROPIC_API_KEY",
             })
 
-        # 3. Create or use execution context
-        # Per architecture.md 3.2: Lens loading should happen at bootstrap
-        # If ctx provided → use it (bootstrap boundary respected)
-        # If ctx not provided → load lens here (backward compatibility)
-        if ctx is not None:
-            # Context provided by bootstrap - use it directly
-            context = ctx
-        else:
-            # Legacy path: Load lens here (will be deprecated once bootstrap is enforced)
-            # Resolve lens_id with fail-fast for missing lens
-            # Per architecture.md §3.1: Dev/test fallback requires explicit flag
-            lens_id = request.lens or os.getenv("LENS_ID")
-
-            if not lens_id:
-                # FATAL ERROR: No lens specified and no dev/test fallback enabled
-                # This prevents silent misconfiguration in production
-                error_msg = (
-                    "No lens specified. Set request.lens or LENS_ID environment variable. "
-                    "For dev/test environments, enable explicit fallback in configuration."
-                )
-                return {
-                    "query": request.query,
-                    "candidates_found": 0,
-                    "accepted_entities": 0,
-                    "connectors": {},
-                    "errors": [{"connector": "lens_resolution", "error": error_msg}],
-                }
-
-            # Bootstrap: Load and validate lens configuration ONCE
-            # This is the bootstrap boundary - lens loading permitted ONLY here
-            lens_contract = None
-            try:
-                lens_path = Path(__file__).parent.parent / "lenses" / lens_id / "lens.yaml"
-                vertical_lens = VerticalLens(lens_path)
-
-                # Extract compiled, immutable lens contract (plain dict)
-                # Shallow copy for defensive programming
-                lens_contract = {
-                    "mapping_rules": list(vertical_lens.mapping_rules),  # Copy list
-                    "module_triggers": list(vertical_lens.module_triggers),  # Copy list
-                    "modules": dict(vertical_lens.domain_modules),  # Copy dict
-                    "facets": dict(vertical_lens.facets),  # Copy dict for facet→dimension lookup
-                    "values": list(vertical_lens.values),  # Copy list for canonical value lookup
-                    "confidence_threshold": vertical_lens.confidence_threshold,
-                }
-
-                # Compute deterministic content hash for reproducibility
-                import hashlib
-                import json
-                canonical_contract = json.dumps(lens_contract, sort_keys=True)
-                lens_hash = hashlib.sha256(canonical_contract.encode("utf-8")).hexdigest()
-
-            except LensConfigError as e:
-                # Fail fast on invalid lens (per architecture.md 3.2)
-                # Context doesn't exist yet, so accumulate error and return early
-                return {
-                    "query": request.query,
-                    "candidates_found": 0,
-                    "accepted_entities": 0,
-                    "connectors": {},
-                    "errors": [{"connector": "lens_bootstrap", "error": f"Lens validation failed: {e}"}],
-                }
-
-            # Create context with lens metadata per architecture.md 3.6
-            # NOTE: This fallback bootstrap path should be removed in Phase B - only cli.bootstrap_lens should create context
-            context = ExecutionContext(
-                lens_id=lens_id,
-                lens_contract=lens_contract,
-                lens_hash=lens_hash
-            )
+        # 3. Use execution context from bootstrap
+        # Per architecture.md 3.2: Lens loading occurs only during engine bootstrap
+        # All callers must bootstrap lens before calling orchestrate()
+        context = ctx
 
         # Create mutable orchestrator state (separate from immutable context per architecture.md 3.6)
         state = OrchestratorState()

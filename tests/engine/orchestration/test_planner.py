@@ -57,26 +57,26 @@ class TestOrchestrate:
     """Test orchestrate() main execution flow."""
 
     @pytest.mark.asyncio
-    async def test_orchestrate_returns_dict(self):
+    async def test_orchestrate_returns_dict(self, mock_context):
         """orchestrate() should return a structured report dict."""
         request = IngestRequest(
             ingestion_mode=IngestionMode.DISCOVER_MANY,
             query="tennis courts Edinburgh",
         )
 
-        report = await orchestrate(request)
+        report = await orchestrate(request, ctx=mock_context)
 
         assert isinstance(report, dict), "orchestrate should return a dict"
 
     @pytest.mark.asyncio
-    async def test_orchestrate_report_structure(self):
+    async def test_orchestrate_report_structure(self, mock_context):
         """orchestrate() report should have required top-level keys."""
         request = IngestRequest(
             ingestion_mode=IngestionMode.DISCOVER_MANY,
             query="tennis courts Edinburgh",
         )
 
-        report = await orchestrate(request)
+        report = await orchestrate(request, ctx=mock_context)
 
         # Required report keys
         assert "query" in report, "report should include query"
@@ -86,78 +86,78 @@ class TestOrchestrate:
         assert "errors" in report, "report should include errors"
 
     @pytest.mark.asyncio
-    async def test_orchestrate_candidates_found_is_int(self):
+    async def test_orchestrate_candidates_found_is_int(self, mock_context):
         """candidates_found should be a non-negative integer."""
         request = IngestRequest(
             ingestion_mode=IngestionMode.DISCOVER_MANY,
             query="tennis courts Edinburgh",
         )
 
-        report = await orchestrate(request)
+        report = await orchestrate(request, ctx=mock_context)
 
         assert isinstance(report["candidates_found"], int), "candidates_found should be int"
         assert report["candidates_found"] >= 0, "candidates_found should be >= 0"
 
     @pytest.mark.asyncio
-    async def test_orchestrate_accepted_entities_is_int(self):
+    async def test_orchestrate_accepted_entities_is_int(self, mock_context):
         """accepted_entities should be a non-negative integer."""
         request = IngestRequest(
             ingestion_mode=IngestionMode.DISCOVER_MANY,
             query="tennis courts Edinburgh",
         )
 
-        report = await orchestrate(request)
+        report = await orchestrate(request, ctx=mock_context)
 
         assert isinstance(report["accepted_entities"], int), "accepted_entities should be int"
         assert report["accepted_entities"] >= 0, "accepted_entities should be >= 0"
 
     @pytest.mark.asyncio
-    async def test_orchestrate_deduplication_works(self):
+    async def test_orchestrate_deduplication_works(self, mock_context):
         """Deduplication should result in accepted_entities <= candidates_found."""
         request = IngestRequest(
             ingestion_mode=IngestionMode.DISCOVER_MANY,
             query="tennis courts Edinburgh",
         )
 
-        report = await orchestrate(request)
+        report = await orchestrate(request, ctx=mock_context)
 
         # Deduplication invariant
         assert report["accepted_entities"] <= report["candidates_found"], \
             "accepted_entities should be <= candidates_found (deduplication)"
 
     @pytest.mark.asyncio
-    async def test_orchestrate_connectors_metrics_is_dict(self):
+    async def test_orchestrate_connectors_metrics_is_dict(self, mock_context):
         """connectors metrics should be a dict with per-connector data."""
         request = IngestRequest(
             ingestion_mode=IngestionMode.DISCOVER_MANY,
             query="tennis courts Edinburgh",
         )
 
-        report = await orchestrate(request)
+        report = await orchestrate(request, ctx=mock_context)
 
         assert isinstance(report["connectors"], dict), "connectors should be a dict"
 
     @pytest.mark.asyncio
-    async def test_orchestrate_errors_is_list(self):
+    async def test_orchestrate_errors_is_list(self, mock_context):
         """errors should be a list."""
         request = IngestRequest(
             ingestion_mode=IngestionMode.DISCOVER_MANY,
             query="tennis courts Edinburgh",
         )
 
-        report = await orchestrate(request)
+        report = await orchestrate(request, ctx=mock_context)
 
         assert isinstance(report["errors"], list), "errors should be a list"
 
     @pytest.mark.asyncio
-    async def test_orchestrate_query_echo(self):
+    async def test_orchestrate_query_echo(self, mock_context):
         """Report should echo the original query string."""
         request = IngestRequest(
             ingestion_mode=IngestionMode.DISCOVER_MANY,
             query="tennis courts Edinburgh",
         )
 
-        report = await orchestrate(request)
+        report = await orchestrate(request, ctx=mock_context)
 
         assert report["query"] == "tennis courts Edinburgh", "query should be echoed in report"
 
@@ -459,14 +459,14 @@ class TestOrchestrateIntegration:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_orchestrate_executes_serper_and_google_places(self):
+    async def test_orchestrate_executes_serper_and_google_places(self, mock_context):
         """orchestrate() should execute both serper and google_places connectors."""
         request = IngestRequest(
             ingestion_mode=IngestionMode.DISCOVER_MANY,
             query="tennis courts Edinburgh",
         )
 
-        report = await orchestrate(request)
+        report = await orchestrate(request, ctx=mock_context)
 
         # Both connectors should have metrics
         assert "serper" in report["connectors"], "serper metrics should be present"
@@ -474,14 +474,14 @@ class TestOrchestrateIntegration:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_orchestrate_serper_metrics_structure(self):
+    async def test_orchestrate_serper_metrics_structure(self, mock_context):
         """Serper connector metrics should have expected structure."""
         request = IngestRequest(
             ingestion_mode=IngestionMode.DISCOVER_MANY,
             query="tennis courts Edinburgh",
         )
 
-        report = await orchestrate(request)
+        report = await orchestrate(request, ctx=mock_context)
         serper_metrics = report["connectors"]["serper"]
 
         # Verify metrics structure
@@ -491,14 +491,14 @@ class TestOrchestrateIntegration:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_orchestrate_google_places_metrics_structure(self):
+    async def test_orchestrate_google_places_metrics_structure(self, mock_context):
         """Google Places connector metrics should have expected structure."""
         request = IngestRequest(
             ingestion_mode=IngestionMode.DISCOVER_MANY,
             query="tennis courts Edinburgh",
         )
 
-        report = await orchestrate(request)
+        report = await orchestrate(request, ctx=mock_context)
         google_places_metrics = report["connectors"]["google_places"]
 
         # Verify metrics structure
@@ -508,14 +508,14 @@ class TestOrchestrateIntegration:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_orchestrate_finds_candidates(self):
+    async def test_orchestrate_finds_candidates(self, mock_context):
         """orchestrate() should find at least some candidates for a real query."""
         request = IngestRequest(
             ingestion_mode=IngestionMode.DISCOVER_MANY,
             query="tennis courts Edinburgh",
         )
 
-        report = await orchestrate(request)
+        report = await orchestrate(request, ctx=mock_context)
 
         # Should find some candidates (real API call)
         # Note: This test requires API keys and network access
@@ -527,7 +527,7 @@ class TestLensLoadingBoundary:
     """Test lens loading boundary compliance (architecture.md 3.2)."""
 
     @pytest.mark.asyncio
-    async def test_orchestrate_accepts_execution_context_parameter(self):
+    async def test_orchestrate_accepts_execution_context_parameter(self, mock_context):
         """
         orchestrate() must accept ExecutionContext parameter (LB-001).
 
@@ -569,16 +569,16 @@ class TestLensLoadingBoundary:
         assert "query" in report, "report should include query"
 
     @pytest.mark.asyncio
-    async def test_orchestrate_uses_lens_from_context_not_disk(self):
+    async def test_orchestrate_uses_lens_from_context_not_disk(self, mock_context):
         """
-        orchestrate() must NOT load lens from disk (LB-001).
+        orchestrate() must use lens from context (LB-001 + LR-003).
 
         Per architecture.md 3.2: "No runtime component may load, reload, or
-        mutate lens configuration." The lens should be provided via context,
-        not loaded from filesystem inside orchestrate().
+        mutate lens configuration." After LR-003, orchestrate() requires ctx
+        parameter and has NO fallback bootstrap path. Lens loading occurs
+        only at bootstrap.
         """
         from engine.orchestration.execution_context import ExecutionContext
-        from unittest.mock import patch
 
         # Create minimal lens contract
         lens_contract = {
@@ -588,7 +588,6 @@ class TestLensLoadingBoundary:
             "facets": {},
             "values": [],
             "confidence_threshold": 0.7,
-            "lens_id": "test_lens",
         }
 
         ctx = ExecutionContext(
@@ -602,14 +601,9 @@ class TestLensLoadingBoundary:
             query="tennis courts Edinburgh",
         )
 
-        # Patch VerticalLens to detect if it's instantiated
-        with patch("engine.orchestration.planner.VerticalLens") as mock_lens_class:
-            report = await orchestrate(request, ctx=ctx)
+        # orchestrate() should work correctly with provided context
+        report = await orchestrate(request, ctx=ctx)
 
-            # VerticalLens should NOT be instantiated inside orchestrate()
-            # when context is provided
-            mock_lens_class.assert_not_called()
-
-            # Should still return valid report
-            assert isinstance(report, dict)
-            assert "query" in report
+        # Should return valid report
+        assert isinstance(report, dict)
+        assert "query" in report

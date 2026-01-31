@@ -27,7 +27,7 @@ class TestOrchestrateIsAsync:
             "orchestrate() should be defined with 'async def'"
 
     @pytest.mark.asyncio
-    async def test_orchestrate_returns_coroutine(self):
+    async def test_orchestrate_returns_coroutine(self, mock_context):
         """Calling orchestrate() should return a coroutine object."""
         request = IngestRequest(
             ingestion_mode=IngestionMode.DISCOVER_MANY,
@@ -35,15 +35,15 @@ class TestOrchestrateIsAsync:
             persist=False,
         )
 
-        result = orchestrate(request)
+        result = orchestrate(request, ctx=mock_context)
         assert inspect.iscoroutine(result), \
-            "orchestrate(request) should return a coroutine"
+            "orchestrate(request, ctx=mock_context) should return a coroutine"
 
         # Clean up the coroutine
         await result
 
     @pytest.mark.asyncio
-    async def test_orchestrate_can_be_awaited(self):
+    async def test_orchestrate_can_be_awaited(self, mock_context):
         """orchestrate() should be awaitable and return a report dict."""
         request = IngestRequest(
             ingestion_mode=IngestionMode.DISCOVER_MANY,
@@ -51,7 +51,7 @@ class TestOrchestrateIsAsync:
             persist=False,
         )
 
-        report = await orchestrate(request)
+        report = await orchestrate(request, ctx=mock_context)
 
         assert isinstance(report, dict), "awaiting orchestrate() should return dict"
         assert "query" in report
@@ -122,7 +122,7 @@ class TestPersistenceWithoutSyncWrapper:
     """Test that persistence works without persist_entities_sync wrapper."""
 
     @pytest.mark.asyncio
-    async def test_orchestrate_calls_persistence_directly(self):
+    async def test_orchestrate_calls_persistence_directly(self, mock_context):
         """orchestrate() should call PersistenceManager.persist_entities directly."""
         request = IngestRequest(
             ingestion_mode=IngestionMode.DISCOVER_MANY,
@@ -145,7 +145,7 @@ class TestPersistenceWithoutSyncWrapper:
 
             mock_pm_class.return_value = mock_pm_instance
 
-            report = await orchestrate(request)
+            report = await orchestrate(request, ctx=mock_context)
 
             # Verify PersistenceManager was used
             assert mock_pm_class.called, "orchestrate should create PersistenceManager"
@@ -174,7 +174,7 @@ class TestGooglePlacesPersistence:
     """Test that Google Places data is persisted correctly."""
 
     @pytest.mark.asyncio
-    async def test_google_places_data_persists_correctly(self):
+    async def test_google_places_data_persists_correctly(self, mock_context):
         """Google Places entities should be persisted with correct structure."""
         request = IngestRequest(
             ingestion_mode=IngestionMode.DISCOVER_MANY,
@@ -199,7 +199,7 @@ class TestGooglePlacesPersistence:
             mock_pm_instance.persist_entities = AsyncMock(side_effect=capture_persist)
             mock_pm_class.return_value = mock_pm_instance
 
-            report = await orchestrate(request)
+            report = await orchestrate(request, ctx=mock_context)
 
             # Verify entities from Google Places are included
             google_places_entities = [
@@ -220,7 +220,7 @@ class TestGooglePlacesPersistence:
                 assert "raw" in entity
 
     @pytest.mark.asyncio
-    async def test_async_persistence_handles_errors_gracefully(self):
+    async def test_async_persistence_handles_errors_gracefully(self, mock_context):
         """Async persistence should handle errors gracefully without event loop issues."""
         request = IngestRequest(
             ingestion_mode=IngestionMode.DISCOVER_MANY,
@@ -240,7 +240,7 @@ class TestGooglePlacesPersistence:
             mock_pm_class.return_value = mock_pm_instance
 
             # Should not raise - errors should be captured
-            report = await orchestrate(request)
+            report = await orchestrate(request, ctx=mock_context)
 
             # Verify orchestration completed despite persistence error
             assert "candidates_found" in report
