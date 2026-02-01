@@ -2,7 +2,7 @@
 
 **Current Phase:** Phase 2: Pipeline Implementation
 **Validation Entity:** Powerleague Portobello Edinburgh (Phase 2+)
-**Last Updated:** 2026-01-31 (PL-003 complete: Phase-based parallel execution - commit c3d0201)
+**Last Updated:** 2026-02-01 (PL-004 Micro-Iteration 2 complete: ConnectorUsage tracking - commit a39d8cb)
 
 ---
 
@@ -489,7 +489,7 @@
     - `engine/orchestration/planner.py`: Replaced sequential loop with phase-grouped execution (~40 lines)
     - `tests/engine/orchestration/test_planner.py`: Added TestPhaseBasedParallelExecution class (2 tests, ~140 lines)
 
-- [ ] **PL-004: Rate Limits Not Implemented** (In Progress - 1/3 micro-iterations complete)
+- [ ] **PL-004: Rate Limits Not Implemented** (In Progress - 2/3 micro-iterations complete)
   - **Principle:** Stage 4 (Connector Execution) requirement: "Enforce rate limits" (architecture.md 4.1)
   - **Location:** `engine/orchestration/registry.py`, `engine/orchestration/adapters.py`, `web/prisma/schema.prisma`
   - **Description:** Architecture.md 4.1 Stage 4 mentions rate_limit enforcement. External APIs have rate limits (Google Places 1000 req/day, Serper 2500 req/day free tier) that should be tracked and enforced to prevent quota exhaustion.
@@ -512,27 +512,21 @@
       - Added 6 tests (TestRateLimitMetadata + TestRateLimitMetadataFlow)
     - **Files Modified:** registry.py, execution_plan.py, planner.py, test_registry.py, test_planner.py (5 files, 87 lines)
 
-  - **Micro-Iteration 2: Add Connector Usage Tracking (PENDING)**
-    - **Status:** Not started
-    - **Scope:** Add ConnectorUsage model to Prisma schemas (web + engine)
-    - **Files to Modify:**
-      - web/prisma/schema.prisma: Add ConnectorUsage model
-      - engine/prisma/schema.prisma: Add ConnectorUsage model
-    - **Schema:**
-      ```prisma
-      model ConnectorUsage {
-        id             String   @id @default(cuid())
-        connector_name String
-        date           DateTime @db.Date
-        request_count  Int      @default(0)
-        createdAt      DateTime @default(now())
-        updatedAt      DateTime @updatedAt
-        @@unique([connector_name, date])
-        @@index([connector_name])
-        @@index([date])
-      }
-      ```
-    - **Expected Lines:** ~20 (schema only, then migration)
+  - **Micro-Iteration 2: Add Connector Usage Tracking (COMPLETE ✅)**
+    - **Completed:** 2026-02-01
+    - **Commit:** a39d8cb
+    - **Executable Proof:**
+      - `grep -A 12 "model ConnectorUsage" engine/schema.prisma` ✅ Model exists with all fields
+      - `grep -A 12 "model ConnectorUsage" web/prisma/schema.prisma` ✅ Model exists with all fields
+      - Both schemas include `@@unique([connector_name, date])` constraint ✅
+      - Both schemas include indexes on connector_name and date ✅
+    - **Changes:**
+      - Added ConnectorUsage model to INFRA_MODELS_AFTER_ENTITY in engine/schema/generators/prisma.py
+      - Model fields: id (cuid), connector_name (String), date (@db.Date), request_count (Int default 0), timestamps
+      - Unique constraint prevents duplicate tracking per connector per day
+      - Indexes enable efficient usage queries for rate limit checks
+      - Ran `python -m engine.schema.generate --force` to regenerate both Prisma schemas
+    - **Files Modified:** engine/schema/generators/prisma.py (1 file, 15 lines), auto-regenerated engine/schema.prisma and web/prisma/schema.prisma
 
   - **Micro-Iteration 3: Implement Rate Limit Enforcement (PENDING)**
     - **Status:** Blocked by Micro-Iteration 2
