@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Dict, List, Any, Optional
 from prisma import Prisma
 
-from engine.orchestration.extraction_integration import extract_entity, needs_extraction
+from engine.orchestration.extraction_integration import extract_entity
 from engine.extraction.entity_classifier import classify_entity
 from engine.ingestion.deduplication import check_duplicate
 
@@ -147,47 +147,40 @@ class PersistenceManager:
                         f"raw_ingestion_id={raw_ingestion.id}, hash={content_hash}"
                     )
 
-                # Step 3: Check if this source needs extraction
-                if needs_extraction(source):
-                    # Log extraction start with context
-                    logger.debug(
-                        f"[PERSIST] Extracting entity from source={source}, "
-                        f"raw_ingestion_id={raw_ingestion.id}, entity_name={candidate_name}"
-                    )
+                # Step 3: Extract entity with full pipeline (Phase 1 + Phase 2 lens application)
+                # All sources go through extract_entity() to ensure lens application happens
+                # (LA-003 fix: structured sources need lens enrichment too)
+                logger.debug(
+                    f"[PERSIST] Extracting entity from source={source}, "
+                    f"raw_ingestion_id={raw_ingestion.id}, entity_name={candidate_name}"
+                )
 
-                    # Use extraction engine to properly extract and structure the data
-                    extracted_data = await extract_entity(raw_ingestion.id, self.db, context)
+                # Use extraction engine to properly extract and structure the data
+                extracted_data = await extract_entity(raw_ingestion.id, self.db, context)
 
-                    # Log extraction success with details
-                    entity_class = extracted_data["entity_class"]
-                    attr_count = len(extracted_data.get("attributes", {}))
-                    logger.debug(
-                        f"[PERSIST] Successfully extracted entity: entity_class={entity_class}, "
-                        f"attributes={attr_count}, raw_ingestion_id={raw_ingestion.id}"
-                    )
+                # Log extraction success with details
+                entity_class = extracted_data["entity_class"]
+                attr_count = len(extracted_data.get("attributes", {}))
+                logger.debug(
+                    f"[PERSIST] Successfully extracted entity: entity_class={entity_class}, "
+                    f"attributes={attr_count}, raw_ingestion_id={raw_ingestion.id}"
+                )
 
-                    # Build entity_data from extraction result
-                    entity_data = {
-                        "source": source,
-                        "entity_class": extracted_data["entity_class"],
-                        "attributes": json.dumps(extracted_data["attributes"]),
-                        "discovered_attributes": json.dumps(extracted_data["discovered_attributes"]),
-                        "raw_ingestion_id": raw_ingestion.id,
-                    }
+                # Build entity_data from extraction result
+                entity_data = {
+                    "source": source,
+                    "entity_class": extracted_data["entity_class"],
+                    "attributes": json.dumps(extracted_data["attributes"]),
+                    "discovered_attributes": json.dumps(extracted_data["discovered_attributes"]),
+                    "raw_ingestion_id": raw_ingestion.id,
+                }
 
-                    # Add optional fields if present
-                    if "external_ids" in extracted_data:
-                        entity_data["external_ids"] = json.dumps(extracted_data["external_ids"])
+                # Add optional fields if present
+                if "external_ids" in extracted_data:
+                    entity_data["external_ids"] = json.dumps(extracted_data["external_ids"])
 
-                    if "model_used" in extracted_data:
-                        entity_data["model_used"] = extracted_data["model_used"]
-                else:
-                    # Structured source - extract directly without LLM
-                    logger.debug(
-                        f"[PERSIST] Processing structured source={source}, "
-                        f"raw_ingestion_id={raw_ingestion.id}, entity_name={candidate_name}"
-                    )
-                    entity_data = self._extract_entity_from_raw(raw_item, source, raw_ingestion.id)
+                if "model_used" in extracted_data:
+                    entity_data["model_used"] = extracted_data["model_used"]
 
                 # Step 4: Create ExtractedEntity record
                 await self.db.extractedentity.create(data=entity_data)
