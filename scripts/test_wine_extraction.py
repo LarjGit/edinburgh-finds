@@ -19,7 +19,7 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from engine.lenses.loader import VerticalLens
-from engine.extraction.base import extract_with_lens_contract
+from tests.engine.extraction.test_helpers import extract_with_lens_for_testing
 
 
 def test_wine_extraction():
@@ -78,7 +78,7 @@ def test_wine_extraction():
     print(f"Input categories: {winery_data['categories']}")
     print()
 
-    extracted_winery = extract_with_lens_contract(winery_data, lens_contract)
+    extracted_winery = extract_with_lens_for_testing(winery_data, lens_contract)
 
     print("Extracted entity:")
     print(f"  entity_class: {extracted_winery['entity_class']}")
@@ -156,7 +156,7 @@ def test_wine_extraction():
     print(f"Input categories: {wine_bar_data['categories']}")
     print()
 
-    extracted_wine_bar = extract_with_lens_contract(wine_bar_data, lens_contract)
+    extracted_wine_bar = extract_with_lens_for_testing(wine_bar_data, lens_contract)
 
     print("Extracted entity:")
     print(f"  entity_class: {extracted_wine_bar['entity_class']}")

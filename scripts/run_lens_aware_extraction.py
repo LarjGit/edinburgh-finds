@@ -29,7 +29,7 @@ from prisma import Prisma, Json
 from tqdm import tqdm
 
 from engine.lenses.loader import VerticalLens
-from engine.extraction.base import extract_with_lens_contract
+from tests.engine.extraction.test_helpers import extract_with_lens_for_testing
 
 
 def require_postgres_database() -> None:
@@ -175,7 +175,7 @@ async def run_extraction(
                 raw_data = json.load(f)
 
             # Extract with lens contract
-            extracted = extract_with_lens_contract(raw_data, lens_contract)
+            extracted = extract_with_lens_for_testing(raw_data, lens_contract)
 
             # Validate required fields
             required_fields = [
