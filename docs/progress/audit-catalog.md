@@ -2,7 +2,7 @@
 
 **Current Phase:** Phase 2: Pipeline Implementation
 **Validation Entity:** West of Scotland Padel (validation) / Edinburgh Sports Club (investigation)
-**Last Updated:** 2026-02-01 (Stage 7: Core lens logic validated ✅, but 5 integration issues block completion: LA-003/LA-006/LA-007/LA-008/LA-009)
+**Last Updated:** 2026-02-01 (Stage 7: Core lens logic validated ✅, but 4 integration issues block completion: LA-003/LA-006/LA-007/LA-008)
 
 ---
 
@@ -903,7 +903,7 @@
 
 ### Stage 7: Lens Application (architecture.md 4.1, 4.2)
 
-**Status:** Partially complete - Core lens logic works but integration broken. LA-001/LA-002/LA-004/LA-005 complete ✅, LA-003/LA-006/LA-007/LA-008/LA-009 outstanding ❌
+**Status:** Partially complete - Core lens logic works but integration broken. LA-001/LA-002/LA-004/LA-005 complete ✅, LA-003/LA-006/LA-007/LA-008 outstanding ❌
 
 **Requirements:**
 - Apply lens mapping rules to populate canonical dimensions
@@ -1046,20 +1046,7 @@
   - **Validation:** "West of Scotland Padel" entity successfully matches and gets canonical_activities: ['padel'] because "padel" is in entity_name
   - **Estimated Scope:** 30-60 minutes (extractor enhancement + testing)
 
-- [ ] **LA-007: EntityFinalizer Only Processes 1 of Many Entities**
-  - **Principle:** Finalization (architecture.md 4.1 Stage 11 - all extracted entities should finalize to Entity table)
-  - **Location:** `engine/orchestration/entity_finalizer.py`, `engine/orchestration/planner.py:326`
-  - **Description:** When orchestration creates 188 ExtractedEntity records, EntityFinalizer only creates 1 Entity record. Remaining 187 entities are not finalized to Entity table.
-  - **Discovered During:** LA-001 test execution (2026-02-01)
-  - **Root Cause:** Unknown - requires investigation of:
-    - EntityFinalizer.finalize_entities() logic (filters by orchestration_run_id?)
-    - Whether orchestration_run_id is correctly set on all RawIngestion records
-    - Whether finalization is failing silently for some entities
-    - Entity grouping/slug generation logic
-  - **Impact:** Critical - most entities extracted during orchestration are not accessible via Entity table
-  - **Estimated Scope:** 1-2 hours (investigation + fix + testing)
-
-- [ ] **LA-008: EntityFinalizer Creates Entities with entity_name "unknown"**
+- [ ] **LA-007: EntityFinalizer Creates Entities with entity_name "unknown"**
   - **Principle:** Finalization (architecture.md 4.1 Stage 11 - entity_name should preserve from ExtractedEntity attributes)
   - **Location:** `engine/orchestration/entity_finalizer.py:112`
   - **Description:** EntityFinalizer creates Entity records with entity_name="unknown" even though ExtractedEntity.attributes contains correct entity_name. For example, "West of Scotland Padel" becomes "unknown" in Entity table.
@@ -1071,7 +1058,7 @@
   - **Impact:** High - entities created but with wrong names, breaks test assertions and user-facing search
   - **Estimated Scope:** 30-60 minutes (debug attribute loading + fix)
 
-- [ ] **LA-009: Module Triggers Not Firing (Modules Field Empty)**
+- [ ] **LA-008: Module Triggers Not Firing (Modules Field Empty)**
   - **Principle:** Module Extraction (architecture.md 4.1 Stage 7 - module triggers should fire when conditions met)
   - **Location:** Lens application pipeline, module trigger evaluation
   - **Description:** Entity with canonical_activities=['padel'] has modules={} (empty) despite lens.yaml defining module_trigger that should add 'sports_facility' module when activity=padel and entity_class=place.
