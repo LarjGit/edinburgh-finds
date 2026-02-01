@@ -2,7 +2,7 @@
 
 **Current Phase:** Phase 2: Pipeline Implementation
 **Validation Entity:** Powerleague Portobello Edinburgh (Phase 2+)
-**Last Updated:** 2026-02-01 (PL-004 Micro-Iteration 2 complete: ConnectorUsage tracking - commit a39d8cb)
+**Last Updated:** 2026-02-01 (PL-004 complete: Rate limit enforcement - commit cbde4f5)
 
 ---
 
@@ -489,10 +489,12 @@
     - `engine/orchestration/planner.py`: Replaced sequential loop with phase-grouped execution (~40 lines)
     - `tests/engine/orchestration/test_planner.py`: Added TestPhaseBasedParallelExecution class (2 tests, ~140 lines)
 
-- [ ] **PL-004: Rate Limits Not Implemented** (In Progress - 2/3 micro-iterations complete)
+- [x] **PL-004: Rate Limits Not Implemented** (COMPLETE ✅)
   - **Principle:** Stage 4 (Connector Execution) requirement: "Enforce rate limits" (architecture.md 4.1)
   - **Location:** `engine/orchestration/registry.py`, `engine/orchestration/adapters.py`, `web/prisma/schema.prisma`
   - **Description:** Architecture.md 4.1 Stage 4 mentions rate_limit enforcement. External APIs have rate limits (Google Places 1000 req/day, Serper 2500 req/day free tier) that should be tracked and enforced to prevent quota exhaustion.
+  - **Completed:** 2026-02-01 (all 3 micro-iterations)
+  - **Commit:** cbde4f5 (Micro-Iteration 3)
   - **Implementation Strategy:** 3 micro-iterations (ultra-small, independent chunks)
 
   - **Micro-Iteration 1: Add Rate Limit Metadata (COMPLETE ✅)**
@@ -528,22 +530,30 @@
       - Ran `python -m engine.schema.generate --force` to regenerate both Prisma schemas
     - **Files Modified:** engine/schema/generators/prisma.py (1 file, 15 lines), auto-regenerated engine/schema.prisma and web/prisma/schema.prisma
 
-  - **Micro-Iteration 3: Implement Rate Limit Enforcement (PENDING)**
-    - **Status:** Blocked by Micro-Iteration 2
-    - **Scope:** Add rate limit checking to adapters.py execute() method
-    - **Files to Modify:** engine/orchestration/adapters.py
-    - **Logic:**
-      1. Add `_check_rate_limit()` helper to ConnectorAdapter
-      2. Query ConnectorUsage for today's count
-      3. If at/over limit: skip connector, log to state.errors
-      4. If under limit: increment usage, execute connector
-      5. Add rate limit status to state.metrics
-    - **Expected Lines:** ~40 (logic + 3-4 tests)
+  - **Micro-Iteration 3: Implement Rate Limit Enforcement (COMPLETE ✅)**
+    - **Completed:** 2026-02-01
+    - **Commit:** cbde4f5
+    - **Executable Proof:**
+      - `pytest tests/engine/orchestration/test_adapters.py::TestRateLimitEnforcement -v` ✅ 4/4 PASSED
+      - `pytest tests/engine/orchestration/test_adapters.py -v` ✅ 36/36 PASSED (no regressions)
+      - `pytest tests/engine/orchestration/ -q` ✅ 227/231 passed (4 pre-existing failures)
+      - All rate limit enforcement logic working correctly
+    - **Changes:**
+      - Added `_check_rate_limit()` helper to ConnectorAdapter (adapters.py:584-603) - queries ConnectorUsage for today's count
+      - Added `_increment_usage()` helper (adapters.py:605-625) - atomic upsert for usage tracking
+      - Updated execute() signature to accept `db: Optional[Prisma]` parameter (adapters.py:102)
+      - Added rate limit check before connector execution (adapters.py:129-142)
+      - Skip connector if at/over limit with error message and rate_limited=True in metrics
+      - Increment usage counter before execution if under limit
+      - Updated planner.py:274 to pass db connection to adapter.execute()
+      - Added TestRateLimitEnforcement class with 4 comprehensive tests (test_adapters.py:778-981)
+      - Fixed 2 mock signatures in test_planner.py to accept db parameter
+    - **Files Modified:** adapters.py (+62 lines), planner.py (+2 lines), test_adapters.py (+166 lines), test_planner.py (+4 lines)
 
 ---
 ### Stage 4: Connector Execution (architecture.md 4.1)
 
-**Status:** Audit complete - Substantially compliant, 1 deferred gap (PL-004)
+**Status:** Audit complete - FULLY COMPLIANT ✅ (all requirements implemented)
 
 **Requirements:**
 - Execute connectors according to the plan
@@ -582,7 +592,14 @@
   - Total cost is deterministic based on selected connector set
 
 **2c. Enforce rate limits**
-- ❌ Not implemented (PL-004 - already documented as deferred "Phase C work")
+- ✅ Rate limit enforcement implemented (PL-004 complete - commit cbde4f5)
+- ✅ ConnectorAdapter checks ConnectorUsage table before execution (adapters.py:129-142)
+- ✅ Skips connector if at/over daily limit with error message (adapters.py:133-142)
+- ✅ Increments usage atomically via upsert (adapters.py:605-625)
+- ✅ First request creates new ConnectorUsage record (request_count=1)
+- ✅ Subsequent requests increment existing count (request_count += 1)
+- ✅ Rate limit status tracked in state.metrics (rate_limited: True/False)
+- ✅ Database connection passed from planner to adapter.execute()
 
 **3. Collect raw payloads and connector metadata**
 
@@ -622,7 +639,7 @@
 
 **❌ GAPS IDENTIFIED:**
 
-(None - PL-004 rate limiting already documented in catalog as deferred work)
+(None - All Stage 4 requirements fully implemented ✅)
 
 ---
 
