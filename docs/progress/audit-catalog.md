@@ -2,7 +2,7 @@
 
 **Current Phase:** Phase 2: Pipeline Implementation
 **Validation Entity:** Powerleague Portobello Edinburgh (Phase 2+)
-**Last Updated:** 2026-02-01 (Stage 6: EX-002-1 complete ✅, 5 parts remaining, split into micro-iterations)
+**Last Updated:** 2026-02-01 (Stage 6: EX-002-2 complete ✅, 4 parts remaining, split into micro-iterations)
 
 ---
 
@@ -800,13 +800,18 @@
   - **Fix Applied:** Created test_serper_extractor.py (263 lines, 5 tests). Also fixed Engine Purity violation in serper_extractor.py docstrings (changed "padel" examples to generic "sports facility" examples).
   - **Note:** EX-002 split into 5 micro-iterations (one per extractor). Remaining parts: EX-002-2 through EX-002-5.
 
-- [ ] **EX-002-2: Add Phase 1 Contract Tests for google_places_extractor (Part 2 of 5)**
+- [x] **EX-002-2: Add Phase 1 Contract Tests for google_places_extractor (Part 2 of 5)**
   - **Principle:** Test Coverage for Extraction Boundary (architecture.md 4.2)
-  - **Location:** `tests/engine/extraction/extractors/test_google_places_extractor_boundary.py` (new file)
-  - **Description:** Create comprehensive Phase 1 contract tests for google_places_extractor. Mirror serper pattern: TestEnginePurity (no domain literals), TestExtractionBoundary (only primitives + raw observations), TestExtractionCorrectness (extraction logic works).
-  - **Impact:** High - Cannot verify google_places_extractor complies with Phase 1 contract
-  - **Estimated Scope:** 1 new test file, ~170 lines, 5-7 tests
-  - **Reference Pattern:** tests/engine/extraction/extractors/test_serper_extractor.py
+  - **Location:** `tests/engine/extraction/extractors/test_google_places_extractor.py` (new file)
+  - **Description:** Created comprehensive Phase 1 contract tests for google_places_extractor. 3 test classes: TestEnginePurity (no domain literals), TestExtractionBoundary (only primitives + raw observations, split_attributes validation), TestExtractionCorrectness (extraction logic works). Merged valuable tests from old test_google_places_extractor.py (test_extract_prefers_display_name_over_name, test_validate_requires_entity_name) to preserve coverage. Deleted old conflicting test file.
+  - **Completed:** 2026-02-01
+  - **Commit:** (pending)
+  - **Executable Proof:**
+    - `pytest tests/engine/extraction/extractors/test_google_places_extractor.py -v` ✅ 8/8 PASSED
+    - `pytest tests/engine/extraction/ -q` ✅ 66/66 PASSED (no regressions)
+    - All 3 test classes passing: EnginePurity (1 test), ExtractionBoundary (2 tests), ExtractionCorrectness (5 tests)
+    - No domain literals found in google_places_extractor.py (Engine Purity compliant)
+  - **Fix Applied:** Created test_google_places_extractor.py (313 lines, 8 tests). Test structure mirrors serper pattern but adapted for deterministic (non-LLM) extractor. Tests validate: no domain terms, no canonical_* fields, no modules field, split_attributes() separation, v1 API extraction, legacy format compatibility, precedence logic, validation requirements.
 
 - [ ] **EX-002-3: Add Phase 1 Contract Tests for osm_extractor (Part 3 of 5)**
   - **Principle:** Test Coverage for Extraction Boundary (architecture.md 4.2)
