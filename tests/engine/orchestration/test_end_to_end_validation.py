@@ -61,16 +61,17 @@ async def test_one_perfect_entity_end_to_end_validation():
         await db.entity.delete_many(
             where={
                 "OR": [
-                    {"entity_name": {"contains": "Powerleague"}},
-                    {"entity_name": {"contains": "powerleague"}},
+                    {"entity_name": {"contains": "West of Scotland Padel"}},
+                    {"entity_name": {"contains": "west of scotland padel"}},
                 ]
             }
         )
 
         # Create orchestration request with persistence enabled
+        # Use RESOLVE_ONE to limit results for faster validation
         request = IngestRequest(
-            ingestion_mode=IngestionMode.DISCOVER_MANY,
-            query="powerleague portobello edinburgh",
+            ingestion_mode=IngestionMode.RESOLVE_ONE,
+            query="west of scotland padel glasgow",
             persist=True,  # CRITICAL: Enable database persistence
         )
 
@@ -102,18 +103,18 @@ async def test_one_perfect_entity_end_to_end_validation():
         )
 
         # Query database to retrieve persisted entity
-        # Search by name (case-insensitive) to find Powerleague entity
+        # Search by name (case-insensitive) to find West of Scotland Padel entity
         entities = await db.entity.find_many(
             where={
                 "OR": [
-                    {"entity_name": {"contains": "Powerleague"}},
-                    {"entity_name": {"contains": "powerleague"}},
+                    {"entity_name": {"contains": "West of Scotland Padel"}},
+                    {"entity_name": {"contains": "west of scotland padel"}},
                 ]
             }
         )
 
         assert len(entities) > 0, (
-            "At least one Powerleague entity should exist in database after orchestration"
+            "At least one West of Scotland Padel entity should exist in database after orchestration"
         )
 
         # Get first entity for validation (should be the validation entity)
@@ -181,8 +182,8 @@ async def test_one_perfect_entity_end_to_end_validation():
         await db.entity.delete_many(
             where={
                 "OR": [
-                    {"entity_name": {"contains": "Powerleague"}},
-                    {"entity_name": {"contains": "powerleague"}},
+                    {"entity_name": {"contains": "West of Scotland Padel"}},
+                    {"entity_name": {"contains": "west of scotland padel"}},
                 ]
             }
         )
