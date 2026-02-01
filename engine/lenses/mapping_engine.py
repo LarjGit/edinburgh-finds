@@ -9,9 +9,21 @@ Architecture: Per architecture.md Section 6.4
 - First match wins per rule
 - Multiple rules may contribute to same dimension
 - Deduplication + deterministic lexicographic ordering
+- When source_fields is omitted, searches all available text fields
 """
 import re
 from typing import Dict, List, Optional, Any
+
+
+# Default text fields to search when source_fields is omitted from mapping rule
+# Per architecture.md: preserves engine universality while avoiding repetitive YAML
+DEFAULT_SOURCE_FIELDS = [
+    "entity_name",
+    "description",
+    "raw_categories",
+    "summary",
+    "street_address"
+]
 
 
 def match_rule_against_entity(rule: Dict[str, Any], entity: Dict[str, Any]) -> Optional[Dict[str, str]]:
@@ -19,9 +31,10 @@ def match_rule_against_entity(rule: Dict[str, Any], entity: Dict[str, Any]) -> O
     Match a single mapping rule against entity fields.
 
     Searches pattern across union of source_fields. First match wins.
+    If source_fields is omitted, searches DEFAULT_SOURCE_FIELDS.
 
     Args:
-        rule: Mapping rule with pattern, canonical, dimension, source_fields
+        rule: Mapping rule with pattern, canonical, dimension, source_fields (optional)
         entity: Entity dict with raw field values
 
     Returns:
@@ -37,7 +50,7 @@ def match_rule_against_entity(rule: Dict[str, Any], entity: Dict[str, Any]) -> O
     pattern = rule.get("pattern")
     canonical = rule.get("canonical")
     dimension = rule.get("dimension")
-    source_fields = rule.get("source_fields", [])
+    source_fields = rule.get("source_fields") or DEFAULT_SOURCE_FIELDS
 
     if not pattern or not canonical or not dimension:
         return None

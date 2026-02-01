@@ -101,6 +101,50 @@ def test_first_match_wins_per_rule():
     assert result["canonical_place_types"] == ["sports_facility"]
 
 
+def test_omitted_source_fields_searches_all_default_fields():
+    """When source_fields is omitted, should search all default text fields."""
+    rule = {
+        "pattern": r"(?i)tennis",
+        "canonical": "tennis",
+        "dimension": "canonical_activities"
+        # source_fields intentionally omitted
+    }
+
+    # Pattern only appears in description (not in entity_name)
+    entity = {
+        "entity_name": "The Sports Club",
+        "description": "We offer tennis coaching and courts"
+    }
+
+    result = match_rule_against_entity(rule, entity)
+
+    # Should match because description is in default source_fields
+    assert result is not None
+    assert result["dimension"] == "canonical_activities"
+    assert result["value"] == "tennis"
+
+
+def test_explicit_source_fields_narrows_search_surface():
+    """When source_fields is explicit, should only search those fields."""
+    rule = {
+        "pattern": r"(?i)tennis",
+        "canonical": "tennis",
+        "dimension": "canonical_activities",
+        "source_fields": ["entity_name"]  # Explicitly only entity_name
+    }
+
+    # Pattern only appears in description (not in entity_name)
+    entity = {
+        "entity_name": "The Sports Club",
+        "description": "We offer tennis coaching and courts"
+    }
+
+    result = match_rule_against_entity(rule, entity)
+
+    # Should NOT match because description is excluded
+    assert result is None
+
+
 def test_canonical_dimensions_deduplicated_and_sorted():
     """Dimension values should be deduplicated and lexicographically sorted."""
     dimensions = {

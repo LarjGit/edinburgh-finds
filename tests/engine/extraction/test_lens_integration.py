@@ -34,7 +34,8 @@ def test_enrich_mapping_rules_derives_dimension_from_facets():
     assert enriched[0]["canonical"] == "football"
     assert enriched[0]["pattern"] == r"(?i)football"
     assert enriched[0]["confidence"] == 0.9
-    assert enriched[0]["source_fields"] == ["entity_name"]
+    # source_fields intentionally omitted - mapping engine will use DEFAULT_SOURCE_FIELDS
+    assert "source_fields" not in enriched[0]
 
 
 def test_enrich_mapping_rules_handles_missing_facet():

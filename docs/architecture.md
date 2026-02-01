@@ -984,7 +984,7 @@ The engine executes mapping rules generically and deterministically.
 
 Execution guarantees:
 
-- Rules execute over the union of declared source_fields.
+- Rules execute over the union of declared source_fields. When source_fields is omitted, the engine searches all available text fields (entity_name, description, raw_categories, summary, street_address).
 - First match wins per rule.
 - Multiple rules may contribute to the same dimension.
 - Duplicate values are deduplicated.

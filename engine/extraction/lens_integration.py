@@ -76,15 +76,15 @@ def enrich_mapping_rules(
         if not dimension:
             continue
 
-        # Add dimension and source_fields to rule
-        # V1 SHIM: Hardcoded to ["entity_name"] to minimize semantic leakage
-        # TODO: Move source_fields to lens.yaml or define universal engine default in architecture.md
+        # Add dimension to rule (source_fields omitted - mapping engine will use defaults)
+        # Per architecture.md: when source_fields is omitted, mapping engine searches
+        # all available text fields (entity_name, description, raw_categories, etc.)
         enriched_rule = {
             "pattern": rule.get("pattern"),
             "canonical": canonical,
             "dimension": dimension,
-            "source_fields": ["entity_name"],  # V1 shim: universal primitive only
             "confidence": rule.get("confidence", 1.0)
+            # source_fields intentionally omitted - delegated to mapping engine default
         }
         enriched_rules.append(enriched_rule)
 

@@ -2,7 +2,7 @@
 
 **Current Phase:** Phase 2: Pipeline Implementation
 **Validation Entity:** Powerleague Portobello Edinburgh (Phase 2+)
-**Last Updated:** 2026-02-01 (Stage 7: LA-001 complete ✅, 2 environment blockers + LA-002/LA-003 remain)
+**Last Updated:** 2026-02-01 (Stage 7: LA-001/LA-002 complete ✅, 2 environment blockers + LA-003 remain)
 
 ---
 
@@ -981,15 +981,20 @@
     - **Blockers:** Requires LA-004 (database migration) + LA-005 (API key setup) to execute
   - **Note:** Test implementation complete and correct. Execution blocked by environment setup (documented as LA-004, LA-005)
 
-- [ ] **LA-002: Source Fields Limited to entity_name Only**
+- [x] **LA-002: Source Fields Limited to entity_name Only**
   - **Principle:** Lens Application (architecture.md 4.1 Stage 7 - mapping rules search union of source_fields)
-  - **Location:** `engine/extraction/lens_integration.py:86`
-  - **Description:** Mapping rule enrichment hardcodes `source_fields: ["entity_name"]` (V1 shim). Lens.yaml mapping rules don't specify source_fields, so coordinator adds minimal default. This limits matching to entity_name only, missing matches in description, raw_categories, etc.
-  - **Fix Options:**
-    - Option A: Add source_fields to lens.yaml mapping rules
-    - Option B: Define universal engine default in architecture.md
-    - Option C: Make source_fields optional with sensible default (all text fields)
-  - **Impact:** Reduced match rate for mapping rules (misses patterns in description/categories)
+  - **Location:** `engine/extraction/lens_integration.py:86` (V1 shim removed), `engine/lenses/mapping_engine.py` (default added)
+  - **Description:** Mapping rule enrichment hardcoded `source_fields: ["entity_name"]` (V1 shim), limiting matching to entity_name only and missing matches in description, raw_categories, etc.
+  - **Completed:** 2026-02-01
+  - **Solution:** Option C - Made source_fields optional with engine-defined default
+  - **Implementation:**
+    - Added `DEFAULT_SOURCE_FIELDS` constant to mapping_engine.py (entity_name, description, raw_categories, summary, street_address)
+    - Modified `match_rule_against_entity()` to use default when source_fields is omitted
+    - Removed V1 shim from lens_integration.py (source_fields no longer hardcoded)
+    - Updated architecture.md §6.4 to document omission-default behavior
+    - Added 2 tests: test_omitted_source_fields_searches_all_default_fields, test_explicit_source_fields_narrows_search_surface
+  - **Test Coverage:** 9/9 mapping_engine tests pass, 9/9 lens_integration tests pass, 151/153 full suite pass
+  - **Impact:** Expanded match rate - mapping rules now search across all available text fields by default while allowing lens authors to narrow search surface with explicit source_fields when needed
 
 - [ ] **LA-003: Module Field Population Not Validated End-to-End**
   - **Principle:** Module Extraction (architecture.md 4.1 Stage 7 - execute module field rules)
@@ -1225,5 +1230,5 @@ Every completed item MUST document executable proof:
 - **Stage 4 Audit Complete:** Substantially compliant, no new gaps identified ✅
 - **Stage 5 Audit Complete:** 2 implementation gaps identified (RI-001, RI-002) — all resolved ✅
 - **Stage 6 Audit Complete:** 3 implementation gaps identified (EX-001, EX-002, EX-003) — all resolved ✅
-- **Stage 7 Progress:** LA-001 complete ✅ (test implemented, pending environment setup), LA-002/LA-003 remain, LA-004/LA-005 environment blockers identified
-- **Next:** Address LA-004/LA-005 (environment setup) to enable LA-001 execution, then LA-002 (source fields), then LA-003 (module validation), or continue with Stage 8 audit
+- **Stage 7 Progress:** LA-001/LA-002 complete ✅, LA-003 remains (will validate once LA-001 runs), LA-004/LA-005 environment blockers identified
+- **Next:** Address LA-004/LA-005 (environment setup) to enable LA-001 execution and validate LA-003, or continue with Stage 8 audit
