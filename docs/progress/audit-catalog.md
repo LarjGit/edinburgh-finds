@@ -805,7 +805,7 @@
   - **Location:** `tests/engine/extraction/extractors/test_google_places_extractor.py` (new file)
   - **Description:** Created comprehensive Phase 1 contract tests for google_places_extractor. 3 test classes: TestEnginePurity (no domain literals), TestExtractionBoundary (only primitives + raw observations, split_attributes validation), TestExtractionCorrectness (extraction logic works). Merged valuable tests from old test_google_places_extractor.py (test_extract_prefers_display_name_over_name, test_validate_requires_entity_name) to preserve coverage. Deleted old conflicting test file.
   - **Completed:** 2026-02-01
-  - **Commit:** (pending)
+  - **Commit:** 9411c9e
   - **Executable Proof:**
     - `pytest tests/engine/extraction/extractors/test_google_places_extractor.py -v` ✅ 8/8 PASSED
     - `pytest tests/engine/extraction/ -q` ✅ 66/66 PASSED (no regressions)
