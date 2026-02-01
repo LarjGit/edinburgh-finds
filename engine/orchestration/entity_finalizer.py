@@ -109,7 +109,8 @@ class EntityFinalizer:
         attributes = json.loads(extracted.attributes) if extracted.attributes else {}
 
         # Generate slug
-        name = attributes.get("name", "unknown")
+        # Try entity_name first (new extraction), fallback to name (old extraction)
+        name = attributes.get("entity_name") or attributes.get("name", "unknown")
         slug = self.slug_generator.generate(name)
 
         # Build Entity data (matching actual Entity schema)

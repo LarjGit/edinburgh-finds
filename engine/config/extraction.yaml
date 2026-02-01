@@ -1,5 +1,5 @@
 llm:
-  model: "claude-haiku-20250318"
+  model: "claude-haiku-4-5"
 
 trust_levels:
   manual_override: 100

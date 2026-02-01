@@ -175,9 +175,12 @@ class SportScotlandExtractor(BaseExtractor):
         """
         validated = extracted.copy()
 
-        # Ensure required fields exist
+        # Ensure required fields exist (use fallback if missing)
         if "entity_name" not in validated or not validated["entity_name"]:
-            raise ValueError("Missing required field: entity_name")
+            # Fallback: try to construct name from facility_type + address_city
+            facility_type = validated.get("facility_type", "Sports Facility")
+            city = validated.get("address_city", "Unknown")
+            validated["entity_name"] = f"{facility_type} - {city}"
 
         # Validate phone format (should already be E.164, but double-check)
         if "phone" in validated and validated["phone"]:
