@@ -123,15 +123,11 @@ class OSMExtractor(BaseExtractor):
    4. **Membership/group entity** → entity_class = "organization"
    5. **Fallback** → entity_class = "thing"
 
-   Additionally, determine canonical_roles (optional, multi-valued array):
-   - What the entity DOES (functions/capabilities)
-   - Examples: ["provides_facility", "provides_instruction", "sells_goods", "membership_org"]
-
    Classification examples:
-   - Sports centre with courts → entity_class="place", canonical_roles=["provides_facility"]
-   - Individual coach → entity_class="person", canonical_roles=["provides_instruction"]
-   - Tournament with dates → entity_class="event", canonical_roles=[]
-   - Retail chain → entity_class="organization", canonical_roles=["sells_goods"]"""
+   - Sports centre with courts → entity_class="place"
+   - Individual coach → entity_class="person"
+   - Tournament with dates → entity_class="event"
+   - Retail chain → entity_class="organization"""
 
     def _aggregate_osm_elements(self, elements: List[Dict]) -> str:
         """

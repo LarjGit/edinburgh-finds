@@ -48,14 +48,15 @@ class TestPromptStructure:
             "Prompt should emphasize using null for uncertain data"
 
     def test_classification_rules_include_dimensions(self):
-        """Classification rules should mention canonical_roles (dimensions)"""
+        """Classification rules should mention entity_class only (Phase 1 contract)"""
         # Mock LLM client to avoid API key requirement
         mock_llm = Mock()
         extractor = SerperExtractor(llm_client=mock_llm)
         classification_rules = extractor._get_classification_rules()
 
-        assert "canonical_roles" in classification_rules, \
-            "Classification rules should include canonical_roles guidance"
+        # Phase 1 extractors should NOT request canonical dimensions
+        assert "canonical_roles" not in classification_rules, \
+            "Classification rules should NOT include canonical_roles (Phase 1 contract - primitives only)"
         assert "entity_class" in classification_rules, \
             "Classification rules should include entity_class guidance"
 
@@ -191,16 +192,16 @@ class TestClassificationImprovement:
             "Classification rules should explain when to use entity_class=event"
 
     def test_classification_rules_mention_role_examples(self):
-        """Classification rules should provide canonical_roles examples"""
+        """Classification rules should NOT provide canonical_roles examples (Phase 1)"""
         mock_llm = Mock()
         extractor = SerperExtractor(llm_client=mock_llm)
         classification_rules = extractor._get_classification_rules()
 
-        # Check for role examples
-        assert "provides_facility" in classification_rules or \
-               "provides_instruction" in classification_rules or \
-               "sells_goods" in classification_rules, \
-            "Classification rules should provide canonical_roles examples"
+        # Phase 1 contract: extractors emit only primitives, no canonical dimensions
+        assert "provides_facility" not in classification_rules and \
+               "provides_instruction" not in classification_rules and \
+               "sells_goods" not in classification_rules, \
+            "Classification rules should NOT provide canonical_roles examples (Phase 1 contract)"
 
 
 class TestConciseSummaries:
@@ -244,7 +245,7 @@ class TestPromptIntegration:
 
     @pytest.mark.slow
     def test_serper_extractor_uses_improved_prompt(self):
-        """Verify SerperExtractor loads and uses the improved prompt template"""
+        """Verify SerperExtractor loads and uses the improved prompt template (Phase 1 compliant)"""
         # Mock LLM client to avoid API key requirement
         mock_llm = Mock()
         extractor = SerperExtractor(llm_client=mock_llm)
@@ -254,13 +255,14 @@ class TestPromptIntegration:
         assert len(extractor.system_message) > 100, \
             "System message should contain substantial prompt content"
 
-        # Verify classification rules are injected
+        # Verify classification rules are injected (Phase 1: primitives only)
         assert "entity_class" in extractor.system_message
-        assert "canonical_roles" in extractor.system_message
+        assert "canonical_roles" not in extractor.system_message, \
+            "Phase 1 extractors should NOT request canonical_roles"
 
     @pytest.mark.slow
     def test_osm_extractor_uses_improved_prompt(self):
-        """Verify OSMExtractor loads and uses the improved prompt template"""
+        """Verify OSMExtractor loads and uses the improved prompt template (Phase 1 compliant)"""
         # Mock LLM client to avoid API key requirement
         mock_llm = Mock()
         extractor = OSMExtractor(llm_client=mock_llm)
@@ -270,6 +272,7 @@ class TestPromptIntegration:
         assert len(extractor.system_message) > 100, \
             "System message should contain substantial prompt content"
 
-        # Verify classification rules are injected
+        # Verify classification rules are injected (Phase 1: primitives only)
         assert "entity_class" in extractor.system_message
-        assert "canonical_roles" in extractor.system_message
+        assert "canonical_roles" not in extractor.system_message, \
+            "Phase 1 extractors should NOT request canonical_roles"
