@@ -694,7 +694,7 @@ class TestPhaseBasedParallelExecution:
         execution_order = []
 
         # Create mock execute function that records phase
-        async def track_phase_execution(phase_name, request, query_features, context, state):
+        async def track_phase_execution(phase_name, request, query_features, context, state, db=None):
             execution_order.append(phase_name)
             await asyncio.sleep(0.01)  # Simulate work
 
@@ -706,7 +706,7 @@ class TestPhaseBasedParallelExecution:
                 phase_name = spec.phase.name
                 # Create AsyncMock that calls our tracking function
                 mock_adapter.execute = AsyncMock(
-                    side_effect=lambda req, qf, ctx, st: track_phase_execution(phase_name, req, qf, ctx, st)
+                    side_effect=lambda req, qf, ctx, st, db=None: track_phase_execution(phase_name, req, qf, ctx, st, db)
                 )
                 return mock_adapter
 
@@ -765,7 +765,7 @@ class TestPhaseBasedParallelExecution:
                 connector_name = spec.name
 
                 # Create async function directly as AsyncMock
-                async def execute_mock(request, query_features, context, state):
+                async def execute_mock(request, query_features, context, state, db=None):
                     nonlocal max_concurrent
                     active_connectors.append(connector_name)
                     current_concurrent = len(active_connectors)

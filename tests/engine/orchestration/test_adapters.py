@@ -768,3 +768,214 @@ class TestConnectorAdapterExecute:
         assert metrics["executed"] is False
         assert "error" in metrics
         assert metrics["cost_usd"] == 0.0  # No cost on timeout
+
+
+class TestRateLimitEnforcement:
+    """Test rate limit enforcement (PL-004 Micro-Iteration 3)."""
+
+    @pytest.mark.asyncio
+    async def test_connector_under_limit_executes_normally(self, mock_context, mock_state):
+        """Connector under rate limit should execute normally and increment usage."""
+        from prisma import Prisma
+        from datetime import date
+
+        mock_connector = Mock(spec=BaseConnector)
+        mock_connector.source_name = "test_connector"
+        mock_connector.fetch = AsyncMock(
+            return_value={"organic": [{"title": "Test Result"}]}
+        )
+
+        spec = ConnectorSpec(
+            name="test_connector",
+            phase=ExecutionPhase.DISCOVERY,
+            trust_level=75,
+            requires=["request.query"],
+            provides=["context.candidates"],
+            supports_query_only=True,
+            rate_limit_per_day=100,  # Limit: 100/day
+        )
+
+        adapter = ConnectorAdapter(mock_connector, spec)
+
+        # Mock database with no existing usage (under limit)
+        mock_db = AsyncMock(spec=Prisma)
+        mock_db.connectorusage = AsyncMock()
+        mock_db.connectorusage.find_first = AsyncMock(return_value=None)
+        mock_db.connectorusage.upsert = AsyncMock()
+
+        request = IngestRequest(
+            ingestion_mode=IngestionMode.DISCOVER_MANY, query="test query"
+        )
+        query_features = QueryFeatures.extract(query="test query", request=request)
+
+        # Execute should succeed
+        await adapter.execute(request, query_features, mock_context, mock_state, db=mock_db)
+
+        # Verify rate limit was checked
+        mock_db.connectorusage.find_first.assert_called_once()
+        call_args = mock_db.connectorusage.find_first.call_args
+        assert call_args[1]["where"]["connector_name"] == "test_connector"
+        assert call_args[1]["where"]["date"] == date.today()
+
+        # Verify usage was incremented
+        mock_db.connectorusage.upsert.assert_called_once()
+        upsert_args = mock_db.connectorusage.upsert.call_args
+        assert upsert_args[1]["data"]["create"]["connector_name"] == "test_connector"
+        assert upsert_args[1]["data"]["create"]["request_count"] == 1
+
+        # Connector should have executed successfully
+        assert mock_connector.fetch.called
+        assert len(mock_state.candidates) == 1
+        assert mock_state.metrics["test_connector"]["executed"] is True
+
+    @pytest.mark.asyncio
+    async def test_connector_at_limit_is_skipped(self, mock_context, mock_state):
+        """Connector at rate limit should be skipped with error."""
+        from prisma import Prisma
+        from datetime import date
+
+        mock_connector = Mock(spec=BaseConnector)
+        mock_connector.source_name = "limited_connector"
+        mock_connector.fetch = AsyncMock(
+            return_value={"organic": [{"title": "Should not execute"}]}
+        )
+
+        spec = ConnectorSpec(
+            name="limited_connector",
+            phase=ExecutionPhase.DISCOVERY,
+            trust_level=75,
+            requires=["request.query"],
+            provides=["context.candidates"],
+            supports_query_only=True,
+            rate_limit_per_day=100,  # Limit: 100/day
+        )
+
+        adapter = ConnectorAdapter(mock_connector, spec)
+
+        # Mock database with usage at limit
+        mock_usage = Mock()
+        mock_usage.request_count = 100  # At limit
+        mock_db = AsyncMock(spec=Prisma)
+        mock_db.connectorusage = AsyncMock()
+        mock_db.connectorusage.find_first = AsyncMock(return_value=mock_usage)
+        mock_db.connectorusage.upsert = AsyncMock()
+
+        request = IngestRequest(
+            ingestion_mode=IngestionMode.DISCOVER_MANY, query="test query"
+        )
+        query_features = QueryFeatures.extract(query="test query", request=request)
+
+        # Execute should skip connector
+        await adapter.execute(request, query_features, mock_context, mock_state, db=mock_db)
+
+        # Connector should NOT have been executed
+        assert not mock_connector.fetch.called
+        assert len(mock_state.candidates) == 0
+
+        # Rate limit error should be recorded
+        assert len(mock_state.errors) == 1
+        error = mock_state.errors[0]
+        assert error["connector"] == "limited_connector"
+        assert "rate limit" in error["error"].lower()
+        assert error["rate_limited"] is True
+
+        # Metrics should show rate-limited
+        assert "limited_connector" in mock_state.metrics
+        metrics = mock_state.metrics["limited_connector"]
+        assert metrics["executed"] is False
+        assert metrics["rate_limited"] is True
+        assert metrics["cost_usd"] == 0.0
+
+        # Usage should NOT be incremented (already at limit)
+        assert not mock_db.connectorusage.upsert.called
+
+    @pytest.mark.asyncio
+    async def test_usage_increment_handles_first_request(self, mock_context, mock_state):
+        """First request of the day should create new ConnectorUsage record."""
+        from prisma import Prisma
+        from datetime import date
+
+        mock_connector = Mock(spec=BaseConnector)
+        mock_connector.source_name = "new_connector"
+        mock_connector.fetch = AsyncMock(
+            return_value={"organic": [{"title": "First Request"}]}
+        )
+
+        spec = ConnectorSpec(
+            name="new_connector",
+            phase=ExecutionPhase.DISCOVERY,
+            trust_level=75,
+            requires=["request.query"],
+            provides=["context.candidates"],
+            supports_query_only=True,
+            rate_limit_per_day=1000,
+        )
+
+        adapter = ConnectorAdapter(mock_connector, spec)
+
+        # Mock database with no existing usage (first request)
+        mock_db = AsyncMock(spec=Prisma)
+        mock_db.connectorusage = AsyncMock()
+        mock_db.connectorusage.find_first = AsyncMock(return_value=None)
+        mock_db.connectorusage.upsert = AsyncMock()
+
+        request = IngestRequest(
+            ingestion_mode=IngestionMode.DISCOVER_MANY, query="test query"
+        )
+        query_features = QueryFeatures.extract(query="test query", request=request)
+
+        await adapter.execute(request, query_features, mock_context, mock_state, db=mock_db)
+
+        # Verify upsert creates new record with request_count=1
+        mock_db.connectorusage.upsert.assert_called_once()
+        upsert_args = mock_db.connectorusage.upsert.call_args
+        create_data = upsert_args[1]["data"]["create"]
+        assert create_data["connector_name"] == "new_connector"
+        assert create_data["date"] == date.today()
+        assert create_data["request_count"] == 1
+
+    @pytest.mark.asyncio
+    async def test_usage_increment_handles_subsequent_requests(self, mock_context, mock_state):
+        """Subsequent requests should increment existing usage count."""
+        from prisma import Prisma
+        from datetime import date
+
+        mock_connector = Mock(spec=BaseConnector)
+        mock_connector.source_name = "existing_connector"
+        mock_connector.fetch = AsyncMock(
+            return_value={"organic": [{"title": "Subsequent Request"}]}
+        )
+
+        spec = ConnectorSpec(
+            name="existing_connector",
+            phase=ExecutionPhase.DISCOVERY,
+            trust_level=75,
+            requires=["request.query"],
+            provides=["context.candidates"],
+            supports_query_only=True,
+            rate_limit_per_day=1000,
+        )
+
+        adapter = ConnectorAdapter(mock_connector, spec)
+
+        # Mock database with existing usage (50 requests today)
+        mock_usage = Mock()
+        mock_usage.request_count = 50
+        mock_db = AsyncMock(spec=Prisma)
+        mock_db.connectorusage = AsyncMock()
+        mock_db.connectorusage.find_first = AsyncMock(return_value=mock_usage)
+        mock_db.connectorusage.upsert = AsyncMock()
+
+        request = IngestRequest(
+            ingestion_mode=IngestionMode.DISCOVER_MANY, query="test query"
+        )
+        query_features = QueryFeatures.extract(query="test query", request=request)
+
+        await adapter.execute(request, query_features, mock_context, mock_state, db=mock_db)
+
+        # Verify upsert increments existing count
+        mock_db.connectorusage.upsert.assert_called_once()
+        upsert_args = mock_db.connectorusage.upsert.call_args
+        update_data = upsert_args[1]["data"]["update"]
+        assert "request_count" in update_data
+        assert update_data["request_count"]["increment"] == 1

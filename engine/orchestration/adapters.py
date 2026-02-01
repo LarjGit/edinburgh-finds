@@ -11,9 +11,11 @@ Handles:
 
 import asyncio
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
+
+from prisma import Prisma
 
 from engine.ingestion.base import BaseConnector
 from engine.orchestration.execution_context import ExecutionContext
@@ -99,24 +101,27 @@ class ConnectorAdapter:
         query_features: QueryFeatures,
         context: ExecutionContext,
         state: "OrchestratorState",
+        db: Optional[Prisma] = None,
     ) -> None:
         """
         Execute connector and write results to state.
 
         This is the main entry point called by the Orchestrator. It:
-        1. Translates query for connector-specific requirements
-        2. Calls connector.fetch() directly (async)
-        3. Extracts items from connector response
-        4. Maps each item to canonical candidate schema
-        5. Appends candidates to state.candidates
-        6. Records metrics in state.metrics
-        7. Handles errors gracefully (logs to state.errors)
+        1. Checks rate limit (PL-004) - skips if at/over limit
+        2. Translates query for connector-specific requirements
+        3. Calls connector.fetch() directly (async)
+        4. Extracts items from connector response
+        5. Maps each item to canonical candidate schema
+        6. Appends candidates to state.candidates
+        7. Records metrics in state.metrics
+        8. Handles errors gracefully (logs to state.errors)
 
         Args:
             request: The ingestion request (contains query)
             query_features: Extracted query features (used for query translation)
             context: Immutable execution context (lens contract)
             state: Mutable orchestrator state (candidates, metrics, errors)
+            db: Database connection for rate limit tracking (PL-004)
         """
         start_time = time.time()
         items_received = 0
@@ -124,6 +129,26 @@ class ConnectorAdapter:
         mapping_failures = 0
 
         try:
+            # Check rate limit before executing (PL-004)
+            if db is not None and not await self._check_rate_limit(db):
+                # At/over limit: skip connector, record error
+                error_msg = f"Rate limit exceeded ({self.spec.rate_limit_per_day}/day)"
+                state.errors.append({
+                    "connector": self.spec.name,
+                    "error": error_msg,
+                    "rate_limited": True
+                })
+                state.metrics[self.spec.name] = {
+                    "executed": False,
+                    "error": error_msg,
+                    "rate_limited": True,
+                    "cost_usd": 0.0
+                }
+                return
+
+            # Increment usage counter before execution (PL-004)
+            if db is not None:
+                await self._increment_usage(db)
             # Translate query for connector-specific requirements
             # (e.g., Sport Scotland needs layer names, not natural language)
             translated_query = self._translate_query(request.query, query_features)
@@ -544,3 +569,60 @@ class ConnectorAdapter:
             "source": self.connector.source_name,
             "raw": raw,
         }
+
+    async def _check_rate_limit(self, db: Prisma) -> bool:
+        """
+        Check if connector is within rate limit for today.
+
+        Queries ConnectorUsage table for today's request count and compares
+        against spec.rate_limit_per_day.
+
+        Args:
+            db: Database connection
+
+        Returns:
+            True if under limit (can execute), False if at/over limit (skip)
+        """
+        today = datetime.now(timezone.utc).date()
+
+        # Query ConnectorUsage for today's count
+        usage = await db.connectorusage.find_first(
+            where={
+                "connector_name": self.spec.name,
+                "date": today
+            }
+        )
+
+        current_count = usage.request_count if usage else 0
+        return current_count < self.spec.rate_limit_per_day
+
+    async def _increment_usage(self, db: Prisma) -> None:
+        """
+        Increment usage count for connector for today.
+
+        Uses upsert to handle both first request (create) and subsequent
+        requests (increment) atomically.
+
+        Args:
+            db: Database connection
+        """
+        today = datetime.now(timezone.utc).date()
+
+        await db.connectorusage.upsert(
+            where={
+                "connector_name_date": {
+                    "connector_name": self.spec.name,
+                    "date": today
+                }
+            },
+            data={
+                "create": {
+                    "connector_name": self.spec.name,
+                    "date": today,
+                    "request_count": 1
+                },
+                "update": {
+                    "request_count": {"increment": 1}
+                }
+            }
+        )

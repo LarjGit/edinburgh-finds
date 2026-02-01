@@ -271,7 +271,8 @@ async def orchestrate(
                     adapter = ConnectorAdapter(connector, node.spec)
 
                     # Create task for concurrent execution
-                    task = adapter.execute(request, query_features, context, state)
+                    # Pass db for rate limit tracking (PL-004)
+                    task = adapter.execute(request, query_features, context, state, db=db)
                     tasks.append(task)
 
                 except Exception as e:
