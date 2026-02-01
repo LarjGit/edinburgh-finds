@@ -2,7 +2,7 @@
 
 **Current Phase:** Phase 2: Pipeline Implementation
 **Validation Entity:** Powerleague Portobello Edinburgh (Phase 2+)
-**Last Updated:** 2026-02-01 (Stage 6: EX-002-4 complete ✅, 2 parts remaining)
+**Last Updated:** 2026-02-01 (Stage 6: EX-002-5 complete ✅, EX-002 series COMPLETE, 1 item remaining)
 
 ---
 
@@ -846,14 +846,19 @@
   - **Fix Applied:** Created test_edinburgh_council_extractor.py (334 lines, 9 tests). Test structure mirrors google_places pattern (deterministic extractor). Tests validate: no domain terms, no canonical_* fields, no modules field, split_attributes() separation, GeoJSON coordinate extraction, category deduplication, multiple field name fallbacks, validation requirements, accessibility flags.
   - **Note:** Tests discovered extractor outputs "website" instead of "website_url" (schema mismatch) - documented in test but not fixed (out of scope for test-writing task)
 
-- [ ] **EX-002-5: Add Phase 1 Contract Tests for open_charge_map_extractor (Part 5 of 5)**
+- [x] **EX-002-5: Add Phase 1 Contract Tests for open_charge_map_extractor (Part 5 of 5)**
   - **Principle:** Test Coverage for Extraction Boundary (architecture.md 4.2)
   - **Location:** `tests/engine/extraction/extractors/test_open_charge_map_extractor.py` (new file)
-  - **Description:** Create comprehensive Phase 1 contract tests for open_charge_map_extractor. Mirror serper pattern: TestEnginePurity (no domain literals), TestExtractionBoundary (only primitives + raw observations), TestExtractionCorrectness (extraction logic works).
-  - **Impact:** High - Cannot verify open_charge_map_extractor complies with Phase 1 contract
-  - **Estimated Scope:** 1 new test file, ~170 lines, 5-7 tests
-  - **Reference Pattern:** tests/engine/extraction/extractors/test_serper_extractor.py
-  - **Note:** Final part of EX-002. After completion, all 6 extractors will have Phase 1 contract tests.
+  - **Description:** Created comprehensive Phase 1 contract tests for open_charge_map_extractor. 3 test classes: TestEnginePurity (validates no domain literals), TestExtractionBoundary (validates Phase 1 contract), TestExtractionCorrectness (validates extraction logic). Deterministic extractor (no LLM) similar to google_places pattern.
+  - **Completed:** 2026-02-01
+  - **Commit:** 84d3f09
+  - **Executable Proof:**
+    - `pytest tests/engine/extraction/extractors/test_open_charge_map_extractor.py -v` ✅ 12/12 PASSED
+    - `pytest tests/engine/extraction/ -q` ✅ 96/96 PASSED (no regressions, up from 84 tests)
+    - All 3 test classes passing: EnginePurity (1 test), ExtractionBoundary (2 tests), ExtractionCorrectness (9 tests)
+    - No domain literals found in open_charge_map_extractor.py (Engine Purity compliant)
+  - **Fix Applied:** Created test_open_charge_map_extractor.py (398 lines, 12 tests). Test structure mirrors deterministic extractor pattern. Tests validate: no domain terms, no canonical_* fields, no modules field, split_attributes() separation, schema primitives extraction, EV-specific fields to discovered, connections extraction, validation requirements, phone/postcode formatting, edge cases.
+  - **Note:** EX-002 series now COMPLETE ✅ - All 6 extractors have Phase 1 contract tests (serper, google_places, osm, edinburgh_council, sport_scotland, open_charge_map)
 
 - [ ] **EX-003: Outdated Documentation in base.py**
   - **Principle:** Documentation Accuracy
