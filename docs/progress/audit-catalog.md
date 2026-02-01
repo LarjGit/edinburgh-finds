@@ -2,7 +2,7 @@
 
 **Current Phase:** Phase 2: Pipeline Implementation
 **Validation Entity:** Powerleague Portobello Edinburgh (Phase 2+)
-**Last Updated:** 2026-02-01 (Stage 6: EX-002-3 complete ✅, 3 parts remaining)
+**Last Updated:** 2026-02-01 (Stage 6: EX-002-4 complete ✅, 2 parts remaining)
 
 ---
 
@@ -818,7 +818,7 @@
   - **Location:** `tests/engine/extraction/extractors/test_osm_extractor.py` (new file)
   - **Description:** Created comprehensive Phase 1 contract tests for osm_extractor. 3 test classes: TestEnginePurity (1 test - no domain literals), TestExtractionBoundary (2 tests - only primitives + raw observations, EX-001 fix validation), TestExtractionCorrectness (6 tests - schema primitives, raw observations, OSM ID, aggregation helper, validation, split_attributes).
   - **Completed:** 2026-02-01
-  - **Commit:** (pending)
+  - **Commit:** 05c4709
   - **Executable Proof:**
     - `pytest tests/engine/extraction/extractors/test_osm_extractor.py -v` ✅ 9/9 PASSED
     - `pytest tests/engine/extraction/ -q` ✅ 75/75 PASSED (no regressions, up from 66 tests)
@@ -832,13 +832,19 @@
     - tests/engine/extraction/extractors/test_osm_extractor.py (NEW - 435 lines, 9 tests)
     - engine/extraction/extractors/osm_extractor.py (FIXED - removed domain literals, fixed split_attributes call)
 
-- [ ] **EX-002-4: Add Phase 1 Contract Tests for edinburgh_council_extractor (Part 4 of 5)**
+- [x] **EX-002-4: Add Phase 1 Contract Tests for edinburgh_council_extractor (Part 4 of 5)**
   - **Principle:** Test Coverage for Extraction Boundary (architecture.md 4.2)
   - **Location:** `tests/engine/extraction/extractors/test_edinburgh_council_extractor.py` (new file)
-  - **Description:** Create comprehensive Phase 1 contract tests for edinburgh_council_extractor. Mirror serper pattern: TestEnginePurity (no domain literals), TestExtractionBoundary (only primitives + raw observations), TestExtractionCorrectness (extraction logic works).
-  - **Impact:** High - Cannot verify edinburgh_council_extractor complies with Phase 1 contract
-  - **Estimated Scope:** 1 new test file, ~170 lines, 5-7 tests
-  - **Reference Pattern:** tests/engine/extraction/extractors/test_serper_extractor.py
+  - **Description:** Created comprehensive Phase 1 contract tests for edinburgh_council_extractor. 3 test classes: TestEnginePurity (validates no domain literals), TestExtractionBoundary (validates Phase 1 contract), TestExtractionCorrectness (validates extraction logic). Deterministic extractor (no LLM) similar to google_places pattern.
+  - **Completed:** 2026-02-01
+  - **Commit:** (pending)
+  - **Executable Proof:**
+    - `pytest tests/engine/extraction/extractors/test_edinburgh_council_extractor.py -v` ✅ 9/9 PASSED
+    - `pytest tests/engine/extraction/ -q` ✅ 84/84 PASSED (no regressions, up from 75 tests)
+    - All 3 test classes passing: EnginePurity (1 test), ExtractionBoundary (1 test), ExtractionCorrectness (7 tests)
+    - No domain literals found in edinburgh_council_extractor.py (Engine Purity compliant)
+  - **Fix Applied:** Created test_edinburgh_council_extractor.py (334 lines, 9 tests). Test structure mirrors google_places pattern (deterministic extractor). Tests validate: no domain terms, no canonical_* fields, no modules field, split_attributes() separation, GeoJSON coordinate extraction, category deduplication, multiple field name fallbacks, validation requirements, accessibility flags.
+  - **Note:** Tests discovered extractor outputs "website" instead of "website_url" (schema mismatch) - documented in test but not fixed (out of scope for test-writing task)
 
 - [ ] **EX-002-5: Add Phase 1 Contract Tests for open_charge_map_extractor (Part 5 of 5)**
   - **Principle:** Test Coverage for Extraction Boundary (architecture.md 4.2)
