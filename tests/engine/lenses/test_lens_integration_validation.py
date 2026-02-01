@@ -7,7 +7,7 @@ verifying canonical dimensions are populated from mapping rules.
 import pytest
 from pathlib import Path
 from engine.lenses.loader import VerticalLens
-from engine.extraction.base import extract_with_lens_contract
+from tests.engine.extraction.test_helpers import extract_with_lens_for_testing
 
 
 def test_padel_extraction_populates_canonical_activities():
@@ -33,7 +33,7 @@ def test_padel_extraction_populates_canonical_activities():
     }
 
     # Act
-    result = extract_with_lens_contract(raw_data, lens_contract)
+    result = extract_with_lens_for_testing(raw_data, lens_contract)
 
     # Assert
     assert "canonical_activities" in result
@@ -66,7 +66,7 @@ def test_sports_facility_extraction_populates_place_types():
         "source": "test"
     }
 
-    result = extract_with_lens_contract(raw_data, lens_contract)
+    result = extract_with_lens_for_testing(raw_data, lens_contract)
 
     assert "sports_facility" in result["canonical_place_types"], \
         f"Expected 'sports_facility' in canonical_place_types, got: {result['canonical_place_types']}"
@@ -92,7 +92,7 @@ def test_multiple_patterns_extracted():
         "source": "test"
     }
 
-    result = extract_with_lens_contract(raw_data, lens_contract)
+    result = extract_with_lens_for_testing(raw_data, lens_contract)
 
     # Should extract padel activity from name/description
     assert "padel" in result["canonical_activities"], \
@@ -124,7 +124,7 @@ def test_canonical_dimensions_stabilized():
         "source": "test"
     }
 
-    result = extract_with_lens_contract(raw_data, lens_contract)
+    result = extract_with_lens_for_testing(raw_data, lens_contract)
 
     activities = result["canonical_activities"]
 
