@@ -583,7 +583,8 @@ class ConnectorAdapter:
         Returns:
             True if under limit (can execute), False if at/over limit (skip)
         """
-        today = datetime.now(timezone.utc).date()
+        # Use datetime at midnight for date comparison (Prisma expects datetime, not date)
+        today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
 
         # Query ConnectorUsage for today's count
         usage = await db.connectorusage.find_first(
@@ -606,7 +607,8 @@ class ConnectorAdapter:
         Args:
             db: Database connection
         """
-        today = datetime.now(timezone.utc).date()
+        # Use datetime at midnight for date comparison (Prisma expects datetime, not date)
+        today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
 
         await db.connectorusage.upsert(
             where={
