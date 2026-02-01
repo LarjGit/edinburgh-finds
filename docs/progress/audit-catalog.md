@@ -2,7 +2,7 @@
 
 **Current Phase:** Phase 2: Pipeline Implementation
 **Validation Entity:** Powerleague Portobello Edinburgh (Phase 2+)
-**Last Updated:** 2026-02-01 (Stage 6: EX-002-5 complete ✅, EX-002 series COMPLETE, 1 item remaining)
+**Last Updated:** 2026-02-01 (Stage 6: COMPLETE ✅ - All extraction gaps resolved, next: Stage 7 audit)
 
 ---
 
@@ -281,9 +281,9 @@
 
 ## Phase 2: Pipeline Implementation
 
-**Status:** Stage 5 (Raw Ingestion Persistence) COMPLETE ✅ (all gaps resolved)
+**Status:** Stage 6 (Source Extraction) COMPLETE ✅ (all gaps resolved)
 **Validation Entity:** Powerleague Portobello Edinburgh (requires complete pipeline)
-**Progress:** Stages 1-5 complete, Stage 6 audited (3 gaps), Stages 7-11 pending
+**Progress:** Stages 1-6 complete ✅, Stages 7-11 pending audit
 
 ### Stage 1: Input (architecture.md 4.1)
 
@@ -747,7 +747,7 @@
 
 ### Stage 6: Source Extraction (architecture.md 4.1, 4.2)
 
-**Status:** Audit complete - 3 implementation gaps identified
+**Status:** COMPLETE ✅ - All 3 implementation gaps resolved
 
 **Requirements:**
 - For each raw artifact, run source-specific extractor
@@ -860,12 +860,44 @@
   - **Fix Applied:** Created test_open_charge_map_extractor.py (398 lines, 12 tests). Test structure mirrors deterministic extractor pattern. Tests validate: no domain terms, no canonical_* fields, no modules field, split_attributes() separation, schema primitives extraction, EV-specific fields to discovered, connections extraction, validation requirements, phone/postcode formatting, edge cases.
   - **Note:** EX-002 series now COMPLETE ✅ - All 6 extractors have Phase 1 contract tests (serper, google_places, osm, edinburgh_council, sport_scotland, open_charge_map)
 
-- [ ] **EX-003: Outdated Documentation in base.py**
+- [x] **EX-003: Outdated Documentation in base.py**
   - **Principle:** Documentation Accuracy
   - **Location:** `engine/extraction/base.py:207-260` (extract_with_lens_contract docstring)
   - **Description:** Function `extract_with_lens_contract()` exists in base.py with documentation showing it returns canonical dimensions. This function appears to be legacy code that's been superseded by the Phase 1/Phase 2 split in extraction_integration.py. Documentation is confusing - makes it look like extractors can return canonical fields.
-  - **Impact:** Low - Documentation confusion only
-  - **Estimated Scope:** 1 file, clarify or remove function (~60 lines)
+  - **Completed:** 2026-02-01
+  - **Commit:** (pending)
+  - **Executable Proof:**
+    - `pytest tests/engine/lenses/test_lens_integration_validation.py -v` ✅ 4/4 PASSED (no regressions)
+    - `pytest tests/engine/extraction/ -q` ✅ 96/96 PASSED (no regressions)
+    - Docstring updated with clear "⚠️ LEGACY CONVENIENCE FUNCTION" warning
+    - Documents production path: extraction_integration.py → lens_integration.apply_lens_contract()
+    - Lists valid use cases (testing, scripts) and invalid use cases (production pipeline)
+  - **Fix Applied:** Updated docstring in engine/extraction/base.py:208-236 with legacy warning, production path documentation, and clear use case guidelines. Function kept for testing/scripts (used by 4 tests + 3 utility scripts). No behavior changes.
+  - **Future Enhancement:** See EX-003-RELOCATE below for planned relocation to test utilities
+
+- [x] **EX-003-RELOCATE: Relocate extract_with_lens_contract to Test Utilities**
+  - **Principle:** Code Organization, Separation of Concerns
+  - **Location:** `tests/engine/extraction/test_helpers.py` (relocated from `engine/extraction/base.py`)
+  - **Description:** Relocated `extract_with_lens_contract()` function from production code to test utilities with clearer naming (`extract_with_lens_for_testing`). Function combines Phase 1 + Phase 2 extraction for testing/scripting convenience but doesn't belong in core infrastructure.
+  - **Completed:** 2026-02-01 (5/5 micro-iterations)
+  - **Commits:** cf010e4, 25abdf6, 99edfe3, 8896c35
+  - **Executable Proof:**
+    - `pytest tests/engine/extraction/ -v` ✅ 96/96 PASSED (no regressions)
+    - `pytest tests/engine/lenses/test_lens_integration_validation.py -v` ✅ 4/4 PASSED (function works from new location)
+    - `grep -rn "from engine.extraction.base import extract_with_lens_contract" tests/ scripts/` ✅ No matches (old import path removed)
+    - `grep -rn "from tests.engine.extraction.test_helpers import extract_with_lens_for_testing" tests/ scripts/` ✅ 3 matches (1 test + 2 scripts using new path)
+  - **Changes Applied:**
+    1. ✅ Created `tests/engine/extraction/test_helpers.py` (282 lines, renamed function)
+    2. ✅ Updated `tests/engine/lenses/test_lens_integration_validation.py` (1 import + 4 calls)
+    3. ✅ Updated 2 scripts: run_lens_aware_extraction.py, test_wine_extraction.py (2 imports + 3 calls)
+    4. ✅ Deleted from `engine/extraction/base.py` (257 lines removed, 3 orphaned imports cleaned up)
+    5. ✅ Final verification passed (399 tests passing, 0 regressions in extraction module)
+  - **Benefits Achieved:**
+    - ✅ Function clearly marked as test-only (lives in `tests/` directory)
+    - ✅ Better name signals intended usage (`extract_with_lens_for_testing`)
+    - ✅ Core extraction code cleaner (257 lines removed from production code)
+    - ✅ Still available for legitimate testing/scripting use cases
+  - **Detailed Plan:** `docs/progress/EX-003-RELOCATE-plan.md`
 
 ---
 
