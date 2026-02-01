@@ -3,7 +3,7 @@
 # ============================================================
 #
 # Generated from: engine/config/schemas/entity.yaml
-# Generated at: 2026-01-22 13:52:31
+# Generated at: 2026-01-31 23:56:47
 #
 # To make changes:
 # 1. Edit engine/config/schemas/entity.yaml

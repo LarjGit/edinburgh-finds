@@ -1,7 +1,7 @@
 # Development Methodology: Reality-Based Incremental Alignment
 
 **Status:** Active Methodology
-**Last Updated:** 2026-01-30
+**Last Updated:** 2026-01-31
 **Purpose:** Guide steady, aligned, vision-true progress in bite-sized, testable chunks
 
 ---
@@ -251,7 +251,7 @@ Save to `docs/progress/audit-catalog.md` (see Section 10 for format)
 
 **Purpose:** Execute one ultra-small, testable change with strict reality-checking
 
-### The Process: 7 Steps with User Checkpoints
+### The Process: 8 Steps with User Checkpoints
 
 ---
 
@@ -273,7 +273,7 @@ Save to `docs/progress/audit-catalog.md` (see Section 10 for format)
 - Foundation never changes
 
 **Phase Transition Criteria:**
-- Phase 1 → Phase 2: Catalog empty + architectural tests pass
+- Phase 1 → Phase 2: No blocking Level-1 violations (defined as: no unchecked Level-1 violations on the runtime path for the validation entity) + bootstrap validation gates enforced
 - Phase 2 → Phase 3: Complete pipeline + use case test passes
 
 ---
@@ -500,9 +500,48 @@ Before marking complete:
    - Never needs to be revisited
    - Permanent architectural improvement
 
-4. **Return to Step 1**
-   - Select next item from catalog
-   - Repeat process
+4. Proceed to Step 8 (Compounding)
+
+---
+
+#### Step 8 — Compounding (Mandatory, Lightweight)
+
+**Purpose:**  
+Ensure that validated work improves future work quality, not just current correctness.
+
+This step captures institutional learning without adding ceremony or slowing execution.
+
+After completing Step 7, the agent MUST answer the following three questions:
+
+1. **Pattern Candidate?**  
+   - Yes / No  
+   - If yes:
+     - Describe the pattern in 1–2 sentences  
+     - Reference the concrete example (file, test, or commit)
+
+2. **Documentation Clarity Improvement?**  
+   - Yes / No  
+   - If yes:
+     - Identify the relevant section of `system-vision.md` or `architecture.md`
+     - Propose a one-line clarification or note
+
+3. **Future Pitfall Identified?**  
+   - Yes / No  
+   - If yes:
+     - State the pitfall in a single sentence (what future work must avoid or watch for)
+
+---
+
+**Rules:**
+- Compounding observations are proposals, not automatic changes
+- The user decides whether to:
+  - ignore
+  - defer
+  - or promote the observation into documentation
+- No files are required to be updated during this step
+
+**Key Principle:**  
+If a lesson was learned and not recorded, it will be relearned the hard way later.
 
 ---
 
@@ -758,18 +797,16 @@ Actions:
 2. Check "Current Phase" field
 
 3. IF Phase = "Foundation":
-   a. Find first unchecked [ ] item in "Critical (Level 1)" section
-   b. IF none exist:
-      - Find first unchecked [ ] item in "Important (Level 2)" section
-      - IF none exist:
-        - Run architectural compliance test suite
-        - IF all pass:
-          * Update Phase to "Use Case Enablement"
-          * GO TO step 2
-        - ELSE:
-          * Catalog the failing tests as new violations
-          * GO TO step 3
-   c. RETURN: Selected item
+   a. Find first unchecked [ ] item in "Critical (Level 1)" section that is on the runtime path for the validation entity
+   b. IF one exists: RETURN it
+   c. IF none exist:
+      - Verify bootstrap validation gates are implemented and enforced
+      - IF enforced:
+        * Update Phase to "Use Case Enablement"
+        * GO TO step 2
+      - ELSE:
+        * Create a catalog item: "Missing bootstrap validation gates enforcement"
+        * RETURN that item
 
 4. IF Phase = "Use Case Enablement":
    a. Check architecture.md Section 4.1 (11 pipeline stages)
@@ -918,7 +955,7 @@ Actions:
 
 **Current Phase:** Foundation (Phase 1)
 **Use Case:** Powerleague Portobello (when in Phase 2+)
-**Last Updated:** 2026-01-30
+**Last Updated:** YYYY-MM-DD
 
 ---
 
@@ -1142,6 +1179,7 @@ touch docs/progress/audit-catalog.md
 7. Validate Against Golden Docs (Step 6)
 8. 🛑 **USER CHECKPOINT 2:** Validate result
 9. Mark Complete & Commit (Step 7)
+10. Compounding (Step 8)
 
 ---
 
@@ -1172,7 +1210,7 @@ touch docs/progress/audit-catalog.md
 
 ## Appendix: Quick Reference
 
-### The 7-Step Process
+### The 8-Step Process
 
 1. **Select Next Item** (Use Decision Logic)
 2. **Code Reality Audit** (Read actual files, verify assumptions)
@@ -1181,6 +1219,7 @@ touch docs/progress/audit-catalog.md
 5. **Execute with TDD** (RED → GREEN → Refactor)
 6. **Validate Against Golden Docs** (Manual verification)
 7. **Mark Complete & Commit** (After user approval only)
+8. **Compounding** (Capture pattern candidates, doc clarity improvements, and future pitfalls)
 
 ### The 2 User Checkpoints
 
