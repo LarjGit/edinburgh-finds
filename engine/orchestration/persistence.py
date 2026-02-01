@@ -17,6 +17,7 @@ from prisma import Prisma
 
 from engine.orchestration.extraction_integration import extract_entity, needs_extraction
 from engine.extraction.entity_classifier import classify_entity
+from engine.ingestion.deduplication import check_duplicate
 
 # Set up structured logging with prefix
 logger = logging.getLogger(__name__)
@@ -94,37 +95,57 @@ class PersistenceManager:
                 data_dir = Path("engine/data/raw") / source
                 data_dir.mkdir(parents=True, exist_ok=True)
 
-                # Generate filename: timestamp_hash.json
-                timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+                # Generate content hash for deduplication
                 raw_payload_str = json.dumps(raw_item, indent=2)
                 content_hash = hashlib.sha256(raw_payload_str.encode()).hexdigest()[:16]
-                file_name = f"{timestamp}_{content_hash}.json"
-                file_path = data_dir / file_name
 
-                # Write raw payload to disk
-                file_path.write_text(raw_payload_str, encoding="utf-8")
+                # Step 2: Check for duplicate (RI-001: Ingestion-level deduplication)
+                is_duplicate = await check_duplicate(self.db, content_hash)
 
-                # Generate source URL from raw item (connector-specific)
-                source_url = self._extract_source_url(raw_item, source, candidate_name)
+                if is_duplicate:
+                    # Reuse existing RawIngestion record (RI-002: Replay stability)
+                    raw_ingestion = await self.db.rawingestion.find_first(
+                        where={"hash": content_hash}
+                    )
+                    logger.debug(
+                        f"[PERSIST] Duplicate payload detected for source={source}, "
+                        f"reusing existing raw_ingestion_id={raw_ingestion.id}, hash={content_hash}"
+                    )
+                else:
+                    # New payload - save to disk and create RawIngestion record
+                    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+                    file_name = f"{timestamp}_{content_hash}.json"
+                    file_path = data_dir / file_name
 
-                # Step 2: Create RawIngestion record with proper file path
-                raw_ingestion_data = {
-                    "source": source,
-                    "source_url": source_url,
-                    "file_path": str(file_path.relative_to(Path("."))),  # Relative path from project root
-                    "status": "success",
-                    "hash": content_hash,
-                    "metadata_json": json.dumps({
-                        "ingestion_mode": "orchestration",
-                        "candidate_name": candidate_name,
-                    }),
-                }
+                    # Write raw payload to disk
+                    file_path.write_text(raw_payload_str, encoding="utf-8")
 
-                # Link to OrchestrationRun if provided
-                if orchestration_run_id:
-                    raw_ingestion_data["orchestration_run_id"] = orchestration_run_id
+                    # Generate source URL from raw item (connector-specific)
+                    source_url = self._extract_source_url(raw_item, source, candidate_name)
 
-                raw_ingestion = await self.db.rawingestion.create(data=raw_ingestion_data)
+                    # Create RawIngestion record
+                    raw_ingestion_data = {
+                        "source": source,
+                        "source_url": source_url,
+                        "file_path": str(file_path.relative_to(Path("."))),  # Relative path from project root
+                        "status": "success",
+                        "hash": content_hash,
+                        "metadata_json": json.dumps({
+                            "ingestion_mode": "orchestration",
+                            "candidate_name": candidate_name,
+                        }),
+                    }
+
+                    # Link to OrchestrationRun if provided
+                    if orchestration_run_id:
+                        raw_ingestion_data["orchestration_run_id"] = orchestration_run_id
+
+                    raw_ingestion = await self.db.rawingestion.create(data=raw_ingestion_data)
+
+                    logger.debug(
+                        f"[PERSIST] Created new RawIngestion: source={source}, "
+                        f"raw_ingestion_id={raw_ingestion.id}, hash={content_hash}"
+                    )
 
                 # Step 3: Check if this source needs extraction
                 if needs_extraction(source):

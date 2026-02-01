@@ -2,7 +2,7 @@
 
 **Current Phase:** Phase 2: Pipeline Implementation
 **Validation Entity:** Powerleague Portobello Edinburgh (Phase 2+)
-**Last Updated:** 2026-02-01 (PL-004 complete: Rate limit enforcement - commit cbde4f5)
+**Last Updated:** 2026-02-01 (Stage 5 gaps RI-001/RI-002 complete ✅, Stage 6: 3 gaps identified)
 
 ---
 
@@ -281,9 +281,9 @@
 
 ## Phase 2: Pipeline Implementation
 
-**Status:** Stage 5 (Raw Ingestion Persistence) audit complete - 2 gaps identified ✅
+**Status:** Stage 5 (Raw Ingestion Persistence) COMPLETE ✅ (all gaps resolved)
 **Validation Entity:** Powerleague Portobello Edinburgh (requires complete pipeline)
-**Progress:** Stages 1-5 audited (2 deferred gaps: PL-004, RI-001/RI-002), Stages 6-11 pending
+**Progress:** Stages 1-5 complete, Stage 6 audited (3 gaps), Stages 7-11 pending
 
 ### Stage 1: Input (architecture.md 4.1)
 
@@ -704,72 +704,95 @@
 
 **❌ GAPS IDENTIFIED:**
 
-- [ ] **RI-001: Ingestion-Level Deduplication Not Enforced in Orchestration Path**
+- [x] **RI-001: Ingestion-Level Deduplication Not Enforced in Orchestration Path**
   - **Principle:** Stage 5 requirement: "Perform ingestion-level deduplication of identical payloads" (architecture.md 4.1)
   - **Location:** `engine/orchestration/persistence.py:59-205` (persist_entities method)
-  - **Description:** Architecture requires deduplication of identical raw payloads before creating RawIngestion records. Deduplication infrastructure exists (engine/ingestion/deduplication.py with compute_content_hash() and check_duplicate() functions), and standalone ingestion connectors use it (serper.py:266 calls check_duplicate). However, orchestration persistence path does NOT check for duplicates before creating RawIngestion records. Same raw payload ingested multiple times creates duplicate RawIngestion records with same hash but different IDs and timestamps.
-  - **Current Behavior:**
-    - persistence.py:100 computes content hash
-    - persistence.py:127 creates RawIngestion record WITHOUT checking if hash already exists
-    - No import from engine.ingestion.deduplication
-    - No call to check_duplicate() before database insert
-  - **Required Behavior:**
-    1. Import check_duplicate from engine.ingestion.deduplication
-    2. After computing content_hash (line 100), call check_duplicate(db, content_hash)
-    3. If duplicate exists: skip RawIngestion creation, return existing raw_ingestion.id
-    4. If not duplicate: create RawIngestion record as normal
-    5. Continue with extraction using existing or new raw_ingestion_id
-  - **Impact:** Medium - Wastes storage with duplicate raw payloads, creates redundant RawIngestion records, but doesn't break correctness (entity-level deduplication still works)
-  - **Files to Modify:**
-    - engine/orchestration/persistence.py: Add deduplication check in persist_entities()
-  - **Test Verification:**
-    - Test ingesting same candidate twice, verify only one RawIngestion created
-    - Test hash collision handling (same hash from different sources)
+  - **Description:** Architecture requires deduplication of identical raw payloads before creating RawIngestion records. Deduplication infrastructure exists (engine/ingestion/deduplication.py with compute_content_hash() and check_duplicate() functions), and standalone ingestion connectors use it (serper.py:266 calls check_duplicate). However, orchestration persistence path did NOT check for duplicates before creating RawIngestion records. Same raw payload ingested multiple times created duplicate RawIngestion records with same hash but different IDs and timestamps.
+  - **Completed:** 2026-02-01
+  - **Commit:** (pending)
+  - **Executable Proof:**
+    - `pytest tests/engine/orchestration/test_deduplication_persistence.py::TestIngestionLevelDeduplication::test_duplicate_payload_creates_only_one_raw_ingestion -v` ✅ PASSED
+    - `pytest tests/engine/orchestration/test_deduplication_persistence.py::TestIngestionLevelDeduplication::test_duplicate_payload_reuses_file_path -v` ✅ PASSED
+    - `pytest tests/engine/orchestration/test_deduplication_persistence.py::TestIngestionLevelDeduplication::test_different_payloads_create_separate_records -v` ✅ PASSED
+    - `pytest tests/engine/orchestration/test_deduplication_persistence.py -v` ✅ 3/3 PASSED
+    - `pytest tests/engine/orchestration/ -q` ✅ 230 passed, 3 skipped, 4 failed (4 pre-existing failures, no regressions)
+  - **Fix Applied:**
+    1. ✅ Added import: `from engine.ingestion.deduplication import check_duplicate` (persistence.py:21)
+    2. ✅ After computing content_hash, call `check_duplicate(db, content_hash)` (persistence.py:103)
+    3. ✅ If duplicate: reuse existing RawIngestion record via `find_first(where={"hash": content_hash})` (persistence.py:105-111)
+    4. ✅ If not duplicate: create new RawIngestion record with file write (persistence.py:113-146)
+    5. ✅ Added debug logging for both duplicate detection and new record creation
+    6. ✅ Naturally fixes RI-002 (replay stability) by reusing existing file_path for duplicates
+  - **Files Modified:**
+    - `engine/orchestration/persistence.py`: Added deduplication check in persist_entities() (~40 lines modified)
+    - `tests/engine/orchestration/test_deduplication_persistence.py`: Created comprehensive test suite (3 tests, ~180 lines)
 
-- [ ] **RI-002: Artifact Identity Not Stable Across Replays**
+- [x] **RI-002: Artifact Identity Not Stable Across Replays**
   - **Principle:** Ingestion Boundary requirement: "Artifact identity is stable across replays" (architecture.md 4.2)
   - **Location:** `engine/orchestration/persistence.py:98-102` (filename generation)
-  - **Description:** Architecture requires deterministic artifact identity for reproducibility. Current implementation includes timestamp in filename: `{timestamp}_{hash}.json` (line 101). Same raw payload ingested at different times produces different filenames and different file_path values in RawIngestion records, violating replay stability requirement. For true replay stability, filename should be deterministic based solely on content hash.
-  - **Current Behavior:**
-    - Line 98: `timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")`
-    - Line 101: `file_name = f"{timestamp}_{content_hash}.json"`
-    - Same content at T1 → `20260131_120000_abc123.json`
-    - Same content at T2 → `20260131_130000_abc123.json`
-    - Different file_path stored in RawIngestion
-  - **Required Behavior:**
-    - **Option A (Pure Hash):** Use hash-only filename: `{hash}.json`
-      - Pros: Perfect determinism, simple
-      - Cons: Loses chronological ordering in filesystem
-    - **Option B (Deduplication Check):** Keep timestamp filename but check for existing file before creating new one
-      - If hash exists in RawIngestion: reuse existing file_path
-      - If new hash: create new timestamped file
-      - Pros: Preserves chronological filesystem layout, deduplication ensures stability
-      - Cons: Requires deduplication (RI-001) to work correctly
-  - **Recommended Approach:** Option B (pairs naturally with RI-001 fix)
-    1. Implement RI-001 deduplication first
-    2. When duplicate detected, reuse existing RawIngestion.file_path
-    3. Timestamp filename OK because deduplication prevents creating new files for same content
-  - **Impact:** Low - Primarily affects reproducibility and debugging (different file paths for same content), doesn't break functionality
-  - **Files to Modify:**
-    - engine/orchestration/persistence.py: Modify filename generation logic (coupled with RI-001 fix)
-  - **Test Verification:**
-    - Test ingesting same candidate at different times, verify same file_path returned
-    - Test replay: same query → same RawIngestion file_path references
-
-**Note:** RI-002 fix should be implemented AFTER RI-001, as the deduplication mechanism naturally solves the replay stability issue.
+  - **Description:** Architecture requires deterministic artifact identity for reproducibility. Original implementation included timestamp in filename: `{timestamp}_{hash}.json`. Same raw payload ingested at different times produced different filenames and different file_path values in RawIngestion records, violating replay stability requirement.
+  - **Completed:** 2026-02-01 (naturally resolved by RI-001 fix)
+  - **Commit:** (same as RI-001, pending)
+  - **Executable Proof:**
+    - `pytest tests/engine/orchestration/test_deduplication_persistence.py::TestIngestionLevelDeduplication::test_duplicate_payload_reuses_file_path -v` ✅ PASSED
+    - Test proves: same payload ingested twice → same file_path returned (replay stability)
+  - **Fix Applied (Option B - Deduplication Check):**
+    - RI-001 deduplication implementation automatically solves replay stability
+    - When duplicate detected: reuse existing RawIngestion record → same file_path
+    - When not duplicate: create new timestamped file (chronological ordering preserved)
+    - No additional code changes needed beyond RI-001 fix
+  - **Result:** Replay stability achieved while preserving chronological filesystem layout
 
 ---
 
 ### Stage 6: Source Extraction (architecture.md 4.1, 4.2)
 
-**Status:** Audit pending
+**Status:** Audit complete - 3 implementation gaps identified
 
 **Requirements:**
 - For each raw artifact, run source-specific extractor
 - Extractors emit schema primitives + raw observations only
 - No lens interpretation at this stage (Phase 1 contract)
 
-(Audit pending)
+**Audit Findings (2026-02-01):**
+
+**✅ COMPLIANT:**
+
+**Infrastructure exists:**
+- ✅ All 6 extractors implemented (serper, osm, google_places, sport_scotland, edinburgh_council, open_charge_map)
+- ✅ ExecutionContext propagation complete (ctx parameter passed to all extractors via CP-001c)
+- ✅ Phase 1/Phase 2 split implemented in extraction_integration.py:164-196
+- ✅ EntityExtraction Pydantic model contains ONLY primitives (no canonical fields)
+- ✅ Sport Scotland extractor passes Phase 1 boundary test (test_extractor_outputs_only_primitives_and_raw_observations)
+- ✅ Integration tests passing (8/8 tests in test_extraction_integration.py)
+
+**Extraction contract partially enforced:**
+- ✅ EntityExtraction model rejects canonical_* fields (structural enforcement via Pydantic)
+- ✅ Phase 2 lens application exists (lens_integration.py:apply_lens_contract())
+- ✅ Extractor output flow correct: extract() → validate() → split_attributes()
+
+**❌ GAPS IDENTIFIED:**
+
+- [ ] **EX-001: LLM Prompts Request Forbidden Fields (Conceptual Violation)**
+  - **Principle:** Extraction Boundary (architecture.md 4.2 Phase 1)
+  - **Location:** `engine/extraction/extractors/osm_extractor.py:126-134`, `engine/extraction/extractors/serper_extractor.py:111-119`
+  - **Description:** LLM prompts in osm_extractor and serper_extractor instruct the LLM to determine `canonical_roles`, violating Phase 1 contract. Prompts contain: "Additionally, determine canonical_roles (optional, multi-valued array)". While EntityExtraction Pydantic model filters this out, the prompts SHOULD NOT request it at all. This is conceptually wrong, wastes LLM tokens generating data that gets discarded, and risks future violations if someone adds canonical_roles to EntityExtraction model.
+  - **Impact:** Medium - Conceptual violation, wastes tokens, confuses maintainers
+  - **Estimated Scope:** 2 files, remove ~9 lines of prompt text from each _get_classification_rules() method
+
+- [ ] **EX-002: Missing Phase 1 Contract Tests for 5 Extractors**
+  - **Principle:** Test Coverage for Extraction Boundary (architecture.md 4.2)
+  - **Location:** `tests/engine/extraction/extractors/` (missing test files for 5 extractors)
+  - **Description:** Only sport_scotland_extractor has `test_extractor_outputs_only_primitives_and_raw_observations()` test. The other 5 extractors (google_places, osm, serper, edinburgh_council, open_charge_map) have NO test files at all. No mechanical validation that they comply with Phase 1 contract (no canonical_* fields, no modules in output).
+  - **Impact:** High - Cannot verify extractors emit only primitives + raw observations
+  - **Estimated Scope:** Create 5 test files, ~150 lines each
+
+- [ ] **EX-003: Outdated Documentation in base.py**
+  - **Principle:** Documentation Accuracy
+  - **Location:** `engine/extraction/base.py:207-260` (extract_with_lens_contract docstring)
+  - **Description:** Function `extract_with_lens_contract()` exists in base.py with documentation showing it returns canonical dimensions. This function appears to be legacy code that's been superseded by the Phase 1/Phase 2 split in extraction_integration.py. Documentation is confusing - makes it look like extractors can return canonical fields.
+  - **Impact:** Low - Documentation confusion only
+  - **Estimated Scope:** 1 file, clarify or remove function (~60 lines)
 
 ---
 
@@ -919,6 +942,20 @@ This catalog was created by systematically auditing system-vision.md Invariants 
     - Violates "Artifact identity is stable across replays" requirement
   - Result: 2 implementation gaps identified (RI-001: deduplication not enforced, RI-002: replay instability)
 
+- **Stage 6 Audit (2026-02-01):** Source Extraction
+  - Read architecture.md 4.1 Stage 6 (extraction requirements) and 4.2 (Extraction Boundary contract)
+  - Analyzed extraction_integration.py Phase 1/Phase 2 split (lines 164-196)
+  - Verified EntityExtraction Pydantic model (engine/extraction/models/entity_extraction.py:16-111)
+  - Searched for canonical field outputs: `grep -r "canonical_" engine/extraction/extractors/`
+  - Found 2 extractors with canonical_roles in prompts (osm_extractor.py:126-134, serper_extractor.py:111-119)
+  - Verified EntityExtraction model rejects canonical fields (no canonical_* fields in model)
+  - Checked Phase 1 contract tests: `grep -r "test_extractor_outputs_only_primitives" tests/`
+  - Found only 1 extractor with boundary test (sport_scotland)
+  - Verified test file count: `glob tests/engine/extraction/extractors/test_*_extractor.py` → only 1 file
+  - Read base.py documentation (lines 207-260) - found legacy extract_with_lens_contract function
+  - Checked integration tests: pytest test_extraction_integration.py → 8/8 passing
+  - Result: 3 implementation gaps (EX-001: prompts request forbidden fields, EX-002: missing tests, EX-003: outdated docs)
+
 ### Progress Rules
 - Items worked in order (top to bottom within each level)
 - Discovered violations added to appropriate section immediately
@@ -947,7 +984,8 @@ Every completed item MUST document executable proof:
 
 **Next Action:**
 - **Stage 2 Audit Complete:** 3 implementation gaps identified (LR-001, LR-002, LR-003) — all resolved ✅
-- **Stage 3 Audit Complete:** 4 implementation gaps identified (PL-001, PL-002, PL-003, PL-004) — 3 resolved ✅, 1 deferred (PL-004)
+- **Stage 3 Audit Complete:** 4 implementation gaps identified (PL-001, PL-002, PL-003, PL-004) — all resolved ✅
 - **Stage 4 Audit Complete:** Substantially compliant, no new gaps identified ✅
-- **Stage 5 Audit Complete:** 2 implementation gaps identified (RI-001, RI-002) ✅
-- **Stage 6 Audit Pending:** Continue pipeline audit with Stage 6 (Source Extraction) next
+- **Stage 5 Audit Complete:** 2 implementation gaps identified (RI-001, RI-002) — deferred ✅
+- **Stage 6 Audit Complete:** 3 implementation gaps identified (EX-001, EX-002, EX-003) ✅
+- **Next:** Work on EX-001 (LLM prompts request forbidden fields) or continue with Stage 7 audit
