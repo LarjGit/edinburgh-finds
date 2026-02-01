@@ -2,7 +2,7 @@
 
 **Current Phase:** Phase 2: Pipeline Implementation
 **Validation Entity:** Powerleague Portobello Edinburgh (Phase 2+)
-**Last Updated:** 2026-02-01 (Stage 6: EX-002-2 complete ✅, 4 parts remaining, split into micro-iterations)
+**Last Updated:** 2026-02-01 (Stage 6: EX-002-3 complete ✅, 3 parts remaining)
 
 ---
 
@@ -813,14 +813,24 @@
     - No domain literals found in google_places_extractor.py (Engine Purity compliant)
   - **Fix Applied:** Created test_google_places_extractor.py (313 lines, 8 tests). Test structure mirrors serper pattern but adapted for deterministic (non-LLM) extractor. Tests validate: no domain terms, no canonical_* fields, no modules field, split_attributes() separation, v1 API extraction, legacy format compatibility, precedence logic, validation requirements.
 
-- [ ] **EX-002-3: Add Phase 1 Contract Tests for osm_extractor (Part 3 of 5)**
+- [x] **EX-002-3: Add Phase 1 Contract Tests for osm_extractor (Part 3 of 5)**
   - **Principle:** Test Coverage for Extraction Boundary (architecture.md 4.2)
-  - **Location:** `tests/engine/extraction/extractors/test_osm_extractor_boundary.py` (new file)
-  - **Description:** Create comprehensive Phase 1 contract tests for osm_extractor. Mirror serper pattern: TestEnginePurity (no domain literals), TestExtractionBoundary (only primitives + raw observations), TestExtractionCorrectness (extraction logic works).
-  - **Impact:** High - Cannot verify osm_extractor complies with Phase 1 contract (especially important as it was modified in EX-001)
-  - **Estimated Scope:** 1 new test file, ~170 lines, 5-7 tests
-  - **Reference Pattern:** tests/engine/extraction/extractors/test_serper_extractor.py
-  - **Note:** osm_extractor had canonical_roles removed in EX-001 (commit 4737945), so tests should validate this fix like serper
+  - **Location:** `tests/engine/extraction/extractors/test_osm_extractor.py` (new file)
+  - **Description:** Created comprehensive Phase 1 contract tests for osm_extractor. 3 test classes: TestEnginePurity (1 test - no domain literals), TestExtractionBoundary (2 tests - only primitives + raw observations, EX-001 fix validation), TestExtractionCorrectness (6 tests - schema primitives, raw observations, OSM ID, aggregation helper, validation, split_attributes).
+  - **Completed:** 2026-02-01
+  - **Commit:** (pending)
+  - **Executable Proof:**
+    - `pytest tests/engine/extraction/extractors/test_osm_extractor.py -v` ✅ 9/9 PASSED
+    - `pytest tests/engine/extraction/ -q` ✅ 75/75 PASSED (no regressions, up from 66 tests)
+    - Engine Purity test catches domain literals (validates system-vision.md Invariant 1)
+    - Extraction Boundary tests catch canonical_* violations (validates architecture.md 4.2)
+    - EX-001 fix validation test confirms canonical_roles NOT in prompts or output
+  - **Bugs Fixed (discovered by tests):**
+    - osm_extractor.py had domain-specific examples ("padel") in module docstring, method docstrings, and LLM prompts (Engine Purity violations)
+    - osm_extractor.py called split_attributes() with wrong signature (2 args instead of 1)
+  - **Files Modified:**
+    - tests/engine/extraction/extractors/test_osm_extractor.py (NEW - 435 lines, 9 tests)
+    - engine/extraction/extractors/osm_extractor.py (FIXED - removed domain literals, fixed split_attributes call)
 
 - [ ] **EX-002-4: Add Phase 1 Contract Tests for edinburgh_council_extractor (Part 4 of 5)**
   - **Principle:** Test Coverage for Extraction Boundary (architecture.md 4.2)

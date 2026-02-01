@@ -4,7 +4,7 @@ OSM Extractor - LLM-based extraction from OpenStreetMap Overpass API
 This extractor transforms raw OSM Overpass API responses (nodes, ways, relations
 with free-form tags) into structured venue information using the Instructor LLM client.
 
-OSM provides structured but free-form key-value tag data (e.g., sport=padel,
+OSM provides structured but free-form key-value tag data (e.g., sport=*,
 addr:city=Edinburgh, name:en=...), which requires intelligent parsing to extract
 venue details. The LLM handles:
 - Tag mapping to schema fields (sport=* → facilities, amenity=* → categories)
@@ -23,13 +23,11 @@ Example input (OSM Overpass API response):
             "lat": 55.9533,
             "lon": -3.1883,
             "tags": {
-                "name": "Edinburgh Padel Club",
-                "sport": "padel",
+                "name": "Sports Facility",
                 "leisure": "sports_centre",
                 "addr:city": "Edinburgh",
                 "addr:postcode": "EH14 4TZ",
-                "phone": "+44 131 539 7071",
-                "capacity:courts": "4"
+                "phone": "+44 131 539 7071"
             }
         },
         ...
@@ -38,14 +36,12 @@ Example input (OSM Overpass API response):
 
 Example output:
 {
-    "entity_name": "Edinburgh Padel Club",
+    "entity_name": "Sports Facility",
     "city": "Edinburgh",
     "postcode": "EH14 4TZ",
     "latitude": 55.9533,
     "longitude": -3.1883,
     "phone": "+441315397071",
-    "padel": true,
-    "padel_total_courts": 4,
     "external_ids": {"osm": "node/123456789"},
     ...
 }
@@ -151,7 +147,7 @@ class OSMExtractor(BaseExtractor):
             ...         "id": 123,
             ...         "lat": 55.95,
             ...         "lon": -3.18,
-            ...         "tags": {"name": "Venue A", "sport": "padel"}
+            ...         "tags": {"name": "Venue A", "leisure": "sports_centre"}
             ...     },
             ...     {
             ...         "type": "way",
@@ -166,7 +162,7 @@ class OSMExtractor(BaseExtractor):
             Coordinates: Lat 55.95, Lon -3.18
             Tags:
               - name: Venue A
-              - sport: padel
+              - leisure: sports_centre
 
             Element 2 (way #456):
             Tags:
@@ -258,7 +254,7 @@ class OSMExtractor(BaseExtractor):
             ... }
             >>> extracted = extractor.extract(osm_data)
             >>> print(extracted["entity_name"])
-            'Edinburgh Padel Club'
+            'Sports Facility'
             >>> print(extracted["external_ids"]["osm"])
             'node/123456789'
         """
@@ -274,8 +270,8 @@ class OSMExtractor(BaseExtractor):
         # Extract using LLM
         extraction_result = self.llm_client.extract(
             prompt="Extract structured venue information from the OpenStreetMap elements below. "
-                   "Map OSM tags to venue fields (e.g., sport=padel → padel: true, "
-                   "addr:city → city, capacity:courts → padel_total_courts). "
+                   "Map OSM tags to venue fields (e.g., sport=* → discovered_attributes, "
+                   "addr:city → city, capacity:* → discovered_attributes). "
                    "Use null for any information not found in the tags.",
             response_model=EntityExtraction,
             context=aggregated_context,
@@ -339,7 +335,7 @@ class OSMExtractor(BaseExtractor):
 
         Example:
             >>> extracted = {
-            ...     "entity_name": "Edinburgh Padel Club",
+            ...     "entity_name": "Sports Facility",
             ...     "city": "Edinburgh",
             ...     "osm_specific_tag": "custom value"
             ... }
@@ -349,4 +345,4 @@ class OSMExtractor(BaseExtractor):
             >>> print(discovered.keys())
             dict_keys(['osm_specific_tag'])
         """
-        return split_attrs(extracted, self.schema_fields)
+        return split_attrs(extracted)
