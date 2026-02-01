@@ -1,8 +1,8 @@
 # Architectural Audit Catalog
 
 **Current Phase:** Phase 2: Pipeline Implementation
-**Validation Entity:** Powerleague Portobello Edinburgh (Phase 2+)
-**Last Updated:** 2026-02-01 (Stage 7: LA-001/LA-002 complete ✅, 2 environment blockers + LA-003 remain)
+**Validation Entity:** West of Scotland Padel (validation) / Edinburgh Sports Club (investigation)
+**Last Updated:** 2026-02-01 (Stage 7: Core lens logic validated ✅, but 5 integration issues block completion: LA-003/LA-006/LA-007/LA-008/LA-009)
 
 ---
 
@@ -903,7 +903,7 @@
 
 ### Stage 7: Lens Application (architecture.md 4.1, 4.2)
 
-**Status:** Substantially compliant - 3 validation gaps identified
+**Status:** Partially complete - Core lens logic works but integration broken. LA-001/LA-002/LA-004/LA-005 complete ✅, LA-003/LA-006/LA-007/LA-008/LA-009 outstanding ❌
 
 **Requirements:**
 - Apply lens mapping rules to populate canonical dimensions
@@ -1008,29 +1008,82 @@
   - **Impact:** Cannot verify module system works in production orchestration flow
   - **Note:** LA-001 test will validate this once environment blockers (LA-004, LA-005) are resolved
 
-- [ ] **LA-004: Database Schema Migration Required (Environment Setup)**
+- [x] **LA-004: Database Schema Migration Required (Environment Setup)**
   - **Principle:** Environment Setup / Infrastructure
   - **Location:** Database (Supabase PostgreSQL)
   - **Description:** ConnectorUsage table doesn't exist in database. Schema defined in engine/schema.prisma:212-217 but not migrated to database. Orchestration fails when trying to log connector usage during execution.
   - **Discovered During:** LA-001 test execution (2026-02-01)
-  - **Error:** `'The table public.ConnectorUsage does not exist in the current database.'`
-  - **Fix Required:**
-    - Option A: Run `cd engine && prisma db push` with DATABASE_URL set
-    - Option B: Run `cd engine && prisma migrate dev` to create migration
-    - Option C: Manually create table in Supabase dashboard
-  - **Impact:** Blocks orchestration execution, prevents LA-001 test from running
-  - **Estimated Scope:** Environment setup task, ~5 minutes
+  - **Completed:** 2026-02-01
+  - **Solution:** Ran `prisma db push` with DATABASE_URL environment variable
+  - **Result:** ConnectorUsage table created successfully, orchestration no longer fails on connector logging
 
-- [ ] **LA-005: API Keys for Extraction (Environment Setup)**
+- [x] **LA-005: API Keys for Extraction (Environment Setup)**
   - **Principle:** Environment Setup / Infrastructure
   - **Location:** Environment variables (.env file)
   - **Description:** ANTHROPIC_API_KEY required for Serper extraction (LLM-based extraction for unstructured sources). Warning appears during orchestration: "⚠ Serper extraction will fail without ANTHROPIC_API_KEY"
   - **Discovered During:** LA-001 test execution (2026-02-01)
-  - **Fix Required:**
-    - Add ANTHROPIC_API_KEY to .env file
-    - Obtain API key from Anthropic Console (https://console.anthropic.com/)
-  - **Impact:** Limits orchestration to structured sources only (google_places, sport_scotland), prevents Serper extraction
-  - **Estimated Scope:** Environment setup task, ~2 minutes (if API key already exists)
+  - **Completed:** 2026-02-01
+  - **Solution:** Added ANTHROPIC_API_KEY to .env file, updated config/extraction.yaml model to claude-haiku-4-5
+  - **Result:** API key configured, LLM extraction enabled
+
+- [ ] **LA-006: Edinburgh Sports Club Lens Matching Investigation**
+  - **Principle:** Lens Application (architecture.md 4.1 Stage 7 - mapping rules should match entities with relevant data)
+  - **Location:** Google Places extractor, lens mapping rules
+  - **Description:** Edinburgh Sports Club has padel courts (confirmed by user research) and Google Places raw data contains "padel" in reviews text, but lens mapping rules don't match it. Canonical dimensions remain empty after extraction.
+  - **Discovered During:** LA-001 test execution (2026-02-01)
+  - **Root Cause Analysis:**
+    - Google Places raw data contains: `reviews[0].text.text: "...The padel court was good..."`
+    - Google Places extractor extracts `types` array but it goes to `categories` field
+    - `categories` field is not in DEFAULT_SOURCE_FIELDS (mapping_engine.py) so not searched by lens rules
+    - Reviews text is not extracted into any searchable field
+    - Result: Entity has "padel" in raw data but no searchable field contains it
+  - **Potential Solutions:**
+    - Option A: Enhance Google Places extractor to extract reviews into `description` or new `reviews_text` field
+    - Option B: Add `categories` to DEFAULT_SOURCE_FIELDS in mapping_engine.py
+    - Option C: Extract editorialSummary, types, and reviews into searchable fields as composite description
+    - Option D: Create extraction rules that search discovered_attributes (not just attributes)
+  - **Impact:** Reduces lens match rate for entities with data in non-standard fields
+  - **Validation:** "West of Scotland Padel" entity successfully matches and gets canonical_activities: ['padel'] because "padel" is in entity_name
+  - **Estimated Scope:** 30-60 minutes (extractor enhancement + testing)
+
+- [ ] **LA-007: EntityFinalizer Only Processes 1 of Many Entities**
+  - **Principle:** Finalization (architecture.md 4.1 Stage 11 - all extracted entities should finalize to Entity table)
+  - **Location:** `engine/orchestration/entity_finalizer.py`, `engine/orchestration/planner.py:326`
+  - **Description:** When orchestration creates 188 ExtractedEntity records, EntityFinalizer only creates 1 Entity record. Remaining 187 entities are not finalized to Entity table.
+  - **Discovered During:** LA-001 test execution (2026-02-01)
+  - **Root Cause:** Unknown - requires investigation of:
+    - EntityFinalizer.finalize_entities() logic (filters by orchestration_run_id?)
+    - Whether orchestration_run_id is correctly set on all RawIngestion records
+    - Whether finalization is failing silently for some entities
+    - Entity grouping/slug generation logic
+  - **Impact:** Critical - most entities extracted during orchestration are not accessible via Entity table
+  - **Estimated Scope:** 1-2 hours (investigation + fix + testing)
+
+- [ ] **LA-008: EntityFinalizer Creates Entities with entity_name "unknown"**
+  - **Principle:** Finalization (architecture.md 4.1 Stage 11 - entity_name should preserve from ExtractedEntity attributes)
+  - **Location:** `engine/orchestration/entity_finalizer.py:112`
+  - **Description:** EntityFinalizer creates Entity records with entity_name="unknown" even though ExtractedEntity.attributes contains correct entity_name. For example, "West of Scotland Padel" becomes "unknown" in Entity table.
+  - **Discovered During:** LA-001 test execution (2026-02-01)
+  - **Root Cause Analysis:**
+    - EntityFinalizer._finalize_single() line 112: `name = attributes.get("entity_name") or attributes.get("name", "unknown")`
+    - Fix was added to check entity_name first, but still produces "unknown"
+    - Attributes might be stored/loaded incorrectly or field name mismatch
+  - **Impact:** High - entities created but with wrong names, breaks test assertions and user-facing search
+  - **Estimated Scope:** 30-60 minutes (debug attribute loading + fix)
+
+- [ ] **LA-009: Module Triggers Not Firing (Modules Field Empty)**
+  - **Principle:** Module Extraction (architecture.md 4.1 Stage 7 - module triggers should fire when conditions met)
+  - **Location:** Lens application pipeline, module trigger evaluation
+  - **Description:** Entity with canonical_activities=['padel'] has modules={} (empty) despite lens.yaml defining module_trigger that should add 'sports_facility' module when activity=padel and entity_class=place.
+  - **Discovered During:** LA-001 test execution (2026-02-01)
+  - **Root Cause (Hypothesis):**
+    - Module trigger condition checks entity_class='place' but entity might have different class
+    - OR module trigger evaluation not receiving correct canonical_values_by_facet
+    - OR sports_facility module has no field_rules that match (results in empty module, which is filtered out)
+    - Requires investigation of module_extractor.py evaluate_module_triggers() and execute_field_rules()
+  - **Impact:** Medium - canonical dimensions work but modules don't populate (LA-003 incomplete)
+  - **Validation Needed:** System-vision.md 6.3 requires "at least one module field populated" for "One Perfect Entity" validation
+  - **Estimated Scope:** 1-2 hours (investigation + potential fix to trigger logic or field rules)
 
 ---
 
