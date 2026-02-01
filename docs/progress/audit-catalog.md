@@ -2,7 +2,7 @@
 
 **Current Phase:** Phase 2: Pipeline Implementation
 **Validation Entity:** Powerleague Portobello Edinburgh (Phase 2+)
-**Last Updated:** 2026-02-01 (Stage 5 gaps RI-001/RI-002 complete ✅, Stage 6: 3 gaps identified)
+**Last Updated:** 2026-02-01 (Stage 5 complete ✅, Stage 6: EX-001 complete ✅, 2 gaps remaining)
 
 ---
 
@@ -773,12 +773,19 @@
 
 **❌ GAPS IDENTIFIED:**
 
-- [ ] **EX-001: LLM Prompts Request Forbidden Fields (Conceptual Violation)**
+- [x] **EX-001: LLM Prompts Request Forbidden Fields (Conceptual Violation)**
   - **Principle:** Extraction Boundary (architecture.md 4.2 Phase 1)
   - **Location:** `engine/extraction/extractors/osm_extractor.py:126-134`, `engine/extraction/extractors/serper_extractor.py:111-119`
   - **Description:** LLM prompts in osm_extractor and serper_extractor instruct the LLM to determine `canonical_roles`, violating Phase 1 contract. Prompts contain: "Additionally, determine canonical_roles (optional, multi-valued array)". While EntityExtraction Pydantic model filters this out, the prompts SHOULD NOT request it at all. This is conceptually wrong, wastes LLM tokens generating data that gets discarded, and risks future violations if someone adds canonical_roles to EntityExtraction model.
-  - **Impact:** Medium - Conceptual violation, wastes tokens, confuses maintainers
-  - **Estimated Scope:** 2 files, remove ~9 lines of prompt text from each _get_classification_rules() method
+  - **Completed:** 2026-02-01
+  - **Commit:** 4737945
+  - **Executable Proof:**
+    - `grep -i "canonical_roles" engine/extraction/extractors/osm_extractor.py` ✅ No matches (removed)
+    - `grep -i "canonical_roles" engine/extraction/extractors/serper_extractor.py` ✅ No matches (removed)
+    - `pytest tests/engine/extraction/ -v` ✅ 58/58 PASSED (no regressions)
+    - `pytest tests/engine/orchestration/test_extraction_integration.py -v` ✅ 8/8 PASSED (integration tests pass)
+    - Tests now validate ABSENCE of canonical_roles (Phase 1 compliance enforced)
+  - **Fix Applied:** Removed canonical_roles sections from _get_classification_rules() in both extractors (~9 lines each). Updated 4 tests in test_prompt_improvements.py to assert canonical_roles NOT present (validates Phase 1 contract). Classification examples now show only entity_class determination, aligned with Phase 1 extraction boundary.
 
 - [ ] **EX-002: Missing Phase 1 Contract Tests for 5 Extractors**
   - **Principle:** Test Coverage for Extraction Boundary (architecture.md 4.2)
