@@ -837,7 +837,7 @@
   - **Location:** `tests/engine/extraction/extractors/test_edinburgh_council_extractor.py` (new file)
   - **Description:** Created comprehensive Phase 1 contract tests for edinburgh_council_extractor. 3 test classes: TestEnginePurity (validates no domain literals), TestExtractionBoundary (validates Phase 1 contract), TestExtractionCorrectness (validates extraction logic). Deterministic extractor (no LLM) similar to google_places pattern.
   - **Completed:** 2026-02-01
-  - **Commit:** (pending)
+  - **Commit:** 95f5e8a
   - **Executable Proof:**
     - `pytest tests/engine/extraction/extractors/test_edinburgh_council_extractor.py -v` ✅ 9/9 PASSED
     - `pytest tests/engine/extraction/ -q` ✅ 84/84 PASSED (no regressions, up from 75 tests)
