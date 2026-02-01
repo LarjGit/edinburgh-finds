@@ -180,6 +180,19 @@ model RawIngestion {
   @@index([orchestration_run_id])
   @@index([source, status])
   @@index([status, ingested_at])
+}
+
+model ConnectorUsage {
+  id             String   @id @default(cuid())
+  connector_name String
+  date           DateTime @db.Date
+  request_count  Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([connector_name, date])
+  @@index([connector_name])
+  @@index([date])
 }"""
 
     ENTITY_EXTRA_FIELD_LINES = {
