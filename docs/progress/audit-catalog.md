@@ -2,7 +2,7 @@
 
 **Current Phase:** Phase 2: Pipeline Implementation
 **Validation Entity:** Powerleague Portobello Edinburgh (Phase 2+)
-**Last Updated:** 2026-02-01 (Stage 5 complete ✅, Stage 6: EX-001 complete ✅, 2 gaps remaining)
+**Last Updated:** 2026-02-01 (Stage 6: EX-002-1 complete ✅, 5 parts remaining, split into micro-iterations)
 
 ---
 
@@ -787,12 +787,52 @@
     - Tests now validate ABSENCE of canonical_roles (Phase 1 compliance enforced)
   - **Fix Applied:** Removed canonical_roles sections from _get_classification_rules() in both extractors (~9 lines each). Updated 4 tests in test_prompt_improvements.py to assert canonical_roles NOT present (validates Phase 1 contract). Classification examples now show only entity_class determination, aligned with Phase 1 extraction boundary.
 
-- [ ] **EX-002: Missing Phase 1 Contract Tests for 5 Extractors**
+- [x] **EX-002-1: Add Phase 1 Contract Tests for serper_extractor (Part 1 of 5)**
   - **Principle:** Test Coverage for Extraction Boundary (architecture.md 4.2)
-  - **Location:** `tests/engine/extraction/extractors/` (missing test files for 5 extractors)
-  - **Description:** Only sport_scotland_extractor has `test_extractor_outputs_only_primitives_and_raw_observations()` test. The other 5 extractors (google_places, osm, serper, edinburgh_council, open_charge_map) have NO test files at all. No mechanical validation that they comply with Phase 1 contract (no canonical_* fields, no modules in output).
-  - **Impact:** High - Cannot verify extractors emit only primitives + raw observations
-  - **Estimated Scope:** Create 5 test files, ~150 lines each
+  - **Location:** `tests/engine/extraction/extractors/test_serper_extractor.py` (new file)
+  - **Description:** Created comprehensive test file for serper_extractor with 3 test classes: TestEnginePurity (validates no domain literals), TestExtractionBoundary (validates Phase 1 contract), TestExtractionCorrectness (validates extraction logic).
+  - **Completed:** 2026-02-01
+  - **Commit:** (pending)
+  - **Executable Proof:**
+    - `pytest tests/engine/extraction/extractors/test_serper_extractor.py -v` ✅ 5/5 PASSED
+    - `pytest tests/engine/extraction/ -v` ✅ 63/63 PASSED (no regressions)
+    - All 3 test classes passing: EnginePurity, ExtractionBoundary, ExtractionCorrectness
+  - **Fix Applied:** Created test_serper_extractor.py (263 lines, 5 tests). Also fixed Engine Purity violation in serper_extractor.py docstrings (changed "padel" examples to generic "sports facility" examples).
+  - **Note:** EX-002 split into 5 micro-iterations (one per extractor). Remaining parts: EX-002-2 through EX-002-5.
+
+- [ ] **EX-002-2: Add Phase 1 Contract Tests for google_places_extractor (Part 2 of 5)**
+  - **Principle:** Test Coverage for Extraction Boundary (architecture.md 4.2)
+  - **Location:** `tests/engine/extraction/extractors/test_google_places_extractor_boundary.py` (new file)
+  - **Description:** Create comprehensive Phase 1 contract tests for google_places_extractor. Mirror serper pattern: TestEnginePurity (no domain literals), TestExtractionBoundary (only primitives + raw observations), TestExtractionCorrectness (extraction logic works).
+  - **Impact:** High - Cannot verify google_places_extractor complies with Phase 1 contract
+  - **Estimated Scope:** 1 new test file, ~170 lines, 5-7 tests
+  - **Reference Pattern:** tests/engine/extraction/extractors/test_serper_extractor.py
+
+- [ ] **EX-002-3: Add Phase 1 Contract Tests for osm_extractor (Part 3 of 5)**
+  - **Principle:** Test Coverage for Extraction Boundary (architecture.md 4.2)
+  - **Location:** `tests/engine/extraction/extractors/test_osm_extractor_boundary.py` (new file)
+  - **Description:** Create comprehensive Phase 1 contract tests for osm_extractor. Mirror serper pattern: TestEnginePurity (no domain literals), TestExtractionBoundary (only primitives + raw observations), TestExtractionCorrectness (extraction logic works).
+  - **Impact:** High - Cannot verify osm_extractor complies with Phase 1 contract (especially important as it was modified in EX-001)
+  - **Estimated Scope:** 1 new test file, ~170 lines, 5-7 tests
+  - **Reference Pattern:** tests/engine/extraction/extractors/test_serper_extractor.py
+  - **Note:** osm_extractor had canonical_roles removed in EX-001 (commit 4737945), so tests should validate this fix like serper
+
+- [ ] **EX-002-4: Add Phase 1 Contract Tests for edinburgh_council_extractor (Part 4 of 5)**
+  - **Principle:** Test Coverage for Extraction Boundary (architecture.md 4.2)
+  - **Location:** `tests/engine/extraction/extractors/test_edinburgh_council_extractor.py` (new file)
+  - **Description:** Create comprehensive Phase 1 contract tests for edinburgh_council_extractor. Mirror serper pattern: TestEnginePurity (no domain literals), TestExtractionBoundary (only primitives + raw observations), TestExtractionCorrectness (extraction logic works).
+  - **Impact:** High - Cannot verify edinburgh_council_extractor complies with Phase 1 contract
+  - **Estimated Scope:** 1 new test file, ~170 lines, 5-7 tests
+  - **Reference Pattern:** tests/engine/extraction/extractors/test_serper_extractor.py
+
+- [ ] **EX-002-5: Add Phase 1 Contract Tests for open_charge_map_extractor (Part 5 of 5)**
+  - **Principle:** Test Coverage for Extraction Boundary (architecture.md 4.2)
+  - **Location:** `tests/engine/extraction/extractors/test_open_charge_map_extractor.py` (new file)
+  - **Description:** Create comprehensive Phase 1 contract tests for open_charge_map_extractor. Mirror serper pattern: TestEnginePurity (no domain literals), TestExtractionBoundary (only primitives + raw observations), TestExtractionCorrectness (extraction logic works).
+  - **Impact:** High - Cannot verify open_charge_map_extractor complies with Phase 1 contract
+  - **Estimated Scope:** 1 new test file, ~170 lines, 5-7 tests
+  - **Reference Pattern:** tests/engine/extraction/extractors/test_serper_extractor.py
+  - **Note:** Final part of EX-002. After completion, all 6 extractors will have Phase 1 contract tests.
 
 - [ ] **EX-003: Outdated Documentation in base.py**
   - **Principle:** Documentation Accuracy

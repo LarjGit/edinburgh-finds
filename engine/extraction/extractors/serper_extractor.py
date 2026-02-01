@@ -13,12 +13,12 @@ intelligent parsing to extract venue details. The LLM handles:
 
 Example input (Serper API response):
 {
-    "searchParameters": {"q": "padel edinburgh"},
+    "searchParameters": {"q": "sports facility edinburgh"},
     "organic": [
         {
-            "title": "Game4Padel Edinburgh",
+            "title": "Example Sports Centre Edinburgh",
             "link": "https://...",
-            "snippet": "Premier padel facility at New Park Square..."
+            "snippet": "Premier sports facility at New Park Square..."
         },
         ...
     ]
@@ -26,11 +26,11 @@ Example input (Serper API response):
 
 Example output:
 {
-    "entity_name": "Game4Padel Edinburgh Park",
+    "entity_name": "Example Sports Centre Edinburgh Park",
     "street_address": "1 New Park Square, Edinburgh",
     "city": "Edinburgh",
     "phone": "+441315397071",
-    "website": "https://www.game4padel.co.uk/edinburgh-park",
+    "website": "https://www.example-sports.co.uk/edinburgh-park",
     ...
 }
 """
@@ -190,12 +190,12 @@ class SerperExtractor(BaseExtractor):
 
         Example:
             >>> serper_data = {
-            ...     "searchParameters": {"q": "padel edinburgh"},
+            ...     "searchParameters": {"q": "sports facility edinburgh"},
             ...     "organic": [...]
             ... }
             >>> extracted = extractor.extract(serper_data)
             >>> print(extracted["entity_name"])
-            'Game4Padel Edinburgh Park'
+            'Example Sports Centre Edinburgh Park'
         """
         # Extract organic results
         organic_results = raw_data.get('organic', [])
