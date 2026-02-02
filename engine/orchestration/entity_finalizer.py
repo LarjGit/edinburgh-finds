@@ -1,10 +1,13 @@
 """Entity Finalization - Bridge from ExtractedEntity to Entity table."""
 
 import json
+import logging
 from typing import List, Dict, Optional, Any
 from prisma import Prisma, Json
 from prisma.models import ExtractedEntity
 from engine.extraction.deduplication import SlugGenerator
+
+logger = logging.getLogger(__name__)
 
 
 class EntityFinalizer:
@@ -33,11 +36,21 @@ class EntityFinalizer:
         Returns:
             Stats dict: {"entities_created": N, "entities_updated": M, "conflicts": K}
         """
-        # 1. Load extracted entities for this run
+        # 1. Get the orchestration run's start time
+        orchestration_run = await self.db.orchestrationrun.find_unique(
+            where={"id": orchestration_run_id}
+        )
+
+        if not orchestration_run:
+            return {"entities_created": 0, "entities_updated": 0, "conflicts": 0}
+
+        # 2. Load extracted entities created during or after this orchestration run
+        # This handles the case where RawIngestion records are reused (duplicates)
+        # but new ExtractedEntity records are still created
         extracted_entities = await self.db.extractedentity.find_many(
             where={
-                "raw_ingestion": {
-                    "orchestration_run_id": orchestration_run_id
+                "createdAt": {
+                    "gte": orchestration_run.createdAt
                 }
             },
             include={"raw_ingestion": True}
@@ -82,7 +95,8 @@ class EntityFinalizer:
         for entity in extracted_entities:
             # Use slug as identity key (external IDs would need more complex matching)
             attributes = json.loads(entity.attributes)
-            name = attributes.get("name", "unknown")
+            # Try entity_name first (new extraction), fallback to name (old extraction)
+            name = attributes.get("entity_name") or attributes.get("name", "unknown")
             key = f"slug:{self.slug_generator.generate(name)}"
 
             if key not in groups:
