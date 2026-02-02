@@ -2,7 +2,7 @@
 
 **Current Phase:** Phase 2: Pipeline Implementation
 **Validation Entity:** West of Scotland Padel (validation) / Edinburgh Sports Club (investigation)
-**Last Updated:** 2026-02-01 (Stage 7: Core lens logic validated ✅, but 4 integration issues block completion: LA-003/LA-006/LA-007/LA-008)
+**Last Updated:** 2026-02-02 (Stage 7: Core lens logic validated ✅, LA-006 complete ✅, but 3 integration issues block completion: LA-003/LA-007/LA-008)
 
 ---
 
@@ -1026,25 +1026,31 @@
   - **Solution:** Added ANTHROPIC_API_KEY to .env file, updated config/extraction.yaml model to claude-haiku-4-5
   - **Result:** API key configured, LLM extraction enabled
 
-- [ ] **LA-006: Edinburgh Sports Club Lens Matching Investigation**
+- [x] **LA-006: Edinburgh Sports Club Lens Matching Investigation**
   - **Principle:** Lens Application (architecture.md 4.1 Stage 7 - mapping rules should match entities with relevant data)
   - **Location:** Google Places extractor, lens mapping rules
   - **Description:** Edinburgh Sports Club has padel courts (confirmed by user research) and Google Places raw data contains "padel" in reviews text, but lens mapping rules don't match it. Canonical dimensions remain empty after extraction.
   - **Discovered During:** LA-001 test execution (2026-02-01)
-  - **Root Cause Analysis:**
-    - Google Places raw data contains: `reviews[0].text.text: "...The padel court was good..."`
-    - Google Places extractor extracts `types` array but it goes to `categories` field
-    - `categories` field is not in DEFAULT_SOURCE_FIELDS (mapping_engine.py) so not searched by lens rules
-    - Reviews text is not extracted into any searchable field
-    - Result: Entity has "padel" in raw data but no searchable field contains it
-  - **Potential Solutions:**
-    - Option A: Enhance Google Places extractor to extract reviews into `description` or new `reviews_text` field
-    - Option B: Add `categories` to DEFAULT_SOURCE_FIELDS in mapping_engine.py
-    - Option C: Extract editorialSummary, types, and reviews into searchable fields as composite description
-    - Option D: Create extraction rules that search discovered_attributes (not just attributes)
-  - **Impact:** Reduces lens match rate for entities with data in non-standard fields
-  - **Validation:** "West of Scotland Padel" entity successfully matches and gets canonical_activities: ['padel'] because "padel" is in entity_name
-  - **Estimated Scope:** 30-60 minutes (extractor enhancement + testing)
+  - **Completed:** 2026-02-02
+  - **Commit:** 24bbbdb
+  - **Root Cause (CONFIRMED):**
+    - Schema-alignment violation: Google Places extractor output `categories` but schema defines `raw_categories`
+    - Field name mismatch caused lens mapping rules to fail (searched `raw_categories`, found nothing)
+    - `raw_categories` marked `exclude: true` (evidence field, not LLM-extractable) so not in extraction schema
+    - Extractor's `split_attributes()` put `categories` in `discovered_attributes` (not a schema field)
+    - DEFAULT_SOURCE_FIELDS includes `raw_categories` but extractor never populated it
+  - **Fix Applied:**
+    - Google Places extractor: `categories` → `raw_categories` (schema alignment)
+    - Mapping engine: enhanced to search both top-level entity dict AND `discovered_attributes` fallback
+    - Makes mapping engine robust to both flat and nested entity structures
+    - Keeps `raw_categories` as `exclude: true` (correct architectural classification as evidence)
+  - **Executable Proof:**
+    - `pytest tests/engine/lenses/test_mapping_engine.py::test_match_searches_discovered_attributes_when_field_not_in_top_level -v` ✅ PASSED
+    - `pytest tests/engine/extraction/extractors/test_google_places_extractor.py -v` ✅ 8/8 PASSED
+    - `pytest tests/engine/lenses/test_mapping_engine.py -v` ✅ 11/11 PASSED
+    - All 153 extraction + lens tests pass, no regressions
+  - **Impact:** Google Places `types` array now searchable by lens mapping rules via `raw_categories` field
+  - **Out of Scope:** Reviews/editorialSummary extraction (tracked separately if needed after validation)
 
 - [ ] **LA-007: EntityFinalizer Creates Entities with entity_name "unknown"**
   - **Principle:** Finalization (architecture.md 4.1 Stage 11 - entity_name should preserve from ExtractedEntity attributes)
