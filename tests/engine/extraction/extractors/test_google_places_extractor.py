@@ -150,9 +150,10 @@ class TestExtractionBoundary:
 
         # Non-schema fields should be in discovered_attributes
         # Note: "website" goes to discovered because schema field is "website_url"
+        # Note: "raw_categories" excluded from schema but extractors can populate it
         assert "website" in discovered
         assert "google_maps_uri" in discovered
-        assert "categories" in discovered
+        assert "raw_categories" in discovered
 
         # Verify no canonical fields in either dict
         for field in ["canonical_activities", "canonical_roles", "canonical_place_types"]:
@@ -205,8 +206,8 @@ class TestExtractionCorrectness:
         assert extracted["external_id"] == "ChIJNWKj_TEST_ID"
 
         # Verify raw observations captured
-        assert "categories" in extracted
-        assert extracted["categories"] == ["sports_complex", "gym", "point_of_interest"]
+        assert "raw_categories" in extracted
+        assert extracted["raw_categories"] == ["sports_complex", "gym", "point_of_interest"]
         assert "google_maps_uri" in extracted
 
     def test_extract_handles_legacy_format(self, mock_ctx):
@@ -245,8 +246,8 @@ class TestExtractionCorrectness:
         assert extracted["latitude"] == 55.9500
         assert extracted["longitude"] == -3.1900
         assert extracted["phone"] == "+441316615351"  # E.164 format
-        assert "categories" in extracted
-        assert extracted["categories"] == ["gym", "health"]
+        assert "raw_categories" in extracted
+        assert extracted["raw_categories"] == ["gym", "health"]
 
     def test_extract_raw_observations_for_phase2_interpretation(self, mock_ctx):
         """
@@ -268,8 +269,8 @@ class TestExtractionCorrectness:
         extracted = extractor.extract(raw_data, ctx=mock_ctx)
 
         # Verify raw observations captured
-        assert "categories" in extracted
-        assert extracted["categories"] == ["sports_complex", "gym", "fitness_center"]
+        assert "raw_categories" in extracted
+        assert extracted["raw_categories"] == ["sports_complex", "gym", "fitness_center"]
         assert "google_maps_uri" in extracted
         assert extracted["google_maps_uri"] == "https://maps.google.com/?cid=999"
 

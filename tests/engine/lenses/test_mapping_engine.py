@@ -196,3 +196,70 @@ def test_apply_lens_mapping_populates_canonical_dimensions():
 
     # Should preserve original entity fields
     assert result["entity_name"] == "Powerleague Padel Edinburgh"
+
+
+def test_match_searches_discovered_attributes_when_field_not_in_top_level():
+    """
+    Validates: LA-006 fix - mapping engine searches discovered_attributes for DEFAULT_SOURCE_FIELDS.
+
+    When entity dict has been pre-split into attributes + discovered_attributes,
+    and source_fields uses defaults, pattern matching should search both:
+    - Top-level entity fields (attributes)
+    - Nested discovered_attributes dict
+
+    This handles the case where extractors output fields marked as exclude: true
+    in the schema (like raw_categories), which end up in discovered_attributes
+    after split_attributes().
+    """
+    rule = {
+        "pattern": r"(?i)sports_complex",
+        "canonical": "sports_facility",
+        "dimension": "canonical_place_types"
+        # source_fields omitted - uses DEFAULT_SOURCE_FIELDS which includes raw_categories
+    }
+
+    # Simulate entity dict AFTER split_attributes()
+    # raw_categories is in discovered because it has exclude: true in schema
+    entity = {
+        "entity_name": "Edinburgh Sports Club",
+        "description": "Multi-sport venue",
+        "discovered_attributes": {
+            "raw_categories": ["sports_complex", "gym"],  # ← Match should find this
+            "google_maps_uri": "https://maps.google.com/?cid=123"
+        }
+    }
+
+    result = match_rule_against_entity(rule, entity)
+
+    # Should match sports_complex in discovered_attributes["raw_categories"]
+    assert result is not None
+    assert result["dimension"] == "canonical_place_types"
+    assert result["value"] == "sports_facility"
+
+
+def test_match_prefers_top_level_over_discovered_attributes():
+    """
+    When field exists in both top-level and discovered_attributes, top-level wins.
+
+    This ensures deterministic behavior and prefers the primary entity structure.
+    """
+    rule = {
+        "pattern": r"(?i)padel",
+        "canonical": "padel",
+        "dimension": "canonical_activities",
+        "source_fields": ["entity_name"]
+    }
+
+    # Field exists in both locations with different values
+    entity = {
+        "entity_name": "Padel Club Edinburgh",  # ← Should match this (top-level)
+        "discovered_attributes": {
+            "entity_name": "Tennis Club"  # ← Should NOT match this
+        }
+    }
+
+    result = match_rule_against_entity(rule, entity)
+
+    # Should match top-level entity_name ("Padel"), not discovered
+    assert result is not None
+    assert result["value"] == "padel"

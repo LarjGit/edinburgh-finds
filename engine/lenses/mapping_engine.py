@@ -57,7 +57,15 @@ def match_rule_against_entity(rule: Dict[str, Any], entity: Dict[str, Any]) -> O
 
     # Search pattern across union of source_fields
     for field_name in source_fields:
+        # Try top-level entity dict first (most common path)
         field_value = entity.get(field_name)
+
+        # If not found and discovered_attributes exists, search there too
+        # This handles cases where entity dict has been pre-split into attributes + discovered
+        if field_value is None and "discovered_attributes" in entity:
+            discovered = entity.get("discovered_attributes", {})
+            if isinstance(discovered, dict):
+                field_value = discovered.get(field_name)
 
         if field_value is None:
             continue
