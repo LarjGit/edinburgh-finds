@@ -197,8 +197,20 @@ class SerperExtractor(BaseExtractor):
             >>> print(extracted["entity_name"])
             'Example Sports Centre Edinburgh Park'
         """
-        # Extract organic results
-        organic_results = raw_data.get('organic', [])
+        # Normalize raw_data to list of organic results (handle both formats)
+        # Format 1: Full API response with wrapper: {"organic": [...]}
+        # Format 2: Single organic result (orchestration persisted mode): {"title": "...", "link": "...", "snippet": "..."}
+
+        if 'organic' in raw_data and isinstance(raw_data['organic'], list):
+            # Full API response format (legacy/batch mode)
+            organic_results = raw_data['organic']
+        elif any(key in raw_data for key in ['title', 'snippet', 'link']):
+            # Single organic result format (current orchestration persisted mode)
+            # Wrap single result in array for uniform processing
+            organic_results = [raw_data]
+        else:
+            # Neither format detected
+            organic_results = []
 
         if not organic_results:
             raise ValueError("No organic search results found in Serper data")
@@ -277,7 +289,7 @@ class SerperExtractor(BaseExtractor):
             >>> print(discovered.keys())
             dict_keys(['custom_field'])
         """
-        return split_attrs(extracted, self.schema_fields)
+        return split_attrs(extracted)
 
     def extract_rich_text(self, raw_data: Dict) -> List[str]:
         """

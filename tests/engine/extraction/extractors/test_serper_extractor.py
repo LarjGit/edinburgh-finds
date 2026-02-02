@@ -262,3 +262,102 @@ class TestExtractionCorrectness:
         assert "categories" in extracted["discovered_attributes"]
 
         # These raw observations will be interpreted by lens mapping rules in Phase 2
+
+    def test_extract_single_item_format_orchestration_persisted_mode(self, mock_ctx):
+        """
+        Validates extractor handles single organic result format (orchestration persisted mode).
+
+        When orchestration persists one RawIngestion per Serper organic result,
+        the extractor receives individual result items without the "organic" wrapper:
+        {"title": "...", "link": "...", "snippet": "..."}
+
+        The extractor must detect this format and process it correctly.
+        """
+        from engine.extraction.models.entity_extraction import EntityExtraction
+
+        class MockLLMClient:
+            def extract(self, prompt, response_model, context, system_message=None, **kwargs):
+                return EntityExtraction(
+                    entity_name="West of Scotland Padel",
+                    entity_class="place",
+                    street_address="Unit 10 Stevenson Industrial Estate",
+                    city="Stevenston",
+                    postcode="KA20 3LR",
+                    summary="Fantastic facility with 3 great indoor padel courts"
+                )
+
+        extractor = SerperExtractor(llm_client=MockLLMClient())
+
+        # Single organic result format (no "organic" wrapper)
+        single_item_data = {
+            "title": "West of Scotland Padel Tennis Club - Irvine",
+            "link": "https://kaleisure.com/community_sports/west-of-scotland-padel-tennis-club/",
+            "snippet": "Fantastic facility with 3 great indoor padel courts for players of all abilities.",
+            "position": 9
+        }
+
+        # Extract should succeed with single-item format
+        extracted = extractor.extract(single_item_data, ctx=mock_ctx)
+
+        # Verify extraction succeeded
+        assert extracted["entity_name"] == "West of Scotland Padel"
+        assert "padel courts" in extracted["summary"].lower()
+
+    def test_extract_full_wrapper_format_backwards_compatible(self, mock_ctx):
+        """
+        Validates extractor still handles full API response format (backwards compatibility).
+
+        Legacy/batch mode uses full API response: {"organic": [...]}
+        This test ensures backwards compatibility is maintained.
+        """
+        from engine.extraction.models.entity_extraction import EntityExtraction
+
+        class MockLLMClient:
+            def extract(self, prompt, response_model, context, system_message=None, **kwargs):
+                return EntityExtraction(
+                    entity_name="Test Venue",
+                    entity_class="place",
+                    summary="Test description"
+                )
+
+        extractor = SerperExtractor(llm_client=MockLLMClient())
+
+        # Full API response format (with "organic" wrapper)
+        full_response_data = {
+            "searchParameters": {"q": "test query"},
+            "organic": [
+                {
+                    "title": "Test Venue",
+                    "link": "https://example.com",
+                    "snippet": "Test description"
+                }
+            ]
+        }
+
+        # Extract should succeed with full wrapper format
+        extracted = extractor.extract(full_response_data, ctx=mock_ctx)
+
+        # Verify extraction succeeded
+        assert extracted["entity_name"] == "Test Venue"
+
+    def test_extract_empty_data_fails_gracefully(self, mock_ctx):
+        """
+        Validates extractor fails gracefully when given empty/invalid data.
+
+        Neither format detected → should raise ValueError with clear message.
+        """
+        from engine.extraction.models.entity_extraction import EntityExtraction
+
+        class MockLLMClient:
+            def extract(self, prompt, response_model, context, system_message=None, **kwargs):
+                # This shouldn't be called if validation fails early
+                return EntityExtraction(entity_name="Should not reach here")
+
+        extractor = SerperExtractor(llm_client=MockLLMClient())
+
+        # Empty dict (no "organic", no single-item keys)
+        empty_data = {}
+
+        # Should raise ValueError
+        with pytest.raises(ValueError, match="No organic search results found"):
+            extractor.extract(empty_data, ctx=mock_ctx)
