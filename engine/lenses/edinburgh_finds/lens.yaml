@@ -109,7 +109,7 @@ mapping_rules:
     confidence: 0.95
 
   - id: map_sports_facility_type
-    pattern: "(?i)sports centre|sports facility|leisure centre"
+    pattern: "(?i)(sports\\s*(centre|center|facility|club)|leisure\\s*(centre|center)|padel\\s*(club|centre|center)|padel\\s*courts?)"
     canonical: "sports_facility"
     confidence: 0.85
 
