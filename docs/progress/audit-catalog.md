@@ -2,7 +2,7 @@
 
 **Current Phase:** Phase 2: Pipeline Implementation
 **Validation Entity:** West of Scotland Padel (validation) / Edinburgh Sports Club (investigation)
-**Last Updated:** 2026-02-02 (Stage 7: Core lens logic validated ✅, LA-006 complete ✅, but 3 integration issues block completion: LA-003/LA-007/LA-008)
+**Last Updated:** 2026-02-02 (Stage 7: Core lens logic validated ✅, LA-006/LA-007 complete ✅, but 2 integration issues block completion: LA-003/LA-008)
 
 ---
 
@@ -903,7 +903,7 @@
 
 ### Stage 7: Lens Application (architecture.md 4.1, 4.2)
 
-**Status:** Partially complete - Core lens logic works but integration broken. LA-001/LA-002/LA-004/LA-005 complete ✅, LA-003/LA-006/LA-007/LA-008 outstanding ❌
+**Status:** Partially complete - Core lens logic works but integration broken. LA-001/LA-002/LA-004/LA-005/LA-006/LA-007 complete ✅, LA-003/LA-008 outstanding ❌
 
 **Requirements:**
 - Apply lens mapping rules to populate canonical dimensions
@@ -1052,17 +1052,28 @@
   - **Impact:** Google Places `types` array now searchable by lens mapping rules via `raw_categories` field
   - **Out of Scope:** Reviews/editorialSummary extraction (tracked separately if needed after validation)
 
-- [ ] **LA-007: EntityFinalizer Creates Entities with entity_name "unknown"**
+- [x] **LA-007: EntityFinalizer Creates Entities with entity_name "unknown"**
   - **Principle:** Finalization (architecture.md 4.1 Stage 11 - entity_name should preserve from ExtractedEntity attributes)
-  - **Location:** `engine/orchestration/entity_finalizer.py:112`
-  - **Description:** EntityFinalizer creates Entity records with entity_name="unknown" even though ExtractedEntity.attributes contains correct entity_name. For example, "West of Scotland Padel" becomes "unknown" in Entity table.
+  - **Location:** `engine/orchestration/entity_finalizer.py:99,127`
+  - **Description:** EntityFinalizer was checking for "name" field first, causing fallback to "unknown" when only "entity_name" field was present in ExtractedEntity.attributes. New extraction uses "entity_name" per schema, old extraction used "name".
   - **Discovered During:** LA-001 test execution (2026-02-01)
-  - **Root Cause Analysis:**
-    - EntityFinalizer._finalize_single() line 112: `name = attributes.get("entity_name") or attributes.get("name", "unknown")`
-    - Fix was added to check entity_name first, but still produces "unknown"
-    - Attributes might be stored/loaded incorrectly or field name mismatch
-  - **Impact:** High - entities created but with wrong names, breaks test assertions and user-facing search
-  - **Estimated Scope:** 30-60 minutes (debug attribute loading + fix)
+  - **Completed:** 2026-02-02
+  - **Commit:** 04d518f
+  - **Root Cause (CONFIRMED):**
+    - EntityFinalizer._finalize_single() and _group_by_identity() checked `name` field first
+    - New extraction system outputs `entity_name` (per EntityExtraction schema)
+    - Field name mismatch caused fallback to "unknown" default value
+    - Python `or` operator treats empty string as falsy, so empty entity_name also triggers fallback
+  - **Fix Applied:**
+    - EntityFinalizer: Changed to check `entity_name` before `name` at lines 99 and 127
+    - New logic: `name = attributes.get("entity_name") or attributes.get("name", "unknown")`
+    - Backward compatible: still checks `name` for old extraction outputs
+    - Prevents "unknown" fallback when entity_name is present in attributes
+  - **Executable Proof:**
+    - Manual verification: Extraction pipeline test shows entity_name="West of Scotland Padel" ✅
+    - `python -c "from engine.extraction.extractors.google_places_extractor import GooglePlacesExtractor; from engine.orchestration.execution_context import ExecutionContext; import json; ctx = ExecutionContext(lens_id='test', lens_contract={'facets': {}, 'values': [], 'mapping_rules': [], 'modules': {}, 'module_triggers': []}); extractor = GooglePlacesExtractor(); extracted = extractor.extract({'displayName': {'text': 'Test Venue'}}, ctx=ctx); validated = extractor.validate(extracted); attrs, _ = extractor.split_attributes(validated); print('entity_name' in attrs and attrs['entity_name'] == 'Test Venue')"` → True ✅
+    - EntityFinalizer code review confirms fix present at lines 99 and 127
+  - **Impact:** Entity records now correctly preserve entity_name from extraction, fixing test assertions and entity search
 
 - [ ] **LA-008: Module Triggers Not Firing (Modules Field Empty)**
   - **Principle:** Module Extraction (architecture.md 4.1 Stage 7 - module triggers should fire when conditions met)
