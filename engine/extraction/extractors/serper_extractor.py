@@ -231,6 +231,32 @@ class SerperExtractor(BaseExtractor):
         # Convert Pydantic model to dictionary
         extracted_dict = extraction_result.model_dump()
 
+        # LA-010a Phase B: Deterministic evidence surfacing (Phase 1 extraction contract)
+        # Summary fallback: explicit and independent of normalization logic
+        if not extracted_dict.get('summary'):
+            # Explicit fallback order (no hidden assumptions):
+            # 1. Direct single-item payload access (raw_data['snippet'])
+            # 2. First item in organic list (organic_results[0]['snippet'])
+            if raw_data.get('snippet'):
+                extracted_dict['summary'] = raw_data['snippet']
+            elif organic_results and len(organic_results) > 0:
+                first_snippet = organic_results[0].get('snippet')
+                if first_snippet:
+                    extracted_dict['summary'] = first_snippet
+
+        # Description aggregation: deterministic, traceable, no semantic rewriting
+        if not extracted_dict.get('description'):
+            # Aggregate all unique snippets in stable order
+            snippets = []
+            for result in organic_results:
+                snippet = result.get('snippet')
+                if snippet and snippet not in snippets:  # Deduplicate
+                    snippets.append(snippet)
+
+            # Join with newlines for readability (preserve evidence structure)
+            if snippets:
+                extracted_dict['description'] = "\n\n".join(snippets)
+
         # Parse and normalize opening hours if present
         if 'opening_hours' in extracted_dict and extracted_dict['opening_hours'] is not None:
             parsed_hours = parse_opening_hours(extracted_dict['opening_hours'])

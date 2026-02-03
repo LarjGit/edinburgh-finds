@@ -361,3 +361,213 @@ class TestExtractionCorrectness:
         # Should raise ValueError
         with pytest.raises(ValueError, match="No organic search results found"):
             extractor.extract(empty_data, ctx=mock_ctx)
+
+    def test_phase1_extraction_contract_evidence_surfacing(self, mock_ctx):
+        """
+        Acceptance test: Phase 1 extraction contract - evidence must be surfaced.
+
+        Validates LA-010a: Deterministic evidence surfacing from Serper snippets.
+
+        Given a Serper payload containing a snippet like "3 fully covered, heated courts",
+        after Stage 1–6 extraction (pre-lens), the extracted entity MUST contain that
+        evidence in at least one lens-visible text surface:
+        - summary includes the snippet text OR
+        - description includes the snippet text
+
+        This ensures lens mapping rules in Phase 2 can match patterns like "courts"
+        to populate canonical_place_types: ['sports_facility'].
+
+        Contract requirement: Phase 1 extractors must surface raw evidence for
+        Phase 2 lens interpretation. Silent loss of evidence is a contract violation.
+        """
+        from engine.extraction.models.entity_extraction import EntityExtraction
+
+        class MockLLMClient:
+            def extract(self, prompt, response_model, context, system_message=None, **kwargs):
+                # Simulate LLM that extracts entity_name but leaves summary/description empty
+                # (This is the current broken behavior that LA-010a fixes)
+                return EntityExtraction(
+                    entity_name="West of Scotland Padel",
+                    entity_class="place",
+                    street_address="Unit 10 Stevenson Industrial Estate",
+                    city="Stevenston"
+                    # summary=None (not populated by LLM)
+                    # description=None
+                )
+
+        extractor = SerperExtractor(llm_client=MockLLMClient())
+
+        # Serper payload with evidence in snippet
+        raw_data = {
+            "title": "West of Scotland Padel Tennis Club",
+            "link": "https://example.com",
+            "snippet": "Our Winter Memberships are now open — and with 3 fully covered, heated courts..."
+        }
+
+        extracted = extractor.extract(raw_data, ctx=mock_ctx)
+
+        # Contract requirement: Evidence MUST be surfaced in summary or description
+        evidence_text = "3 fully covered, heated courts"
+
+        summary_has_evidence = (
+            extracted.get("summary") is not None and
+            evidence_text in extracted["summary"]
+        )
+
+        description_has_evidence = (
+            extracted.get("description") is not None and
+            evidence_text in extracted["description"]
+        )
+
+        assert summary_has_evidence or description_has_evidence, (
+            f"Phase 1 extraction contract violation (LA-010a): "
+            f"Evidence '{evidence_text}' from Serper snippet not surfaced in summary or description. "
+            f"summary={extracted.get('summary')}, description={extracted.get('description')}. "
+            f"Phase 2 lens mapping rules cannot match patterns without evidence. "
+            f"Extractor must implement deterministic evidence surfacing."
+        )
+
+    def test_summary_fallback_single_item_payload_uses_raw_snippet(self, mock_ctx):
+        """
+        LA-010a Phase B: Summary fallback for single-item payload (explicit test).
+
+        Validates that single-item payload format (orchestration persisted mode)
+        uses raw_data['snippet'] directly for summary fallback.
+
+        This tests the explicit fallback order:
+        1. raw_data.get('snippet') <- TESTED HERE
+        2. organic_results[0].get('snippet')
+        """
+        from engine.extraction.models.entity_extraction import EntityExtraction
+
+        class MockLLMClient:
+            def extract(self, prompt, response_model, context, system_message=None, **kwargs):
+                # LLM doesn't populate summary
+                return EntityExtraction(
+                    entity_name="Test Venue",
+                    entity_class="place"
+                )
+
+        extractor = SerperExtractor(llm_client=MockLLMClient())
+
+        # Single-item payload (no "organic" wrapper)
+        raw_data = {
+            "title": "Test Venue",
+            "link": "https://example.com",
+            "snippet": "Direct snippet from single-item payload"
+        }
+
+        extracted = extractor.extract(raw_data, ctx=mock_ctx)
+
+        # Verify summary was populated from raw_data['snippet']
+        assert extracted['summary'] == "Direct snippet from single-item payload"
+
+    def test_summary_fallback_organic_list_payload_uses_first_snippet(self, mock_ctx):
+        """
+        LA-010a Phase B: Summary fallback for organic list payload (explicit test).
+
+        Validates that organic list payload format (full API response)
+        uses organic_results[0]['snippet'] for summary fallback.
+
+        This tests the explicit fallback order:
+        1. raw_data.get('snippet') (not present in this format)
+        2. organic_results[0].get('snippet') <- TESTED HERE
+        """
+        from engine.extraction.models.entity_extraction import EntityExtraction
+
+        class MockLLMClient:
+            def extract(self, prompt, response_model, context, system_message=None, **kwargs):
+                # LLM doesn't populate summary
+                return EntityExtraction(
+                    entity_name="Test Venue",
+                    entity_class="place"
+                )
+
+        extractor = SerperExtractor(llm_client=MockLLMClient())
+
+        # Organic list payload (full API response with wrapper)
+        raw_data = {
+            "searchParameters": {"q": "test query"},
+            "organic": [
+                {
+                    "title": "Test Venue",
+                    "link": "https://example.com",
+                    "snippet": "First snippet from organic list"
+                },
+                {
+                    "title": "Test Venue 2",
+                    "link": "https://example2.com",
+                    "snippet": "Second snippet from organic list"
+                }
+            ]
+        }
+
+        extracted = extractor.extract(raw_data, ctx=mock_ctx)
+
+        # Verify summary was populated from organic_results[0]['snippet']
+        assert extracted['summary'] == "First snippet from organic list"
+
+    def test_description_aggregates_all_unique_snippets(self, mock_ctx):
+        """
+        LA-010a Phase B: Description aggregation (deterministic, traceable).
+
+        Validates that description field aggregates all unique snippets
+        from organic_results in stable order, joined with newlines.
+
+        Properties tested:
+        - Deterministic: same input → same output
+        - Deduplication: repeated snippets appear once
+        - Stable order: snippets maintain organic_results order
+        - Readability: joined with \\n\\n separator
+        """
+        from engine.extraction.models.entity_extraction import EntityExtraction
+
+        class MockLLMClient:
+            def extract(self, prompt, response_model, context, system_message=None, **kwargs):
+                # LLM doesn't populate summary or description
+                return EntityExtraction(
+                    entity_name="Test Venue",
+                    entity_class="place"
+                )
+
+        extractor = SerperExtractor(llm_client=MockLLMClient())
+
+        # Organic list with multiple unique snippets
+        raw_data = {
+            "searchParameters": {"q": "test query"},
+            "organic": [
+                {
+                    "title": "Test Venue",
+                    "link": "https://example.com",
+                    "snippet": "First snippet with facility details"
+                },
+                {
+                    "title": "Test Venue Review",
+                    "link": "https://example2.com",
+                    "snippet": "Second snippet with user review"
+                },
+                {
+                    "title": "Test Venue Duplicate",
+                    "link": "https://example3.com",
+                    "snippet": "First snippet with facility details"  # Duplicate
+                },
+                {
+                    "title": "Test Venue Hours",
+                    "link": "https://example4.com",
+                    "snippet": "Third snippet with opening hours"
+                }
+            ]
+        }
+
+        extracted = extractor.extract(raw_data, ctx=mock_ctx)
+
+        # Verify description aggregates unique snippets in stable order
+        expected_description = (
+            "First snippet with facility details\n\n"
+            "Second snippet with user review\n\n"
+            "Third snippet with opening hours"
+        )
+        assert extracted['description'] == expected_description
+
+        # Verify summary uses first snippet
+        assert extracted['summary'] == "First snippet with facility details"
