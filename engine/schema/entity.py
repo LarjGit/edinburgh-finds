@@ -3,7 +3,7 @@
 # ============================================================
 #
 # Generated from: engine/config/schemas/entity.yaml
-# Generated at: 2026-01-31 23:56:47
+# Generated at: 2026-02-03 09:13:47
 #
 # To make changes:
 # 1. Edit engine/config/schemas/entity.yaml
@@ -71,6 +71,15 @@ ENTITY_FIELDS: List[FieldSpec] = [
         required=False,
         search_category="description",
         search_keywords=["description", "about", "overview"],
+    ),
+    FieldSpec(
+        name="description",
+        type_annotation="Optional[str]",
+        description="Long-form aggregated evidence from multiple sources (reviews, snippets, editorial summaries)",
+        nullable=True,
+        required=False,
+        search_category="description",
+        search_keywords=["description", "details", "about", "information"],
     ),
     FieldSpec(
         name="raw_categories",

@@ -2,7 +2,7 @@
 
 **Current Phase:** Phase 2: Pipeline Implementation
 **Validation Entity:** West of Scotland Padel (validation) / Edinburgh Sports Club (investigation)
-**Last Updated:** 2026-02-02 (Stage 7: LA-001/002/004/005/006/007 complete ✅, LA-008a/b/d complete ✅, LA-008b blocked by LA-009 (classification) + LA-010 (evidence surface) ❌, LA-003 blocked pending LA-009/010)
+**Last Updated:** 2026-02-02 (Stage 7: LA-001/002/004/005/006/007 complete ✅, LA-008a/d complete ✅, LA-008 BLOCKED by LA-009 (classification) + LA-010 (evidence surface) ❌, LA-003 blocked pending LA-009/010)
 
 ---
 
@@ -903,7 +903,7 @@
 
 ### Stage 7: Lens Application (architecture.md 4.1, 4.2)
 
-**Status:** Core engine validated ✅, Serper connector operational ✅, LA-001/002/004/005/006/007/008a/008b/008d complete ✅. LA-008b lens pattern correct but blocked by extraction issues: LA-009 (classification) + LA-010 (evidence surface) pending ❌. LA-003 blocked by LA-009/010 ❌
+**Status:** Core engine validated ✅, Serper connector operational ✅, LA-001/002/004/005/006/007/008a/008d complete ✅. LA-008 BLOCKED by upstream prerequisites: LA-009 (classification) + LA-010 (evidence surface) ❌. LA-003 blocked by LA-009/010 ❌
 
 **Requirements:**
 - Apply lens mapping rules to populate canonical dimensions
@@ -1080,63 +1080,47 @@
   - **Location:** `engine/lenses/edinburgh_finds/lens.yaml` (module field rules), mapping rules for canonical_place_types
   - **Description:** Entity with canonical_activities=['padel'] has modules={} (empty) despite lens.yaml defining module_trigger that should add 'sports_facility' module when activity=padel and entity_class=place.
   - **Discovered During:** LA-001 test execution (2026-02-01)
-  - **Status:** In Progress - Serper connector fixed ✅, evidence flowing ✅, lens configuration adjustments needed
-  - **Progress (2026-02-02):**
-    - **Serper Connector Fixed** (commit pending):
-      - Updated API key in `engine/config/sources.yaml` (old key had no credits)
-      - Fixed `serper_extractor.py` to handle both full API response (`{"organic": [...]}`) and single-item format (`{"title": "...", "snippet": "..."}`)
-      - Fixed `split_attributes()` call (was passing 2 args, function takes 1)
-      - Added 3 new tests for format handling (all passing: 8/8 tests pass)
-    - **Evidence Now Flowing:**
-      - Serper extraction succeeds ✅
-      - Entity found: "West of Scotland Padel"
-      - Summary populated: "West of Scotland Padel is a padel court venue in Stevenston offering 3 fully covered, heated courts with winter memberships available."
-      - canonical_activities: `['padel']` ✅ (proves Stage 7 mapping works end-to-end)
-      - canonical_place_types: `[]` ❌ (mapping rule pattern too narrow)
-      - modules: `{}` ❌ (may be regex pattern issue - requires test validation)
-  - **Root Cause Analysis (REFINED 2026-02-02):**
-    - **Not an engine defect** - Stage 7 mapping logic works correctly
-    - **Lens configuration refinement needed:**
-      1. **source_fields**: Already correct ✅ (`source_fields: [summary, description, entity_name]` present in lens.yaml:141,152)
-      2. **canonical_place_types mapping**: Pattern `"(?i)sports centre|sports facility|leisure centre"` too narrow - doesn't match "padel court venue"
-      3. **Module field extraction**: Pattern `(\d+)\s*padel\s*courts?` may not match "3 fully covered, heated courts" (requires adjacent "padel" + "courts")
-    - **Canonical key confirmed:** `sports_facility` (lens.yaml:95-102, facet: place_type) ✅
-  - **Remaining Tasks:**
+  - **Status:** BLOCKED - upstream prerequisites not met
+
+  - **LA-008 – UPDATED STATUS (2026-02-02):**
+
+    **Authoritative E2E run (2026-02-02 17:50):**
+    - summary = None ❌ – no evidence surface
+    - entity_class = "thing" ❌ – module triggers require place
+    - canonical_activities = ['padel'] ✅ – Stage 7 mapping functioning
+    - canonical_place_types = [] ❌
+    - modules = {} ❌
+
+    **Root Cause (current, not lens-related):**
+    - **LA-010 – Evidence Surface Gap**
+      - Serper snippet/reviews are not surfaced into summary/description, which are the fields used by lens rules.
+    - **LA-009 – Classification Gap**
+      - Serper entities classified as "thing" because classification only checks coordinates/street_address and ignores geographic anchoring such as city/locality.
+
+    **Decision:**
+    - Any changes to canonical_place_types or module regex are deferred hypotheses and must not be merged until LA-009 and LA-010 are completed and validated via E2E.
+
+  - **Subtasks:**
     - **LA-008a**: Update module field rules to include `summary` field ✅ COMPLETE
       - Location: `engine/lenses/edinburgh_finds/lens.yaml` lines 141, 152
       - Status: Already implemented - `source_fields: [summary, description, entity_name]` present in current config
       - Verified: 2026-02-02
-    - **LA-008b**: Broaden canonical_place_types mapping rule ✅ COMPLETE (but blocked by upstream issues)
+
+    - **LA-008b**: Broaden canonical_place_types mapping rule
+      - **Status:** 🟨 Proposed / Not Validated – BLOCKED by LA-009 + LA-010
       - Location: `engine/lenses/edinburgh_finds/lens.yaml` line 112
-      - **Status:** Pattern updated successfully (commit pending), but test reveals upstream extraction issues
       - **Committed pattern (HEAD):** `"(?i)sports centre|sports facility|leisure centre"` (narrow)
-      - **Updated pattern (working copy):** `"(?i)(sports\\s*(centre|center|facility|club)|leisure\\s*(centre|center)|padel\\s*(club|centre|center)|padel\\s*courts?)"` (broad)
+      - **Proposed pattern (branch only):** `"(?i)(sports\\s*(centre|center|facility|club)|leisure\\s*(centre|center)|padel\\s*(club|centre|center)|padel\\s*courts?)"` (broad)
       - **Canonical key verified:** `sports_facility` (lens.yaml:95-102, facet: place_type) ✅
-      - **Test Results (2026-02-02 17:50):**
-        - Entity found: "West of Scotland Padel"
-        - entity_class: "thing" ❌ (should be "place")
-        - canonical_activities: ['padel'] ✅ (mapping works!)
-        - canonical_place_types: [] ❌ (empty - no match)
-        - modules: {} ❌ (empty - module triggers blocked by entity_class gate)
-        - summary: None ❌ (evidence surface missing)
-        - street_address: None, latitude: None, longitude: None
-      - **Root Cause Analysis:**
-        - **Issue 1 (Classification):** entity_class="thing" prevents module triggers (expect entity_class: [place])
-        - **Issue 2 (Evidence Surface):** summary=None means mapping rules have no text to match against
-        - Raw Serper payload contains: snippet="...3 fully covered, heated courts..." but not extracted to summary
-        - Pattern is correct, but evidence surface is empty
-      - **Conclusion:** LA-008b lens change is correct, but blocked by LA-009 (classification) and LA-010 (evidence surface)
+      - **Validation Status:** Cannot validate until LA-009 and LA-010 provide evidence surface and correct entity_class
+      - **Decision:** Lens change must remain on a branch and not merged until evidence surface and classification are fixed.
       - **Blocks:** LA-003 (pending LA-009, LA-010 fixes)
+
     - **LA-008c**: Validate module field extraction for court counts
       - **Current rule:** `pattern: "(?i)(\\d+)\\s*padel\\s*courts?"` (lens.yaml:140)
-      - **Test evidence:** Summary says "3 fully covered, heated courts" (line 1093)
-      - **Concern:** Pattern requires "padel" adjacent to "courts", but summary has "heated courts" (may not match)
-      - **Action:** Run E2E test first to confirm if rule matches
-      - **If rule doesn't match:** Consider widening pattern OR adding conditional rule that:
-        - Matches `(\d+)\s*(indoor\s*)?courts?`
-        - Requires `canonical_activities` includes 'padel' (if module extractor supports facet gating)
-        - OR requires "padel" elsewhere in same field
-      - **Decision:** Only widen if test confirms current rule fails
+      - **Status:** Deferred – cannot validate without summary field populated (depends on LA-010)
+      - **Decision:** Re-evaluate after LA-010 complete
+
     - **LA-008d**: Re-run validation test and report exact fields ✅ COMPLETE
       - Command: `pytest tests/engine/orchestration/test_end_to_end_validation.py::test_one_perfect_entity_end_to_end_validation -v -s`
       - **Test Executed:** 2026-02-02 17:50
@@ -1145,8 +1129,42 @@
         - canonical_place_types: [] ❌
         - modules: {} ❌
         - canonical_activities: ['padel'] ✅
-      - **Diagnosis:** Broadened pattern is correct, but upstream extraction issues prevent it from matching
       - **Outcome:** Identified LA-009 (classification) and LA-010 (evidence surface) as blockers
+
+  - **Governance Rule:**
+    - Stage-7 lens configuration must not be adapted to compensate for missing Stage-1–6 evidence.
+    - **Order of work is strictly:**
+      1. LA-010 – deterministic snippet → summary/description
+      2. LA-009 – principled classification using geographic anchoring
+      3. Re-run E2E validation
+      4. Only then consider any lens pattern changes if still required.
+
+  - **NEXT TASKS (in order):**
+    1. **LA-010 Phase A – Schema Evolution**
+       - Add `description` field to entity.yaml (long-form aggregated evidence surface)
+       - Regenerate EntityExtraction model, Prisma schema, TypeScript types
+       - Verify schema generation + unit tests pass
+       - Single commit, no functional changes yet
+    2. **LA-010 Phase B – Evidence Surfacing (LA-010a)**
+       - Implement explicit summary fallback (independent of normalization):
+         - `raw_data.get("snippet")` → summary (single-item payload)
+         - `organic_results[0].get("snippet")` → summary (list payload)
+       - Implement description aggregation (deterministic):
+         - Aggregate all unique snippets from organic_results
+         - Join with `\n\n` (preserve readability, no semantic rewriting)
+       - Add/update tests for both payload shapes + both surfaces
+       - Single commit with acceptance test
+    3. **LA-010 Phase C – Downstream Verification**
+       - Run full test suite (extraction + lens + orchestration)
+       - Document description merge strategy (overwrite vs concat)
+       - Re-run E2E validation, report entity_class, canonical_place_types, modules
+       - NO lens.yaml changes (deferred until LA-010 + LA-009 complete)
+    4. **LA-009 – Classification**
+       - Extend has_location() to include geographic anchoring (city/locality/postcode)
+       - Validate timing of classification (pre- vs post-merge)
+    5. **Re-run E2E**
+       - Confirm whether modules and canonical_place_types populate without lens changes
+       - Only then consider lens pattern tuning if still necessary
 
 - [ ] **LA-009: Entity Classification - Serper entities misclassified as "thing" instead of "place"**
   - **Principle:** Entity Classification (architecture.md 4.1 Stage 8 - deterministic classification from extraction primitives)
@@ -1187,52 +1205,115 @@
   - **Impact:** HIGH - Blocks module triggers (expect entity_class: [place]), prevents canonical_place_types population
   - **Blocks:** LA-008b (lens mapping can't apply to wrong entity_class), LA-003 (end-to-end validation)
 
-- [ ] **LA-010: Evidence Surface - Serper snippet not mapped to summary field**
+- [ ] **LA-010: Evidence Surface - Complete description + summary Text Surface Contract**
   - **Principle:** Phase 1 Extraction Contract (architecture.md 4.2 - extractors must populate schema primitives including text surfaces)
-  - **Location:** `engine/extraction/extractors/serper_extractor.py:171-239` (extract method)
-  - **Description:** Serper payloads contain rich snippet text (e.g., "3 fully covered, heated courts"), but the LLM extraction does not populate the `summary` field. This leaves lens mapping rules with no text to match against (summary=None, raw_categories=[]).
+  - **Location:** `engine/extraction/extractors/serper_extractor.py:171-251` (extract method), `engine/config/schemas/entity.yaml` (schema definition)
+  - **Description:** Serper payloads contain rich snippet text (e.g., "3 fully covered, heated courts"), but Phase 1 extraction does not populate evidence surfaces. Additionally, `DEFAULT_SOURCE_FIELDS` references `description` field which does not exist in schema, creating architectural debt.
   - **Discovered During:** LA-008b test execution (2026-02-02 17:50)
-  - **Status:** NOT STARTED
+  - **Status:** IN PROGRESS (Option B approved 2026-02-02)
   - **Evidence:**
     - Raw Serper snippet: "Our Winter Memberships are now open — and with 3 fully covered, heated courts..." ✅
     - Extracted entity summary: None ❌
+    - Extracted entity description: Field does not exist in schema ❌
     - Lens mapping rule source_fields: [summary, description, entity_name] (lens.yaml:141,152)
-    - Result: No text surface for place_type mapping pattern to match against
+    - `DEFAULT_SOURCE_FIELDS` (mapping_engine.py:20-26) includes "description" but field absent from schema ❌
+    - Result: No text surface for lens mapping rules to match against
+
   - **Root Cause Analysis:**
-    - EntityExtraction model has `summary` field (engine/extraction/models/entity_extraction.py:22)
-    - Serper LLM prompt (engine/extraction/prompts/serper_extraction.txt) does NOT mention "summary" in extraction instructions
-    - LLM doesn't know to populate summary field from snippets
-    - Result: summary=None even when rich snippet text exists
-  - **Proposed Fix (dual approach):**
-    - **LA-010a (PRIMARY - Deterministic):** Serper extractor normalization
-      - Location: `engine/extraction/extractors/serper_extractor.py:239` (after LLM extraction, before return)
-      - Logic: If `extracted_dict['summary']` is None/empty, set `summary = raw_data.get('snippet')`
-      - Rationale: Connector normalization (not LLM behavior) - makes pipeline robust
-      - This is Phase 1 primitive population (contract compliance)
-    - **LA-010b (SUPPORTING - Enhancement):** Update LLM prompt
-      - Location: `engine/extraction/prompts/serper_extraction.txt`
-      - Add explicit instruction to extract/synthesize summary from snippets
-      - Rationale: LLM can produce better summary than raw snippet (but prompt is enhancement, not only source)
-  - **Implementation Order:**
-    1. Implement LA-010a (deterministic mapping) first
-    2. Rerun E2E test to verify canonical_place_types and modules populate
-    3. Only then implement LA-010b (prompt enhancement) if needed
-  - **Expected Outcome:**
+    - EntityExtraction model has `summary` field but LLM doesn't populate it from snippets
+    - `description` field referenced in mapping engine but does NOT exist in entity.yaml schema
+    - `extract_rich_text()` base method exists but returns unused `List[str]` (architectural debt)
+    - Current implementation wraps single-item payload → creates fragile normalization dependency
+
+  - **Architectural Decision (2026-02-02): Option B - Add description as First-Class Evidence Surface**
+    - **Justification:**
+      - Completes existing architectural intent (DEFAULT_SOURCE_FIELDS already references description)
+      - Enables layered evidence: summary (concise) + description (verbose aggregated)
+      - Supports horizontal scaling: all connectors benefit (Google Places editorialSummary, OSM tags, etc.)
+      - Resolves architectural debt: extract_rich_text() → description field (deterministic)
+      - Satisfies Phase 1 contract with explicit testable surfaces
+    - **Rejected Alternative:** Option A (summary-only) would delete aspiration, lose granularity, create vertical scaling friction
+
+  - **Implementation Plan (Three-Phase, Non-Negotiable Constraints):**
+
+    **Phase A: Schema Evolution (Single Commit)**
+    - Add `description` field to `engine/config/schemas/entity.yaml`:
+      ```yaml
+      - name: description
+        type: string
+        description: Long-form aggregated evidence from multiple sources (reviews, snippets, editorial)
+        nullable: true
+        search:
+          category: description
+          keywords:
+            - description
+            - details
+            - about
+      ```
+    - Regenerate: EntityExtraction Pydantic model, Prisma schema, TypeScript types
+    - Ensure vertical-agnostic: description is opaque evidence surface (no domain semantics)
+    - **Acceptance:** All schema generation + unit tests pass
+
+    **Phase B: LA-010a Tightening (Single Commit)**
+    - **Summary Fallback (Explicit, Independent of Normalization):**
+      ```python
+      # Explicit fallback order (no hidden assumptions):
+      if not extracted_dict.get('summary'):
+          if raw_data.get("snippet"):  # Single-item payload
+              extracted_dict['summary'] = raw_data["snippet"]
+          elif organic_results and organic_results[0].get("snippet"):  # List payload
+              extracted_dict['summary'] = organic_results[0]["snippet"]
+      ```
+    - **Description Aggregation (Deterministic, Traceable):**
+      ```python
+      # Aggregate all unique snippets in stable order
+      if not extracted_dict.get('description'):
+          snippets = []
+          for result in organic_results:
+              snippet = result.get('snippet')
+              if snippet and snippet not in snippets:  # Deduplicate
+                  snippets.append(snippet)
+          if snippets:
+              extracted_dict['description'] = "\n\n".join(snippets)  # Preserve readability
+      ```
+      - No semantic rewriting (pure aggregation only)
+      - Deterministic: same input → same output
+      - Extensible: ready for long_text, reviews, categories when available
+
+    - **Test Requirements:**
+      - Acceptance test contract: `assert evidence in summary OR description`
+      - Add explicit coverage for both payload shapes:
+        - Single-item: `raw_data['snippet']` → summary
+        - Organic list: `organic_results[0]['snippet']` → summary
+        - Multi-snippet: All snippets → description (deduplicated, stable order)
+      - **Acceptance:** New/updated tests prove both shapes and both surfaces
+
+    **Phase C: Downstream Verification Checkpoint (No Lens Changes)**
+    - Run full test suite (all extraction + lens + orchestration tests pass)
+    - **Merge Strategy Decision Required:**
+      - Determine description merge behavior (overwrite vs concat)
+      - Document strategy in merge logic
+      - Add test coverage for merge strategy
+    - **E2E Validation Re-Run:**
+      - Report exact outputs for West of Scotland Padel test entity:
+        - `entity_class` (must be "place")
+        - `canonical_place_types` (must include sports_facility or similar)
+        - `modules` (must contain at least one populated field per system-vision.md 6.3)
+    - **Governance Rule:** NO lens.yaml regex broadening as part of this work
+      - Lens changes deferred until LA-010 + LA-009 complete
+      - Only proceed with lens tuning if E2E still fails after Phase C
+
+  - **Expected Outcome (After All Three Phases):**
     - summary: "Our Winter Memberships are now open — and with 3 fully covered, heated courts..." ✅
-    - Lens mapping rule can match "courts" → canonical_place_types: ['sports_facility'] ✅
-    - Module triggers can fire → modules: {sports_facility: {...}} ✅
+    - description: (aggregated snippets with readability preserved) ✅
+    - Lens mapping rules can match patterns in summary OR description ✅
+    - canonical_place_types populated via lens mapping ✅
+    - modules populated via module triggers ✅
+    - One Perfect Entity validation passes ✅
+
   - **Impact:** HIGH - Blocks lens mapping rules (no evidence surface), prevents canonical_place_types and modules population
   - **Blocks:** LA-008b (lens pattern can't match empty text), LA-003 (end-to-end validation)
-
-  - **Guidance (User - 2026-02-02):**
-    - "Serper evidence is flowing and canonical_activities=['padel'] proves Stage 7 mapping works end-to-end."
-    - "What remains (place_types + modules) looks like lens configuration / rule search-surface, not engine defects, so let's fix it in the lens rather than changing core logic."
-    - "Update the module field rule to include summary: source_fields: [summary, description, entity_name] - This is not a hack — it aligns the rule with where evidence now lives."
-    - "For canonical_place_types, avoid narrow phrasing like 'court venue'. Prefer broader patterns like padel\s*(court|centre|club) and sports\s*club."
-    - "Hold off changing Google Places extraction until we see whether Serper evidence alone resolves LA-008."
-  - **Impact:** Medium - canonical dimensions work, Serper works, only lens configuration tuning needed
-  - **Validation Needed:** System-vision.md 6.3 requires "at least one module field populated" for "One Perfect Entity" validation
-  - **Blocks:** LA-003 (end-to-end module validation)
+  - **Unblocks:** Horizontal scaling for other connectors (Google Places, OSM) to use description field
 
 ---
 

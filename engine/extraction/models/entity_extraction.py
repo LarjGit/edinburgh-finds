@@ -3,7 +3,7 @@
 # ============================================================
 #
 # Generated from: engine/config/schemas/entity.yaml
-# Generated at: 2026-01-22 13:21:59
+# Generated at: 2026-02-03 09:13:44
 #
 # To make changes:
 # 1. Edit engine/config/schemas/entity.yaml
@@ -20,6 +20,8 @@ class EntityExtraction(BaseModel):
     entity_name: str = Field(description="Official name of the entity REQUIRED.")
 
     summary: Optional[str] = Field(default=None, description="A short overall description of the entity summarising all gathered data Null if not found.")
+
+    description: Optional[str] = Field(default=None, description="Long-form aggregated evidence from multiple sources (reviews, snippets, editorial summaries) Null if not found.")
 
     discovered_attributes: Optional[Dict[str, Any]] = Field(default=None, description="Dictionary containing any extra attributes not explicitly defined in Listing or Entity models Null if not found.")
 
