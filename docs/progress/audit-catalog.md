@@ -2,7 +2,7 @@
 
 **Current Phase:** Phase 2: Pipeline Implementation
 **Validation Entity:** West of Scotland Padel (validation) / Edinburgh Sports Club (investigation)
-**Last Updated:** 2026-02-02 (Stage 7: LA-001/002/004/005/006/007 complete ✅, LA-008a/d complete ✅, LA-008 BLOCKED by LA-009 (classification) + LA-010 (evidence surface) ❌, LA-003 blocked pending LA-009/010)
+**Last Updated:** 2026-02-03 (Stage 7: LA-001/002/004/005/006/007 complete ✅, LA-008a/d complete ✅, LA-009 complete ✅, LA-010 complete ✅, LA-008b/LA-003 partially unblocked - modules field still empty ⚠️)
 
 ---
 
@@ -903,7 +903,7 @@
 
 ### Stage 7: Lens Application (architecture.md 4.1, 4.2)
 
-**Status:** Core engine validated ✅, Serper connector operational ✅, LA-001/002/004/005/006/007/008a/008d complete ✅. LA-008 BLOCKED by upstream prerequisites: LA-009 (classification) + LA-010 (evidence surface) ❌. LA-003 blocked by LA-009/010 ❌
+**Status:** Core engine validated ✅, Serper connector operational ✅, LA-001/002/004/005/006/007/008a/008d/009/010 complete ✅. Evidence surface + classification working ✅. Canonical dimensions populated ✅. Module triggers not firing (investigation needed) ⚠️
 
 **Requirements:**
 - Apply lens mapping rules to populate canonical dimensions
@@ -1166,21 +1166,27 @@
        - Confirm whether modules and canonical_place_types populate without lens changes
        - Only then consider lens pattern tuning if still necessary
 
-- [ ] **LA-009: Entity Classification - Serper entities misclassified as "thing" instead of "place"**
+- [x] **LA-009: Entity Classification - Serper entities misclassified as "thing" instead of "place"**
   - **Principle:** Entity Classification (architecture.md 4.1 Stage 8 - deterministic classification from extraction primitives)
-  - **Location:** `engine/extraction/entity_classifier.py:53-72` (has_location function)
+  - **Location:** `engine/extraction/entity_classifier.py:53-83` (has_location function)
   - **Description:** Serper-extracted entities classified as "thing" instead of "place" because classification only checks latitude/longitude + street_address, but Serper never provides coordinates and often lacks street addresses (only city/region names like "Stevenston").
   - **Discovered During:** LA-008b test execution (2026-02-02 17:50)
-  - **Status:** NOT STARTED - Pending investigation
-  - **Evidence:**
+  - **Status:** COMPLETE (2026-02-03)
+  - **Completed:** Extended has_location() to include geographic anchoring fields (city, postcode)
+    - Commit: ec871e9 - fix(classification): extend has_location() to include city/postcode
+    - Tests: 6 new tests added, all 110 extraction tests pass
+    - E2E validation: entity_class='place' ✅, canonical_place_types=['sports_facility'] ✅
+  - **Evidence (Before Fix):**
     - Test entity: "West of Scotland Padel | Stevenston"
-    - Raw Serper payload (file: `engine/data/raw/serper/20260202_174914_8aad69f29cb657ee.json`):
-      - snippet: "...3 fully covered, heated courts..." ✅
-      - title: "West of Scotland Padel | Stevenston" ✅
-      - NO coordinates ❌
-      - NO street_address in snippet ❌
-    - Current classification result: entity_class = "thing" ❌
-    - Expected: entity_class = "place" ✅
+    - Raw Serper payload: NO coordinates ❌, NO street_address ❌, city="Stevenston" ✅
+    - Classification result: entity_class = "thing" ❌
+    - canonical_place_types = [] ❌
+
+  - **Evidence (After Fix - Verified 2026-02-03):**
+    - Same entity with city="Stevenston" now triggers has_location()
+    - Classification result: entity_class = "place" ✅
+    - canonical_place_types = ['sports_facility'] ✅
+    - Lens mapping rules working correctly ✅
   - **Root Cause Analysis:**
     - `has_location()` (entity_classifier.py:53-72) only checks: coordinates OR street_address
     - Does NOT check `city` field (which Serper often populates from title/snippet)
@@ -1205,19 +1211,28 @@
   - **Impact:** HIGH - Blocks module triggers (expect entity_class: [place]), prevents canonical_place_types population
   - **Blocks:** LA-008b (lens mapping can't apply to wrong entity_class), LA-003 (end-to-end validation)
 
-- [ ] **LA-010: Evidence Surface - Complete description + summary Text Surface Contract**
+- [x] **LA-010: Evidence Surface - Complete description + summary Text Surface Contract**
   - **Principle:** Phase 1 Extraction Contract (architecture.md 4.2 - extractors must populate schema primitives including text surfaces)
   - **Location:** `engine/extraction/extractors/serper_extractor.py:171-251` (extract method), `engine/config/schemas/entity.yaml` (schema definition)
   - **Description:** Serper payloads contain rich snippet text (e.g., "3 fully covered, heated courts"), but Phase 1 extraction does not populate evidence surfaces. Additionally, `DEFAULT_SOURCE_FIELDS` references `description` field which does not exist in schema, creating architectural debt.
   - **Discovered During:** LA-008b test execution (2026-02-02 17:50)
-  - **Status:** IN PROGRESS (Option B approved 2026-02-02)
-  - **Evidence:**
+  - **Status:** COMPLETE (2026-02-03)
+  - **Completed:** All three phases implemented and verified
+    - Phase A (2adc7e7): Schema evolution - added `description` field to entity.yaml
+    - Phase B (4138973): Evidence surfacing - implemented summary fallback + description aggregation in Serper extractor
+    - Phase C (e03c909): Downstream verification - all extraction/lens/orchestration tests pass
+  - **Evidence (Before Fix):**
     - Raw Serper snippet: "Our Winter Memberships are now open — and with 3 fully covered, heated courts..." ✅
     - Extracted entity summary: None ❌
     - Extracted entity description: Field does not exist in schema ❌
-    - Lens mapping rule source_fields: [summary, description, entity_name] (lens.yaml:141,152)
-    - `DEFAULT_SOURCE_FIELDS` (mapping_engine.py:20-26) includes "description" but field absent from schema ❌
     - Result: No text surface for lens mapping rules to match against
+
+  - **Evidence (After Fix - Verified 2026-02-03):**
+    - Extracted entity summary: "West of Scotland Padel is a padel tennis venue in Stevenston..." ✅
+    - Extracted entity description: (aggregated snippets with readability preserved) ✅
+    - Schema: `description` field added to entity.yaml ✅
+    - Lens mapping rules: Can now match patterns in summary OR description ✅
+    - E2E validation: canonical_place_types=['sports_facility'] populated via lens mapping ✅
 
   - **Root Cause Analysis:**
     - EntityExtraction model has `summary` field but LLM doesn't populate it from snippets
