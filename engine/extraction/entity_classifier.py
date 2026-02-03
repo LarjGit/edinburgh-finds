@@ -52,15 +52,23 @@ def has_time_bounds(raw_data: Dict[str, Any]) -> bool:
 
 def has_location(raw_data: Dict[str, Any]) -> bool:
     """
-    Check if entity has physical location (coordinates or street address).
+    Check if entity has physical location (any geographic anchoring field).
+
+    Geographic anchoring fields include:
+    - Coordinates (latitude + longitude)
+    - Street address
+    - City (LA-009: geographic anchoring for Serper entities)
+    - Postcode (LA-009: geographic anchoring)
 
     Args:
         raw_data: Raw entity data dictionary
 
     Returns:
-        True if entity has latitude/longitude or street address, False otherwise
+        True if entity has any geographic anchoring field, False otherwise
 
     Priority: 2 - see classification_rules.md
+
+    See also: LA-009 (audit-catalog.md) - Extended to include city/postcode
     """
     has_coordinates = bool(
         raw_data.get("latitude") and raw_data.get("longitude")
@@ -69,7 +77,10 @@ def has_location(raw_data: Dict[str, Any]) -> bool:
         raw_data.get("address") or
         raw_data.get("street_address")
     )
-    return has_coordinates or has_address
+    has_city = bool(raw_data.get("city"))
+    has_postcode = bool(raw_data.get("postcode"))
+
+    return has_coordinates or has_address or has_city or has_postcode
 
 
 def is_individual(raw_data: Dict[str, Any]) -> bool:

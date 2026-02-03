@@ -3,7 +3,11 @@
 import pytest
 import inspect
 from engine.extraction import entity_classifier
-from engine.extraction.entity_classifier import extract_roles
+from engine.extraction.entity_classifier import (
+    extract_roles,
+    has_location,
+    resolve_entity_class,
+)
 
 
 def test_extract_roles_provides_equipment():
@@ -96,3 +100,115 @@ def test_classifier_contains_no_domain_literals():
     assert len(violations) == 0, \
         f"Classifier contains forbidden domain terms: {violations}. " \
         f"Domain logic must live in lens contracts only."
+
+
+# ============================================================
+# LA-009: Geographic Anchoring Tests
+# ============================================================
+# Tests for has_location() to include city/postcode as
+# geographic anchoring fields (not just coordinates/address)
+# ============================================================
+
+
+def test_has_location_with_coordinates():
+    """Test that coordinates alone trigger has_location (existing behavior)."""
+    raw_data = {
+        "latitude": 55.9533,
+        "longitude": -3.1883,
+    }
+
+    assert has_location(raw_data) is True
+
+
+def test_has_location_with_street_address():
+    """Test that street_address alone triggers has_location (existing behavior)."""
+    raw_data = {
+        "street_address": "123 Main Street",
+    }
+
+    assert has_location(raw_data) is True
+
+
+def test_has_location_with_city_only():
+    """
+    Test that city alone triggers has_location (LA-009 fix).
+
+    Serper often provides city (e.g., "Stevenston") without coordinates.
+    City is a geographic anchoring field that indicates a physical place.
+    """
+    raw_data = {
+        "city": "Stevenston",
+    }
+
+    assert has_location(raw_data) is True
+
+
+def test_has_location_with_postcode_only():
+    """
+    Test that postcode alone triggers has_location (LA-009 fix).
+
+    Postcode is a geographic anchoring field that indicates a physical place.
+    """
+    raw_data = {
+        "postcode": "KA20 3LR",
+    }
+
+    assert has_location(raw_data) is True
+
+
+def test_has_location_with_no_geographic_fields():
+    """Test that entities without any geographic fields return False."""
+    raw_data = {
+        "entity_name": "Some Organization",
+        "website": "https://example.com",
+    }
+
+    assert has_location(raw_data) is False
+
+
+def test_resolve_entity_class_serper_with_city():
+    """
+    Integration test: Serper entity with city but no coordinates → place (LA-009).
+
+    This is the real-world scenario from LA-008d validation test:
+    - Serper provides: title="West of Scotland Padel | Stevenston"
+    - LLM extracts: city="Stevenston", but NO coordinates
+    - Expected: entity_class="place" (not "thing")
+    """
+    raw_data = {
+        "entity_name": "West of Scotland Padel",
+        "city": "Stevenston",
+        # NO coordinates
+        # NO street_address
+    }
+
+    result = resolve_entity_class(raw_data)
+
+    assert result["entity_class"] == "place", \
+        "Entities with city should be classified as 'place' even without coordinates"
+
+
+def test_resolve_entity_class_priority_order_not_affected():
+    """
+    Test that adding city/postcode to has_location doesn't break priority order.
+
+    Priority order (classification_rules.md):
+    1. Time-bounded → event (HIGHEST)
+    2. Physical location → place
+    3. Organization → organization
+    4. Person → person
+    5. Fallback → thing
+
+    An event with a city should still be classified as event, not place.
+    """
+    raw_data = {
+        "entity_name": "Annual Tournament",
+        "city": "Edinburgh",
+        "start_date": "2026-06-01",
+        "end_date": "2026-06-02",
+    }
+
+    result = resolve_entity_class(raw_data)
+
+    assert result["entity_class"] == "event", \
+        "Time-bounded entities should be classified as 'event' even if they have city"
