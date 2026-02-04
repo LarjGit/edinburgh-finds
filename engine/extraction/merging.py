@@ -11,6 +11,32 @@ from typing import Dict, List, Optional, Any
 import yaml
 from pathlib import Path
 
+# ---------------------------------------------------------------------------
+# Missingness predicate — single source of truth (architecture.md 9.4)
+# ---------------------------------------------------------------------------
+# Curated punctuation-dash and "not-available" sentinels only.
+# Deliberately NOT including "null"/"none"/"unknown"/"tbd" etc. — those
+# tokens appear legitimately in real field values and would cause silent
+# data loss.  Extend only when a concrete production false-positive is
+# observed and documented.
+_PLACEHOLDER_SENTINELS = {"N/A", "n/a", "NA", "-", "\u2013", "\u2014"}
+#                                              hyphen  en-dash  em-dash
+
+
+def _is_missing(value: Any) -> bool:
+    """Return True when *value* should be treated as absent.
+
+    Covers None, empty/whitespace-only strings, and the curated
+    placeholder sentinels above.  Non-string types (0, False, [], {})
+    are always real values.
+    """
+    if value is None:
+        return True
+    if not isinstance(value, str):
+        return False
+    stripped = value.strip()
+    return stripped == "" or stripped in _PLACEHOLDER_SENTINELS
+
 
 @dataclass
 class FieldValue:
@@ -134,10 +160,10 @@ class FieldMerger:
         # Track all sources that provided values
         all_sources = [fv.source for fv in field_values]
 
-        # Filter out None values, but keep track of them
-        non_none_values = [fv for fv in field_values if fv.value is not None]
+        # Filter out missing values (None, empty, placeholders)
+        non_none_values = [fv for fv in field_values if not _is_missing(fv.value)]
 
-        # If all values are None, return None with highest trust source
+        # If all values are missing, return None with highest trust source
         if not non_none_values:
             highest_trust_source = self.trust_hierarchy.get_highest_trust_source(all_sources)
             result = FieldValue(

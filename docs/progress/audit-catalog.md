@@ -2,7 +2,7 @@
 
 **Current Phase:** Phase 2: Pipeline Implementation
 **Validation Entity:** West of Scotland Padel (validation) / Edinburgh Sports Club (investigation)
-**Last Updated:** 2026-02-04 (LA-003 constitutional gate COMPLETE ✅, LA-011 COMPLETE ✅, LA-012 OPE+Geo gate added — awaiting first run)
+**Last Updated:** 2026-02-04 (Stages 9-11 audited. Stage 9 COMPLIANT ✅. Stage 10: 5 gaps cataloged DM-001 through DM-005. Stage 11 COMPLIANT pending Stage 10.)
 
 ---
 
@@ -1286,11 +1286,11 @@
   - **Blocks:** None
   - **Blocked By:** None
 
-- [ ] **LA-012: OPE+Geo — Coordinate End-to-End Gate**
+- [x] **LA-012: OPE+Geo — Coordinate End-to-End Gate** ✅ COMPLETE
   - **Principle:** Geographic Extraction (Phase 1 Extraction Contract), Data Quality (downstream directions/mapping/geo-search)
   - **Location:** `tests/engine/orchestration/test_end_to_end_validation.py::test_ope_geo_coordinate_validation`
   - **Description:** Non-constitutional data-quality gate. Proves that latitude/longitude flow end-to-end when a coordinate-rich source is in the execution plan. Split out of LA-003 because system-vision.md 6.3 does not require coordinates. Uses a Google Places-reliable validation entity (Meadowbank Sports Centre, Edinburgh) instead of the Serper-only "West of Scotland Padel".
-  - **Status:** NOT STARTED — test written, awaiting first run
+  - **Status:** COMPLETE ✅ — test passed 2026-02-04
   - **Validation entity:** Meadowbank Sports Centre, Edinburgh
     - Long-standing Edinburgh landmark; reliably in Google Places with authoritative coordinates.
     - Query: `"Meadowbank Sports Centre Edinburgh"`
@@ -1315,38 +1315,118 @@
 
 ### Stage 9: Cross-Source Deduplication (architecture.md 4.1)
 
-**Status:** Audit pending
+**Status:** Audit complete — COMPLIANT ✅ (LA-012 resolved the one gap)
 
 **Requirements:**
 - Group extracted entities representing same real-world entity
 - Multi-tier strategies (external IDs, geo similarity, name similarity, fingerprints)
 
-(Audit pending)
+**Audit Findings (2026-02-04):**
+
+**✅ COMPLIANT:**
+- Orchestration-level dedup in `orchestrator_state.py` accept_entity() implements full cascade:
+  - Tier 1: Strong ID match (google_place_id, osm_id, etc.)
+  - Tier 2: Geo-based key (normalised name + rounded lat/lng)
+  - Tier 2.5: Fuzzy name match via token_set_ratio (threshold 85), bidirectional strong/weak
+  - Tier 3: SHA1 hash fallback
+- LA-012 (2026-02-04): Strong candidate now replaces weak fuzzy match instead of being dropped
+- Ingestion-level dedup via content hash prevents duplicate RawIngestion records (RI-001)
+- 13 deduplication tests pass covering all tiers + cross-source scenarios
+- Dedup boundary respected: groups entities, does NOT resolve field conflicts (architecture.md 4.2)
+
+**Note:** Stage 9 dedup operates on *in-flight candidates* during orchestration. The finaliser's `_group_by_identity()` (entity_finalizer.py:88-105) performs a second, slug-only grouping at persistence time. These two grouping stages are complementary — orchestration dedup prevents duplicate candidates entering the pipeline; finaliser grouping clusters ExtractedEntity DB records for merge. No gap here, but the merge that follows the finaliser grouping is where the violations live (see Stage 10).
 
 ---
 
-### Stage 10: Deterministic Merge (architecture.md 4.1)
+### Stage 10: Deterministic Merge (architecture.md 4.1, Section 9)
 
-**Status:** Audit pending
+**Status:** Audit complete — 5 implementation gaps identified ❌
 
-**Requirements:**
-- Merge each deduplication group into single canonical entity
-- Metadata-driven, field-aware deterministic rules
+**Requirements (architecture.md Section 9):**
+- One canonical merge strategy, metadata-driven
+- Field-group-specific strategies (identity/display, geo, contact, canonical arrays, modules)
+- Missingness = None | "" | "N/A" | placeholders — must not block real values
+- Deterministic tie-break cascade: trust_tier → quality → confidence → completeness → priority → lexicographic connector_id
+- Connector names must never appear in merge logic (trust metadata only)
+- Deep recursive merge for modules JSON
 
-(Audit pending)
+**Audit Findings (2026-02-04):**
+
+Two merge systems exist and conflict:
+1. `engine/extraction/merging.py` — `EntityMerger` + `FieldMerger` + `TrustHierarchy`. Trust-aware, field-level, reads `extraction.yaml` trust scores. Has provenance tracking and conflict detection. **Not called anywhere in the production pipeline.**
+2. `engine/orchestration/entity_finalizer.py:107-162` — `_finalize_group()`. Inline "first non-null wins" merge. No trust awareness. Group iteration order determined by DB query order (non-deterministic). **This is what actually runs.**
+
+The correct fix is to wire `merging.py` into `entity_finalizer.py` and then add the missing capabilities to `merging.py`. Split into 5 micro-iterations below.
+
+**❌ GAPS IDENTIFIED:**
+
+- [ ] **DM-001: Missingness Filter Missing — empty strings block real values**
+  - **Principle:** Deterministic Merge (architecture.md 9.4 — "Prefer more complete values deterministically")
+  - **Location:** `engine/extraction/merging.py:138` (FieldMerger.merge_field — canonical location for the predicate)
+  - **Description:** FieldMerger uses `fv.value is not None` as the only missing-value test (merging.py:138). Empty string `""` passes the check and blocks a subsequent real value. Architecture requires `None`, `""`, whitespace-only strings, and known placeholders (`"N/A"`, `"n/a"`, `"NA"`, `"-"`, `"—"`) to all be treated as missing. The predicate must live in `merging.py` as the single source of truth — FieldMerger's filter step (currently line 138) must call it. Any remaining legacy fallback in `entity_finalizer.py` (currently line 145: `is None` check in the inline merge) must either be removed when DM-002 wires in EntityMerger, or replaced with an import of the same predicate if any path survives. Example: Google Places returns `summary=""` → currently blocks Serper's rich description.
+  - **Estimated Scope:** 1 file (`merging.py`), ~15 lines — add `_is_missing(value)` predicate, update FieldMerger filter at line 138 to use it
+
+- [ ] **DM-002: EntityMerger not wired into EntityFinalizer — two conflicting merge paths**
+  - **Principle:** One canonical merge strategy (architecture.md 9.1 — "Merge resolves conflicts deterministically using metadata and rules")
+  - **Location:** `engine/orchestration/entity_finalizer.py:107-162`, `engine/extraction/merging.py:175-284`
+  - **Description:** `_finalize_group()` contains its own inline merge (first-non-null, no trust). `EntityMerger` in merging.py is fully trust-aware but never called. Wire EntityMerger into _finalize_group() and remove the inline merge. EntityMerger needs source metadata on each entity — finaliser must attach source from ExtractedEntity.source before calling merge.
+  - **Estimated Scope:** 2 files (`entity_finalizer.py` + `merging.py`), ~30 lines changed
+  - **Blocked by:** DM-001 (missingness filter must exist before wiring)
+
+- [ ] **DM-003: No field-group strategies — all fields use same trust-only logic**
+  - **Principle:** Field-Group Merge Strategies (architecture.md 9.4)
+  - **Location:** `engine/extraction/merging.py:110-172` (FieldMerger.merge_field)
+  - **Description:** FieldMerger applies identical logic to every field: filter None → sort by trust → pick winner. Architecture.md 9.4 specifies distinct strategies per field group:
+    - **Geo fields** (latitude, longitude): Prefer sources that actually provide coordinates (presence > trust). Serper never provides coords — must never "win" geo fields.
+    - **Narrative text** (summary, description): Prefer richer (longer, non-empty) value over trust score alone.
+    - **Canonical dimension arrays**: Union all values, deduplicate, lexicographic sort. No "winner" — all sources contribute.
+  - **Estimated Scope:** 1 file (`merging.py`), ~40 lines — add field-group routing in merge_field()
+  - **Blocked by:** DM-001 (missingness filter)
+
+- [ ] **DM-004: Entity group order is DB-query-order, not trust-ordered — non-deterministic**
+  - **Principle:** Determinism (system-vision.md Invariant 4, architecture.md 9.6)
+  - **Location:** `engine/orchestration/entity_finalizer.py:63-68` (iteration over entity_groups), `entity_finalizer.py:122-125` (all_attributes list built from group order)
+  - **Description:** `_finalize_group()` receives `entity_group: List[ExtractedEntity]` in DB find_many() order (insertion-order). This is the finaliser's responsibility to make stable — it must not rely on EntityMerger's internal sort as a substitute, because the finaliser boundary is the contract point with the DB. Sort must happen in `_finalize_group()` before the group is passed to the merger, using a fully deterministic three-level tie-break: **trust desc → connector_id asc → extracted_entity.id asc**. Trust comes from TrustHierarchy (extraction.yaml). connector_id is the ExtractedEntity.source field (already persisted). extracted_entity.id is the DB primary key — stable, unique, always available. This guarantees identical output regardless of DB insertion order or query plan.
+  - **Estimated Scope:** 1 file (`entity_finalizer.py`), ~15 lines — instantiate TrustHierarchy, sort group before merge call
+  - **Blocked by:** DM-002 (sort must happen before the EntityMerger call added in DM-002)
+
+- [ ] **DM-005: Modules merge is shallow key-union, not deep recursive**
+  - **Principle:** Modules JSON Structures merge strategy (architecture.md 9.4 — "Deep recursive merge. Object vs object → recursive merge.")
+  - **Location:** `engine/orchestration/entity_finalizer.py:154-160` (current shallow merge), `engine/extraction/merging.py` (EntityMerger has no modules handling)
+  - **Description:** Current modules merge in finaliser: iterates candidate_modules keys, adds any key not already in base_modules. This is a shallow first-key-wins union. Architecture requires: object vs object → recursive merge; scalar arrays → concatenate + deduplicate + sort; type mismatch → higher trust wins wholesale. Must be implemented in merging.py alongside the other field-group strategies.
+  - **Estimated Scope:** 1 file (`merging.py`), ~35 lines — add deep_merge_modules() function
+  - **Blocked by:** DM-003 (field-group routing must exist to route modules to this handler)
+
+- [ ] **DM-006: Order-independence end-to-end test — proves merge is DB-order-blind**
+  - **Principle:** Determinism (system-vision.md Invariant 4, architecture.md 9.6 — "Merge output must be identical across runs. Ordering must remain stable.")
+  - **Location:** `tests/engine/orchestration/test_entity_finalizer.py`
+  - **Description:** Single test class with two test methods that construct the canonical resolution-rules scenario (Serper: name + rich description, no coords; Google Places: same place, place_id, coords, empty description) as mock ExtractedEntity objects. Method A passes the list in Serper-first order; Method B passes it in Google-first order. Both call `_finalize_group()` and assert identical output: coords from Google, description from Serper, external_ids from Google. This is the acceptance test for the resolution rules — if it passes, the merge is provably order-independent for the target scenario.
+  - **Estimated Scope:** 1 file (`test_entity_finalizer.py`), ~50 lines — one test class, two methods sharing a shared assertion helper
+  - **Blocked by:** DM-004 (deterministic sort must be in place before this test can pass)
 
 ---
 
 ### Stage 11: Finalization and Persistence (architecture.md 4.1)
 
-**Status:** Audit pending
+**Status:** Audit complete — COMPLIANT for slug generation and upsert ✅, merge delegation pending (blocked on Stage 10)
 
 **Requirements:**
 - Generate stable slugs and derived identifiers
 - Upsert merged entities idempotently
 - Persist provenance and external identifiers
 
-(Audit pending)
+**Audit Findings (2026-02-04):**
+
+**✅ COMPLIANT:**
+- SlugGenerator produces deterministic URL-safe slugs (deduplication.py:389-431)
+- Upsert logic: find_unique by slug → update if exists, create if not (entity_finalizer.py:72-84)
+- Idempotency verified by test_finalize_idempotent (test_entity_finalizer.py:250-321)
+- external_ids union preserved in _finalize_single (entity_finalizer.py:173)
+- LA-007 (2026-02-02): entity_name key correctly read from attributes
+- LA-011 (2026-02-04): Legacy keys swapped for canonical schema keys
+
+**⚠️ Pending:**
+- Provenance (source_info, field_confidence) not persisted — blocked on DM-002 through DM-005. Once EntityMerger is wired in, its source_info and field_confidence outputs flow through _finalize_group() into the upsert payload. No additional Stage 11 code change needed; this resolves when Stage 10 items complete.
 
 ---
 
