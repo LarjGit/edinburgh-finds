@@ -234,11 +234,15 @@ class TestCrossSourceDeduplication:
         }
 
         accepted1, _, _ = state.accept_entity(serper_result)
-        accepted2, _, reason2 = state.accept_entity(google_result)
+        accepted2, key2, _ = state.accept_entity(google_result)
 
-        # EXPECTED TO FAIL - this is the core issue we're fixing
-        assert accepted2 is False, "Cross-source deduplication should work with fuzzy matching"
-        assert reason2 == "duplicate"
+        # Strong candidate (GP: has IDs + coords) replaces weak match (serper: no IDs, no coords).
+        # Only one entity should remain, and it should be the Google Places one.
+        assert accepted1 is True
+        assert accepted2 is True, "Strong GP candidate should replace the weak serper match"
+        assert len(state.accepted_entities) == 1
+        assert state.accepted_entities[0]["source"] == "google_places"
+        assert state.accepted_entities[0]["lat"] == 55.9213
 
     def test_multiple_sources_same_venue(self):
         """

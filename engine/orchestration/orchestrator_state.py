@@ -277,10 +277,19 @@ class OrchestratorState:
             return (False, key, "duplicate")
 
         # Tier 2.5: Check for fuzzy name match
-        # Only applies when candidate lacks strong identifiers (IDs or coords)
         fuzzy_match_key = self._find_fuzzy_match(candidate)
         if fuzzy_match_key:
-            # Found a fuzzy match - reject as duplicate
+            # Strong candidate matched against a weak accepted entity:
+            # replace the weak entity so the richer data (IDs, coords) is kept.
+            if self._has_strong_identifier(candidate):
+                for i, accepted in enumerate(self.accepted_entities):
+                    if self._generate_entity_key(accepted) == fuzzy_match_key:
+                        self.accepted_entities[i] = candidate
+                        self.accepted_entity_keys.discard(fuzzy_match_key)
+                        self.accepted_entity_keys.add(key)
+                        return (True, key, None)
+
+            # Weak candidate matching an existing entity: drop as duplicate
             return (False, fuzzy_match_key, "duplicate")
 
         # No duplicates found - accept the entity
