@@ -1379,6 +1379,11 @@ The correct fix is to wire `merging.py` into `entity_finalizer.py` and then add 
     - **Canonical dimension arrays**: Union all values, deduplicate, lexicographic sort. No "winner" — all sources contribute.
   - **Estimated Scope:** 1 file (`merging.py`), ~40 lines — add field-group routing in merge_field()
   - **Blocked by:** DM-001 (missingness filter)
+  - **Acceptance Criteria:**
+    1. **entity_type deterministic merge semantics** — entity_type is now passed through DM-002 and must not rely on implicit ordering. Resolution order must be: missingness filter first → trust tier/score → stable tie-break (connector_id lexicographic). A test must prove that `[A, B]` vs `[B, A]` input ordering produces an identical entity_type winner.
+    2. **Provenance shape consistency** — Single-source finalization must produce the same structural shape for provenance fields (`source_info`, `field_confidence`) as multi-source finalization (consistently `{}` not `null`). An assertion verifying this shape equivalence must be included in the test suite.
+    3. **Deterministic ordering guarantees** — All test comparisons must use Python structures or canonical JSON with sorted keys; no set-equality shortcuts that mask ordering bugs. Canonical arrays introduced in DM-003 must be unioned + deduped + deterministically sorted so strict order-independence is preserved through every layer.
+    4. **Field-group strategies are the next layer, not regressions** — Trust-only behaviour that still loses richer narrative or doesn't union arrays is the expected baseline until DM-003/DM-005 land the following: (a) narrative "prefer richer text" logic, (b) geo presence/precision preference, (c) canonical array union/dedup/sort. The regression boundary remains narrow: any return of order dependence or bypass of EntityMerger constitutes a regression; everything else is forward work.
 
 - [ ] **DM-004: Entity group order is DB-query-order, not trust-ordered — non-deterministic**
   - **Principle:** Determinism (system-vision.md Invariant 4, architecture.md 9.6)
