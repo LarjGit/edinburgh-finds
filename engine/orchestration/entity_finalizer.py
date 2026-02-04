@@ -6,6 +6,7 @@ from typing import List, Dict, Optional, Any
 from prisma import Prisma, Json
 from prisma.models import ExtractedEntity
 from engine.extraction.deduplication import SlugGenerator
+from engine.extraction.merging import EntityMerger
 
 logger = logging.getLogger(__name__)
 
@@ -110,71 +111,70 @@ class EntityFinalizer:
     ) -> Dict[str, Any]:
         """Finalize a group of ExtractedEntity records into Entity data.
 
-        Multi-source merge strategy: first non-null value wins for each scalar
-        field.  List fields (canonical_* arrays) use the first non-empty list.
-        The first entity in the group is the base; subsequent entities fill any
-        remaining None / empty-list slots.
+        Single-entity groups take the fast path via _finalize_single.
+        Multi-entity groups are merged by EntityMerger (trust-aware,
+        missingness-filtered) and mapped to the upsert payload via the
+        shared _build_upsert_payload helper.
         """
         if len(entity_group) == 1:
             return self._finalize_single(entity_group[0])
 
-        # Collect raw attributes from all entities in group
-        all_attributes = []
+        # Build input dicts — every merge-relevant blob from ExtractedEntity
+        merger_inputs = []
         for entity in entity_group:
-            attrs = json.loads(entity.attributes) if entity.attributes else {}
-            all_attributes.append(attrs)
+            merger_inputs.append({
+                "source": entity.source,
+                "entity_type": entity.entity_class,
+                "attributes": json.loads(entity.attributes) if entity.attributes else {},
+                "discovered_attributes": json.loads(entity.discovered_attributes) if entity.discovered_attributes else {},
+                "external_ids": json.loads(entity.external_ids) if entity.external_ids else {},
+            })
 
-        # Base is first entity's finalized form
-        merged = self._finalize_single(entity_group[0])
+        merged = EntityMerger().merge_entities(merger_inputs)
 
-        # Scalar fields: Entity key → extractor attribute key
-        scalar_map = {
-            "summary": "summary", "latitude": "latitude", "longitude": "longitude",
-            "street_address": "street_address", "city": "city", "postcode": "postcode",
-            "country": "country", "phone": "phone", "email": "email",
-            "website_url": "website",
-        }
-        list_fields = [
-            "canonical_activities", "canonical_roles",
-            "canonical_place_types", "canonical_access",
-        ]
-
-        for attrs in all_attributes[1:]:
-            # Fill null scalars from later sources
-            for entity_key, attr_key in scalar_map.items():
-                if merged.get(entity_key) is None and attrs.get(attr_key) is not None:
-                    merged[entity_key] = attrs[attr_key]
-
-            # Fill empty list fields from later sources
-            for field in list_fields:
-                if not merged.get(field) and attrs.get(field):
-                    merged[field] = attrs[field]
-
-            # Fill missing module keys from later sources
-            candidate_modules = attrs.get("modules", {})
-            if candidate_modules:
-                base_modules = all_attributes[0].get("modules", {})
-                for key, value in candidate_modules.items():
-                    if key not in base_modules:
-                        base_modules[key] = value
-                merged["modules"] = Json(base_modules)
-
-        return merged
+        return self._build_upsert_payload(
+            attributes=merged,
+            entity_class=merged.get("entity_type") or entity_group[0].entity_class,
+            external_ids=merged.get("external_ids", {}),
+            source_info=merged.get("source_info", {}),
+            field_confidence=merged.get("field_confidence", {}),
+            discovered_attributes=merged.get("discovered_attributes", {}),
+        )
 
     def _finalize_single(self, extracted: ExtractedEntity) -> Dict[str, Any]:
-        """Convert single ExtractedEntity to Entity format."""
+        """Convert single ExtractedEntity to Entity format via the shared
+        upsert-payload helper.  Provenance fields default to empty — there is
+        only one source, so no merge conflict to record."""
         attributes = json.loads(extracted.attributes) if extracted.attributes else {}
+        external_ids = json.loads(extracted.external_ids) if extracted.external_ids else {}
+        return self._build_upsert_payload(
+            attributes=attributes,
+            entity_class=extracted.entity_class,
+            external_ids=external_ids,
+        )
 
-        # Generate slug
+    def _build_upsert_payload(
+        self,
+        attributes: Dict[str, Any],
+        entity_class: str,
+        external_ids: Dict[str, Any],
+        source_info: Optional[Dict[str, Any]] = None,
+        field_confidence: Optional[Dict[str, Any]] = None,
+        discovered_attributes: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """Map a flat attributes dict to the canonical Entity upsert payload.
+
+        This is the single mapping surface for attribute-key → Entity-column
+        normalization (e.g. website → website_url, slug generation).  Both
+        _finalize_single and _finalize_group route through here so the mapping
+        stays in sync.
+        """
         name = attributes.get("entity_name", "unknown")
         slug = self.slug_generator.generate(name)
 
-        # Build Entity data (matching actual Entity schema)
-        external_ids_data = json.loads(extracted.external_ids) if extracted.external_ids else {}
-
         return {
             "slug": slug,
-            "entity_class": extracted.entity_class,
+            "entity_class": entity_class,
             "entity_name": name,
             "summary": attributes.get("summary"),
             "canonical_activities": attributes.get("canonical_activities", []),
@@ -191,9 +191,9 @@ class EntityFinalizer:
             "email": attributes.get("email"),
             "website_url": attributes.get("website"),
             "modules": Json(attributes.get("modules", {})),
-            "discovered_attributes": Json({}),
+            "discovered_attributes": Json(discovered_attributes or {}),
             "opening_hours": Json({}),
-            "source_info": Json({}),
-            "field_confidence": Json({}),
-            "external_ids": Json(external_ids_data),
+            "source_info": Json(source_info or {}),
+            "field_confidence": Json(field_confidence or {}),
+            "external_ids": Json(external_ids),
         }

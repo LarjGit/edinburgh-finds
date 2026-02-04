@@ -2,7 +2,7 @@
 
 **Current Phase:** Phase 2: Pipeline Implementation
 **Validation Entity:** West of Scotland Padel (validation) / Edinburgh Sports Club (investigation)
-**Last Updated:** 2026-02-04 (Stages 9-11 audited. Stage 9 COMPLIANT ✅. Stage 10: 5 gaps cataloged DM-001 through DM-005. Stage 11 COMPLIANT pending Stage 10.)
+**Last Updated:** 2026-02-04 (Stages 9-11 audited. Stage 9 COMPLIANT ✅. Stage 10: DM-001 ✅ DM-002 ✅, DM-003 through DM-005 remaining. Stage 11 COMPLIANT pending Stage 10.)
 
 ---
 
@@ -1360,18 +1360,15 @@ The correct fix is to wire `merging.py` into `entity_finalizer.py` and then add 
 
 **❌ GAPS IDENTIFIED:**
 
-- [ ] **DM-001: Missingness Filter Missing — empty strings block real values**
+- [x] **DM-001: Missingness Filter Missing — empty strings block real values** ✅ COMPLETE (fff4166)
   - **Principle:** Deterministic Merge (architecture.md 9.4 — "Prefer more complete values deterministically")
-  - **Location:** `engine/extraction/merging.py:138` (FieldMerger.merge_field — canonical location for the predicate)
-  - **Description:** FieldMerger uses `fv.value is not None` as the only missing-value test (merging.py:138). Empty string `""` passes the check and blocks a subsequent real value. Architecture requires `None`, `""`, whitespace-only strings, and known placeholders (`"N/A"`, `"n/a"`, `"NA"`, `"-"`, `"—"`) to all be treated as missing. The predicate must live in `merging.py` as the single source of truth — FieldMerger's filter step (currently line 138) must call it. Any remaining legacy fallback in `entity_finalizer.py` (currently line 145: `is None` check in the inline merge) must either be removed when DM-002 wires in EntityMerger, or replaced with an import of the same predicate if any path survives. Example: Google Places returns `summary=""` → currently blocks Serper's rich description.
-  - **Estimated Scope:** 1 file (`merging.py`), ~15 lines — add `_is_missing(value)` predicate, update FieldMerger filter at line 138 to use it
+  - **Location:** `engine/extraction/merging.py` — `_is_missing()` predicate + FieldMerger filter
+  - **Resolution:** Added `_is_missing(value)` predicate covering None, empty/whitespace strings, and curated placeholder sentinels (N/A, n/a, NA, -, –, —). FieldMerger.merge_field filters via `_is_missing`. 25 unit tests green.
 
-- [ ] **DM-002: EntityMerger not wired into EntityFinalizer — two conflicting merge paths**
+- [x] **DM-002: EntityMerger not wired into EntityFinalizer — two conflicting merge paths** ✅ COMPLETE
   - **Principle:** One canonical merge strategy (architecture.md 9.1 — "Merge resolves conflicts deterministically using metadata and rules")
-  - **Location:** `engine/orchestration/entity_finalizer.py:107-162`, `engine/extraction/merging.py:175-284`
-  - **Description:** `_finalize_group()` contains its own inline merge (first-non-null, no trust). `EntityMerger` in merging.py is fully trust-aware but never called. Wire EntityMerger into _finalize_group() and remove the inline merge. EntityMerger needs source metadata on each entity — finaliser must attach source from ExtractedEntity.source before calling merge.
-  - **Estimated Scope:** 2 files (`entity_finalizer.py` + `merging.py`), ~30 lines changed
-  - **Blocked by:** DM-001 (missingness filter must exist before wiring)
+  - **Location:** `engine/orchestration/entity_finalizer.py` — `_finalize_group()` + `_build_upsert_payload()`
+  - **Resolution:** Removed inline first-non-null merge from `_finalize_group()`. Now builds merger-input dicts (source, attributes, discovered_attributes, external_ids, entity_type) from each ExtractedEntity and delegates to `EntityMerger.merge_entities()`. Extracted shared `_build_upsert_payload()` helper — single mapping surface for attribute-key → Entity-column normalization (website → website_url, slug, Json wrapping). Both `_finalize_single` and `_finalize_group` route through it. Provenance (source_info, field_confidence) now flows from EntityMerger into the upsert payload. Regression test confirms trust-based winner is order-independent (both [serper, gp] and [gp, serper] produce identical payloads). 32 tests green.
 
 - [ ] **DM-003: No field-group strategies — all fields use same trust-only logic**
   - **Principle:** Field-Group Merge Strategies (architecture.md 9.4)
@@ -1426,7 +1423,7 @@ The correct fix is to wire `merging.py` into `entity_finalizer.py` and then add 
 - LA-011 (2026-02-04): Legacy keys swapped for canonical schema keys
 
 **⚠️ Pending:**
-- Provenance (source_info, field_confidence) not persisted — blocked on DM-002 through DM-005. Once EntityMerger is wired in, its source_info and field_confidence outputs flow through _finalize_group() into the upsert payload. No additional Stage 11 code change needed; this resolves when Stage 10 items complete.
+- Provenance (source_info, field_confidence) — DM-002 wired EntityMerger in; source_info and field_confidence now flow through _finalize_group() → _build_upsert_payload() → upsert. Provenance for multi-source groups is live. Single-source entities still emit empty provenance (expected — nothing to conflict). Remaining Stage 10 items (DM-003 through DM-005) will enrich provenance further but do not block Stage 11.
 
 ---
 

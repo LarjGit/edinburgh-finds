@@ -10,12 +10,14 @@ from engine.orchestration.entity_finalizer import EntityFinalizer
 class TestFinalizeSingleCanonicalKeys:
     """Unit tests: _finalize_single must read canonical schema keys only."""
 
-    def _make_extracted(self, attributes: dict, entity_class: str = "place", external_ids: dict = None):
+    def _make_extracted(self, attributes: dict, entity_class: str = "place", external_ids: dict = None, source: str = "unknown_source", discovered_attributes: dict = None):
         """Helper: build a mock ExtractedEntity with the given attributes JSON."""
         mock = Mock()
         mock.attributes = json.dumps(attributes)
         mock.external_ids = json.dumps(external_ids or {})
+        mock.discovered_attributes = json.dumps(discovered_attributes or {})
         mock.entity_class = entity_class
+        mock.source = source
         return mock
 
     def test_latitude_longitude_read_from_canonical_keys(self):
@@ -169,6 +171,78 @@ class TestFinalizeSingleCanonicalKeys:
         assert result["longitude"] == -3.1883
         assert result["street_address"] == "42 Test Road"
         assert result["phone"] == "+441315551234"
+
+
+class TestFinalizeGroupTrustOrderIndependence:
+    """_finalize_group must delegate to EntityMerger so that trust — not
+    insertion order — decides the winner.  Running the same group in both
+    orderings must produce identical payloads for every scalar field."""
+
+    def _make(self, attributes: dict, source: str, entity_class: str = "place",
+              external_ids: dict = None, discovered_attributes: dict = None):
+        mock = Mock()
+        mock.attributes = json.dumps(attributes)
+        mock.external_ids = json.dumps(external_ids or {})
+        mock.discovered_attributes = json.dumps(discovered_attributes or {})
+        mock.entity_class = entity_class
+        mock.source = source
+        return mock
+
+    @pytest.mark.asyncio
+    async def test_trust_wins_regardless_of_list_order(self):
+        """google_places (trust 70) summary must beat serper (trust 50)
+        whether google_places appears first or second in the group.
+        All scalar fields must be bit-identical across the two orderings."""
+        finalizer = EntityFinalizer(db=None)
+
+        gp = self._make(
+            source="google_places",
+            attributes={
+                "entity_name": "Order Test Venue",
+                "summary": "GP summary — high trust",
+                "latitude": 55.95,
+                "longitude": -3.19,
+            },
+            external_ids={"google_place_id": "ChIJ_gp_001"},
+            discovered_attributes={"note": "from GP"},
+        )
+
+        serper = self._make(
+            source="serper",
+            attributes={
+                "entity_name": "Order Test Venue",
+                "summary": "Serper summary — low trust",
+                "city": "Edinburgh",
+            },
+            external_ids={"serper_id": "serp_001"},
+            discovered_attributes={"note": "from serper"},
+        )
+
+        result_gp_first = await finalizer._finalize_group([gp, serper])
+        result_serper_first = await finalizer._finalize_group([serper, gp])
+
+        # --- trust winner (google_places) takes summary in both orderings ---
+        assert result_gp_first["summary"] == "GP summary — high trust"
+        assert result_serper_first["summary"] == "GP summary — high trust"
+
+        # --- every scalar / array field is order-independent ---
+        scalar_keys = [
+            "slug", "entity_class", "entity_name", "summary",
+            "latitude", "longitude", "street_address", "city",
+            "postcode", "country", "phone", "email", "website_url",
+            "canonical_activities", "canonical_roles",
+            "canonical_place_types", "canonical_access",
+        ]
+        for key in scalar_keys:
+            assert result_gp_first[key] == result_serper_first[key], (
+                f"field {key!r} differs by input order: "
+                f"{result_gp_first[key]!r} vs {result_serper_first[key]!r}"
+            )
+
+        # --- non-overlapping fields from both sources survived the merge ---
+        assert result_gp_first["latitude"] == 55.95
+        assert result_gp_first["longitude"] == -3.19
+        assert result_gp_first["city"] == "Edinburgh"
 
 
 @pytest.mark.slow
