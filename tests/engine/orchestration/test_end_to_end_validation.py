@@ -145,6 +145,18 @@ async def test_one_perfect_entity_end_to_end_validation():
             "This proves Stage 7 (Lens Application) mapping rules executed."
         )
 
+        # Debug: Print entity data for inspection
+        print("\n" + "=" * 80)
+        print("ENTITY DEBUG INFO")
+        print("=" * 80)
+        print(f"entity_name: {entity.entity_name}")
+        print(f"entity_class: {entity.entity_class}")
+        print(f"summary: {entity.summary}")
+        print(f"canonical_activities: {entity.canonical_activities}")
+        print(f"canonical_place_types: {entity.canonical_place_types}")
+        print(f"modules: {entity.modules}")
+        print("=" * 80)
+
         # 3. Modules field populated (Stage 7: Module Extraction)
         # Per system-vision.md 6.3: "at least one module field populated"
         assert entity.modules is not None, (
@@ -158,13 +170,29 @@ async def test_one_perfect_entity_end_to_end_validation():
             "This proves Stage 7 (Module Extraction) executed and modules triggered."
         )
 
-        # 4. Location data (for sports facility)
-        # Not strictly required by system-vision.md but good validation for Powerleague
-        assert entity.latitude is not None, "latitude should be extracted"
-        assert entity.longitude is not None, "longitude should be extracted"
+        # Validate sports_facility module structure
+        assert "sports_facility" in entity.modules, (
+            f"sports_facility module should be present for padel activity (got modules: {list(entity.modules.keys())})"
+        )
+        assert isinstance(entity.modules["sports_facility"], dict), (
+            "sports_facility module should be a structured object"
+        )
+        assert "padel_courts" in entity.modules["sports_facility"], (
+            f"sports_facility module should contain padel_courts field (got: {list(entity.modules['sports_facility'].keys())})"
+        )
+        assert "total" in entity.modules["sports_facility"]["padel_courts"], (
+            f"padel_courts should contain total field (got: {list(entity.modules['sports_facility']['padel_courts'].keys())})"
+        )
+        assert entity.modules["sports_facility"]["padel_courts"]["total"] > 0, (
+            f"padel_courts.total should be populated with count > 0 (got: {entity.modules['sports_facility']['padel_courts']['total']})"
+        )
 
         # === SUCCESS: "One Perfect Entity" Validation Passed ===
-        # Print validation success for audit trail
+        # Constitutional requirements (system-vision.md 6.3) are satisfied:
+        # - Non-empty canonical dimensions ✅
+        # - At least one module field populated ✅
+        # Note: latitude/longitude extraction is tracked separately (LA-011)
+        # and is NOT a constitutional OPE requirement.
         print("\n" + "=" * 80)
         print("✅ ONE PERFECT ENTITY VALIDATION PASSED")
         print("=" * 80)
@@ -298,4 +326,85 @@ async def test_modules_field_structure():
                     )
 
     finally:
+        await db.disconnect()
+
+
+@pytest.mark.slow
+@pytest.mark.asyncio
+async def test_ope_coordinate_extraction():
+    """
+    LA-011: Validate latitude/longitude extraction for OPE validation entity.
+
+    This is a SEPARATE gate from the constitutional "One Perfect Entity"
+    validation (test_one_perfect_entity_end_to_end_validation). Coordinates
+    are NOT required by system-vision.md 6.3 but are needed for full entity
+    data quality and downstream features (directions, mapping, geo-search).
+
+    Tracked as: LA-011 (audit-catalog.md)
+    """
+    ctx = bootstrap_lens("edinburgh_finds")
+
+    db = Prisma()
+    await db.connect()
+
+    try:
+        # Clean before run
+        await db.entity.delete_many(
+            where={
+                "OR": [
+                    {"entity_name": {"contains": "West of Scotland Padel"}},
+                    {"entity_name": {"contains": "west of scotland padel"}},
+                ]
+            }
+        )
+
+        request = IngestRequest(
+            ingestion_mode=IngestionMode.RESOLVE_ONE,
+            query="west of scotland padel glasgow",
+            persist=True,
+        )
+
+        await orchestrate(request, ctx=ctx)
+
+        entities = await db.entity.find_many(
+            where={
+                "OR": [
+                    {"entity_name": {"contains": "West of Scotland Padel"}},
+                    {"entity_name": {"contains": "west of scotland padel"}},
+                ]
+            }
+        )
+
+        assert len(entities) > 0, "OPE validation entity must exist"
+        entity = entities[0]
+
+        print("\n" + "=" * 80)
+        print("LA-011: COORDINATE EXTRACTION STATE")
+        print("=" * 80)
+        print(f"entity_name: {entity.entity_name}")
+        print(f"latitude:    {entity.latitude}")
+        print(f"longitude:   {entity.longitude}")
+        print(f"city:        {entity.city}")
+        print(f"street_address: {entity.street_address}")
+        print("=" * 80)
+
+        # LA-011 assertion: coordinates must be populated
+        assert entity.latitude is not None, (
+            f"latitude should be extracted for {entity.entity_name}. "
+            "See LA-011 in audit-catalog.md for source-of-truth investigation."
+        )
+        assert entity.longitude is not None, (
+            f"longitude should be extracted for {entity.entity_name}. "
+            "See LA-011 in audit-catalog.md for source-of-truth investigation."
+        )
+
+    finally:
+        await db.entity.delete_many(
+            where={
+                "OR": [
+                    {"entity_name": {"contains": "West of Scotland Padel"}},
+                    {"entity_name": {"contains": "west of scotland padel"}},
+                ]
+            }
+        )
         await db.disconnect()

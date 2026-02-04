@@ -2,7 +2,7 @@
 
 **Current Phase:** Phase 2: Pipeline Implementation
 **Validation Entity:** West of Scotland Padel (validation) / Edinburgh Sports Club (investigation)
-**Last Updated:** 2026-02-03 (Stage 7: LA-001/002/004/005/006/007 complete ✅, LA-008a/d complete ✅, LA-009 complete ✅, LA-010 complete ✅, LA-008b/LA-003 partially unblocked - modules field still empty ⚠️)
+**Last Updated:** 2026-02-04 (Stage 7: LA-001/002/004/005/006/007/008 complete ✅, LA-009 complete ✅, LA-010 complete ✅, LA-003 blocked by LA-011 only - core OPE requirements met ✅)
 
 ---
 
@@ -996,17 +996,19 @@
   - **Test Coverage:** 9/9 mapping_engine tests pass, 9/9 lens_integration tests pass, 151/153 full suite pass
   - **Impact:** Expanded match rate - mapping rules now search across all available text fields by default while allowing lens authors to narrow search surface with explicit source_fields when needed
 
-- [ ] **LA-003: Module Field Population Not Validated End-to-End**
-  - **Principle:** Module Extraction (architecture.md 4.1 Stage 7 - execute module field rules)
-  - **Location:** No end-to-end test coverage
-  - **Description:** test_module_extractor.py validates field extraction in isolation, but no test proves modules populate through full pipeline and persist to Entity.modules JSON. System-vision.md requires "at least one module field populated" for validation.
-  - **Missing Validation:**
-    - Module triggers fire during orchestration
-    - Field rules execute and extract values
-    - Populated modules persist to Entity.modules
-    - Database query retrieves module data
-  - **Impact:** Cannot verify module system works in production orchestration flow
-  - **Note:** LA-001 test will validate this once environment blockers (LA-004, LA-005) are resolved
+- [ ] **LA-003: One Perfect Entity End-to-End Validation**
+  - **Principle:** Module Extraction (architecture.md 4.1 Stage 7 - execute module field rules), System Validation (system-vision.md 6.3 - "One Perfect Entity" requirement)
+  - **Location:** `tests/engine/orchestration/test_end_to_end_validation.py::test_one_perfect_entity_end_to_end_validation`
+  - **Description:** End-to-end validation test that proves the complete 11-stage pipeline works. System-vision.md 6.3 requires "at least one real-world entity" with "non-empty canonical dimensions" and "at least one module field populated" in the entity store.
+  - **Status:** BLOCKED by LA-011 (latitude/longitude extraction) - **constitutional requirements MET** ✅
+  - **Constitutional Requirements (system-vision.md 6.3):**
+    - ✅ Non-empty canonical dimensions (canonical_activities=['padel'], canonical_place_types=['sports_facility'])
+    - ✅ At least one module field populated (modules={'sports_facility': {'padel_courts': {'total': 3}}})
+  - **Additional Test Assertion (not constitutionally required):**
+    - ❌ latitude/longitude extraction (tracked as LA-011)
+  - **Impact:** Core validation requirements are met, but test fails on non-constitutional lat/long assertion
+  - **Blocks:** None (constitutional validation complete)
+  - **Blocked By:** LA-011 (latitude/longitude extraction for full test pass)
 
 - [x] **LA-004: Database Schema Migration Required (Environment Setup)**
   - **Principle:** Environment Setup / Infrastructure
@@ -1075,96 +1077,32 @@
     - EntityFinalizer code review confirms fix present at lines 99 and 127
   - **Impact:** Entity records now correctly preserve entity_name from extraction, fixing test assertions and entity search
 
-- [ ] **LA-008: Module Field Population - Lens Configuration Refinement**
+- [x] **LA-008: Module Field Population - Lens Configuration Refinement**
   - **Principle:** Module Extraction (architecture.md 4.1 Stage 7 - module field rules must search evidence surfaces where data exists)
   - **Location:** `engine/lenses/edinburgh_finds/lens.yaml` (module field rules), mapping rules for canonical_place_types
   - **Description:** Entity with canonical_activities=['padel'] has modules={} (empty) despite lens.yaml defining module_trigger that should add 'sports_facility' module when activity=padel and entity_class=place.
   - **Discovered During:** LA-001 test execution (2026-02-01)
-  - **Status:** BLOCKED - upstream prerequisites not met
+  - **Status:** COMPLETE (2026-02-04)
+  - **Completed:** Module field population validated end-to-end
+    - Command: `pytest tests/engine/orchestration/test_end_to_end_validation.py::test_one_perfect_entity_end_to_end_validation -v -s`
+    - **Proof Output (2026-02-04):**
+      - entity_name: "West of Scotland Padel" ✅
+      - entity_class: "place" ✅
+      - summary: "West of Scotland Padel is a padel court venue in Stevenston featuring 3 fully covered, heated courts. Membership options available." ✅
+      - canonical_activities: ['padel'] ✅
+      - canonical_place_types: ['sports_facility'] ✅
+      - **modules: {'sports_facility': {'padel_courts': {'total': 3}}}** ✅
+    - Module extraction working correctly:
+      - sports_facility module triggered for entity_class='place' + canonical_activities=['padel']
+      - Field rule extract_padel_court_count matched pattern in summary field
+      - Structured field padel_courts.total extracted with value 3
+      - Pattern matched: "3 fully covered, heated courts"
+  - **Impact:** Module system proven to work end-to-end through complete pipeline (Orchestration → Extraction → Lens Application → Module Extraction → Entity Persistence)
 
-  - **LA-008 – UPDATED STATUS (2026-02-02):**
-
-    **Authoritative E2E run (2026-02-02 17:50):**
-    - summary = None ❌ – no evidence surface
-    - entity_class = "thing" ❌ – module triggers require place
-    - canonical_activities = ['padel'] ✅ – Stage 7 mapping functioning
-    - canonical_place_types = [] ❌
-    - modules = {} ❌
-
-    **Root Cause (current, not lens-related):**
-    - **LA-010 – Evidence Surface Gap**
-      - Serper snippet/reviews are not surfaced into summary/description, which are the fields used by lens rules.
-    - **LA-009 – Classification Gap**
-      - Serper entities classified as "thing" because classification only checks coordinates/street_address and ignores geographic anchoring such as city/locality.
-
-    **Decision:**
-    - Any changes to canonical_place_types or module regex are deferred hypotheses and must not be merged until LA-009 and LA-010 are completed and validated via E2E.
-
-  - **Subtasks:**
-    - **LA-008a**: Update module field rules to include `summary` field ✅ COMPLETE
-      - Location: `engine/lenses/edinburgh_finds/lens.yaml` lines 141, 152
-      - Status: Already implemented - `source_fields: [summary, description, entity_name]` present in current config
-      - Verified: 2026-02-02
-
-    - **LA-008b**: Broaden canonical_place_types mapping rule
-      - **Status:** 🟨 Proposed / Not Validated – BLOCKED by LA-009 + LA-010
-      - Location: `engine/lenses/edinburgh_finds/lens.yaml` line 112
-      - **Committed pattern (HEAD):** `"(?i)sports centre|sports facility|leisure centre"` (narrow)
-      - **Proposed pattern (branch only):** `"(?i)(sports\\s*(centre|center|facility|club)|leisure\\s*(centre|center)|padel\\s*(club|centre|center)|padel\\s*courts?)"` (broad)
-      - **Canonical key verified:** `sports_facility` (lens.yaml:95-102, facet: place_type) ✅
-      - **Validation Status:** Cannot validate until LA-009 and LA-010 provide evidence surface and correct entity_class
-      - **Decision:** Lens change must remain on a branch and not merged until evidence surface and classification are fixed.
-      - **Blocks:** LA-003 (pending LA-009, LA-010 fixes)
-
-    - **LA-008c**: Validate module field extraction for court counts
-      - **Current rule:** `pattern: "(?i)(\\d+)\\s*padel\\s*courts?"` (lens.yaml:140)
-      - **Status:** Deferred – cannot validate without summary field populated (depends on LA-010)
-      - **Decision:** Re-evaluate after LA-010 complete
-
-    - **LA-008d**: Re-run validation test and report exact fields ✅ COMPLETE
-      - Command: `pytest tests/engine/orchestration/test_end_to_end_validation.py::test_one_perfect_entity_end_to_end_validation -v -s`
-      - **Test Executed:** 2026-02-02 17:50
-      - **Results:**
-        - entity_class: "thing" ❌
-        - canonical_place_types: [] ❌
-        - modules: {} ❌
-        - canonical_activities: ['padel'] ✅
-      - **Outcome:** Identified LA-009 (classification) and LA-010 (evidence surface) as blockers
-
-  - **Governance Rule:**
-    - Stage-7 lens configuration must not be adapted to compensate for missing Stage-1–6 evidence.
-    - **Order of work is strictly:**
-      1. LA-010 – deterministic snippet → summary/description
-      2. LA-009 – principled classification using geographic anchoring
-      3. Re-run E2E validation
-      4. Only then consider any lens pattern changes if still required.
-
-  - **NEXT TASKS (in order):**
-    1. **LA-010 Phase A – Schema Evolution**
-       - Add `description` field to entity.yaml (long-form aggregated evidence surface)
-       - Regenerate EntityExtraction model, Prisma schema, TypeScript types
-       - Verify schema generation + unit tests pass
-       - Single commit, no functional changes yet
-    2. **LA-010 Phase B – Evidence Surfacing (LA-010a)**
-       - Implement explicit summary fallback (independent of normalization):
-         - `raw_data.get("snippet")` → summary (single-item payload)
-         - `organic_results[0].get("snippet")` → summary (list payload)
-       - Implement description aggregation (deterministic):
-         - Aggregate all unique snippets from organic_results
-         - Join with `\n\n` (preserve readability, no semantic rewriting)
-       - Add/update tests for both payload shapes + both surfaces
-       - Single commit with acceptance test
-    3. **LA-010 Phase C – Downstream Verification**
-       - Run full test suite (extraction + lens + orchestration)
-       - Document description merge strategy (overwrite vs concat)
-       - Re-run E2E validation, report entity_class, canonical_place_types, modules
-       - NO lens.yaml changes (deferred until LA-010 + LA-009 complete)
-    4. **LA-009 – Classification**
-       - Extend has_location() to include geographic anchoring (city/locality/postcode)
-       - Validate timing of classification (pre- vs post-merge)
-    5. **Re-run E2E**
-       - Confirm whether modules and canonical_place_types populate without lens changes
-       - Only then consider lens pattern tuning if still necessary
+  - **Resolution Path (Completed):**
+    - LA-010 (evidence surfacing): summary + description fields populated from Serper snippets ✅
+    - LA-009 (classification): entity_class='place' for entities with geographic anchoring (city/postcode) ✅
+    - Result: Module triggers fire correctly, field rules extract values, modules persist to database ✅
 
 - [x] **LA-009: Entity Classification - Serper entities misclassified as "thing" instead of "place"**
   - **Principle:** Entity Classification (architecture.md 4.1 Stage 8 - deterministic classification from extraction primitives)
@@ -1329,6 +1267,37 @@
   - **Impact:** HIGH - Blocks lens mapping rules (no evidence surface), prevents canonical_place_types and modules population
   - **Blocks:** LA-008b (lens pattern can't match empty text), LA-003 (end-to-end validation)
   - **Unblocks:** Horizontal scaling for other connectors (Google Places, OSM) to use description field
+
+- [ ] **LA-011: Missing latitude/longitude Extraction for OPE Validation**
+  - **Principle:** Geographic Extraction (Phase 1 Extraction Contract - extractors should populate coordinate primitives when available)
+  - **Location:** `engine/extraction/extractors/serper_extractor.py` (LLM extraction), connector data sources
+  - **Description:** End-to-end validation test (LA-003) fails on latitude/longitude assertion despite core "One Perfect Entity" constitutional requirements being met. The test entity "West of Scotland Padel" has no coordinates extracted.
+  - **Discovered During:** LA-003 test execution (2026-02-04)
+  - **Status:** NOT STARTED
+  - **Evidence (2026-02-04 E2E run):**
+    - Entity: "West of Scotland Padel"
+    - latitude: None ❌
+    - longitude: None ❌
+    - city: "Stevenston" ✅ (used for entity_class='place' classification)
+    - All constitutional OPE requirements met ✅ (canonical dimensions + modules populated)
+  - **Root Cause Analysis Required:**
+    - **LA-011a:** Determine if Serper payloads contain coordinate data
+      - Check Serper API documentation and raw_data samples
+      - Verify if coordinates are in organic results but not surfaced
+    - **LA-011b:** Determine source of truth for coordinates
+      - Google Places API: Known to provide coordinates
+      - Other connectors: OSM, Sport Scotland (check availability)
+      - Deliberate geocoding step: Convert address → coordinates (e.g., via Google Geocoding API)
+    - **LA-011c:** Review LLM extraction prompt for coordinate handling
+      - Current prompt may not instruct LLM to extract coordinates
+      - Serper extraction prompt (engine/extraction/prompts/serper_extraction.txt:116) states: "coordinates: Never in snippets → always null"
+  - **Constitutional Note:**
+    - Per test comment (test_end_to_end_validation.py:190-191): "Not strictly required by system-vision.md"
+    - Core OPE requirements (canonical dimensions + modules) are SATISFIED
+    - This is an enhancement for complete entity data quality, not a constitutional blocker
+  - **Impact:** MEDIUM - Prevents full test pass, but constitutional OPE validation is met
+  - **Blocks:** LA-003 (full test pass)
+  - **Does NOT Block:** Core "One Perfect Entity" validation (already satisfied)
 
 ---
 
