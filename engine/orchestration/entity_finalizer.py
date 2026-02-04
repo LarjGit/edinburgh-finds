@@ -95,8 +95,7 @@ class EntityFinalizer:
         for entity in extracted_entities:
             # Use slug as identity key (external IDs would need more complex matching)
             attributes = json.loads(entity.attributes)
-            # Try entity_name first (new extraction), fallback to name (old extraction)
-            name = attributes.get("entity_name") or attributes.get("name", "unknown")
+            name = attributes.get("entity_name", "unknown")
             key = f"slug:{self.slug_generator.generate(name)}"
 
             if key not in groups:
@@ -109,22 +108,65 @@ class EntityFinalizer:
         self,
         entity_group: List[ExtractedEntity]
     ) -> Dict[str, Any]:
-        """Finalize a group of ExtractedEntity records into Entity data."""
+        """Finalize a group of ExtractedEntity records into Entity data.
+
+        Multi-source merge strategy: first non-null value wins for each scalar
+        field.  List fields (canonical_* arrays) use the first non-empty list.
+        The first entity in the group is the base; subsequent entities fill any
+        remaining None / empty-list slots.
+        """
         if len(entity_group) == 1:
-            # Single source - no merging needed
             return self._finalize_single(entity_group[0])
 
-        # Multi-source merging (simplified - just use first for now)
-        # TODO: Implement proper EntityMerger integration
-        return self._finalize_single(entity_group[0])
+        # Collect raw attributes from all entities in group
+        all_attributes = []
+        for entity in entity_group:
+            attrs = json.loads(entity.attributes) if entity.attributes else {}
+            all_attributes.append(attrs)
+
+        # Base is first entity's finalized form
+        merged = self._finalize_single(entity_group[0])
+
+        # Scalar fields: Entity key → extractor attribute key
+        scalar_map = {
+            "summary": "summary", "latitude": "latitude", "longitude": "longitude",
+            "street_address": "street_address", "city": "city", "postcode": "postcode",
+            "country": "country", "phone": "phone", "email": "email",
+            "website_url": "website",
+        }
+        list_fields = [
+            "canonical_activities", "canonical_roles",
+            "canonical_place_types", "canonical_access",
+        ]
+
+        for attrs in all_attributes[1:]:
+            # Fill null scalars from later sources
+            for entity_key, attr_key in scalar_map.items():
+                if merged.get(entity_key) is None and attrs.get(attr_key) is not None:
+                    merged[entity_key] = attrs[attr_key]
+
+            # Fill empty list fields from later sources
+            for field in list_fields:
+                if not merged.get(field) and attrs.get(field):
+                    merged[field] = attrs[field]
+
+            # Fill missing module keys from later sources
+            candidate_modules = attrs.get("modules", {})
+            if candidate_modules:
+                base_modules = all_attributes[0].get("modules", {})
+                for key, value in candidate_modules.items():
+                    if key not in base_modules:
+                        base_modules[key] = value
+                merged["modules"] = Json(base_modules)
+
+        return merged
 
     def _finalize_single(self, extracted: ExtractedEntity) -> Dict[str, Any]:
         """Convert single ExtractedEntity to Entity format."""
         attributes = json.loads(extracted.attributes) if extracted.attributes else {}
 
         # Generate slug
-        # Try entity_name first (new extraction), fallback to name (old extraction)
-        name = attributes.get("entity_name") or attributes.get("name", "unknown")
+        name = attributes.get("entity_name", "unknown")
         slug = self.slug_generator.generate(name)
 
         # Build Entity data (matching actual Entity schema)
@@ -139,15 +181,15 @@ class EntityFinalizer:
             "canonical_roles": attributes.get("canonical_roles", []),
             "canonical_place_types": attributes.get("canonical_place_types", []),
             "canonical_access": attributes.get("canonical_access", []),
-            "latitude": attributes.get("location_lat"),
-            "longitude": attributes.get("location_lng"),
-            "street_address": attributes.get("address_full") or attributes.get("address_street"),
-            "city": attributes.get("address_city"),
-            "postcode": attributes.get("address_postal_code"),
-            "country": attributes.get("address_country"),
-            "phone": attributes.get("contact_phone"),
-            "email": attributes.get("contact_email"),
-            "website_url": attributes.get("contact_website"),
+            "latitude": attributes.get("latitude"),
+            "longitude": attributes.get("longitude"),
+            "street_address": attributes.get("street_address"),
+            "city": attributes.get("city"),
+            "postcode": attributes.get("postcode"),
+            "country": attributes.get("country"),
+            "phone": attributes.get("phone"),
+            "email": attributes.get("email"),
+            "website_url": attributes.get("website"),
             "modules": Json(attributes.get("modules", {})),
             "discovered_attributes": Json({}),
             "opening_hours": Json({}),

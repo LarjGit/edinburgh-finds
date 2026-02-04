@@ -168,3 +168,76 @@ class TestExtractionCorrectness:
 
         # These raw observations will flow to discovered_attributes
         # and be interpreted by lens mapping rules in Phase 2
+
+    def test_extract_multipoint_coordinates(self, mock_ctx):
+        """
+        Sport Scotland WFS returns MultiPoint geometry for many facilities.
+        Coordinates must be extracted from coordinates[0] (first point).
+        GeoJSON order is [longitude, latitude].
+        """
+        extractor = SportScotlandExtractor()
+
+        raw_data = {
+            "type": "Feature",
+            "id": "pub_sptk.12572",
+            "geometry": {
+                "type": "MultiPoint",
+                "coordinates": [
+                    [-3.0653, 55.9245]
+                ]
+            },
+            "properties": {
+                "name": "Stevenston Facility",
+                "address": "BIRCHLEA, 33 OLD CRAIGHALL, MUSSELBURGH",
+            }
+        }
+
+        extracted = extractor.extract(raw_data, ctx=mock_ctx)
+
+        assert extracted["latitude"] == 55.9245, (
+            f"MultiPoint latitude should be extracted from coordinates[0][1] "
+            f"(got {extracted.get('latitude')})"
+        )
+        assert extracted["longitude"] == -3.0653, (
+            f"MultiPoint longitude should be extracted from coordinates[0][0] "
+            f"(got {extracted.get('longitude')})"
+        )
+
+    def test_extract_multipoint_deterministic_first_point(self, mock_ctx):
+        """
+        Deterministic first-point selection: when MultiPoint contains multiple
+        coordinate pairs the extractor MUST always return coordinates[0].
+
+        Regression guard: ensures no sorting, averaging, or iteration-order
+        dependence (system-vision.md Invariant 4 — Determinism).
+        """
+        extractor = SportScotlandExtractor()
+
+        raw_data = {
+            "type": "Feature",
+            "id": "multi.999",
+            "geometry": {
+                "type": "MultiPoint",
+                "coordinates": [
+                    [-3.1883, 55.9533],   # Point 0 — must be selected
+                    [-3.0653, 55.9245],   # Point 1
+                    [-2.9876, 55.8712],   # Point 2
+                ]
+            },
+            "properties": {
+                "name": "Multi-Point Facility",
+            }
+        }
+
+        # Run extraction 10 times — output must be identical every time
+        results = [extractor.extract(raw_data, ctx=mock_ctx) for _ in range(10)]
+
+        for result in results:
+            assert result["longitude"] == -3.1883, (
+                f"MultiPoint must deterministically select coordinates[0][0] "
+                f"(got {result.get('longitude')})"
+            )
+            assert result["latitude"] == 55.9533, (
+                f"MultiPoint must deterministically select coordinates[0][1] "
+                f"(got {result.get('latitude')})"
+            )

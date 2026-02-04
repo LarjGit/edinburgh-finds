@@ -1268,36 +1268,20 @@
   - **Blocks:** LA-008b (lens pattern can't match empty text), LA-003 (end-to-end validation)
   - **Unblocks:** Horizontal scaling for other connectors (Google Places, OSM) to use description field
 
-- [ ] **LA-011: Missing latitude/longitude Extraction for OPE Validation**
+- [x] **LA-011: Missing latitude/longitude Extraction for OPE Validation**
   - **Principle:** Geographic Extraction (Phase 1 Extraction Contract - extractors should populate coordinate primitives when available)
-  - **Location:** `engine/extraction/extractors/serper_extractor.py` (LLM extraction), connector data sources
-  - **Description:** End-to-end validation test (LA-003) fails on latitude/longitude assertion despite core "One Perfect Entity" constitutional requirements being met. The test entity "West of Scotland Padel" has no coordinates extracted.
+  - **Location:** `engine/orchestration/entity_finalizer.py`, `engine/extraction/extractors/sport_scotland_extractor.py`
+  - **Description:** End-to-end validation test (LA-003) fails on latitude/longitude assertion. Two root causes found and fixed:
+    1. **entity_finalizer.py `_finalize_single`** was reading 9 legacy attribute keys (`location_lat`, `location_lng`, `address_full`, `address_street`, `address_city`, `address_postal_code`, `address_country`, `contact_phone`, `contact_email`, `contact_website`) instead of the canonical schema keys that extractors actually emit (`latitude`, `longitude`, `street_address`, `city`, `postcode`, `country`, `phone`, `email`, `website`). Any coordinates emitted by extractors were silently discarded.
+    2. **sport_scotland_extractor.py** had no MultiPoint geometry handler — Sport Scotland WFS returns `"type": "MultiPoint"` for most facilities. Added first-point extraction with deterministic guarantee.
   - **Discovered During:** LA-003 test execution (2026-02-04)
-  - **Status:** NOT STARTED
-  - **Evidence (2026-02-04 E2E run):**
-    - Entity: "West of Scotland Padel"
-    - latitude: None ❌
-    - longitude: None ❌
-    - city: "Stevenston" ✅ (used for entity_class='place' classification)
-    - All constitutional OPE requirements met ✅ (canonical dimensions + modules populated)
-  - **Root Cause Analysis Required:**
-    - **LA-011a:** Determine if Serper payloads contain coordinate data
-      - Check Serper API documentation and raw_data samples
-      - Verify if coordinates are in organic results but not surfaced
-    - **LA-011b:** Determine source of truth for coordinates
-      - Google Places API: Known to provide coordinates
-      - Other connectors: OSM, Sport Scotland (check availability)
-      - Deliberate geocoding step: Convert address → coordinates (e.g., via Google Geocoding API)
-    - **LA-011c:** Review LLM extraction prompt for coordinate handling
-      - Current prompt may not instruct LLM to extract coordinates
-      - Serper extraction prompt (engine/extraction/prompts/serper_extraction.txt:116) states: "coordinates: Never in snippets → always null"
-  - **Constitutional Note:**
-    - Per test comment (test_end_to_end_validation.py:190-191): "Not strictly required by system-vision.md"
-    - Core OPE requirements (canonical dimensions + modules) are SATISFIED
-    - This is an enhancement for complete entity data quality, not a constitutional blocker
-  - **Impact:** MEDIUM - Prevents full test pass, but constitutional OPE validation is met
-  - **Blocks:** LA-003 (full test pass)
-  - **Does NOT Block:** Core "One Perfect Entity" validation (already satisfied)
+  - **Status:** COMPLETE — awaiting E2E rerun proof (2026-02-04)
+  - **Changes (2026-02-04):**
+    - `engine/orchestration/entity_finalizer.py`: Swapped all 9 legacy keys → canonical keys in `_finalize_single`. Implemented multi-source merge in `_finalize_group` (first-non-null wins). Removed `name` legacy fallback.
+    - `engine/extraction/extractors/sport_scotland_extractor.py`: Added MultiPoint branch before Point branch. Fixed `validate()` fallback from `address_city` → `city`.
+    - `tests/engine/orchestration/test_entity_finalizer.py`: Added 6 unit tests (canonical key reads, legacy key rejection, name-key rejection, multi-source merge).
+    - `tests/engine/extraction/extractors/test_sport_scotland_extractor.py`: Added MultiPoint single-point test + deterministic multi-point test (10-run stability).
+  - **Blocks:** LA-003 (full test pass) — E2E rerun required to close
 
 ---
 

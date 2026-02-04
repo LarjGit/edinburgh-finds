@@ -101,11 +101,18 @@ class SportScotlandExtractor(BaseExtractor):
         # Coordinates from GeoJSON geometry
         # NOTE: GeoJSON uses [longitude, latitude] order
         geometry = raw_data.get("geometry", {})
-        if geometry.get("type") == "Point" and "coordinates" in geometry:
+        geom_type = geometry.get("type")
+        if geom_type == "MultiPoint" and "coordinates" in geometry:
+            # MultiPoint: coordinates is array of [lng, lat] pairs — use first point
+            coords = geometry["coordinates"]
+            if coords and len(coords[0]) >= 2:
+                extracted["longitude"] = coords[0][0]
+                extracted["latitude"] = coords[0][1]
+        elif geom_type == "Point" and "coordinates" in geometry:
             coords = geometry["coordinates"]
             if len(coords) >= 2:
-                extracted["longitude"] = coords[0]  # First element is longitude
-                extracted["latitude"] = coords[1]   # Second element is latitude
+                extracted["longitude"] = coords[0]
+                extracted["latitude"] = coords[1]
 
         # Contact information
         if "phone" in properties:
@@ -177,9 +184,9 @@ class SportScotlandExtractor(BaseExtractor):
 
         # Ensure required fields exist (use fallback if missing)
         if "entity_name" not in validated or not validated["entity_name"]:
-            # Fallback: try to construct name from facility_type + address_city
+            # Fallback: try to construct name from facility_type + city
             facility_type = validated.get("facility_type", "Sports Facility")
-            city = validated.get("address_city", "Unknown")
+            city = validated.get("city", "Unknown")
             validated["entity_name"] = f"{facility_type} - {city}"
 
         # Validate phone format (should already be E.164, but double-check)
