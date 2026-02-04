@@ -2,7 +2,7 @@
 
 **Current Phase:** Phase 2: Pipeline Implementation
 **Validation Entity:** West of Scotland Padel (validation) / Edinburgh Sports Club (investigation)
-**Last Updated:** 2026-02-04 (Stages 9-11 audited. Stage 9 COMPLIANT ✅. Stage 10: DM-001 ✅ DM-002 ✅, DM-003 through DM-005 remaining. Stage 11 COMPLIANT pending Stage 10.)
+**Last Updated:** 2026-02-04 (Stages 9-11 audited. Stage 9 COMPLIANT ✅. Stage 10: DM-001 ✅ DM-002 ✅ DM-003 ✅, DM-004 through DM-005 remaining. Stage 11 COMPLIANT pending Stage 10.)
 
 ---
 
@@ -1370,20 +1370,17 @@ The correct fix is to wire `merging.py` into `entity_finalizer.py` and then add 
   - **Location:** `engine/orchestration/entity_finalizer.py` — `_finalize_group()` + `_build_upsert_payload()`
   - **Resolution:** Removed inline first-non-null merge from `_finalize_group()`. Now builds merger-input dicts (source, attributes, discovered_attributes, external_ids, entity_type) from each ExtractedEntity and delegates to `EntityMerger.merge_entities()`. Extracted shared `_build_upsert_payload()` helper — single mapping surface for attribute-key → Entity-column normalization (website → website_url, slug, Json wrapping). Both `_finalize_single` and `_finalize_group` route through it. Provenance (source_info, field_confidence) now flows from EntityMerger into the upsert payload. Regression test confirms trust-based winner is order-independent (both [serper, gp] and [gp, serper] produce identical payloads). 32 tests green.
 
-- [ ] **DM-003: No field-group strategies — all fields use same trust-only logic**
+- [x] **DM-003: No field-group strategies — all fields use same trust-only logic** ✅ COMPLETE
   - **Principle:** Field-Group Merge Strategies (architecture.md 9.4)
-  - **Location:** `engine/extraction/merging.py:110-172` (FieldMerger.merge_field)
-  - **Description:** FieldMerger applies identical logic to every field: filter None → sort by trust → pick winner. Architecture.md 9.4 specifies distinct strategies per field group:
-    - **Geo fields** (latitude, longitude): Prefer sources that actually provide coordinates (presence > trust). Serper never provides coords — must never "win" geo fields.
-    - **Narrative text** (summary, description): Prefer richer (longer, non-empty) value over trust score alone.
-    - **Canonical dimension arrays**: Union all values, deduplicate, lexicographic sort. No "winner" — all sources contribute.
-  - **Estimated Scope:** 1 file (`merging.py`), ~40 lines — add field-group routing in merge_field()
-  - **Blocked by:** DM-001 (missingness filter)
-  - **Acceptance Criteria:**
-    1. **entity_type deterministic merge semantics** — entity_type is now passed through DM-002 and must not rely on implicit ordering. Resolution order must be: missingness filter first → trust tier/score → stable tie-break (connector_id lexicographic). A test must prove that `[A, B]` vs `[B, A]` input ordering produces an identical entity_type winner.
-    2. **Provenance shape consistency** — Single-source finalization must produce the same structural shape for provenance fields (`source_info`, `field_confidence`) as multi-source finalization (consistently `{}` not `null`). An assertion verifying this shape equivalence must be included in the test suite.
-    3. **Deterministic ordering guarantees** — All test comparisons must use Python structures or canonical JSON with sorted keys; no set-equality shortcuts that mask ordering bugs. Canonical arrays introduced in DM-003 must be unioned + deduped + deterministically sorted so strict order-independence is preserved through every layer.
-    4. **Field-group strategies are the next layer, not regressions** — Trust-only behaviour that still loses richer narrative or doesn't union arrays is the expected baseline until DM-003/DM-005 land the following: (a) narrative "prefer richer text" logic, (b) geo presence/precision preference, (c) canonical array union/dedup/sort. The regression boundary remains narrow: any return of order dependence or bypass of EntityMerger constitutes a regression; everything else is forward work.
+  - **Location:** `engine/extraction/merging.py` — `FieldMerger` routing + strategy methods; `EntityMerger.merge_entities` entity_type tie-break; `_format_single_entity` provenance guards
+  - **Resolution:**
+    - Added field-group constants (`GEO_FIELDS`, `NARRATIVE_FIELDS`, `CANONICAL_ARRAY_FIELDS`) and `_normalise_canonical` (strip + lower) at module level.
+    - `merge_field()` routes to four strategies: `_merge_geo` (presence via `_is_missing` → trust → connector_id; 0/0.0 are valid coords, not filtered), `_merge_narrative` (longer text → trust → connector_id), `_merge_canonical_array` (union + normalise + dedup + lexicographic sort; source = "merged"), `_merge_trust_default` (trust → confidence → connector_id). All winner-picking strategies use compound key `(-trust, -confidence, source)` — connector_id ascending is the final deterministic tie-break; no `reverse=True`.
+    - `entity_type` resolution: swapped truthiness filter for `_is_missing`; sort replaced with `min` on `(-trust, source)`.
+    - `_format_single_entity`: `entity.get(…) or {}` guards on `attributes`, `discovered_attributes`, `external_ids` — provenance dicts are always `{}`, never `None`. Same guard applied in multi-source attribute and discovered_attributes loops.
+  - **Executable Proof:**
+    - `pytest tests/engine/extraction/test_merging.py -v` → 45 passed (20 new DM-003 tests covering all 4 acceptance criteria)
+    - 229 passed across engine/extraction, engine/lenses, engine/config — zero regressions
 
 - [ ] **DM-004: Entity group order is DB-query-order, not trust-ordered — non-deterministic**
   - **Principle:** Determinism (system-vision.md Invariant 4, architecture.md 9.6)

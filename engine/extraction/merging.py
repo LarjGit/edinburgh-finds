@@ -38,6 +38,24 @@ def _is_missing(value: Any) -> bool:
     return stripped == "" or stripped in _PLACEHOLDER_SENTINELS
 
 
+# ---------------------------------------------------------------------------
+# Field-group sets — architecture.md 9.4 strategy routing
+# ---------------------------------------------------------------------------
+GEO_FIELDS = {"latitude", "longitude"}
+NARRATIVE_FIELDS = {"summary", "description"}
+CANONICAL_ARRAY_FIELDS = {
+    "canonical_activities",
+    "canonical_roles",
+    "canonical_place_types",
+    "canonical_access",
+}
+
+
+def _normalise_canonical(value: str) -> str:
+    """Strip whitespace and lowercase for canonical-array deduplication."""
+    return value.strip().lower()
+
+
 @dataclass
 class FieldValue:
     """Represents a field value from a specific source."""
@@ -139,62 +157,114 @@ class FieldMerger:
         field_values: List[FieldValue]
     ) -> FieldValue:
         """
-        Merge a single field from multiple sources.
+        Merge a single field using the strategy for its field group.
 
-        Strategy:
-        1. Filter out None values
-        2. Sort by trust level (highest first)
-        3. If trust levels equal, use confidence as tie-breaker
-        4. Return the winning value with provenance tracking
+        Routing (architecture.md 9.4):
+          - Canonical arrays  → union + normalise + dedup + sort
+          - Geo fields        → presence (via _is_missing) then trust
+          - Narrative text    → richer (longer) text then trust
+          - Default           → trust tier → confidence → connector_id
 
-        Args:
-            field_name: Name of the field being merged
-            field_values: List of field values from different sources
-
-        Returns:
-            Merged FieldValue with winning value and source tracking
+        All winner-picking strategies share the same deterministic
+        tie-break cascade: (-trust_level, -confidence, source) where
+        source is ascending lexicographic connector_id.
         """
         if not field_values:
             return FieldValue(value=None, source=None, confidence=0.0)
 
-        # Track all sources that provided values
         all_sources = [fv.source for fv in field_values]
 
-        # Filter out missing values (None, empty, placeholders)
-        non_none_values = [fv for fv in field_values if not _is_missing(fv.value)]
+        # Canonical arrays have their own missing-value handling (union → [])
+        if field_name in CANONICAL_ARRAY_FIELDS:
+            return self._merge_canonical_array(field_name, field_values, all_sources)
 
-        # If all values are missing, return None with highest trust source
-        if not non_none_values:
+        # All other groups share the same missingness pre-filter
+        non_missing = [fv for fv in field_values if not _is_missing(fv.value)]
+
+        if not non_missing:
             highest_trust_source = self.trust_hierarchy.get_highest_trust_source(all_sources)
-            result = FieldValue(
-                value=None,
-                source=highest_trust_source,
-                confidence=0.0
-            )
+            result = FieldValue(value=None, source=highest_trust_source, confidence=0.0)
             result.all_sources = all_sources
             return result
 
-        # Sort by trust level (highest first), then by confidence
-        sorted_values = sorted(
-            non_none_values,
-            key=lambda fv: (
-                self.trust_hierarchy.get_trust_level(fv.source),
-                fv.confidence
-            ),
-            reverse=True
-        )
+        # Route to field-group strategy
+        if field_name in GEO_FIELDS:
+            return self._merge_geo(field_name, non_missing, all_sources)
+        if field_name in NARRATIVE_FIELDS:
+            return self._merge_narrative(field_name, non_missing, all_sources)
+        return self._merge_trust_default(field_name, non_missing, all_sources)
 
-        # Winner is the first (highest trust/confidence)
-        winner = sorted_values[0]
+    # ------------------------------------------------------------------
+    # Strategy methods
+    # ------------------------------------------------------------------
 
-        # Create result with provenance tracking
-        result = FieldValue(
-            value=winner.value,
-            source=winner.source,
-            confidence=winner.confidence
-        )
+    def _merge_trust_default(
+        self,
+        field_name: str,
+        candidates: List[FieldValue],
+        all_sources: List[str],
+    ) -> FieldValue:
+        """Default: trust tier → confidence → connector_id (ascending)."""
+        winner = min(candidates, key=lambda fv: (
+            -self.trust_hierarchy.get_trust_level(fv.source),
+            -fv.confidence,
+            fv.source,
+        ))
+        result = FieldValue(value=winner.value, source=winner.source, confidence=winner.confidence)
         result.all_sources = all_sources
+        return result
 
+    def _merge_geo(
+        self,
+        field_name: str,
+        candidates: List[FieldValue],
+        all_sources: List[str],
+    ) -> FieldValue:
+        """Geo: presence (already filtered via _is_missing) → trust → connector_id.
+
+        0 / 0.0 are valid coordinates (equator / prime meridian) and are NOT
+        treated as missing.  Extensible point for future precision-based logic.
+        """
+        return self._merge_trust_default(field_name, candidates, all_sources)
+
+    def _merge_narrative(
+        self,
+        field_name: str,
+        candidates: List[FieldValue],
+        all_sources: List[str],
+    ) -> FieldValue:
+        """Narrative: richer (longer) text → trust → connector_id."""
+        winner = min(candidates, key=lambda fv: (
+            -len(str(fv.value)),
+            -self.trust_hierarchy.get_trust_level(fv.source),
+            -fv.confidence,
+            fv.source,
+        ))
+        result = FieldValue(value=winner.value, source=winner.source, confidence=winner.confidence)
+        result.all_sources = all_sources
+        return result
+
+    def _merge_canonical_array(
+        self,
+        field_name: str,
+        field_values: List[FieldValue],
+        all_sources: List[str],
+    ) -> FieldValue:
+        """Canonical arrays: union, normalise, deduplicate, lexicographic sort.
+
+        All contributing sources are co-authors — no single winner.
+        Individual items that are missing per _is_missing are silently dropped.
+        """
+        seen: set = set()
+        for fv in field_values:
+            if fv.value is None:
+                continue
+            items = fv.value if isinstance(fv.value, list) else [fv.value]
+            for item in items:
+                if isinstance(item, str) and not _is_missing(item):
+                    seen.add(_normalise_canonical(item))
+        result = FieldValue(value=sorted(seen), source="merged", confidence=1.0)
+        result.all_sources = all_sources
         return result
 
 
@@ -249,7 +319,7 @@ class EntityMerger:
             field_values = []
 
             for entity in extracted_entities:
-                attributes = entity.get("attributes", {})
+                attributes = entity.get("attributes") or {}
                 if field_name in attributes:
                     value = attributes[field_name]
                     source = entity["source"]
@@ -278,22 +348,20 @@ class EntityMerger:
         # Combine external_ids from all sources
         merged_external_ids = self._merge_external_ids(extracted_entities)
 
-        # Determine entity_class (should be consistent across all entities)
-        # Use the entity_type from the most trusted source
+        # Determine entity_type — deterministic cascade:
+        #   _is_missing filter → trust descending → connector_id ascending
         entity_types = [
             (entity.get("entity_type"), entity["source"])
             for entity in extracted_entities
-            if entity.get("entity_type")
+            if not _is_missing(entity.get("entity_type"))
         ]
         entity_type = None
         if entity_types:
-            # Sort by trust level and pick the highest
-            entity_types_sorted = sorted(
-                entity_types,
-                key=lambda x: self.trust_hierarchy.get_trust_level(x[1]),
-                reverse=True
-            )
-            entity_type = entity_types_sorted[0][0]
+            winner = min(entity_types, key=lambda x: (
+                -self.trust_hierarchy.get_trust_level(x[1]),
+                x[1],
+            ))
+            entity_type = winner[0]
 
         # Build final merged entity
         merged_entity = {
@@ -310,25 +378,27 @@ class EntityMerger:
         return merged_entity
 
     def _format_single_entity(self, entity: Dict[str, Any]) -> Dict[str, Any]:
-        """Format a single entity to match merged entity structure."""
-        attributes = entity.get("attributes", {})
+        """Format a single entity to match merged entity structure.
+
+        Provenance fields (source_info, field_confidence) are always dicts —
+        never None — so that single-source and multi-source outputs share the
+        same structural shape.
+        """
+        attributes = entity.get("attributes") or {}
         source = entity["source"]
 
-        # Create source_info mapping for all fields
-        source_info = {field_name: source for field_name in attributes.keys()}
-
-        # Default confidence of 1.0 for single source
-        field_confidence = {field_name: 1.0 for field_name in attributes.keys()}
+        source_info = {field_name: source for field_name in attributes}
+        field_confidence = {field_name: 1.0 for field_name in attributes}
 
         return {
             **attributes,
             "entity_type": entity.get("entity_type"),
-            "discovered_attributes": entity.get("discovered_attributes", {}),
-            "external_ids": entity.get("external_ids", {}),
+            "discovered_attributes": entity.get("discovered_attributes") or {},
+            "external_ids": entity.get("external_ids") or {},
             "source_info": source_info,
             "field_confidence": field_confidence,
             "sources": [source],
-            "source_count": 1
+            "source_count": 1,
         }
 
     def _merge_discovered_attributes(
@@ -342,7 +412,7 @@ class EntityMerger:
         """
         all_discovered_fields = set()
         for entity in extracted_entities:
-            discovered = entity.get("discovered_attributes", {})
+            discovered = entity.get("discovered_attributes") or {}
             if discovered:
                 all_discovered_fields.update(discovered.keys())
 
@@ -352,7 +422,7 @@ class EntityMerger:
             field_values = []
 
             for entity in extracted_entities:
-                discovered = entity.get("discovered_attributes", {})
+                discovered = entity.get("discovered_attributes") or {}
                 if field_name in discovered:
                     value = discovered[field_name]
                     source = entity["source"]
