@@ -189,7 +189,9 @@ def apply_lens_contract(
             continue
 
         # Execute field rules (deterministic extractors only for v1)
-        module_fields = execute_field_rules(field_rules, extracted_primitives, source)
+        # Add entity_class to extracted_primitives for applicability filtering
+        entity_with_class = {**extracted_primitives, "entity_class": entity_class}
+        module_fields = execute_field_rules(field_rules, entity_with_class, source)
 
         # Only include module if it has populated fields
         if module_fields:

@@ -137,8 +137,8 @@ modules:
       - rule_id: extract_padel_court_count
         target_path: padel_courts.total
         extractor: regex_capture
-        pattern: "(?i)(\\d+)\\s*padel\\s*courts?"
-        source_fields: [description, entity_name]
+        pattern: "(?i)(\\d+)\\s+(?:fully\\s+)?(?:covered(?:,\\s*|\\s+and\\s+)?)?(?:heated\\s+)?courts?"
+        source_fields: [summary, description, entity_name]
         confidence: 0.85
         applicability:
           source: [serper, google_places, sport_scotland]

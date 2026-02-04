@@ -120,7 +120,8 @@ def execute_field_rules(
 
         # Filter by entity_class
         allowed_classes = applicability.get("entity_class", [])
-        if allowed_classes and entity.get("entity_class") not in allowed_classes:
+        entity_class = entity.get("entity_class")
+        if allowed_classes and entity_class not in allowed_classes:
             continue
 
         # Execute extractor

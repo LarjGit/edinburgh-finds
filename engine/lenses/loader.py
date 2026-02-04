@@ -375,7 +375,7 @@ class VerticalLens:
     @property
     def domain_modules(self) -> Dict[str, Any]:
         """Get domain modules configuration."""
-        return self.config.get("domain_modules", {})
+        return self.config.get("modules", {})
 
     @property
     def module_triggers(self) -> list:
