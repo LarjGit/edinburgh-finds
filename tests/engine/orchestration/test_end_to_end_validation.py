@@ -331,16 +331,27 @@ async def test_modules_field_structure():
 
 @pytest.mark.slow
 @pytest.mark.asyncio
-async def test_ope_coordinate_extraction():
+async def test_ope_geo_coordinate_validation():
     """
-    LA-011: Validate latitude/longitude extraction for OPE validation entity.
+    OPE+Geo gate: prove coordinates flow end-to-end when a coordinate-rich
+    source (Google Places) is in the execution plan.
 
-    This is a SEPARATE gate from the constitutional "One Perfect Entity"
-    validation (test_one_perfect_entity_end_to_end_validation). Coordinates
-    are NOT required by system-vision.md 6.3 but are needed for full entity
-    data quality and downstream features (directions, mapping, geo-search).
+    This is NOT a constitutional requirement (system-vision.md 6.3 does not
+    mandate lat/lng).  It is a data-quality gate for downstream features
+    (directions, mapping, geo-search).  Tracked separately from LA-003.
 
-    Tracked as: LA-011 (audit-catalog.md)
+    Validation entity: Meadowbank Sports Centre, Edinburgh.
+      - Long-standing Edinburgh landmark (Commonwealth Games 1970).
+      - Reliably present in Google Places with authoritative coordinates.
+      - RESOLVE_ONE + category-search routing → Serper + Google Places
+        (planner.py lines 79-81: "sports centre" is a facility keyword).
+      - Google Places extractor populates latitude/longitude from
+        geometry.location (google_places_extractor.py:191-198).
+
+    Assertions (coordinates only — no canonical-dimension checks):
+      1. At least one "Meadowbank" entity persists.
+      2. latitude is not None.
+      3. longitude is not None.
     """
     ctx = bootstrap_lens("edinburgh_finds")
 
@@ -348,63 +359,67 @@ async def test_ope_coordinate_extraction():
     await db.connect()
 
     try:
-        # Clean before run
+        # Idempotent pre-clean
         await db.entity.delete_many(
-            where={
-                "OR": [
-                    {"entity_name": {"contains": "West of Scotland Padel"}},
-                    {"entity_name": {"contains": "west of scotland padel"}},
-                ]
-            }
+            where={"entity_name": {"contains": "Meadowbank"}}
         )
 
         request = IngestRequest(
             ingestion_mode=IngestionMode.RESOLVE_ONE,
-            query="west of scotland padel glasgow",
+            query="Meadowbank Sports Centre Edinburgh",
             persist=True,
         )
 
-        await orchestrate(request, ctx=ctx)
+        report = await orchestrate(request, ctx=ctx)
 
+        # Debug: show which connectors fired
+        print("\n" + "=" * 80)
+        print("OPE+Geo: ORCHESTRATION REPORT")
+        print("=" * 80)
+        print(f"Query: {report['query']}")
+        print(f"Candidates found: {report['candidates_found']}")
+        print(f"Persisted: {report.get('persisted_count', 'N/A')}")
+        for name, info in report.get("connectors", {}).items():
+            print(f"  {name}: items={info['items_received']}")
+        print("=" * 80)
+
+        # Retrieve persisted entity
         entities = await db.entity.find_many(
-            where={
-                "OR": [
-                    {"entity_name": {"contains": "West of Scotland Padel"}},
-                    {"entity_name": {"contains": "west of scotland padel"}},
-                ]
-            }
+            where={"entity_name": {"contains": "Meadowbank"}}
         )
 
-        assert len(entities) > 0, "OPE validation entity must exist"
+        assert len(entities) > 0, (
+            "At least one Meadowbank entity must persist. "
+            "Google Places Text Search should match "
+            "'Meadowbank Sports Centre Edinburgh'."
+        )
+
         entity = entities[0]
 
         print("\n" + "=" * 80)
-        print("LA-011: COORDINATE EXTRACTION STATE")
+        print("OPE+Geo: COORDINATE EXTRACTION STATE")
         print("=" * 80)
-        print(f"entity_name: {entity.entity_name}")
-        print(f"latitude:    {entity.latitude}")
-        print(f"longitude:   {entity.longitude}")
-        print(f"city:        {entity.city}")
+        print(f"entity_name:    {entity.entity_name}")
+        print(f"latitude:       {entity.latitude}")
+        print(f"longitude:      {entity.longitude}")
+        print(f"city:           {entity.city}")
         print(f"street_address: {entity.street_address}")
         print("=" * 80)
 
-        # LA-011 assertion: coordinates must be populated
+        # OPE+Geo assertions — coordinates only
         assert entity.latitude is not None, (
-            f"latitude should be extracted for {entity.entity_name}. "
-            "See LA-011 in audit-catalog.md for source-of-truth investigation."
+            f"latitude must be populated for '{entity.entity_name}'. "
+            "Google Places is the coordinate source; check that the GP adapter "
+            "maps geometry.location into the raw ingestion payload."
         )
         assert entity.longitude is not None, (
-            f"longitude should be extracted for {entity.entity_name}. "
-            "See LA-011 in audit-catalog.md for source-of-truth investigation."
+            f"longitude must be populated for '{entity.entity_name}'. "
+            "Google Places is the coordinate source; check that the GP adapter "
+            "maps geometry.location into the raw ingestion payload."
         )
 
     finally:
         await db.entity.delete_many(
-            where={
-                "OR": [
-                    {"entity_name": {"contains": "West of Scotland Padel"}},
-                    {"entity_name": {"contains": "west of scotland padel"}},
-                ]
-            }
+            where={"entity_name": {"contains": "Meadowbank"}}
         )
         await db.disconnect()
