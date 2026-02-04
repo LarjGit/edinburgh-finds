@@ -1365,7 +1365,7 @@ The correct fix is to wire `merging.py` into `entity_finalizer.py` and then add 
   - **Location:** `engine/extraction/merging.py` — `_is_missing()` predicate + FieldMerger filter
   - **Resolution:** Added `_is_missing(value)` predicate covering None, empty/whitespace strings, and curated placeholder sentinels (N/A, n/a, NA, -, –, —). FieldMerger.merge_field filters via `_is_missing`. 25 unit tests green.
 
-- [x] **DM-002: EntityMerger not wired into EntityFinalizer — two conflicting merge paths** ✅ COMPLETE
+- [x] **DM-002: EntityMerger not wired into EntityFinalizer — two conflicting merge paths** ✅ COMPLETE (a76d4c2)
   - **Principle:** One canonical merge strategy (architecture.md 9.1 — "Merge resolves conflicts deterministically using metadata and rules")
   - **Location:** `engine/orchestration/entity_finalizer.py` — `_finalize_group()` + `_build_upsert_payload()`
   - **Resolution:** Removed inline first-non-null merge from `_finalize_group()`. Now builds merger-input dicts (source, attributes, discovered_attributes, external_ids, entity_type) from each ExtractedEntity and delegates to `EntityMerger.merge_entities()`. Extracted shared `_build_upsert_payload()` helper — single mapping surface for attribute-key → Entity-column normalization (website → website_url, slug, Json wrapping). Both `_finalize_single` and `_finalize_group` route through it. Provenance (source_info, field_confidence) now flows from EntityMerger into the upsert payload. Regression test confirms trust-based winner is order-independent (both [serper, gp] and [gp, serper] produce identical payloads). 32 tests green.
