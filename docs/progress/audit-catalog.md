@@ -2,7 +2,7 @@
 
 **Current Phase:** Phase 2: Pipeline Implementation
 **Validation Entity:** West of Scotland Padel (validation) / Edinburgh Sports Club (investigation)
-**Last Updated:** 2026-02-04 (Stages 9-11 audited. Stage 9 COMPLIANT ✅. Stage 10: DM-001 ✅ DM-002 ✅ DM-003 ✅ DM-004 ✅, DM-005 remaining. Stage 11 COMPLIANT pending Stage 10.)
+**Last Updated:** 2026-02-05 (Stages 9-11 audited. Stage 9 COMPLIANT ✅. Stage 10: DM-001 ✅ DM-002 ✅ DM-003 ✅ DM-004 ✅ DM-005 ✅, DM-006 remaining. Stage 11 COMPLIANT pending Stage 10.)
 
 ---
 
@@ -1394,12 +1394,21 @@ The correct fix is to wire `merging.py` into `entity_finalizer.py` and then add 
     - `pytest tests/engine/orchestration/test_entity_finalizer.py -m "not slow" -v` → 8 passed (includes new `TestFinalizeGroupPreMergerSort::test_group_sorted_trust_desc_source_asc_id_asc`)
     - `pytest tests/engine/extraction/ -m "not slow"` → 156 passed, zero regressions
 
-- [ ] **DM-005: Modules merge is shallow key-union, not deep recursive**
+- [x] **DM-005: Modules merge is shallow key-union, not deep recursive** ✅ COMPLETE
   - **Principle:** Modules JSON Structures merge strategy (architecture.md 9.4 — "Deep recursive merge. Object vs object → recursive merge.")
-  - **Location:** `engine/orchestration/entity_finalizer.py:154-160` (current shallow merge), `engine/extraction/merging.py` (EntityMerger has no modules handling)
-  - **Description:** Current modules merge in finaliser: iterates candidate_modules keys, adds any key not already in base_modules. This is a shallow first-key-wins union. Architecture requires: object vs object → recursive merge; scalar arrays → concatenate + deduplicate + sort; type mismatch → higher trust wins wholesale. Must be implemented in merging.py alongside the other field-group strategies.
-  - **Estimated Scope:** 1 file (`merging.py`), ~35 lines — add deep_merge_modules() function
-  - **Blocked by:** DM-003 (field-group routing must exist to route modules to this handler)
+  - **Location:** `engine/extraction/merging.py` — `FieldMerger` routing + `_merge_modules_deep` / `_deep_merge` / `_deep_merge_dicts` / `_deep_merge_arrays` / `_trust_winner_value`
+  - **Resolution:**
+    - Routed `"modules"` in `FieldMerger.merge_field()` before the missingness pre-filter (same position as canonical arrays — modules owns its own emptiness semantics).
+    - `_merge_modules_deep`: strips None values, dispatches to `_deep_merge`, wraps result in `FieldValue(source="merged")`.
+    - `_deep_merge`: type-dispatch — all-dicts → `_deep_merge_dicts`; all-lists → `_deep_merge_arrays`; else (type mismatch or scalar leaf) → `_trust_winner_value`. Single-candidate short-circuits.
+    - `_deep_merge_dicts`: union of keys (sorted for determinism), recurse per key.
+    - `_deep_merge_arrays`: object arrays (any dict element) → wholesale via `_trust_winner_value`; scalar arrays → trim strings, check type uniformity, mixed types → wholesale fallback, uniform → `sorted(set(...), key=str)`.
+    - `_trust_winner_value`: cascade `(-trust, -confidence, source_asc)` — shared tie-break with all other strategies.
+    - Empty containers handled naturally: `{}` contributes no keys to the union; `[]` contributes no items to concat.
+  - **Executable Proof:**
+    - `pytest tests/engine/extraction/test_merging.py::TestModulesDeepMerge tests/engine/extraction/test_merging.py::TestModulesDeepMergeSameTrust -v` → 11 passed
+    - `pytest tests/engine/extraction/ -m "not slow"` → 167 passed, zero regressions
+    - `pytest tests/engine/orchestration/test_entity_finalizer.py -m "not slow"` → 8 passed, zero regressions
 
 - [ ] **DM-006: Order-independence end-to-end test — proves merge is DB-order-blind**
   - **Principle:** Determinism (system-vision.md Invariant 4, architecture.md 9.6 — "Merge output must be identical across runs. Ordering must remain stable.")

@@ -402,3 +402,208 @@ class TestCanonicalArrayMerge:
             result = merger.merge_field(field_name, values)
             assert result.value == ["alpha", "beta"], f"Failed for {field_name}"
             assert result.source == "merged"
+
+
+# ---------------------------------------------------------------------------
+# DM-005: Modules deep recursive merge (architecture.md 9.4)
+# ---------------------------------------------------------------------------
+
+
+class TestModulesDeepMerge:
+    """modules field: deep recursive merge per architecture.md 9.4.
+
+    - Object vs object → recursive merge
+    - Scalar arrays → concatenate, deduplicate, sort (strings trimmed only)
+    - Object arrays → wholesale from winning source
+    - Type mismatch → higher trust wins wholesale
+    - Per-leaf: trust → confidence → source (asc)
+    - Empty containers ({}, []) yield to populated counterpart naturally
+    """
+
+    @pytest.fixture
+    def merger(self, tmp_path):
+        cfg = tmp_path / "extraction.yaml"
+        cfg.write_text(
+            "trust_levels:\n"
+            "  high_trust: 80\n"
+            "  low_trust:  40\n"
+            "  unknown_source: 10\n"
+        )
+        th = TrustHierarchy(config_path=str(cfg))
+        return FieldMerger(trust_hierarchy=th)
+
+    # --- object vs object: recursive merge ---
+
+    def test_recursive_merge_nested_dicts(self, merger):
+        """Disjoint nested keys are unioned; shared leaf keys resolve by trust."""
+        high = {
+            "sports_facility": {
+                "pitch_count": 4,
+                "surface": "artificial",
+            }
+        }
+        low = {
+            "sports_facility": {
+                "pitch_count": 2,          # conflict → high_trust wins
+                "floodlights": True,       # unique to low → included
+            },
+            "contact": {"phone": "555-1234"},  # unique module → included
+        }
+        values = [
+            FieldValue(value=high, source="high_trust", confidence=0.9),
+            FieldValue(value=low,  source="low_trust",  confidence=0.8),
+        ]
+        result = merger.merge_field("modules", values)
+
+        assert result.value["sports_facility"]["pitch_count"] == 4
+        assert result.value["sports_facility"]["surface"] == "artificial"
+        assert result.value["sports_facility"]["floodlights"] is True
+        assert result.value["contact"]["phone"] == "555-1234"
+        assert result.source == "merged"
+
+    # --- scalar arrays: concat + dedup + sort ---
+
+    def test_scalar_array_concat_dedup_sort(self, merger):
+        """Scalar string arrays across sources: concat, dedup, sort."""
+        high = {"tags": ["indoor", "competitive"]}
+        low  = {"tags": ["competitive", "beginner"]}
+        values = [
+            FieldValue(value=high, source="high_trust", confidence=0.9),
+            FieldValue(value=low,  source="low_trust",  confidence=0.8),
+        ]
+        result = merger.merge_field("modules", values)
+        assert result.value["tags"] == ["beginner", "competitive", "indoor"]
+
+    def test_scalar_array_strings_trimmed_not_lowered(self, merger):
+        """Strings are trimmed but NOT lowercased (modules are case-sensitive).
+        'competitive' and 'Competitive' are distinct after trim."""
+        high = {"tags": [" indoor ", "competitive"]}
+        low  = {"tags": ["indoor", " Competitive "]}
+        values = [
+            FieldValue(value=high, source="high_trust", confidence=0.9),
+            FieldValue(value=low,  source="low_trust",  confidence=0.8),
+        ]
+        result = merger.merge_field("modules", values)
+        # "indoor" deduped to one; "competitive" != "Competitive" → both kept
+        assert len(result.value["tags"]) == 3
+        assert "indoor" in result.value["tags"]
+        assert "competitive" in result.value["tags"]
+        assert "Competitive" in result.value["tags"]
+
+    # --- object arrays: wholesale from winning source ---
+
+    def test_object_array_wholesale_from_winner(self, merger):
+        """Arrays containing dicts are taken wholesale from highest-trust source."""
+        high = {"schedules": [{"day": "Mon", "time": "09:00"}]}
+        low  = {"schedules": [{"day": "Tue", "time": "10:00"}, {"day": "Wed", "time": "11:00"}]}
+        values = [
+            FieldValue(value=high, source="high_trust", confidence=0.9),
+            FieldValue(value=low,  source="low_trust",  confidence=0.8),
+        ]
+        result = merger.merge_field("modules", values)
+        assert result.value["schedules"] == [{"day": "Mon", "time": "09:00"}]
+
+    # --- type mismatch: higher trust wins wholesale ---
+
+    def test_type_mismatch_higher_trust_wins(self, merger):
+        """Same key, incompatible types (str vs dict) → higher-trust value taken."""
+        high = {"detail": "a plain string"}
+        low  = {"detail": {"nested_key": "value"}}
+        values = [
+            FieldValue(value=high, source="high_trust", confidence=0.9),
+            FieldValue(value=low,  source="low_trust",  confidence=0.8),
+        ]
+        result = merger.merge_field("modules", values)
+        assert result.value["detail"] == "a plain string"
+
+    # --- empty containers yield to populated ---
+
+    def test_empty_dict_yields_to_populated(self, merger):
+        """Source with {} modules doesn't block populated source's keys."""
+        values = [
+            FieldValue(value={},                            source="high_trust", confidence=0.9),
+            FieldValue(value={"sports": {"courts": 3}},     source="low_trust",  confidence=0.8),
+        ]
+        result = merger.merge_field("modules", values)
+        assert result.value == {"sports": {"courts": 3}}
+
+    def test_empty_list_yields_to_populated_list(self, merger):
+        """[] in one source doesn't block populated list in other (concat path)."""
+        high = {"tags": []}
+        low  = {"tags": ["indoor", "outdoor"]}
+        values = [
+            FieldValue(value=high, source="high_trust", confidence=0.9),
+            FieldValue(value=low,  source="low_trust",  confidence=0.8),
+        ]
+        result = merger.merge_field("modules", values)
+        assert result.value["tags"] == ["indoor", "outdoor"]
+
+    # --- mixed-type scalar array: fall back to trust winner ---
+
+    def test_mixed_type_array_falls_back_to_trust(self, merger):
+        """Scalar array with mixed types (str + int) can't be sorted →
+        trust winner takes the array wholesale."""
+        high = {"ids": [1, "abc"]}
+        low  = {"ids": [2, "def"]}
+        values = [
+            FieldValue(value=high, source="high_trust", confidence=0.9),
+            FieldValue(value=low,  source="low_trust",  confidence=0.8),
+        ]
+        result = merger.merge_field("modules", values)
+        assert result.value["ids"] == [1, "abc"]
+
+    # --- input order independence ---
+
+    def test_input_order_independent(self, merger):
+        """Swapping source order produces identical merged modules."""
+        a = {"sports": {"courts": 4}, "tags": ["indoor"]}
+        b = {"sports": {"lights": True}, "tags": ["outdoor"]}
+        ab = [
+            FieldValue(value=a, source="high_trust", confidence=0.9),
+            FieldValue(value=b, source="low_trust",  confidence=0.8),
+        ]
+        ba = [
+            FieldValue(value=b, source="low_trust",  confidence=0.8),
+            FieldValue(value=a, source="high_trust", confidence=0.9),
+        ]
+        assert merger.merge_field("modules", ab).value == \
+               merger.merge_field("modules", ba).value
+
+
+class TestModulesDeepMergeSameTrust:
+    """Per-leaf confidence and source tie-break when trust levels are equal."""
+
+    @pytest.fixture
+    def merger(self, tmp_path):
+        cfg = tmp_path / "extraction.yaml"
+        cfg.write_text(
+            "trust_levels:\n"
+            "  source_a: 60\n"
+            "  source_b: 60\n"
+            "  unknown_source: 10\n"
+        )
+        th = TrustHierarchy(config_path=str(cfg))
+        return FieldMerger(trust_hierarchy=th)
+
+    def test_same_trust_higher_confidence_wins_leaf(self, merger):
+        """Equal trust → confidence decides the leaf value."""
+        a = {"detail": {"name": "Version A"}}
+        b = {"detail": {"name": "Version B"}}
+        values = [
+            FieldValue(value=a, source="source_a", confidence=0.9),
+            FieldValue(value=b, source="source_b", confidence=0.5),
+        ]
+        result = merger.merge_field("modules", values)
+        assert result.value["detail"]["name"] == "Version A"
+
+    def test_same_trust_same_confidence_source_id_tiebreak(self, merger):
+        """Equal trust, equal confidence → lexicographic source_id wins."""
+        a = {"detail": {"name": "A value"}}
+        b = {"detail": {"name": "B value"}}
+        values = [
+            FieldValue(value=a, source="source_a", confidence=0.8),
+            FieldValue(value=b, source="source_b", confidence=0.8),
+        ]
+        result = merger.merge_field("modules", values)
+        # source_a < source_b lexicographically → source_a wins
+        assert result.value["detail"]["name"] == "A value"

@@ -178,6 +178,10 @@ class FieldMerger:
         if field_name in CANONICAL_ARRAY_FIELDS:
             return self._merge_canonical_array(field_name, field_values, all_sources)
 
+        # Modules have their own deep-merge semantics (architecture.md 9.4)
+        if field_name == "modules":
+            return self._merge_modules_deep(field_values, all_sources)
+
         # All other groups share the same missingness pre-filter
         non_missing = [fv for fv in field_values if not _is_missing(fv.value)]
 
@@ -266,6 +270,110 @@ class FieldMerger:
         result = FieldValue(value=sorted(seen), source="merged", confidence=1.0)
         result.all_sources = all_sources
         return result
+
+
+    # ------------------------------------------------------------------
+    # Modules deep merge — architecture.md 9.4 "Modules JSON Structures"
+    # ------------------------------------------------------------------
+
+    def _merge_modules_deep(
+        self,
+        field_values: List[FieldValue],
+        all_sources: List[str],
+    ) -> FieldValue:
+        """Entry point: strip Nones, recurse, wrap in FieldValue."""
+        candidates = [
+            (fv.value, fv.source, fv.confidence)
+            for fv in field_values
+            if fv.value is not None
+        ]
+        merged = self._deep_merge(candidates) if candidates else {}
+        result = FieldValue(value=merged, source="merged", confidence=1.0)
+        result.all_sources = all_sources
+        return result
+
+    def _deep_merge(self, candidates: List[tuple]) -> Any:
+        """Recursive dispatch on value types.
+
+        candidates: list of (value, source, confidence).
+        Single candidate short-circuits immediately.
+        """
+        if not candidates:
+            return None
+        if len(candidates) == 1:
+            return candidates[0][0]
+
+        if all(isinstance(v, dict) for v, _s, _c in candidates):
+            return self._deep_merge_dicts(candidates)
+        if all(isinstance(v, list) for v, _s, _c in candidates):
+            return self._deep_merge_arrays(candidates)
+
+        # Type mismatch or scalar leaf → trust winner takes all
+        return self._trust_winner_value(candidates)
+
+    def _deep_merge_dicts(self, candidates: List[tuple]) -> Dict[str, Any]:
+        """Object vs object → recursive merge on the union of keys.
+
+        Keys are iterated in sorted order for deterministic output.
+        """
+        all_keys: set = set()
+        for v, _s, _c in candidates:
+            all_keys.update(v.keys())
+
+        result: Dict[str, Any] = {}
+        for key in sorted(all_keys):
+            sub = [(v[key], s, c) for v, s, c in candidates if key in v]
+            result[key] = self._deep_merge(sub)
+        return result
+
+    def _deep_merge_arrays(self, candidates: List[tuple]) -> Any:
+        """Array vs array dispatch.
+
+        - Contains any dict element → object array → wholesale from winner.
+        - All same scalar type    → concat + dedup + sort (strings trimmed).
+        - Mixed scalar types      → can't sort safely → wholesale from winner.
+        """
+        # Object-array check: any dict anywhere across all arrays?
+        if any(
+            isinstance(item, dict)
+            for v, _s, _c in candidates
+            for item in v
+        ):
+            return self._trust_winner_value(candidates)
+
+        # Flatten all items; trim strings; track types
+        trimmed: List[Any] = []
+        types_seen: set = set()
+        for v, _s, _c in candidates:
+            for item in v:
+                if isinstance(item, str):
+                    trimmed.append(item.strip())
+                    types_seen.add(str)
+                else:
+                    trimmed.append(item)
+                    types_seen.add(type(item))
+
+        if not trimmed:
+            return []
+
+        # Mixed types → unsafe to sort → trust winner wholesale
+        if len(types_seen) > 1:
+            return self._trust_winner_value(candidates)
+
+        # Deduplicate and sort (all items are the same type)
+        return sorted(set(trimmed), key=str)
+
+    def _trust_winner_value(self, candidates: List[tuple]) -> Any:
+        """Pick the value from the highest-trust source.
+
+        Tie-break cascade: trust desc → confidence desc → source asc.
+        """
+        winner = min(candidates, key=lambda x: (
+            -self.trust_hierarchy.get_trust_level(x[1]),
+            -x[2],   # confidence descending
+            x[1],    # source ascending (lexicographic)
+        ))
+        return winner[0]
 
 
 class EntityMerger:
