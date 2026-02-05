@@ -60,13 +60,13 @@ def resolve_entity_class(raw_data):
     if has_location(raw_data):
         return 'place'
 
-    # Priority 3: Check if it's an individual
-    if is_individual(raw_data):
-        return 'person'
-
-    # Priority 4: Default to organization for groups/businesses
+    # Priority 3: Membership/group → organization
     if is_organization_like(raw_data):
         return 'organization'
+
+    # Priority 4: Named individual → person
+    if is_individual(raw_data):
+        return 'person'
 
     # Fallback
     return 'thing'

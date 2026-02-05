@@ -2,7 +2,7 @@
 
 **Current Phase:** Phase 2: Pipeline Implementation
 **Validation Entity:** West of Scotland Padel (validation) / Edinburgh Sports Club (investigation)
-**Last Updated:** 2026-02-05 (Stages 7-11 audited. Stage 7 COMPLIANT ✅. Stage 8: CL-001 ✅ CL-002 ❌ (pending execution). Stage 9 COMPLIANT ✅. Stage 10: DM-001 ✅ DM-002 ✅ DM-003 ✅ DM-004 ✅ DM-005 ✅ DM-006 ✅. Stage 10 COMPLIANT ✅. Stage 11 COMPLIANT ✅. Cross-cutting: TI-001 ✅.)
+**Last Updated:** 2026-02-05 (Stages 7-11 audited. Stage 7 COMPLIANT ✅. Stage 8: CL-001 ✅ CL-002 ✅. Stage 8 COMPLIANT ✅. Stage 9 COMPLIANT ✅. Stage 10: DM-001 ✅ DM-002 ✅ DM-003 ✅ DM-004 ✅ DM-005 ✅ DM-006 ✅. Stage 10 COMPLIANT ✅. Stage 11 COMPLIANT ✅. Cross-cutting: TI-001 ✅.)
 
 ---
 
@@ -281,9 +281,9 @@
 
 ## Phase 2: Pipeline Implementation
 
-**Status:** Stages 1-7, 9-11 COMPLETE ✅. Stage 8 audited — 2 gaps identified (CL-001, CL-002, pending execution)
+**Status:** Stages 1-11 COMPLETE ✅. All gaps resolved.
 **Validation Entity:** Powerleague Portobello Edinburgh (requires complete pipeline)
-**Progress:** Stages 1-7 complete ✅, Stage 8 audited (gaps pending) ⚠️, Stages 9-11 complete ✅
+**Progress:** Stages 1-11 complete ✅
 
 ### Stage 1: Input (architecture.md 4.1)
 
@@ -1304,7 +1304,7 @@
 
 ### Stage 8: Classification (architecture.md 4.1)
 
-**Status:** CL-001 ✅. CL-002 ❌ pending. Active pipeline COMPLIANT ✅.
+**Status:** CL-001 ✅. CL-002 ✅. Stage 8 COMPLIANT ✅.
 
 **Requirements:**
 - Determine entity_class using deterministic universal rules
@@ -1347,11 +1347,13 @@
     - `pytest tests/engine/extraction/ -q` ✅ 166 passed, 0 failures (no regressions)
   - **Fix Applied:** Deleted `classify_entity()` (entity_classifier.py), `_extract_entity_from_raw()` + dead import (persistence.py), and `test_classify_entity.py`. Replaced 3 symbol-specific guard tests with 2 pattern-level invariant guards: single-entry-point (patch-based, proves live path routes through resolve_entity_class) and legacy-field-name ban (static scan for deprecated dict keys). Added CLASSIFICATION INVARIANT comment to entity_classifier.py header.
 
-- [ ] **CL-002: Pseudocode in classification_rules.md contradicts authoritative priority order**
+- [x] **CL-002: Pseudocode in classification_rules.md contradicts authoritative priority order**
   - **Principle:** Determinism (system-vision.md Invariant 4), No Implicit Behavior (system-vision.md §7)
   - **Location:** `engine/docs/classification_rules.md:63-65` (pseudocode block)
-  - **Description:** The authoritative "Priority Order" list (classification_rules.md lines 34-38) correctly states: priority 3 = organization, priority 4 = person. The pseudocode implementation block (lines 63-65) swaps them: priority 3 = person (`is_individual`), priority 4 = organization (`is_organization_like`). The live `resolve_entity_class()` matches the authoritative list. The pseudocode is a documentation bug that could mislead future development or AI agents.
-  - **Scope:** Swap priority 3/4 in the pseudocode block to match authoritative order (organization before person).
+  - **Description:** The authoritative "Priority Order" list (classification_rules.md lines 34-38) correctly states: priority 3 = organization, priority 4 = person. The pseudocode implementation block (lines 63-65) had them swapped: priority 3 = person (`is_individual`), priority 4 = organization (`is_organization_like`). The live `resolve_entity_class()` matches the authoritative list. The pseudocode was a documentation bug that could mislead future development or AI agents.
+  - **Completed:** 2026-02-05
+  - **Executable Proof:** Manual inspection — pseudocode block (lines 63-69) now matches authoritative Priority Order list (lines 34-38) exactly: event → place → organization → person → thing. Docstring (lines 48-52) and inline comments (lines 63, 67) all agree.
+  - **Fix Applied:** Swapped priority 3/4 in pseudocode block. `is_organization_like` now at priority 3, `is_individual` at priority 4. Comments updated to match.
 
 ---
 
