@@ -2,7 +2,7 @@
 
 **Current Phase:** Phase 2: Pipeline Implementation
 **Validation Entity:** West of Scotland Padel (validation) / Edinburgh Sports Club (investigation)
-**Last Updated:** 2026-02-05 (Stages 9-11 audited. Stage 9 COMPLIANT ✅. Stage 10: DM-001 ✅ DM-002 ✅ DM-003 ✅ DM-004 ✅ DM-005 ✅ DM-006 ✅. Stage 10 COMPLIANT ✅. Stage 11 COMPLIANT ✅. Cross-cutting: TI-001 ✅.)
+**Last Updated:** 2026-02-05 (Stages 7-11 audited. Stage 7 COMPLIANT ✅. Stage 8: CL-001 ✅ CL-002 ❌ (pending execution). Stage 9 COMPLIANT ✅. Stage 10: DM-001 ✅ DM-002 ✅ DM-003 ✅ DM-004 ✅ DM-005 ✅ DM-006 ✅. Stage 10 COMPLIANT ✅. Stage 11 COMPLIANT ✅. Cross-cutting: TI-001 ✅.)
 
 ---
 
@@ -281,9 +281,9 @@
 
 ## Phase 2: Pipeline Implementation
 
-**Status:** Stage 6 (Source Extraction) COMPLETE ✅ (all gaps resolved)
+**Status:** Stages 1-7, 9-11 COMPLETE ✅. Stage 8 audited — 2 gaps identified (CL-001, CL-002, pending execution)
 **Validation Entity:** Powerleague Portobello Edinburgh (requires complete pipeline)
-**Progress:** Stages 1-6 complete ✅, Stages 7-11 pending audit
+**Progress:** Stages 1-7 complete ✅, Stage 8 audited (gaps pending) ⚠️, Stages 9-11 complete ✅
 
 ### Stage 1: Input (architecture.md 4.1)
 
@@ -903,7 +903,7 @@
 
 ### Stage 7: Lens Application (architecture.md 4.1, 4.2)
 
-**Status:** Core engine validated ✅, Serper connector operational ✅, LA-001/002/004/005/006/007/008a/008d/009/010 complete ✅. Evidence surface + classification working ✅. Canonical dimensions populated ✅. Module triggers not firing (investigation needed) ⚠️
+**Status:** COMPLETE ✅ — All gaps resolved (LA-001 through LA-012). Canonical dimensions populated ✅. Module triggers firing ✅. Evidence surface complete ✅.
 
 **Requirements:**
 - Apply lens mapping rules to populate canonical dimensions
@@ -1304,12 +1304,54 @@
 
 ### Stage 8: Classification (architecture.md 4.1)
 
-**Status:** Audit pending
+**Status:** CL-001 ✅. CL-002 ❌ pending. Active pipeline COMPLIANT ✅.
 
 **Requirements:**
 - Determine entity_class using deterministic universal rules
 
-(Audit pending)
+**Audit Findings (2026-02-05):**
+
+**✅ COMPLIANT (active pipeline):**
+
+**1. `resolve_entity_class()` implements spec priority correctly**
+- Priority order: event → place → organization → person → thing (matches classification_rules.md §Priority Order)
+- Location check via `has_location()`: coordinates OR street_address OR city OR postcode (LA-009 fix applied)
+- Deterministic: stable priority cascade, set-based dedup on roles/activities/place_types
+- Validation gate: `validate_entity_class()` asserts output is one of 5 valid values
+
+**2. Active pipeline callsite is correct**
+- `engine/orchestration/extraction_integration.py:170-173` imports and calls `resolve_entity_class()`
+- Classification runs pre-lens-application (needed for module trigger applicability filtering)
+- Result feeds `entity_class` into `apply_lens_contract()` at line 179
+
+**3. Engine purity maintained**
+- `test_classifier_contains_no_domain_literals` scans classifier source for forbidden terms — passes
+- Classifier uses only universal type indicators (`type`, `is_person`, `is_franchise`) and structural signals (`location_count`, `employee_count`)
+- No domain-specific category checks in classification logic
+
+**4. Test coverage adequate for active function**
+- `tests/engine/extraction/test_entity_classifier_refactor.py`: 12 tests
+- Covers: role extraction (5 tests), engine purity (1 test), LA-009 geographic anchoring (6 tests including priority-order regression)
+
+**❌ GAPS IDENTIFIED:**
+
+- [x] **CL-001: Dead `classify_entity()` function, caller, import, and tests**
+  - **Principle:** No Permanent Translation Layers (system-vision.md Invariant 8), Engine Purity (Invariant 1)
+  - **Location:** `engine/extraction/entity_classifier.py:422-458` (function), `engine/orchestration/persistence.py:250-394` (dead caller `_extract_entity_from_raw`), `engine/orchestration/persistence.py:19` (dead import), `tests/engine/extraction/test_classify_entity.py` (5 tests)
+  - **Description:** `classify_entity()` is a legacy classification function using deprecated field names (`location_lat`, `location_lng`, `address_full`, `address_street`, `entity_type`) that no longer match the canonical schema. It has the wrong priority order (person before place, contradicting the spec). Its sole caller `_extract_entity_from_raw()` in persistence.py is itself never called anywhere in the codebase — both are dead code. The dead import remains at persistence.py:19. The test file `test_classify_entity.py` exercises only the dead function and contains the domain term "Padel Tournament" (engine purity violation in test data). All of these must be removed: silent legacy code that contradicts the canonical pipeline is exactly the class of defect Invariant 8 forbids.
+  - **Scope:** Delete `classify_entity()` from entity_classifier.py. Delete `_extract_entity_from_raw()` and dead import from persistence.py. Delete `test_classify_entity.py`.
+  - **Completed:** 2026-02-05
+  - **Executable Proof:**
+    - `pytest tests/engine/extraction/test_entity_classifier_refactor.py::test_classification_routes_through_single_entry_point -v` ✅ PASSED
+    - `pytest tests/engine/extraction/test_entity_classifier_refactor.py::test_classification_uses_no_legacy_field_names -v` ✅ PASSED
+    - `pytest tests/engine/extraction/ -q` ✅ 166 passed, 0 failures (no regressions)
+  - **Fix Applied:** Deleted `classify_entity()` (entity_classifier.py), `_extract_entity_from_raw()` + dead import (persistence.py), and `test_classify_entity.py`. Replaced 3 symbol-specific guard tests with 2 pattern-level invariant guards: single-entry-point (patch-based, proves live path routes through resolve_entity_class) and legacy-field-name ban (static scan for deprecated dict keys). Added CLASSIFICATION INVARIANT comment to entity_classifier.py header.
+
+- [ ] **CL-002: Pseudocode in classification_rules.md contradicts authoritative priority order**
+  - **Principle:** Determinism (system-vision.md Invariant 4), No Implicit Behavior (system-vision.md §7)
+  - **Location:** `engine/docs/classification_rules.md:63-65` (pseudocode block)
+  - **Description:** The authoritative "Priority Order" list (classification_rules.md lines 34-38) correctly states: priority 3 = organization, priority 4 = person. The pseudocode implementation block (lines 63-65) swaps them: priority 3 = person (`is_individual`), priority 4 = organization (`is_organization_like`). The live `resolve_entity_class()` matches the authoritative list. The pseudocode is a documentation bug that could mislead future development or AI agents.
+  - **Scope:** Swap priority 3/4 in the pseudocode block to match authoritative order (organization before person).
 
 ---
 

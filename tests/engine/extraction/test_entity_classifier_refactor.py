@@ -67,6 +67,117 @@ def test_extract_roles_is_members_only():
     assert "membership_org" in roles
 
 
+# ============================================================
+# CL-001 Invariant Guards
+# Protect the single-classifier and canonical-schema invariants
+# rather than policing specific deleted symbols.  Robust to
+# renames; break if the architectural pattern is re-introduced.
+# ============================================================
+
+
+async def test_classification_routes_through_single_entry_point():
+    """
+    Invariant: every entity on the live extraction path is classified
+    exactly once, via resolve_entity_class, with no alternate classifier.
+
+    Patches resolve_entity_class at its definition site, drives a minimal
+    extraction through the Phase-2 code path (lens contract present),
+    and asserts exactly one classification call was made.
+
+    Also verifies the entity_classifier module surface exports no other
+    classification function beyond resolve_entity_class and its companion
+    validator validate_entity_class.
+    """
+    from unittest.mock import patch, AsyncMock, Mock
+    from pathlib import Path as _Path
+    from engine.orchestration.extraction_integration import extract_entity
+    from engine.orchestration.execution_context import ExecutionContext
+
+    # --- minimal stubs to reach the Phase-2 classification call ---
+    fake_record = Mock()
+    fake_record.source = "sport_scotland"
+    fake_record.file_path = "/fake/path.json"
+
+    mock_db = Mock()
+    mock_db.rawingestion = Mock()
+    mock_db.rawingestion.find_unique = AsyncMock(return_value=fake_record)
+
+    mock_extractor = Mock()
+    mock_extractor.extract.return_value = {"entity_name": "Test Venue", "latitude": 55.9}
+    mock_extractor.validate.return_value = {"entity_name": "Test Venue", "latitude": 55.9}
+    mock_extractor.split_attributes.return_value = ({"entity_name": "Test Venue"}, {})
+
+    ctx = ExecutionContext(
+        lens_id="test_lens",
+        lens_contract={"facets": {}, "values": [], "mapping_rules": [], "modules": {}, "module_triggers": []},
+        lens_hash="test_hash",
+    )
+
+    classification_stub = {
+        "entity_class": "place",
+        "canonical_roles": [],
+        "canonical_activities": [],
+        "canonical_place_types": [],
+    }
+
+    with (
+        patch("engine.extraction.entity_classifier.resolve_entity_class",
+              return_value=classification_stub) as mock_classify,
+        patch("engine.orchestration.extraction_integration.get_extractor_for_source",
+              return_value=mock_extractor),
+        patch.object(_Path, "read_text", return_value='{"entity_name": "Test Venue"}'),
+        patch("engine.extraction.lens_integration.apply_lens_contract",
+              return_value={"canonical_activities": [], "canonical_roles": [],
+                            "canonical_place_types": [], "canonical_access": [], "modules": {}}),
+    ):
+        await extract_entity("fake_id", mock_db, ctx)
+
+        # resolve_entity_class is the sole classification call on the live path
+        mock_classify.assert_called_once()
+
+    # No alternate classifier may exist on the module surface.
+    # Match callable names containing "entity_class" or "classif";
+    # callable() excludes the VALID_ENTITY_CLASSES constant.
+    permitted = {"resolve_entity_class", "validate_entity_class"}
+    found = {
+        name for name in dir(entity_classifier)
+        if not name.startswith("_")
+        and callable(getattr(entity_classifier, name))
+        and ("entity_class" in name.lower() or "classif" in name.lower())
+    }
+    assert found == permitted, (
+        f"Unexpected classification functions: {found - permitted}. "
+        f"Only resolve_entity_class (entry point) and validate_entity_class (validator) are permitted."
+    )
+
+
+def test_classification_uses_no_legacy_field_names():
+    """
+    Classification logic must reference only canonical field names.
+
+    The superseded classify_entity() used location_lat, location_lng,
+    address_full and entity_type as dict-key lookups.  If any of those
+    reappear as quoted string literals in the classifier module the
+    canonical-schema contract is broken.
+
+    Checks quoted occurrences only (the pattern in .get("…") calls) so
+    that coincidental local variable names are not flagged.
+    """
+    source = inspect.getsource(entity_classifier)
+
+    legacy_fields = ["location_lat", "location_lng", "address_full", "entity_type"]
+
+    violations = [
+        field for field in legacy_fields
+        if f'"{field}"' in source or f"'{field}'" in source
+    ]
+
+    assert len(violations) == 0, (
+        f"Classifier references legacy field names as dict keys: {violations}. "
+        f"Canonical equivalents: latitude, longitude, street_address/address, type"
+    )
+
+
 def test_classifier_contains_no_domain_literals():
     """
     Classifier must not contain domain-specific terms (engine purity).
