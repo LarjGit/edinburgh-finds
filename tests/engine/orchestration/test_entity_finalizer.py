@@ -2,7 +2,7 @@
 
 import pytest
 import json
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 from prisma import Prisma
 from engine.orchestration.entity_finalizer import EntityFinalizer
 
@@ -18,6 +18,7 @@ class TestFinalizeSingleCanonicalKeys:
         mock.discovered_attributes = json.dumps(discovered_attributes or {})
         mock.entity_class = entity_class
         mock.source = source
+        mock.id = str(id(mock))
         return mock
 
     def test_latitude_longitude_read_from_canonical_keys(self):
@@ -186,6 +187,7 @@ class TestFinalizeGroupTrustOrderIndependence:
         mock.discovered_attributes = json.dumps(discovered_attributes or {})
         mock.entity_class = entity_class
         mock.source = source
+        mock.id = str(id(mock))
         return mock
 
     @pytest.mark.asyncio
@@ -221,9 +223,10 @@ class TestFinalizeGroupTrustOrderIndependence:
         result_gp_first = await finalizer._finalize_group([gp, serper])
         result_serper_first = await finalizer._finalize_group([serper, gp])
 
-        # --- trust winner (google_places) takes summary in both orderings ---
-        assert result_gp_first["summary"] == "GP summary — high trust"
-        assert result_serper_first["summary"] == "GP summary — high trust"
+        # --- narrative strategy: longer text wins summary in both orderings ---
+        # "Serper summary — low trust" (26 chars) > "GP summary — high trust" (24 chars)
+        assert result_gp_first["summary"] == "Serper summary — low trust"
+        assert result_serper_first["summary"] == "Serper summary — low trust"
 
         # --- every scalar / array field is order-independent ---
         scalar_keys = [
@@ -243,6 +246,64 @@ class TestFinalizeGroupTrustOrderIndependence:
         assert result_gp_first["latitude"] == 55.95
         assert result_gp_first["longitude"] == -3.19
         assert result_gp_first["city"] == "Edinburgh"
+
+
+class TestFinalizeGroupPreMergerSort:
+    """_finalize_group must sort the group by (trust desc, source asc, id asc)
+    before EntityMerger sees it.  This is a contract-boundary determinism
+    guarantee — independent of merger internals."""
+
+    def _make(self, source: str, entity_id: str, marker: str):
+        """Mock with a unique marker in external_ids for order tracing."""
+        mock = Mock()
+        mock.attributes = json.dumps({"entity_name": "Sort Test"})
+        mock.external_ids = json.dumps({"marker": marker})
+        mock.discovered_attributes = json.dumps({})
+        mock.entity_class = "place"
+        mock.source = source
+        mock.id = entity_id
+        return mock
+
+    @pytest.mark.asyncio
+    async def test_group_sorted_trust_desc_source_asc_id_asc(self):
+        """Three entities (two serper, one google_places) arrive scrambled.
+        Finaliser must emit them to merger in:
+          1. google_places  (trust 70)
+          2. serper id-1    (trust 50, id tie-break wins)
+          3. serper id-2    (trust 50)
+        Markers in external_ids trace each entity through merger_inputs.
+        """
+        finalizer = EntityFinalizer(db=None)
+
+        # Deliberately scrambled input order
+        group = [
+            self._make("serper",        "id-2", "s2"),
+            self._make("google_places", "id-1", "gp"),
+            self._make("serper",        "id-1", "s1"),
+        ]
+
+        with patch(
+            "engine.orchestration.entity_finalizer.EntityMerger"
+        ) as MockMergerCls:
+            mock_merger = Mock()
+            mock_merger.merge_entities.return_value = {
+                "entity_type": "place",
+                "entity_name": "Sort Test",
+                "external_ids": {},
+                "source_info": {},
+                "field_confidence": {},
+                "discovered_attributes": {},
+            }
+            MockMergerCls.return_value = mock_merger
+
+            await finalizer._finalize_group(group)
+
+            merger_inputs = mock_merger.merge_entities.call_args[0][0]
+            markers = [inp["external_ids"]["marker"] for inp in merger_inputs]
+
+        assert markers == ["gp", "s1", "s2"], (
+            f"Expected trust-desc / source-asc / id-asc order; got {markers}"
+        )
 
 
 @pytest.mark.slow

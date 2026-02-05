@@ -6,7 +6,7 @@ from typing import List, Dict, Optional, Any
 from prisma import Prisma, Json
 from prisma.models import ExtractedEntity
 from engine.extraction.deduplication import SlugGenerator
-from engine.extraction.merging import EntityMerger
+from engine.extraction.merging import EntityMerger, TrustHierarchy
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +17,7 @@ class EntityFinalizer:
     def __init__(self, db: Prisma):
         self.db = db
         self.slug_generator = SlugGenerator()
+        self.trust_hierarchy = TrustHierarchy()
 
     async def finalize_entities(
         self,
@@ -118,6 +119,15 @@ class EntityFinalizer:
         """
         if len(entity_group) == 1:
             return self._finalize_single(entity_group[0])
+
+        # Deterministic contract-boundary sort — trust desc, connector_id asc,
+        # DB primary-key asc.  Pins input order so the finaliser boundary is
+        # stable regardless of DB query-plan or insertion order.
+        entity_group = sorted(entity_group, key=lambda e: (
+            -self.trust_hierarchy.get_trust_level(e.source),
+            e.source,
+            e.id,
+        ))
 
         # Build input dicts — every merge-relevant blob from ExtractedEntity
         merger_inputs = []

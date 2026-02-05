@@ -2,7 +2,7 @@
 
 **Current Phase:** Phase 2: Pipeline Implementation
 **Validation Entity:** West of Scotland Padel (validation) / Edinburgh Sports Club (investigation)
-**Last Updated:** 2026-02-04 (Stages 9-11 audited. Stage 9 COMPLIANT ✅. Stage 10: DM-001 ✅ DM-002 ✅ DM-003 ✅, DM-004 through DM-005 remaining. Stage 11 COMPLIANT pending Stage 10.)
+**Last Updated:** 2026-02-04 (Stages 9-11 audited. Stage 9 COMPLIANT ✅. Stage 10: DM-001 ✅ DM-002 ✅ DM-003 ✅ DM-004 ✅, DM-005 remaining. Stage 11 COMPLIANT pending Stage 10.)
 
 ---
 
@@ -1382,12 +1382,17 @@ The correct fix is to wire `merging.py` into `entity_finalizer.py` and then add 
     - `pytest tests/engine/extraction/test_merging.py -v` → 45 passed (20 new DM-003 tests covering all 4 acceptance criteria)
     - 229 passed across engine/extraction, engine/lenses, engine/config — zero regressions
 
-- [ ] **DM-004: Entity group order is DB-query-order, not trust-ordered — non-deterministic**
+- [x] **DM-004: Entity group order is DB-query-order, not trust-ordered — non-deterministic** ✅
   - **Principle:** Determinism (system-vision.md Invariant 4, architecture.md 9.6)
   - **Location:** `engine/orchestration/entity_finalizer.py:63-68` (iteration over entity_groups), `entity_finalizer.py:122-125` (all_attributes list built from group order)
   - **Description:** `_finalize_group()` receives `entity_group: List[ExtractedEntity]` in DB find_many() order (insertion-order). This is the finaliser's responsibility to make stable — it must not rely on EntityMerger's internal sort as a substitute, because the finaliser boundary is the contract point with the DB. Sort must happen in `_finalize_group()` before the group is passed to the merger, using a fully deterministic three-level tie-break: **trust desc → connector_id asc → extracted_entity.id asc**. Trust comes from TrustHierarchy (extraction.yaml). connector_id is the ExtractedEntity.source field (already persisted). extracted_entity.id is the DB primary key — stable, unique, always available. This guarantees identical output regardless of DB insertion order or query plan.
   - **Estimated Scope:** 1 file (`entity_finalizer.py`), ~15 lines — instantiate TrustHierarchy, sort group before merge call
   - **Blocked by:** DM-002 (sort must happen before the EntityMerger call added in DM-002)
+  - **Resolution:** `_finalize_group()` now sorts `entity_group` with key `(-trust, source, id)` before building `merger_inputs`. `TrustHierarchy` is instantiated once in `EntityFinalizer.__init__`. Sort is strictly a contract-boundary determinism guarantee — no merge logic.
+  - **Side-fix:** DM-003 regression in `TestFinalizeGroupTrustOrderIndependence` — summary assertion corrected to match narrative-richness strategy (length-first, not trust-first). Confirmed pre-existing on baseline.
+  - **Executable Proof:**
+    - `pytest tests/engine/orchestration/test_entity_finalizer.py -m "not slow" -v` → 8 passed (includes new `TestFinalizeGroupPreMergerSort::test_group_sorted_trust_desc_source_asc_id_asc`)
+    - `pytest tests/engine/extraction/ -m "not slow"` → 156 passed, zero regressions
 
 - [ ] **DM-005: Modules merge is shallow key-union, not deep recursive**
   - **Principle:** Modules JSON Structures merge strategy (architecture.md 9.4 — "Deep recursive merge. Object vs object → recursive merge.")
