@@ -4,7 +4,27 @@ import pytest
 import json
 from unittest.mock import Mock, patch
 from prisma import Prisma
+from prisma._fields import Json as PrismaJson
 from engine.orchestration.entity_finalizer import EntityFinalizer
+from tests.utils import unwrap_prisma_json
+
+
+class TestJsonEqualityTrap:
+    """Proof that prisma Json.__eq__ is a type-only check and that
+    unwrap_prisma_json is the canonical way to make content visible."""
+
+    def test_json_eq_ignores_content(self):
+        """Json.__eq__ returns True for any two Json instances regardless of data."""
+        assert PrismaJson({"a": 1}) == PrismaJson({"a": 2})  # the trap
+
+    def test_unwrap_exposes_content_difference(self):
+        """After unwrapping, standard dict equality catches mutations."""
+        assert unwrap_prisma_json(PrismaJson({"a": 1})) != unwrap_prisma_json(PrismaJson({"a": 2}))
+
+    def test_unwrap_recurses_into_dicts_and_lists(self):
+        """Nested Json inside dicts and lists is also unwrapped."""
+        nested = {"key": PrismaJson({"inner": 42}), "lst": [PrismaJson({"x": 1})]}
+        assert unwrap_prisma_json(nested) == {"key": {"inner": 42}, "lst": [{"x": 1}]}
 
 
 class TestFinalizeSingleCanonicalKeys:
@@ -161,11 +181,12 @@ class TestFinalizeSingleCanonicalKeys:
         }, entity_class="place")
 
         # Serper first (as in real pipeline order), GP second
-        result = await finalizer._finalize_group([serper_entity, gp_entity])
+        result = unwrap_prisma_json(await finalizer._finalize_group([serper_entity, gp_entity]))
 
         # Fields from Serper (first non-null)
         assert result["city"] == "Edinburgh"
         assert result["canonical_activities"] == ["padel"]
+        assert result["modules"] == {"sports_facility": {"padel_courts": {"total": 2}}}
 
         # Fields from GP (Serper had None, GP fills them)
         assert result["latitude"] == 55.9533
@@ -220,23 +241,24 @@ class TestFinalizeGroupTrustOrderIndependence:
             discovered_attributes={"note": "from serper"},
         )
 
-        result_gp_first = await finalizer._finalize_group([gp, serper])
-        result_serper_first = await finalizer._finalize_group([serper, gp])
+        result_gp_first = unwrap_prisma_json(await finalizer._finalize_group([gp, serper]))
+        result_serper_first = unwrap_prisma_json(await finalizer._finalize_group([serper, gp]))
 
         # --- narrative strategy: longer text wins summary in both orderings ---
         # "Serper summary — low trust" (26 chars) > "GP summary — high trust" (24 chars)
         assert result_gp_first["summary"] == "Serper summary — low trust"
         assert result_serper_first["summary"] == "Serper summary — low trust"
 
-        # --- every scalar / array field is order-independent ---
-        scalar_keys = [
+        # --- every field (scalar, array, and Json-wrapped) is order-independent ---
+        all_keys = [
             "slug", "entity_class", "entity_name", "summary",
             "latitude", "longitude", "street_address", "city",
             "postcode", "country", "phone", "email", "website_url",
             "canonical_activities", "canonical_roles",
             "canonical_place_types", "canonical_access",
+            "modules", "external_ids", "source_info", "field_confidence",
         ]
-        for key in scalar_keys:
+        for key in all_keys:
             assert result_gp_first[key] == result_serper_first[key], (
                 f"field {key!r} differs by input order: "
                 f"{result_gp_first[key]!r} vs {result_serper_first[key]!r}"
@@ -390,16 +412,8 @@ class TestMergeOrderIndependenceEndToEnd:
 
     @staticmethod
     def _normalise(payload: dict) -> dict:
-        """Strip Prisma Json wrappers to plain Python structures.
-
-        Json.__eq__ always returns True regardless of content, so any
-        comparison that touches a Json-wrapped field must unwrap first.
-        """
-        from prisma._fields import Json as PrismaJson
-        return {
-            k: v.data if isinstance(v, PrismaJson) else v
-            for k, v in payload.items()
-        }
+        """Strip Prisma Json wrappers via the shared recursive helper."""
+        return unwrap_prisma_json(payload)
 
     async def _run(self, permutation) -> dict:
         """Run _finalize_group and return a normalised (Json-free) payload."""

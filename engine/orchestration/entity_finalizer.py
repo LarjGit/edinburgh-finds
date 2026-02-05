@@ -200,6 +200,7 @@ class EntityFinalizer:
             "phone": attributes.get("phone"),
             "email": attributes.get("email"),
             "website_url": attributes.get("website"),
+            # Json-wrapped fields below: Json.__eq__ is type-only — tests must unwrap via tests.utils.unwrap_prisma_json before comparing.
             "modules": Json(attributes.get("modules", {})),
             "discovered_attributes": Json(discovered_attributes or {}),
             "opening_hours": Json({}),

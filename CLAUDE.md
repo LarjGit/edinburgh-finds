@@ -20,6 +20,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
    - Specifies the locked extraction contract (Phase 1: primitives only, Phase 2: lens application)
    - May evolve deliberately but MUST preserve system-vision.md invariants
 
+**ENFORCEMENT RULE:**  
+The agent MUST explicitly open and read `docs/system-vision.md` and `docs/architecture.md` using the Read tool and MUST confirm this in its response BEFORE proposing any plan or change. Until that confirmation appears, NO further actions are permitted.
+
 **Before making ANY architectural change:**
 - Ask: Does this preserve engine purity? (No domain semantics in engine code)
 - Ask: Does this maintain determinism and idempotency?
