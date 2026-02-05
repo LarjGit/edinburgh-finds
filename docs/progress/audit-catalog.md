@@ -2,7 +2,7 @@
 
 **Current Phase:** Phase 2: Pipeline Implementation
 **Validation Entity:** West of Scotland Padel (validation) / Edinburgh Sports Club (investigation)
-**Last Updated:** 2026-02-05 (Stages 9-11 audited. Stage 9 COMPLIANT ✅. Stage 10: DM-001 ✅ DM-002 ✅ DM-003 ✅ DM-004 ✅ DM-005 ✅ DM-006 ✅. Stage 10 COMPLIANT ✅. Stage 11 COMPLIANT ✅.)
+**Last Updated:** 2026-02-05 (Stages 9-11 audited. Stage 9 COMPLIANT ✅. Stage 10: DM-001 ✅ DM-002 ✅ DM-003 ✅ DM-004 ✅ DM-005 ✅ DM-006 ✅. Stage 10 COMPLIANT ✅. Stage 11 COMPLIANT ✅. Cross-cutting: TI-001 pending.)
 
 ---
 
@@ -1442,6 +1442,28 @@ The correct fix is to wire `merging.py` into `entity_finalizer.py` and then add 
 
 **⚠️ Pending:**
 - Provenance (source_info, field_confidence) — DM-002 wired EntityMerger in; source_info and field_confidence now flow through _finalize_group() → _build_upsert_payload() → upsert. Provenance for multi-source groups is live. Single-source entities still emit empty provenance (expected — nothing to conflict). Remaining Stage 10 items (DM-003 through DM-005) will enrich provenance further but do not block Stage 11.
+
+---
+
+## Cross-Cutting: Test Infrastructure
+
+Tasks here are not bound to a single pipeline stage. They protect test
+correctness across the entire suite.
+
+- [ ] **TI-001: Global Prisma Json equality guard — Json.__eq__ is a no-op**
+  - **Principle:** Test correctness / silent-regression prevention. Discovered during DM-006: `Json.__eq__` returns `True` unconditionally regardless of content. Any test that compares payloads containing `Json`-wrapped fields (`modules`, `external_ids`, `source_info`, `field_confidence`, `discovered_attributes`, `opening_hours`) via raw `==` will never catch a regression in those fields.
+  - **Location:** `tests/` — shared helper (conftest or test_utils) + migration of existing payload comparisons
+  - **Requirements:**
+    1. Shared helper that recursively unwraps `prisma._fields.Json` → `.data`, traversing nested dicts and lists.
+    2. Migrate existing tests that compare payloads or records (including `TestFinalizeGroupTrustOrderIndependence`, `test_multi_source_merge_fills_nulls_from_richer_source`, and any other sites) to route through the helper.
+    3. Unit test proving: (a) `Json(a) == Json(b)` is `True` even when `a != b`; (b) the unwrap helper makes the difference visible.
+    4. One-line code comment near `_build_upsert_payload()` and inside the helper documenting `Json.__eq__` behaviour to prevent reintroduction.
+  - **Estimated Scope:** 1–2 files, ≤60 lines
+  - **Acceptance:**
+    - No test in the suite relies on raw `Json` equality.
+    - A mutation in `modules`, `external_ids`, or provenance fields would now cause a test failure.
+    - Helper is reused by DM-006 (`TestMergeOrderIndependenceEndToEnd._normalise`) and all other payload-comparison sites.
+  - **Spawned by:** DM-006 (2026-02-05)
 
 ---
 
