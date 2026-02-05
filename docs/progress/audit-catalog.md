@@ -2,7 +2,7 @@
 
 **Current Phase:** Phase 2: Pipeline Implementation
 **Validation Entity:** West of Scotland Padel (validation) / Edinburgh Sports Club (investigation)
-**Last Updated:** 2026-02-05 (Stages 9-11 audited. Stage 9 COMPLIANT ✅. Stage 10: DM-001 ✅ DM-002 ✅ DM-003 ✅ DM-004 ✅ DM-005 ✅, DM-006 remaining. Stage 11 COMPLIANT pending Stage 10.)
+**Last Updated:** 2026-02-05 (Stages 9-11 audited. Stage 9 COMPLIANT ✅. Stage 10: DM-001 ✅ DM-002 ✅ DM-003 ✅ DM-004 ✅ DM-005 ✅ DM-006 ✅. Stage 10 COMPLIANT ✅. Stage 11 COMPLIANT ✅.)
 
 ---
 
@@ -1410,12 +1410,14 @@ The correct fix is to wire `merging.py` into `entity_finalizer.py` and then add 
     - `pytest tests/engine/extraction/ -m "not slow"` → 167 passed, zero regressions
     - `pytest tests/engine/orchestration/test_entity_finalizer.py -m "not slow"` → 8 passed, zero regressions
 
-- [ ] **DM-006: Order-independence end-to-end test — proves merge is DB-order-blind**
+- [x] **DM-006: Order-independence end-to-end test — proves merge is DB-order-blind**
   - **Principle:** Determinism (system-vision.md Invariant 4, architecture.md 9.6 — "Merge output must be identical across runs. Ordering must remain stable.")
-  - **Location:** `tests/engine/orchestration/test_entity_finalizer.py`
-  - **Description:** Single test class with two test methods that construct the canonical resolution-rules scenario (Serper: name + rich description, no coords; Google Places: same place, place_id, coords, empty description) as mock ExtractedEntity objects. Method A passes the list in Serper-first order; Method B passes it in Google-first order. Both call `_finalize_group()` and assert identical output: coords from Google, description from Serper, external_ids from Google. This is the acceptance test for the resolution rules — if it passes, the merge is provably order-independent for the target scenario.
-  - **Estimated Scope:** 1 file (`test_entity_finalizer.py`), ~50 lines — one test class, two methods sharing a shared assertion helper
-  - **Blocked by:** DM-004 (deterministic sort must be in place before this test can pass)
+  - **Location:** `tests/engine/orchestration/test_entity_finalizer.py` — class `TestMergeOrderIndependenceEndToEnd`
+  - **Description:** Three-source end-to-end proof test. `sport_scotland` (trust 90), `google_places` (trust 70), and `serper` (trust 50) each contribute fields that exercise every field-group strategy: scalars (trust-default), geo (presence → trust), narrative (richness → trust), canonical arrays (union + dedup + sort), and modules (deep merge). All 3! = 6 input permutations are fed through `_finalize_group → EntityMerger → _build_upsert_payload` and every key in the resulting payload is asserted identical. Winner assertions pin the expected outcome of each strategy independently (geo coords, exact narrative string, canonical array with a cross-source duplicate to prove dedup, contact field trust race between ss and gp, modules deep-merge leaf equality, external-id union). `_normalise` helper unwraps all Prisma `Json` fields to plain dicts before comparison — discovered that `Json.__eq__` returns `True` unconditionally, so raw `==` on Json-wrapped keys is a no-op.
+  - **Completed:** 2026-02-05
+  - **Executable Proof:**
+    - `pytest tests/engine/orchestration/test_entity_finalizer.py::TestMergeOrderIndependenceEndToEnd -v` ✅ PASSED
+    - `pytest tests/engine/orchestration/test_entity_finalizer.py -m "not slow"` → 9 passed, zero regressions
 
 ---
 

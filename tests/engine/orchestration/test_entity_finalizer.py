@@ -306,6 +306,180 @@ class TestFinalizeGroupPreMergerSort:
         )
 
 
+class TestMergeOrderIndependenceEndToEnd:
+    """End-to-end proof: _finalize_group produces bit-identical payloads
+    regardless of the order in which entities arrive from the DB.
+
+    Three sources at distinct trust tiers exercise every field-group
+    strategy in a single run:
+      - sport_scotland (90)  → wins scalar identity fields (trust-default)
+      - google_places  (70)  → wins geo (trust after presence filter)
+      - serper         (50)  → contributes narrative (longer text wins),
+                               canonical arrays (union), modules (deep merge)
+
+    All 3! = 6 permutations are fed through the shared assertion helper so
+    that no permutation is accidentally privileged.
+    """
+
+    # ------------------------------------------------------------------
+    # fixtures
+    # ------------------------------------------------------------------
+
+    def _make(self, source: str, attributes: dict, entity_id: str = None,
+              external_ids: dict = None, discovered_attributes: dict = None):
+        mock = Mock()
+        mock.attributes = json.dumps(attributes)
+        mock.external_ids = json.dumps(external_ids or {})
+        mock.discovered_attributes = json.dumps(discovered_attributes or {})
+        mock.entity_class = "place"
+        mock.source = source
+        mock.id = entity_id or source  # stable, unique across the trio
+        return mock
+
+    def _trio(self):
+        """Return (sport_scotland, google_places, serper) mocks.
+
+        Each contributes at least one field that only it has, plus
+        overlapping fields that exercise every strategy path.
+
+        "hockey" appears on both sport_scotland and serper so the
+        canonical-array assertion can verify deduplication, not just union.
+        """
+        ss = self._make(
+            source="sport_scotland",
+            entity_id="ss-1",
+            attributes={
+                "entity_name": "End-to-End Venue",
+                "street_address": "1 Sport Street",        # scalar identity — trust wins
+                "phone": "+441315550001",                  # contact — trust wins (ss 90 > gp 70)
+                "canonical_activities": ["hockey"],        # array — union (duplicate with serper)
+                "modules": {"sports_facility": {"pitches": {"total": 4}}},
+            },
+            external_ids={"ss_id": "ss-ext-1"},
+        )
+        gp = self._make(
+            source="google_places",
+            entity_id="gp-1",
+            attributes={
+                "entity_name": "End-to-End Venue",
+                "latitude": 55.95,                         # geo — only source with coords
+                "longitude": -3.19,
+                "phone": "+441315550002",                  # contact — loses to ss (trust 70 < 90)
+                "canonical_activities": ["tennis"],        # array — unique contribution
+                "modules": {"sports_facility": {"pitches": {"indoor": 2}}},
+            },
+            external_ids={"gp_id": "gp-ext-1"},
+        )
+        serper = self._make(
+            source="serper",
+            entity_id="serp-1",
+            attributes={
+                "entity_name": "End-to-End Venue",
+                "summary": "A longer narrative summary that wins by richness strategy",
+                "city": "Edinburgh",                       # scalar identity — only serper has it
+                "canonical_activities": ["hockey", "squash"],  # hockey duplicates ss; squash is unique
+                "modules": {"sports_facility": {"pitches": {"outdoor": 3}}},
+            },
+            external_ids={"serper_id": "serp-ext-1"},
+        )
+        return [ss, gp, serper]
+
+    # ------------------------------------------------------------------
+    # helpers
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _normalise(payload: dict) -> dict:
+        """Strip Prisma Json wrappers to plain Python structures.
+
+        Json.__eq__ always returns True regardless of content, so any
+        comparison that touches a Json-wrapped field must unwrap first.
+        """
+        from prisma._fields import Json as PrismaJson
+        return {
+            k: v.data if isinstance(v, PrismaJson) else v
+            for k, v in payload.items()
+        }
+
+    async def _run(self, permutation) -> dict:
+        """Run _finalize_group and return a normalised (Json-free) payload."""
+        finalizer = EntityFinalizer(db=None)
+        raw = await finalizer._finalize_group(list(permutation))
+        return self._normalise(raw)
+
+    # ------------------------------------------------------------------
+    # test
+    # ------------------------------------------------------------------
+
+    @pytest.mark.asyncio
+    async def test_all_six_permutations_produce_identical_payloads(self):
+        """All 3! permutations of the three-source group yield the same
+        merged payload for every key.  This is the determinism proof that
+        the contract-boundary sort + merger strategies are collectively
+        order-blind.
+
+        Winner assertions pin the expected outcome of each strategy so the
+        test cannot pass while being consistently wrong across all
+        permutations."""
+        import itertools
+
+        trio = self._trio()
+        payloads = [await self._run(perm) for perm in itertools.permutations(trio)]
+        reference = payloads[0]
+
+        # ----------------------------------------------------------
+        # Strategy-winner assertions (would fail if merge were wrong
+        # but happened to be consistently wrong across all orderings)
+        # ----------------------------------------------------------
+
+        # GEO — google_places is the sole source with coordinates;
+        # presence filter surfaces them regardless of trust ordering.
+        assert reference["latitude"] == 55.95
+        assert reference["longitude"] == -3.19
+
+        # NARRATIVE — serper's summary is the only non-missing summary,
+        # so it wins by richness (longer text) strategy unconditionally.
+        assert reference["summary"] == "A longer narrative summary that wins by richness strategy"
+
+        # CANONICAL ARRAYS — union across all three sources, deduplicated
+        # ("hockey" contributed by both sport_scotland and serper appears
+        # exactly once), then lexicographically sorted.
+        assert reference["canonical_activities"] == ["hockey", "squash", "tennis"]
+
+        # SCALAR IDENTITY — street_address: sport_scotland (trust 90)
+        # beats any other source.  city: only serper provides it.
+        assert reference["street_address"] == "1 Sport Street"
+        assert reference["city"] == "Edinburgh"
+
+        # CONTACT — phone: sport_scotland (+…0001, trust 90) beats
+        # google_places (+…0002, trust 70).
+        assert reference["phone"] == "+441315550001"
+
+        # MODULES DEEP MERGE — three sources each contribute a distinct
+        # leaf under the same nested path.  All three must survive.
+        pitches = reference["modules"]["sports_facility"]["pitches"]
+        assert pitches == {"total": 4, "indoor": 2, "outdoor": 3}
+
+        # EXTERNAL IDS — union; every source's identifier survives.
+        assert reference["external_ids"] == {
+            "ss_id": "ss-ext-1",
+            "gp_id": "gp-ext-1",
+            "serper_id": "serp-ext-1",
+        }
+
+        # ----------------------------------------------------------
+        # Order-independence: every permutation matches reference on
+        # every key (plain-Python comparison, no Json wrappers).
+        # ----------------------------------------------------------
+        for i, payload in enumerate(payloads[1:], start=2):
+            for key in reference:
+                assert payload[key] == reference[key], (
+                    f"Permutation {i}: field {key!r} differs.\n"
+                    f"  reference  : {reference[key]!r}\n"
+                    f"  permutation: {payload[key]!r}"
+                )
+
+
 @pytest.mark.slow
 @pytest.mark.asyncio
 async def test_finalize_single_entity():
