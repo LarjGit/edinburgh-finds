@@ -442,3 +442,8 @@ This document may evolve deliberately as the system matures, but changes must be
 The purpose of this document is stability, clarity, and long-term coherence — not rapid experimentation.
 
 ---
+## Change Log
+
+**2026-02-06 – Phase 2 Clarifications**  
+Added Evidence Model section defining Phase 1 surfaces and binding them to lens-owned semantics; formalized deterministic merge as constitutional with connector-blind constraint; clarified OPE vs OPE+Geo; clarified place recognition via any geographic anchor.
+
