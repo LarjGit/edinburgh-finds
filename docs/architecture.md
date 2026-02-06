@@ -2195,3 +2195,7 @@ Changes must:
 The purpose of this document is long-term coherence, not convenience.
 
 ---
+## Change Log
+
+**2026-02 — Phase 2 Alignment**  
+Formalized extraction boundary (no canonical solicitation), default evidence surfaces, geographic anchoring for classification, deterministic merge contract, and canonical-only finalization per LA-002/009/011 and DM-001–006.
