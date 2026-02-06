@@ -180,6 +180,18 @@ Provenance enables:
 
 Provenance is not optional metadata; it is a core part of the data model.
 
+### Evidence Model
+
+The engine recognizes a fixed set of evidence surfaces produced in Phase 1:
+
+- Structured primitives (name, address, coordinates, categories, etc.).
+- Narrative surfaces (summary, description).
+- Source observations.
+
+Lenses may reason only over these surfaces.
+Evidence surfaces carry no semantics; interpretation occurs exclusively through lens contracts.
+The creation or removal of an evidence surface is a Vision-level change.
+
 ---
 
 ## 5. Determinism, Trust & Reproducibility
@@ -230,6 +242,18 @@ This includes:
 
 Reproducibility enables confident iteration, debugging, and long-term system evolution.
 
+### Merge is Constitutional
+
+The formation of a single entity from many observations follows a deterministic constitution:
+
+- Field-group strategies.
+- Explicit missingness semantics.
+- Metadata-driven tie-break.
+- Deep module merge.
+
+Merge behavior is not an implementation detail; it defines truth.
+Merge must not contain connector-specific conditions; only trust metadata may influence outcomes.
+
 ---
 
 ## 6. What Success Looks Like
@@ -244,6 +268,9 @@ The system is not considered validated until at least **one real-world entity** 
 
 Query → Orchestration → Ingestion → Extraction → Lens Mapping → Classification → Module Attachment → Module Population → Deduplication → Deterministic Merge → Finalization → Persistence.
 
+One Perfect Entity requires canonical dimensions and at least one module field.
+Geographic coordinates are an optional OPE+Geo quality gate.
+
 The validation entity must produce a persisted record in the entity store with:
 
 - Correct `entity_class`.
@@ -251,6 +278,11 @@ The validation entity must produce a persisted record in the entity store with:
 - All triggered modules attached and **at least one** module field populated.
 - Accurate universal primitives (identity, location, contact where available).
 - Provenance and external IDs preserved.
+
+### What Is a Place
+
+A location is recognized when any reliable geographic anchoring is present
+(coordinates, street address, city, postcode).
 
 Partial success (e.g., primitives only, single-source only, empty modules) is not considered architecture validation.
 
@@ -444,6 +476,5 @@ The purpose of this document is stability, clarity, and long-term coherence — 
 ---
 ## Change Log
 
-**2026-02-06 – Phase 2 Clarifications**  
+**2026-02-06 – Phase 2 Clarifications**
 Added Evidence Model section defining Phase 1 surfaces and binding them to lens-owned semantics; formalized deterministic merge as constitutional with connector-blind constraint; clarified OPE vs OPE+Geo; clarified place recognition via any geographic anchor.
-
