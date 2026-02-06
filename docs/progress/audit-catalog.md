@@ -285,6 +285,9 @@
 **Validation Entity:** Powerleague Portobello Edinburgh (requires complete pipeline)
 **Progress:** Stages 1-11 complete ✅
 
+**Phase Transition Statement**
+This completes Phase 2 (pipeline correctness). Phase 3 will focus on operational quality:
+observability, performance, and real-world data coverage **without altering core contracts**.
 ### Stage 1: Input (architecture.md 4.1)
 
 **Status:** Skipped as trivial (agreement with user)
@@ -1652,12 +1655,3 @@ Every completed item MUST document executable proof:
 - All 7 lens validation gates implemented (architecture.md 6.7)
 - Full architectural compliance achieved: 319 tests passed, 5 skipped, 0 failures
 - Foundation is solid and permanent
-
-**Next Action:**
-- **Stage 2 Audit Complete:** 3 implementation gaps identified (LR-001, LR-002, LR-003) — all resolved ✅
-- **Stage 3 Audit Complete:** 4 implementation gaps identified (PL-001, PL-002, PL-003, PL-004) — all resolved ✅
-- **Stage 4 Audit Complete:** Substantially compliant, no new gaps identified ✅
-- **Stage 5 Audit Complete:** 2 implementation gaps identified (RI-001, RI-002) — all resolved ✅
-- **Stage 6 Audit Complete:** 3 implementation gaps identified (EX-001, EX-002, EX-003) — all resolved ✅
-- **Stage 7 Progress:** LA-001/LA-002 complete ✅, LA-003 remains (will validate once LA-001 runs), LA-004/LA-005 environment blockers identified
-- **Next:** Address LA-004/LA-005 (environment setup) to enable LA-001 execution and validate LA-003, or continue with Stage 8 audit
