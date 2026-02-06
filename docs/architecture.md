@@ -500,6 +500,9 @@ A single execution progresses through the following stages in strict order:
 
 6. **Source Extraction**
    - For each raw artifact, run the source-specific extractor.
+   - Extractors MUST NOT solicit or emit canonical dimensions.
+   - This includes LLM prompts: requesting canonical fields is a boundary
+     violation.
    - Extractors emit:
      - Schema-aligned universal primitives (e.g., entity_name, latitude,
        street_address, phone, website_url).
@@ -514,8 +517,19 @@ A single execution progresses through the following stages in strict order:
    - Deterministic rules execute before schema-bound LLM extraction.
    - Output consists of canonical dimensions and populated modules.
 
+   ### Default Evidence Surfaces
+   - If a mapping rule omits source_fields, the engine searches:
+     entity_name, summary, description, raw_categories, street_address.
+   - Implementations may additionally search discovered_attributes when a field
+     is not present top-level.
+
 8. **Classification**
    - Determine entity_class using deterministic universal rules.
+   - A candidate is a place if any geographic anchoring is present:
+     - coordinates
+     - street address
+     - city
+     - postcode
 
 9. **Cross-Source Deduplication Grouping**
    - Group extracted entities believed to represent the same real-world entity
@@ -530,6 +544,8 @@ A single execution progresses through the following stages in strict order:
     - Generate stable slugs and derived identifiers.
     - Upsert merged entities idempotently.
     - Persist provenance and external identifiers.
+    - Finalization MUST use canonical schema keys only.
+    - Legacy keys (e.g., location_lat) are forbidden.
 
 Stages must execute in this order without reordering or shortcutting.
 
@@ -1554,6 +1570,13 @@ Multi-source merge is:
 Merge consumes connector trust metadata and extraction confidence but never
 hardcodes connector names or domain logic.
 
+Normative merge requirements:
+
+- Missingness definition must be explicit and shared across all merge
+  strategies.
+- Inputs must be pre-sorted by (-trust, connector_id, extracted_entity.id)
+  before field-level merge logic executes.
+
 ---
 
 ## 9.2 Merge Position in Pipeline
@@ -1590,6 +1613,8 @@ Connector names must never appear in merge logic.
 ## 9.4 Field-Group Merge Strategies
 
 Different field classes use different deterministic strategies.
+
+- Field-group strategies must be explicitly declared and stable across runs.
 
 ### Identity and Display Fields
 
@@ -1655,6 +1680,7 @@ Examples:
 Strategy:
 
 - Union all values.
+- Normalize values.
 - Deduplicate.
 - Lexicographically sort.
 - No weighting or ranking.
@@ -1665,7 +1691,7 @@ Strategy:
 
 Strategy:
 
-- Deep recursive merge.
+- Modules recursive merge algorithm.
 - Object vs object → recursive merge.
 - Array vs array:
   - Scalar arrays → concatenate, deduplicate, sort.
@@ -1936,6 +1962,8 @@ Failures abort execution immediately.
 - Field naming validation.
 - Extraction boundary enforcement.
 - Merge contract enforcement.
+- Finalization enforces canonical schema keys only.
+- Legacy keys (e.g., location_lat) are forbidden.
 
 Runtime validation may fail fast or degrade gracefully depending on severity.
 
