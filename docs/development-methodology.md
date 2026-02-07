@@ -81,8 +81,8 @@
 - Never revisit completed work
 
 **Golden Doc Supremacy**
-- `docs/system-vision.md` = immutable constitution
-- `docs/architecture.md` = runtime specification
+- `docs/target/system-vision.md` = immutable constitution
+- `docs/target/architecture.md` = runtime specification
 - All decisions reference golden docs explicitly
 - Conflicts → golden docs always win
 
@@ -94,7 +94,7 @@
 
 **Goal:** Fix all architectural violations from golden docs
 
-**Source of Work:** Audit `docs/system-vision.md` Invariants 1-10
+**Source of Work:** Audit `docs/target/system-vision.md` Invariants 1-10
 - Engine Purity (Invariant 1): No domain terms in engine code
 - Lens Ownership (Invariant 2): All semantics in lens configs
 - Zero Engine Changes (Invariant 3): New verticals require no engine changes
@@ -122,7 +122,7 @@
 
 **Goal:** Implement complete orchestration pipeline per architecture
 
-**Source of Work:** `docs/architecture.md` Section 4.1 - Pipeline Stages
+**Source of Work:** `docs/target/architecture.md` Section 4.1 - Pipeline Stages
 
 The 11 stages in canonical order:
 1. Input
@@ -180,7 +180,7 @@ The 11 stages in canonical order:
 
 ### Step 1: Identify Architectural Principles
 
-Read `docs/system-vision.md` and `docs/architecture.md` and extract testable principles:
+Read `docs/target/system-vision.md` and `docs/target/architecture.md` and extract testable principles:
 - Engine Purity (Invariant 1): No domain terms in engine code
 - Extraction Boundary (architecture.md 4.2): Extractors emit only primitives
 - Lens Ownership (Invariant 2): All semantics in lens configs
@@ -1126,8 +1126,8 @@ Actions:
 ### Step 1: Read the Golden Docs
 
 **Essential reading (must read before starting):**
-- `docs/system-vision.md` - The immutable constitution (30 min)
-- `docs/architecture.md` - Runtime specification (45 min)
+- `docs/target/system-vision.md` - The immutable constitution (30 min)
+- `docs/target/architecture.md` - Runtime specification (45 min)
 
 **Purpose:** Understand what you're building toward
 

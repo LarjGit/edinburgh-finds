@@ -18,8 +18,8 @@ You are the orchestrator. You MUST:
 
 ## 0) Read architectural authorities first (MANDATORY)
 Read:
-- docs/system-vision.md
-- docs/architecture.md
+- docs/target/system-vision.md
+- docs/target/architecture.md
 
 Extract their non-negotiable constraints into <=10 bullets called "GLOBAL CONSTRAINTS".
 These constraints apply to all doc outputs and must be included in each doc agent call.
