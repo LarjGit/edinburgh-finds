@@ -1,153 +1,230 @@
-﻿---
-description: Generate the complete /docs suite by orchestrating doc agents and diagram agents. The orchestrator saves files; subagents only return text.
+---
+description: Generate the complete /docs suite by orchestrating doc agents and diagram agents using the outline→section-chunks pattern to keep orchestrator context lean.
 allowed-tools:
   - Read
   - Glob
   - Grep
   - Write
+  - Edit
 ---
 
-# Generate Complete Documentation Suite (Orchestrator v2)
+# Generate Complete Documentation Suite (Orchestrator v3 - Section-Chunked)
 
-You are the orchestrator. You MUST:
-- Read architectural authorities first.
-- Call subagents to produce content (doc sections and diagrams are both â€œcontent producersâ€).
-- Save outputs to /docs/*.md.
-- Ensure consistent cross-links.
-- Run a review agent at the end and apply fixes.
+You are the orchestrator. You MUST follow the section-chunked pattern to keep context lean.
 
-## 0) Read architectural authorities first (MANDATORY)
-Read:
-- docs/target/system-vision.md
-- docs/target/architecture.md
+## Core Principle: Outline→Section-Chunks Pattern
 
-Extract their non-negotiable constraints into <=10 bullets called "GLOBAL CONSTRAINTS".
-These constraints apply to all doc outputs and must be included in each doc agent call.
+Doc subagents NEVER return full documents. Instead:
+1. First call: Return outline (≤50 lines)
+2. Subsequent calls: Return one section at a time (≤400 lines each)
 
-## 1) Dependency graph (doc -> prerequisites)
+This keeps orchestrator context bounded regardless of doc size.
 
-- docs/ARCHITECTURE.md:
-  - diagram-architecture
-  - diagram-c4
-  - diagram-dependency
-  - diagram-sequence
+## Workflow
 
-- docs/DATABASE.md:
-  - diagram-er
+### Phase 1: Extract Global Constraints
 
-- docs/API.md:
-  - diagram-sequence
+1. Read docs/target/system-vision.md and docs/target/architecture.md
+2. Extract into GLOBAL CONSTRAINTS (max 100 lines):
+   - System name, tech stack, key patterns
+   - Naming conventions, terminology
+   - Cross-cutting concerns (auth, logging, etc.)
+   - Immutable invariants
+   - Engine vs Lens boundaries
 
-- docs/FEATURES.md:
-  - diagram-user-journey
-  - diagram-sequence
+### Phase 2: Generate Diagrams
 
-- docs/ONBOARDING.md:
-  - (none)
+For each diagram type needed:
+1. Call diagram subagent with GLOBAL CONSTRAINTS
+2. Receive Mermaid code (max 150 lines)
+3. Store diagram text for later inclusion in docs
 
-- docs/FRONTEND.md:
-  - diagram-component
-  - diagram-state
+Diagram types:
+- diagram-architecture
+- diagram-c4
+- diagram-component
+- diagram-contribution-flow
+- diagram-dependency
+- diagram-deployment
+- diagram-er
+- diagram-network
+- diagram-sequence
+- diagram-state
+- diagram-user-journey
 
-- docs/BACKEND.md:
-  - diagram-component
-  - diagram-sequence
+### Phase 3: Generate Docs (Section-by-Section)
 
-- docs/DEPLOYMENT.md:
-  - diagram-deployment
-  - diagram-network
+For each doc type in order:
 
-- docs/DEVELOPMENT.md:
-  - diagram-contribution-flow
+**Document Order:**
+1. ARCHITECTURE.md (needs: diagram-architecture, diagram-c4, diagram-dependency, diagram-sequence)
+2. DATABASE.md (needs: diagram-er)
+3. API.md (needs: diagram-sequence)
+4. FEATURES.md (needs: diagram-user-journey, diagram-sequence)
+5. ONBOARDING.md (needs: none)
+6. FRONTEND.md (needs: diagram-component, diagram-state)
+7. BACKEND.md (needs: diagram-component, diagram-sequence)
+8. DEPLOYMENT.md (needs: diagram-deployment, diagram-network)
+9. DEVELOPMENT.md (needs: diagram-contribution-flow)
+10. CONFIGURATION.md (needs: none)
 
-- docs/CONFIGURATION.md:
-  - (none)
+**For each document:**
 
-## 2) Execution protocol (applies to EVERY doc)
-For each document:
-A) Run each prerequisite subagent and capture its returned text exactly.
-B) Call the doc subagent with:
+**Step 3a: Get Outline**
+1. Call doc subagent with:
    - GLOBAL CONSTRAINTS
-   - ARTIFACTS: the prerequisite outputs (diagrams etc.)
-   - Any repo snippets it requests (use Read/Glob/Grep)
-C) The doc subagent MUST return a complete Markdown file body for that doc.
-D) Orchestrator writes it to the correct path under /docs.
+   - Required diagrams for this doc
+   - Instruction: `task: "outline"`
+2. Receive outline (max 50 lines) with format:
+   ```markdown
+   # [Document Title]
 
-## 3) Ensure folder structure exists
-Create if missing:
-- docs/
-- docs/diagrams/ (optional; only use if you decide to save diagrams separately)
+   ## Section: [Heading 1]
+   Description: [One-line description]
+   Estimated lines: [number]
 
-## 4) Generate documents in this order
+   ## Section: [Heading 2]
+   Description: [One-line description]
+   Estimated lines: [number]
+   ```
 
-1) ARCHITECTURE.md
-   - prereqs: diagram-architecture, diagram-c4, diagram-dependency, diagram-sequence
-   - doc agent: architecture-docs
-   - write: docs/ARCHITECTURE.md
+**Step 3b: Create Skeleton**
+1. Parse outline to extract section headings
+2. Write skeleton file to docs/generated/[FILENAME] with:
+   - Document title
+   - Section headings from outline
+   - Placeholder comment: `<!-- SECTION PENDING: [heading] -->`
 
-2) DATABASE.md
-   - prereq: diagram-er
-   - doc agent: database-docs
-   - write: docs/DATABASE.md
+**Step 3c: Fill Sections**
+For each section in outline:
+1. Call doc subagent with:
+   - GLOBAL CONSTRAINTS
+   - Required diagrams
+   - Current skeleton file content
+   - Instruction: `task: "section: [heading name]"`
+2. Receive section content (≤400 lines)
+3. Use Edit tool to replace placeholder with section content
+4. Section content should:
+   - Reference diagrams: ` ```mermaid\n[diagram content]\n``` `
+   - Reference other docs: `[Doc Name](FILENAME.md#section)`
+   - Follow GLOBAL CONSTRAINTS for all naming
 
-3) API.md
-   - prereq: diagram-sequence
-   - doc agent: api-docs
-   - write: docs/API.md
+### Phase 4: Review & Fix
 
-4) FEATURES.md
-   - prereqs: diagram-user-journey, diagram-sequence
-   - doc agent: features-docs
-   - write: docs/FEATURES.md
+For each completed doc:
+1. Call review-docs subagent with:
+   - The specific doc file path
+   - GLOBAL CONSTRAINTS
+   - All other completed docs (for cross-references)
+2. Receive patch instructions in format:
+   ```markdown
+   ## PATCH 1
+   SECTION: ## [Heading Name]
+   ACTION: REPLACE
+   REASON: [Why this change is needed]
+   CONTENT:
+   [replacement content, max 300 lines]
 
-5) ONBOARDING.md
-   - doc agent: onboarding-docs
-   - write: docs/ONBOARDING.md
+   ## PATCH 2
+   SECTION: ## [Heading Name]
+   ACTION: INSERT_AFTER
+   REASON: [Why this change is needed]
+   CONTENT:
+   [new content to insert, max 300 lines]
 
-6) FRONTEND.md
-   - prereqs: diagram-component, diagram-state
-   - doc agent: frontend-docs
-   - write: docs/FRONTEND.md
+   ## PATCH 3
+   SECTION: ## [Heading Name]
+   ACTION: DELETE
+   REASON: [Why this section should be removed]
+   ```
+3. Apply patches using Edit tool
 
-7) BACKEND.md
-   - prereqs: diagram-component, diagram-sequence
-   - doc agent: backend-docs
-   - write: docs/BACKEND.md
+### Phase 5: Final Validation
 
-8) DEPLOYMENT.md
-   - prereqs: diagram-deployment, diagram-network
-   - doc agent: deployment-docs
-   - write: docs/DEPLOYMENT.md
+1. Check all cross-references resolve
+2. Verify diagram content is embedded correctly
+3. Generate docs/generated/README.md with navigation structure:
+   ```markdown
+   # Generated Documentation Suite
 
-9) DEVELOPMENT.md
-   - prereq: diagram-contribution-flow
-   - doc agent: development-docs
-   - write: docs/DEVELOPMENT.md
+   Generated on: [timestamp]
 
-10) CONFIGURATION.md
-   - doc agent: configuration-docs
-   - write: docs/CONFIGURATION.md
+   ## Documents
+   - [ARCHITECTURE.md](ARCHITECTURE.md) - System architecture overview
+   - [DATABASE.md](DATABASE.md) - Database schema and data model
+   - [API.md](API.md) - API endpoints and contracts
+   - [FEATURES.md](FEATURES.md) - Feature documentation
+   - [ONBOARDING.md](ONBOARDING.md) - Developer onboarding guide
+   - [FRONTEND.md](FRONTEND.md) - Frontend architecture
+   - [BACKEND.md](BACKEND.md) - Backend architecture
+   - [DEPLOYMENT.md](DEPLOYMENT.md) - Deployment procedures
+   - [DEVELOPMENT.md](DEVELOPMENT.md) - Development workflow
+   - [CONFIGURATION.md](CONFIGURATION.md) - Configuration reference
 
-11) CHANGELOG.md
-   - Orchestrator generates this directly (no subagent):
-     - Include generation date/time
-     - List all docs written/updated
-     - Summarize major decisions/inferences
-     - Include review issues (from review-docs) and whether applied
+   ## Quality Checks
+   - All cross-references validated
+   - All diagrams embedded
+   - Compliance with GLOBAL CONSTRAINTS verified
+   ```
+4. Generate CHANGELOG.md with:
+   - Generation timestamp
+   - List of docs created/updated
+   - Summary of review issues and resolutions
+   - Any warnings or notes
 
-## 5) Review + fix pass (MANDATORY)
-After writing all docs:
-- Call subagent: review-docs
-- Provide:
-  - GLOBAL CONSTRAINTS
-  - List of generated doc paths
-- review-docs returns:
-  - Issue list
-  - Concrete patch suggestions per file (exact replacements)
-Apply fixes by editing the affected docs (Write).
+## Context Budget Enforcement
 
-## 6) Final output
-Print:
-- List of files generated/updated
-- Any review issues remaining
-- Suggested cadence for re-runs
+At any moment, orchestrator context contains:
+- GLOBAL CONSTRAINTS: ~100 lines
+- Diagram outputs: ~150 lines each (reused across docs)
+- Current outline: ~50 lines
+- Current section being written: ~400 lines
+- **Maximum per doc iteration: ~700 lines**
+
+This scales to unlimited doc size because we process incrementally.
+
+## Error Handling
+
+If a subagent exceeds limits:
+1. Truncate the response at the limit
+2. Log warning to CHANGELOG.md
+3. Request rewrite with explicit line count reminder
+
+If a subagent returns malformed output:
+1. Log the issue to CHANGELOG.md
+2. Skip that section with a placeholder: `<!-- ERROR: Failed to generate [section] -->`
+3. Continue with remaining sections
+
+## Final Output
+
+Print summary:
+```
+✅ Documentation generation complete
+
+Files generated:
+- docs/generated/ARCHITECTURE.md (X lines)
+- docs/generated/DATABASE.md (X lines)
+[... etc ...]
+- docs/generated/CHANGELOG.md
+
+Review issues: X blocking, Y important, Z minor
+Context budget: Peak XXX lines (within 700 line target)
+
+Next steps:
+- Review generated docs in docs/generated/
+- Address any blocking review issues
+- Move approved docs to docs/ root when ready
+```
+
+## Agent Mapping
+
+- architecture-docs → docs/generated/ARCHITECTURE.md
+- database-docs → docs/generated/DATABASE.md
+- api-docs → docs/generated/API.md
+- features-docs → docs/generated/FEATURES.md
+- onboarding-docs → docs/generated/ONBOARDING.md
+- frontend-docs → docs/generated/FRONTEND.md
+- backend-docs → docs/generated/BACKEND.md
+- deployment-docs → docs/generated/DEPLOYMENT.md
+- development-docs → docs/generated/DEVELOPMENT.md
+- configuration-docs → docs/generated/CONFIGURATION.md
