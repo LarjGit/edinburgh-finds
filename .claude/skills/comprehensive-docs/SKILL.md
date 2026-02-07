@@ -37,6 +37,7 @@ Document the database architecture:
 
 - **Schema Overview**: Explain the Prisma schema in plain English
 - **ERD Diagram**: Create a Mermaid entity-relationship diagram
+- NOTE: Mermaid ERD syntax doesn't support combined PK_FK notation. Use PK for primary keys, FK for foreign keys separately. For composite primary keys in junction tables, omit the PK notation and explain in text that both fields form the composite key.
   
 ```mermaid
 erDiagram
