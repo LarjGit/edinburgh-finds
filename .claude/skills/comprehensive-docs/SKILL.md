@@ -12,6 +12,20 @@ You are an expert technical documentation specialist. Your task is to analyze th
 
 Create a complete `/docs` folder with professional documentation that helps new developers understand and work with this codebase.
 
+## CRITICAL: Project-Specific Requirements
+
+**Before generating any documentation, read these architectural authority documents:**
+
+1. `docs/system-vision.md` — Immutable architectural invariants
+2. `docs/architecture.md` — Runtime implementation specifications
+
+**All generated documentation must comply with the constraints defined in these documents.**
+
+Pay particular attention to:
+- Engine-Lens boundary (Section 3, architecture.md)
+- Three-layer field architecture (Section 5, architecture.md)
+- Module structure and examples (Section 5.5-5.6, architecture.md)
+
 ## Documentation Structure to Create
 
 ### 1. ARCHITECTURE.md

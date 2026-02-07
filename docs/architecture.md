@@ -834,19 +834,33 @@ Persisted module payloads follow a stable nested structure.
 Example shape:
 
     modules:
-      core:
-        entity_name: "Craiglockhart Sports Centre"
-        slug: "craiglockhart-sports-centre"
-      location:
-        street_address: "177 Colinton Road"
-        city: "Edinburgh"
-        postcode: "EH14 1BZ"
-        latitude: 55.920654
-        longitude: -3.237891
       sports_facility:
         tennis_courts:
           total: 12
           indoor: 8
+          outdoor: 4
+          surfaces: ["hard_court", "clay"]
+        padel_courts:
+          total: 3
+          indoor: 3
+          covered: true
+          heated: true
+        booking:
+          online_booking_available: true
+          advance_booking_days: 7
+          booking_url: "https://example.com/book"
+        coaching_available: true
+        equipment_rental: true
+      amenities:
+        parking:
+          available: true
+          spaces: 50
+          cost: "free"
+        accessibility:
+          wheelchair_accessible: true
+          accessible_parking: true
+          accessible_changing_rooms: true
+        facilities: ["changing_rooms", "showers", "cafe", "pro_shop"]
 
 The engine treats module payloads as opaque structured data with only structural
 validation applied.
