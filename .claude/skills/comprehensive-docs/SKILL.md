@@ -1,13 +1,7 @@
 ---
 name: comprehensive-docs
 description: "Generates complete project documentation including architecture, database, features, API, and setup guides. Use when user asks to: document project, generate docs, create documentation, document codebase, or set up project documentation."
-model: opus
-allowed-tools:
-  - Read
-  - Write
-  - Glob
-  - Grep
-  - Bash
+
 ---
 
 # Comprehensive Documentation Generator
