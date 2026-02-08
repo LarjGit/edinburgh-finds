@@ -168,13 +168,13 @@ Estimated time: ~2 minutes (parallel updates)
 
 1. **Read both files**
 2. **Re-extract GLOBAL CONSTRAINTS** (max 100 lines)
-3. **Write to /tmp/global_constraints.md**
+3. **Write to .claude/tmp/global_constraints.md**
 4. **Flag all docs for regeneration** (not just updates)
 
 **Otherwise:**
 ```bash
 # Reuse existing GLOBAL CONSTRAINTS from last generation
-cp docs/generated/.global_constraints_cache.md /tmp/global_constraints.md
+cp docs/generated/.global_constraints_cache.md .claude/tmp/global_constraints.md
 ```
 
 ### Phase 4: Spawn Background Update Agents (Parallel)
@@ -206,7 +206,7 @@ You are a background agent updating a specific section in BACKEND.md.
 Update section: "## Orchestration System"
 
 ## Instructions
-1. Read GLOBAL CONSTRAINTS from /tmp/global_constraints.md
+1. Read GLOBAL CONSTRAINTS from .claude/tmp/global_constraints.md
 2. Read changed source files:
    - engine/orchestration/planner.py
    - engine/orchestration/registry.py
@@ -244,19 +244,19 @@ Task(
       "doc": "BACKEND.md",
       "section": "Orchestration System",
       "agent_id": "task_20",
-      "output_file": "/tmp/agent_20.log"
+      "output_file": "<from_task_result>"
     },
     {
       "doc": "BACKEND.md",
       "section": "Query Planning",
       "agent_id": "task_21",
-      "output_file": "/tmp/agent_21.log"
+      "output_file": "<from_task_result_agent_21.log"
     },
     {
       "doc": "DATABASE.md",
       "section": "Schema Generation",
       "agent_id": "task_22",
-      "output_file": "/tmp/agent_22.log"
+      "output_file": "<from_task_result_agent_22.log"
     },
     ...
   ]
@@ -265,12 +265,12 @@ Task(
 
 ### Phase 5: Monitor Progress
 
-**Poll output files periodically:**
+**Poll output files periodically (using paths from task results):**
 
 ```bash
-# Every 15 seconds, check agent progress
-tail -n 10 /tmp/agent_20.log  # Look for "✅ Section complete"
-tail -n 10 /tmp/agent_21.log
+# Every 15 seconds, check agent progress using captured output_file paths
+tail -n 10 <output_file_for_agent_1>  # Look for "✅ Section complete"
+tail -n 10 <output_file_for_agent_2>
 ...
 ```
 
@@ -327,7 +327,7 @@ for agent_id in update_agent_ids:
 - Section heading found, but content is only 5 lines (expected >50)
 
 Reading agent output...
-[tail /tmp/agent_20.log]
+[tail <output_file_agent_20.log]
 
 Issue: [diagnosis]
 Options:
@@ -432,8 +432,8 @@ for review_agent_id in review_agent_ids:
 
 **Remove temporary files:**
 ```bash
-rm /tmp/global_constraints.md
-rm /tmp/agent_*.log
+rm .claude/tmp/global_constraints.md
+# Note: agent log files are system-managed and cleaned automatically
 ```
 
 ### Final Output
@@ -548,7 +548,7 @@ Choose [1/2/3]:
 ⚠️ Update agent failed: task_22 (DATABASE.md → Schema Generation)
 
 Reading agent output...
-[diagnosis from /tmp/agent_22.log]
+[diagnosis from <output_file_agent_22.log]
 
 Options:
 1. Retry with adjusted prompt

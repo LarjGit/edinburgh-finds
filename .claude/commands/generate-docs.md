@@ -19,12 +19,14 @@ You are the orchestrator. You MUST use background agents to keep context minimal
 
 The orchestrator NEVER receives doc content. Instead:
 1. Extract GLOBAL CONSTRAINTS
-2. Spawn background agents in parallel (one per doc or section)
-3. Background agents write directly to files
-4. Orchestrator monitors completion via output files
+2. Generate diagrams (parallel agents)
+3. **VALIDATE diagrams exist** (validation gate)
+4. Generate docs (parallel agents, embed diagrams)
 5. Validate results and report summary
 
 **Context Budget:** Orchestrator stays under 2,000 lines total (vs. unbounded in sequential approach)
+
+**⚠️ CRITICAL: You MUST follow all phases in order. DO NOT skip Phase 2 (diagrams) or Phase 2.5 (validation gate). Skipping phases will cause downstream failures.**
 
 ## Workflow
 
@@ -76,32 +78,50 @@ The orchestrator NEVER receives doc content. Instead:
 
 3. **Write to shared file** for background agents:
    ```
-   Write to: /tmp/global_constraints.md
+   Write to: .claude/tmp/global_constraints.md
    ```
 
 ### Phase 2: Generate Diagrams (Parallel)
 
-**Spawn diagram agents in parallel** using `run_in_background=True`:
+**⚠️ MANDATORY PHASE - DO NOT SKIP**
+
+**Required Diagrams (minimum):**
+1. `pipeline.mmd` — 11-stage data flow (Input → Entity Store)
+2. `architecture.mmd` — Engine vs Lens layers, component interaction
+3. `entity_model.mmd` — Entity schema (classes, dimensions, modules)
+
+**Generate diagrams by writing Mermaid directly** (NO agents needed for simple diagrams):
+
+```bash
+# Write each diagram directly to docs/generated/diagrams/
+cat > docs/generated/diagrams/pipeline.mmd << 'EOF'
+graph TB
+    Input[Query] --> Lens[Lens Resolution]
+    Lens --> Planning[Planning]
+    ...
+EOF
+```
+
+**OR spawn diagram agents if complex** using `run_in_background=True`:
 
 ```python
-# Single message with multiple Task calls
+# Single message with multiple Task calls if diagrams need exploration
 Task(subagent="diagram-architecture", run_in_background=True, ...)
 Task(subagent="diagram-er", run_in_background=True, ...)
-Task(subagent="diagram-sequence", run_in_background=True, ...)
 ...
 ```
 
 Each diagram agent:
-1. Reads /tmp/global_constraints.md
+1. Reads .claude/tmp/global_constraints.md
 2. Generates Mermaid diagram
-3. Writes to /tmp/diagram_[type].mmd
+3. Writes to docs/generated/diagrams/diagram_[type].mmd
 4. Returns brief confirmation
 
 **Track completion:**
 ```json
 {
-  "diagram-architecture": {"agent_id": "task_1", "output_file": "/tmp/agent_1.log"},
-  "diagram-er": {"agent_id": "task_2", "output_file": "/tmp/agent_2.log"},
+  "diagram-architecture": {"agent_id": "task_1", "output_file": "<from_task_result_agent_1.log"},
+  "diagram-er": {"agent_id": "task_2", "output_file": "<from_task_result_agent_2.log"},
   ...
 }
 ```
@@ -109,10 +129,41 @@ Each diagram agent:
 **Monitor completion:**
 ```bash
 # Poll each output file
-tail /tmp/agent_1.log  # Check if "✅ Complete" appears
+tail <output_file_from_task_result>  # Check if "✅ Complete" appears
 ```
 
 **Once all diagrams complete:** Collect diagram file paths for doc agents
+
+### Phase 2.5: VALIDATION GATE - Verify Diagrams Exist
+
+**CRITICAL: This gate MUST pass before proceeding to Phase 3**
+
+```bash
+# Verify all required diagrams exist
+required_diagrams=(
+  "docs/generated/diagrams/pipeline.mmd"
+  "docs/generated/diagrams/architecture.mmd"
+  "docs/generated/diagrams/entity_model.mmd"
+)
+
+for diagram in "${required_diagrams[@]}"; do
+  if [[ ! -f "$diagram" ]]; then
+    echo "❌ VALIDATION FAILED: Missing diagram: $diagram"
+    echo "Cannot proceed to Phase 3 without diagrams"
+    exit 1
+  fi
+done
+
+echo "✅ All required diagrams verified"
+```
+
+**If validation fails:**
+1. STOP execution immediately
+2. Report which diagrams are missing
+3. DO NOT proceed to Phase 3
+4. Fix Phase 2 diagram generation
+
+**Only proceed to Phase 3 if this validation passes.**
 
 ### Phase 3: Generate Docs (Parallel)
 
@@ -144,12 +195,12 @@ You are a background agent generating ARCHITECTURE.md.
 
 ## Instructions
 
-1. Read GLOBAL CONSTRAINTS from /tmp/global_constraints.md
+1. Read GLOBAL CONSTRAINTS from .claude/tmp/global_constraints.md
 2. Read required diagrams:
-   - /tmp/diagram_architecture.mmd
-   - /tmp/diagram_c4.mmd
-   - /tmp/diagram_dependency.mmd
-   - /tmp/diagram_sequence.mmd
+   - docs/generated/diagrams/diagram_architecture.mmd
+   - docs/generated/diagrams/diagram_c4.mmd
+   - docs/generated/diagrams/diagram_dependency.mmd
+   - docs/generated/diagrams/diagram_sequence.mmd
 
 3. Read source files to understand architecture:
    - docs/target/system-vision.md
@@ -187,23 +238,25 @@ Task(subagent="general-purpose", description="Generate API.md", prompt="...", ru
 ...
 ```
 
-**Track agents:**
+**Track agents (capture output_file from task results):**
 ```json
 {
-  "ARCHITECTURE.md": {"agent_id": "task_10", "output_file": "/tmp/agent_10.log"},
-  "DATABASE.md": {"agent_id": "task_11", "output_file": "/tmp/agent_11.log"},
+  "ARCHITECTURE.md": {"agent_id": "task_10", "output_file": "<path_from_task_result>"},
+  "DATABASE.md": {"agent_id": "task_11", "output_file": "<path_from_task_result>"},
   ...
 }
 ```
 
+**Note:** The `output_file` paths are returned by the Task tool and may vary by system.
+
 #### Step 3b: Monitor Progress
 
-**Poll output files periodically:**
+**Poll output files periodically using paths from task results:**
 
 ```bash
-# Every 30 seconds, check all agent output files
-tail -n 20 /tmp/agent_10.log  # Look for "✅ Section complete" or "✅ Complete"
-tail -n 20 /tmp/agent_11.log
+# Every 30 seconds, check all agent output files using captured paths
+tail -n 20 <output_file_for_architecture>  # Look for "✅ Section complete" or "✅ Complete"
+tail -n 20 <output_file_for_database>
 ...
 ```
 
@@ -260,7 +313,7 @@ for agent_id in agent_ids:
 ```
 ⚠️ DATABASE.md validation failed (only 23 lines)
 Reading agent output to diagnose...
-[tail /tmp/agent_11.log]
+[tail <output_file_agent_11.log]
 
 Issue: [describe problem]
 Options:
@@ -282,7 +335,7 @@ Task(
 Review docs/generated/ARCHITECTURE.md
 
 Check for:
-- Compliance with GLOBAL CONSTRAINTS (/tmp/global_constraints.md)
+- Compliance with GLOBAL CONSTRAINTS (.claude/tmp/global_constraints.md)
 - Cross-reference correctness
 - Consistency with other docs (read all docs/generated/*.md)
 - Diagram embedding correctness
@@ -369,9 +422,9 @@ for review_agent_id in review_agent_ids:
 
 **Remove temporary files:**
 ```bash
-rm /tmp/global_constraints.md
-rm /tmp/diagram_*.mmd
-rm /tmp/agent_*.log
+rm .claude/tmp/global_constraints.md
+rm docs/generated/diagrams/diagram_*.mmd
+# Note: agent log files are system-managed and cleaned automatically
 ```
 
 ### Final Output
@@ -442,7 +495,7 @@ Next Steps:
 ## Error Handling
 
 **If agent fails:**
-1. Read agent output file: `Read(/tmp/agent_X.log)`
+1. Read agent output file: `Read(<output_file_agent_X.log)`
 2. Diagnose issue from agent's messages
 3. Options:
    - Retry with clearer prompt
