@@ -1,8 +1,8 @@
-# Backend Architecture Documentation
+# Backend Documentation — Universal Entity Extraction Engine
 
-**Project:** Edinburgh Finds — Universal Entity Extraction Engine
-**Generated:** 2026-02-08
-**Subsystem:** Python Engine (Backend)
+**Last Updated:** 2026-02-08
+**Status:** Complete
+**Authority:** Implementation guide derived from [docs/target/system-vision.md](../target/system-vision.md) and [docs/target/architecture.md](../target/architecture.md)
 
 ---
 
@@ -10,76 +10,53 @@
 
 1. [Overview](#overview)
 2. [Architecture](#architecture)
-3. [Orchestration](#orchestration)
-4. [Ingestion](#ingestion)
-5. [Extraction](#extraction)
-6. [Lenses](#lenses)
-7. [Persistence](#persistence)
-8. [Schema System](#schema-system)
-9. [Testing](#testing)
-10. [CLI Tools](#cli-tools)
-11. [Development Workflow](#development-workflow)
+3. [Orchestration Kernel](#orchestration-kernel)
+4. [Ingestion System](#ingestion-system)
+5. [Extraction System](#extraction-system)
+6. [Lens Layer](#lens-layer)
+7. [Schema Generation](#schema-generation)
+8. [Module System](#module-system)
+9. [Testing Strategy](#testing-strategy)
+10. [Development Workflow](#development-workflow)
 
 ---
 
 ## Overview
 
-The **Universal Entity Extraction Engine** is a Python-based ETL (Extract, Transform, Load) pipeline designed for vertical-agnostic entity discovery and structured data extraction. The engine operates on a strict architectural separation:
+The backend engine is a **vertical-agnostic entity extraction platform** that transforms natural language queries into complete, accurate entity records through AI-powered multi-source orchestration.
 
-- **Engine Layer (Domain-Blind):** Handles orchestration, ingestion, extraction, deduplication, merging, and persistence using universal entity classifications (`place`, `person`, `organization`, `event`, `thing`).
-- **Lens Layer (Domain-Aware):** Provides vertical-specific interpretation through YAML configuration files containing vocabulary, routing rules, mapping rules, and canonical value registries.
+### Core Principles
 
-### Core Responsibilities
+**Engine Purity (Immutable)**
+- ZERO domain knowledge in engine code
+- No domain-specific terms ("Padel", "Wine", "Tennis", "Venue")
+- All semantics live exclusively in Lens YAML contracts
+- Engine operates only on generic structures and opaque values
 
-1. **Multi-Source Data Ingestion:** Parallel fetching from 6 data sources (Serper, Google Places, OpenStreetMap, SportScotland, Edinburgh Council, OpenChargeMap)
-2. **Intelligent Orchestration:** Query-aware connector selection, phase-based execution, budget management
-3. **Hybrid Extraction:** Deterministic parsing + LLM-based structured extraction (Instructor + Claude)
-4. **Lens Application:** Pattern-based population of canonical dimensions and modules
-5. **Deduplication & Merge:** Cross-source identity matching and conflict resolution
-6. **Entity Finalization:** Slug generation, provenance tracking, idempotent persistence
+**Determinism & Idempotency**
+- Same inputs + lens contract → identical outputs
+- Re-running queries updates entities, never creates duplicates
+- All tie-breaking and merge behavior is deterministic
 
-### 11-Stage Execution Pipeline
-
-The engine implements the canonical 11-stage pipeline defined in `docs/target/architecture.md` Section 4.1:
-
-1. **Input** - Accept query or entity identifier
-2. **Lens Resolution & Validation** - Bootstrap lens contract, compute hash
-3. **Planning** - Derive query features, select connectors via lens routing rules
-4. **Connector Execution** - Parallel fetch from planned connectors
-5. **Raw Ingestion Persistence** - Immutable artifact storage
-6. **Source Extraction** - Phase 1: Emit ONLY primitives + raw observations (NO canonical_* or modules)
-7. **Lens Application** - Phase 2: Populate canonical dimensions + modules via mapping rules
-8. **Classification** - Determine entity_class via geographic anchoring
-9. **Cross-Source Deduplication** - Group entities by identity signals
-10. **Deterministic Merge** - Metadata-driven conflict resolution
-11. **Finalization & Persistence** - Slug generation, idempotent upsert to Entity table
-
-**Critical Contract:** Source extractors (Stage 6) MUST NOT emit `canonical_*` fields or `modules`. These are populated exclusively in Stage 7 (Lens Application) per the locked extraction boundary defined in architecture.md Section 4.2.
+**Lens Ownership of Semantics**
+- Domain vocabulary, mapping rules, canonical registries → Lenses
+- Connector routing, module schemas, triggers → Lenses
+- Engine executes generic logic; Lenses define interpretation
 
 ### Tech Stack
 
-| Component | Technology |
-|-----------|-----------|
-| **Language** | Python 3.x |
-| **Validation** | Pydantic (schema-driven) |
-| **LLM Integration** | Instructor + Anthropic Claude |
-| **ORM** | Prisma Client Python |
-| **Database** | PostgreSQL (via Supabase) |
-| **Testing** | pytest (>80% coverage target) |
-| **Schema Source** | YAML (single source of truth) |
-
-### Key Principles
-
-1. **Engine Purity (Invariant 1):** Zero domain knowledge in engine code. All domain semantics live in Lens YAML configs.
-2. **Determinism (Invariant 4):** Same inputs + same Lens contract = identical outputs, always.
-3. **Schema-Bound LLM Usage (Invariant 7):** LLMs produce validated Pydantic-structured output only.
-4. **Fail-Fast Validation (Invariant 6):** Invalid Lens contracts fail at bootstrap, not runtime.
+- **Language:** Python 3.x
+- **Validation:** Pydantic (schema-driven models)
+- **LLM Integration:** Instructor + Anthropic Claude (schema-bound structured output)
+- **ORM:** Prisma Client Python
+- **Database:** PostgreSQL (Supabase)
+- **Testing:** pytest (>80% coverage target)
 
 ---
 
 ## Architecture
 
-The engine is composed of 6 major subsystems, each with clearly defined responsibilities and boundaries.
+The backend follows a **6-subsystem architecture** as defined in [system-vision.md Section 3](../target/system-vision.md#3-architectural-boundaries):
 
 ```mermaid
 graph TD
@@ -169,8 +146,6 @@ graph TD
     LensLoader --> LensValidator
     LensLoader --> MappingEngine
     LensLoader --> ModuleTriggerEngine
-    MappingEngine --> EntityClassifier
-    ModuleTriggerEngine --> ModuleExtractor
 
     %% Dependencies - Ingestion
     ConnectorAdapters --> Serper
@@ -204,16 +179,11 @@ graph TD
     EdinburghCouncilExtractor --> LLMExtractionEngine
     OpenChargeMapExtractor --> LLMExtractionEngine
 
-    %% Dependencies - Lens Application
-    SerperExtractor --> MappingEngine
-    GooglePlacesExtractor --> MappingEngine
-    OSMExtractor --> MappingEngine
-    SportScotlandExtractor --> MappingEngine
-    EdinburghCouncilExtractor --> MappingEngine
-    OpenChargeMapExtractor --> MappingEngine
-
-    MappingEngine --> ModuleExtractor
-    ModuleExtractor --> EntityClassifier
+    %% Dependencies - Phase 2: Lens Application (Post-Extraction)
+    Orchestrator --> MappingEngine
+    Orchestrator --> ModuleTriggerEngine
+    MappingEngine --> EntityClassifier
+    ModuleTriggerEngine --> EntityClassifier
 
     %% Dependencies - Merge & Persistence
     EntityClassifier --> DeduplicationEngine
@@ -248,32 +218,9 @@ graph TD
     class SchemaParser,PythonGenerator,PrismaGenerator,TypeScriptGenerator schema
 ```
 
-### Module Dependencies
+### 11-Stage Pipeline
 
-| Layer | Module | Dependencies | Exports |
-|-------|--------|--------------|---------|
-| **Orchestration** | `execution_context.py` | Lens loader | `ExecutionContext` |
-| **Orchestration** | `query_features.py` | Lens vocabulary | `QueryFeatures` |
-| **Orchestration** | `planner.py` | Registry, adapters, features | `select_connectors()`, `orchestrate()` |
-| **Orchestration** | `orchestrator.py` | Execution plan | `Orchestrator` |
-| **Orchestration** | `entity_finalizer.py` | Deduplication, merging | `EntityFinalizer` |
-| **Lens** | `loader.py` | Validator | `VerticalLens`, `LensLoader` |
-| **Lens** | `mapping_engine.py` | None | `execute_mapping_rules()` |
-| **Ingestion** | `registry.py` | Connector classes | `CONNECTOR_REGISTRY`, `get_connector_instance()` |
-| **Ingestion** | `adapters.py` | Registry, connectors | `ConnectorAdapter` |
-| **Ingestion** | `connectors/*` | Base connector | Source-specific connectors |
-| **Extraction** | `extractors/*` | LLM client, validation | Source extractors |
-| **Extraction** | `llm_client.py` | Instructor, Anthropic | `InstructorClient` |
-| **Extraction** | `entity_classifier.py` | None | `classify_entity()` |
-| **Extraction** | `merging.py` | Trust hierarchy | `EntityMerger` |
-| **Schema** | `cli.py` | Generators | `main()` |
-| **Schema** | `generators/*` | Parser | Generator classes |
-
----
-
-## Orchestration
-
-The **Orchestration Layer** is the runtime control plane that coordinates multi-source entity discovery. It enforces phase barriers, manages shared context, and produces structured execution reports.
+All executions flow through this canonical pipeline ([architecture.md Section 4.1](../target/architecture.md#41-pipeline-stages-canonical-order)):
 
 ```mermaid
 sequenceDiagram
@@ -365,1713 +312,1108 @@ sequenceDiagram
     WebApp-->>User: Display results (cards, map, filters)
 ```
 
-### Query Feature Extraction
-
-**File:** `engine/orchestration/query_features.py`
-
-Provides deterministic boolean signal extraction from query strings to guide connector selection. Uses Lens vocabulary for domain-specific term detection.
-
-**Features Extracted:**
-
-1. **`looks_like_category_search`:** True if query appears to be a generic category/activity search (e.g., "tennis courts") rather than a specific venue name.
-2. **`has_geo_intent`:** True if query contains geographic markers (location names, "in", "near").
-
-**Example:**
-
-```python
-from engine.orchestration.query_features import QueryFeatures
-from engine.orchestration.types import IngestRequest
-
-request = IngestRequest(query="padel courts in Edinburgh", lens="edinburgh_finds")
-features = QueryFeatures.extract(request.query, request, lens_name="edinburgh_finds")
-
-# Output:
-# QueryFeatures(
-#     looks_like_category_search=True,   # "padel courts" is generic
-#     has_geo_intent=True                # "in Edinburgh" is location
-# )
-```
-
-**Vertical-Agnostic Design:**
-
-```python
-# OLD (hardcoded domain terms - WRONG):
-ACTIVITY_KEYWORDS = ["tennis", "padel", "squash"]  # ❌ Engine impurity
-
-# NEW (uses Lens vocabulary - CORRECT):
-lens = get_active_lens(lens_name)
-looks_like_category = cls._detect_category_search(normalized, lens)  # ✅ Lens-driven
-```
-
-### Execution Planning
-
-**File:** `engine/orchestration/planner.py`
-
-Selects which connectors to run for a given request based on query features, ingestion mode, budget constraints, and Lens routing rules.
-
-**Selection Logic:**
-
-| Query Type | Mode | Connectors Selected |
-|------------|------|---------------------|
-| Specific venue | `RESOLVE_ONE` | `google_places` only |
-| Category search | `RESOLVE_ONE` | `serper` + `google_places` |
-| Category search | `DISCOVER_MANY` | `serper` + `openstreetmap` + `google_places` |
-| Sports-related | Any | Add `sport_scotland` (via Lens routing) |
-
-**Example:**
-
-```python
-from engine.orchestration.planner import select_connectors
-from engine.orchestration.types import IngestRequest, IngestionMode
-
-# Category search in DISCOVER_MANY mode
-request = IngestRequest(
-    query="padel courts in Edinburgh",
-    ingestion_mode=IngestionMode.DISCOVER_MANY,
-    lens="edinburgh_finds"
-)
-
-plan = select_connectors(request)
-# ExecutionPlan(connectors=["serper", "openstreetmap", "google_places", "sport_scotland"])
-```
-
-**Budget-Aware Gating:**
-
-```python
-# Phase C: Filter out paid connectors if budget is tight
-if request.budget_limit and request.budget_limit < 0.05:
-    # Remove connectors with cost > 0
-    selected_connectors = [
-        c for c in selected_connectors
-        if CONNECTOR_REGISTRY[c].cost_per_call_usd == 0.0
-    ]
-```
-
-### Connector Adapters
-
-**File:** `engine/orchestration/adapters.py`
-
-Bridges async connectors to the orchestrator, normalizing results and handling timeouts.
-
-**Responsibilities:**
-
-1. Execute connector with timeout enforcement
-2. Convert connector-specific payloads to standard format
-3. Persist `RawIngestion` records to database
-4. Return normalized metadata (latency, cost, candidates found)
-
-**Example:**
-
-```python
-from engine.orchestration.adapters import ConnectorAdapter
-from engine.ingestion.connectors.serper import SerperConnector
-
-adapter = ConnectorAdapter(db)
-connector = SerperConnector()
-
-result = await adapter.execute(
-    connector=connector,
-    request=request,
-    query_features=features,
-    context=context
-)
-# Returns: {"latency_ms": 342, "cost_usd": 0.01, "candidates_added": 12}
-```
-
-### Deduplication
-
-**File:** `engine/ingestion/deduplication.py`, `engine/extraction/deduplication.py`
-
-Implements multi-tier identity matching strategies:
-
-1. **External ID Matching:** Match `google_place_id`, `osm_id`, etc.
-2. **Geo Similarity:** Haversine distance <100m + name similarity
-3. **Name Normalization:** Lowercase, remove punctuation, fuzzy match
-4. **Content Fingerprinting:** Hash of normalized (name, address, phone)
-
-**Example:**
-
-```python
-from engine.extraction.deduplication import SlugGenerator, group_by_identity
-
-slug_gen = SlugGenerator()
-
-entities = [
-    {"entity_name": "The Padel Club", "latitude": 55.9533, "longitude": -3.1883},
-    {"entity_name": "Padel Club", "latitude": 55.9534, "longitude": -3.1884}
-]
-
-groups = group_by_identity(entities)
-# Groups[0]: ["The Padel Club", "Padel Club"]  # Same location + similar name
-```
-
-### Entity Finalization
-
-**File:** `engine/orchestration/entity_finalizer.py`
-
-Bridges `ExtractedEntity` records to the final `Entity` table with slug generation and idempotent upsert.
-
-**Process:**
-
-1. Load all `ExtractedEntity` records for orchestration run
-2. Group by identity (slug or external_id)
-3. Merge each group using `EntityMerger`
-4. Generate stable slugs (`"The Padel Club"` → `"padel-club"`)
-5. Upsert to `Entity` table (create or update)
-
-**Example:**
-
-```python
-from engine.orchestration.entity_finalizer import EntityFinalizer
-
-finalizer = EntityFinalizer(db)
-stats = await finalizer.finalize_entities(orchestration_run_id="abc123")
-
-# Returns: {"entities_created": 8, "entities_updated": 2, "conflicts": 0}
-```
-
 ---
 
-## Ingestion
+## Orchestration Kernel
 
-The **Ingestion Layer** fetches raw data from 6 external sources, persists immutable artifacts, and provides deduplication to prevent redundant API calls.
+**Location:** `engine/orchestration/`
+**Purpose:** Runtime control plane for intelligent multi-source query execution
 
-### Connector Registry
+### Key Components
 
-**File:** `engine/orchestration/registry.py`
+#### 1. ExecutionContext (`execution_context.py`)
 
-Centralized metadata for all 6 connectors. Serves as single source of truth for connector capabilities, costs, and trust levels.
-
-**ConnectorSpec Structure:**
+**Immutable context carrier** passed through entire pipeline.
 
 ```python
 @dataclass(frozen=True)
-class ConnectorSpec:
-    name: str                    # e.g., "serper"
-    connector_class: str         # Fully qualified class path
-    phase: str                   # "discovery" or "enrichment"
-    cost_per_call_usd: float     # Average API cost
-    trust_level: float           # 0.0 to 1.0 (1.0 = authoritative)
-    timeout_seconds: int         # Max execution timeout
-    rate_limit_per_day: int      # Daily request limit
+class ExecutionContext:
+    lens_id: str                    # Active lens identifier
+    lens_contract: dict             # Validated lens runtime contract
+    lens_hash: Optional[str]        # Content hash for reproducibility
 ```
 
-**Registry Contents:**
+**Responsibilities:**
+- Identify active lens
+- Carry validated lens contract
+- Enable reproducibility and traceability
+- Created once at bootstrap, never mutated
 
-| Connector | Phase | Cost (USD) | Trust | Timeout | Rate Limit |
-|-----------|-------|-----------|-------|---------|------------|
-| **serper** | discovery | $0.01 | 0.75 | 30s | 2,500/day |
-| **google_places** | enrichment | $0.017 | 0.95 | 30s | 1,000/day |
-| **openstreetmap** | discovery | $0.00 | 0.70 | 60s | 10,000/day |
-| **sport_scotland** | enrichment | $0.00 | 0.90 | 60s | 10,000/day |
-| **edinburgh_council** | enrichment | $0.00 | 0.90 | 60s | 10,000/day |
-| **open_charge_map** | enrichment | $0.00 | 0.85 | 60s | 10,000/day |
+#### 2. QueryFeatureExtractor (`query_features.py`)
 
-**Usage:**
+**Vocabulary-based query analysis** using lens-defined keywords.
 
 ```python
-from engine.orchestration.registry import CONNECTOR_REGISTRY, get_connector_instance
+class QueryFeatureExtractor:
+    def extract(self, query: str, lens: QueryLens) -> QueryFeatures:
+        """
+        Extract domain-agnostic features from query using lens vocabulary.
 
-# Get metadata
-spec = CONNECTOR_REGISTRY["serper"]
-print(f"Trust: {spec.trust_level}, Cost: ${spec.cost_per_call_usd}")
-
-# Instantiate connector
-connector = get_connector_instance("serper")
+        Detects:
+        - Activity mentions (via lens.activity_keywords)
+        - Geographic intent (via lens.location_indicators)
+        - Category search patterns
+        - Facility type mentions
+        """
 ```
 
-### Data Sources
+**Output:**
+```python
+@dataclass
+class QueryFeatures:
+    detected_activities: List[str]          # Matched activity keywords
+    has_geo_intent: bool                    # Location indicators present
+    looks_like_category_search: bool        # Pattern: "<activity> in <location>"
+    mentioned_facilities: List[str]         # Detected facility types
+```
 
-#### 1. Serper (Google Search Results)
+**Purity Guarantee:** Uses ONLY lens-provided vocabulary, no hardcoded domain terms.
 
-**File:** `engine/ingestion/connectors/serper.py`
+#### 3. ExecutionPlanner (`planner.py`)
 
-Fetches Google search results via Serper API. Provides web search coverage for discovery phase.
+**Intelligent connector selection** based on lens routing rules.
 
-**Configuration:** `engine/config/sources.yaml`
+**Responsibilities:**
+- Analyze query features
+- Match against lens connector_rules triggers
+- Build phase-ordered execution plan
+- Enforce budget and priority constraints
 
+**Example Lens Rule:**
 ```yaml
-serper:
-  api_key: ${SERPER_API_KEY}
-  base_url: "https://google.serper.dev"
-  timeout_seconds: 30
-  default_params:
-    gl: uk      # Geolocation: UK
-    hl: en      # Language: English
-    num: 10     # Results per query
-```
-
-**Example Response:**
-
-```json
-{
-  "searchParameters": {"q": "padel courts edinburgh"},
-  "organic": [
-    {
-      "title": "Edinburgh Padel Centre",
-      "link": "https://...",
-      "snippet": "Premier padel facility with 4 courts...",
-      "position": 1
-    }
-  ]
-}
-```
-
-#### 2. Google Places (Authoritative POI Data)
-
-**File:** `engine/ingestion/connectors/google_places.py`
-
-Fetches structured POI data from Google Places API. High-trust enrichment source.
-
-**Fields Retrieved:**
-- Place ID, name, address components
-- Coordinates (lat/lng)
-- Phone number, website, opening hours
-- Google ratings, price level
-- Place types (e.g., `["gym", "point_of_interest"]`)
-
-#### 3. OpenStreetMap (Crowdsourced Geographic Data)
-
-**File:** `engine/ingestion/connectors/open_street_map.py`
-
-Queries OSM Nominatim API for free geographic data. Good for discovery phase.
-
-**Tags Extracted:**
-- `amenity`, `leisure`, `sport`
-- `name`, `address`, `phone`, `website`
-- Coordinates, bounding box
-
-#### 4. Sport Scotland (Official Sports Facilities)
-
-**File:** `engine/ingestion/connectors/sport_scotland.py`
-
-Queries Scottish government sports facility database. High-trust source for sports venues.
-
-**Facility Types:**
-- Swimming pools, gyms, sports halls
-- Tennis/padel/squash courts
-- Outdoor pitches, tracks
-
-#### 5. Edinburgh Council (Municipal Data)
-
-**File:** `engine/ingestion/connectors/edinburgh_council.py`
-
-Queries City of Edinburgh Council APIs for municipal facilities and events.
-
-#### 6. OpenChargeMap (EV Charging Stations)
-
-**File:** `engine/ingestion/connectors/open_charge_map.py`
-
-Queries global EV charging station database. Demonstrates extensibility to non-sports verticals.
-
-### Raw Ingestion Storage
-
-**File:** `engine/ingestion/storage.py`
-
-Persists immutable raw API responses to filesystem and database.
-
-**Storage Format:**
-
-```
-engine/data/raw/
-  serper/
-    2026-01-15_14-23-45_abc123.json
-  google_places/
-    2026-01-15_14-24-12_def456.json
-```
-
-**Database Schema:**
-
-```prisma
-model RawIngestion {
-  id            String   @id @default(cuid())
-  source        String   // "serper", "google_places", etc.
-  content_hash  String   @unique  // SHA-256 of payload
-  raw_payload   Json     // Original API response
-  query_text    String
-  source_url    String?
-  createdAt     DateTime @default(now())
-}
-```
-
-**Deduplication:**
-
-```python
-from engine.ingestion.deduplication import compute_content_hash, check_duplicate
-
-content_hash = compute_content_hash(payload)
-if not await check_duplicate(db, content_hash):
-    await save_raw_ingestion(db, source="serper", payload=payload)
-```
-
----
-
-## Extraction
-
-The **Extraction Layer** transforms raw API responses into structured entity data using a hybrid approach: deterministic parsing + LLM-based extraction.
-
-```mermaid
-graph TD
-    %% Input Stage
-    Input[Input: Query or Entity Identifier]
-
-    %% Stage 1: Lens Resolution & Validation
-    Input --> LensResolution[Lens Resolution & Validation]
-    LensResolution --> LensLoad[Load lens.yaml]
-    LensLoad --> LensValidate[Validate Schema, Registry, Rules]
-    LensValidate --> LensHash[Compute Content Hash]
-    LensHash --> ExecContext[Create ExecutionContext]
-
-    %% Stage 2: Planning
-    ExecContext --> Planning[Planning: Connector Selection]
-    Planning --> QueryFeatures[Derive Query Features]
-    QueryFeatures --> LensRouting[Apply Lens Routing Rules]
-    LensRouting --> ExecPlan[Generate Execution Plan]
-
-    %% Stage 3: Connector Execution
-    ExecPlan --> ConnectorExec[Connector Execution: Parallel Ingestion]
-    ConnectorExec --> Conn1[Connector 1<br/>Serper]
-    ConnectorExec --> Conn2[Connector 2<br/>GooglePlaces]
-    ConnectorExec --> Conn3[Connector 3<br/>OSM]
-    ConnectorExec --> Conn4[Connector 4<br/>SportScotland]
-    ConnectorExec --> Conn5[Connector 5<br/>...]
-
-    %% Stage 4: Raw Ingestion
-    Conn1 --> RawIngestion[Raw Ingestion Persistence]
-    Conn2 --> RawIngestion
-    Conn3 --> RawIngestion
-    Conn4 --> RawIngestion
-    Conn5 --> RawIngestion
-    RawIngestion --> RawArtifacts[(RawIngestion Records<br/>Immutable Artifacts)]
-
-    %% Stage 5: Source Extraction
-    RawArtifacts --> SourceExtraction[Source Extraction]
-    SourceExtraction --> ExtractPrimitives[Extract Schema Primitives<br/>entity_name, lat, lng, address, phone, etc.]
-    ExtractPrimitives --> ExtractRaw[Extract Raw Observations<br/>raw_categories, description, etc.]
-    ExtractRaw --> ExtractedEntity[(ExtractedEntity Records<br/>NO canonical_* or modules)]
-
-    %% Stage 6: Lens Application
-    ExtractedEntity --> LensApp[Lens Application]
-    LensApp --> MappingRules[Apply Mapping Rules<br/>Pattern → canonical_*]
-    MappingRules --> ModuleTriggers[Evaluate Module Triggers]
-    ModuleTriggers --> ModuleExtraction[Execute Module Field Rules]
-    ModuleExtraction --> CanonicalPopulated[(Canonical Dimensions<br/>+ Modules Populated)]
-
-    %% Stage 7: Classification
-    CanonicalPopulated --> Classification[Classification: Entity Class Assignment]
-    Classification --> GeoCheck{Geographic<br/>Anchoring?}
-    GeoCheck -->|Yes: coords, address,<br/>city, or postcode| ClassPlace[entity_class = place]
-    GeoCheck -->|No| ClassOther[entity_class = person,<br/>organization, event, thing]
-    ClassPlace --> Classified[(Classified Entities)]
-    ClassOther --> Classified
-
-    %% Stage 8: Deduplication
-    Classified --> Dedup[Cross-Source Deduplication Grouping]
-    Dedup --> MatchExternal[Match External Identifiers]
-    MatchExternal --> MatchGeo[Geo Similarity Matching]
-    MatchGeo --> MatchName[Normalized Name Matching]
-    MatchName --> MatchContent[Content Fingerprint Matching]
-    MatchContent --> DedupGroups[(Deduplication Groups)]
-
-    %% Stage 9: Merge
-    DedupGroups --> Merge[Deterministic Merge]
-    Merge --> MergeIdentity[Merge Identity Fields<br/>trust → priority → connector_id]
-    MergeIdentity --> MergeGeo[Merge Geo Fields<br/>precision → trust → decimal]
-    MergeGeo --> MergeContact[Merge Contact Fields<br/>quality → trust → priority]
-    MergeContact --> MergeCanonical[Merge Canonical Arrays<br/>union, dedupe, sort]
-    MergeCanonical --> MergeModules[Merge Modules<br/>recursive, trust-driven]
-    MergeModules --> MergedEntity[(Merged Entities<br/>Single Canonical Record)]
-
-    %% Stage 10: Finalization
-    MergedEntity --> Finalization[Finalization & Persistence]
-    Finalization --> SlugGen[Generate Stable Slugs]
-    SlugGen --> Provenance[Persist Provenance Metadata]
-    Provenance --> Upsert[Idempotent Upsert]
-    Upsert --> EntityTable[(Entity Table<br/>Canonical Schema Only)]
-
-    %% Stage 11: Output
-    EntityTable --> Output[Output: Persisted Entities<br/>Ready for Display]
-
-    %% Styling
-    classDef inputClass fill:#e1f5ff,stroke:#0066cc,stroke-width:2px
-    classDef processClass fill:#fff4e6,stroke:#ff8c00,stroke-width:2px
-    classDef artifactClass fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
-    classDef decisionClass fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
-    classDef outputClass fill:#fce4ec,stroke:#c2185b,stroke-width:2px
-
-    class Input,ExecContext inputClass
-    class LensResolution,LensLoad,LensValidate,LensHash,Planning,QueryFeatures,LensRouting,ExecPlan,ConnectorExec,SourceExtraction,ExtractPrimitives,ExtractRaw,LensApp,MappingRules,ModuleTriggers,ModuleExtraction,Classification,Dedup,MatchExternal,MatchGeo,MatchName,MatchContent,Merge,MergeIdentity,MergeGeo,MergeContact,MergeCanonical,MergeModules,Finalization,SlugGen,Provenance,Upsert processClass
-    class RawArtifacts,ExtractedEntity,CanonicalPopulated,Classified,DedupGroups,MergedEntity,EntityTable artifactClass
-    class GeoCheck decisionClass
-    class Conn1,Conn2,Conn3,Conn4,Conn5,ClassPlace,ClassOther,Output outputClass
-```
-
-### Phase 1: Schema Primitives
-
-**CRITICAL ARCHITECTURAL BOUNDARY:** Phase 1 extractors emit ONLY schema primitives + raw observations. They MUST NOT populate `canonical_*` fields or `modules`.
-
-**Allowed Outputs:**
-
-- **Identity:** `entity_name`, `slug`
-- **Geographic:** `latitude`, `longitude`, `street_address`, `city`, `postcode`, `country`
-- **Contact:** `phone`, `email`, `website`
-- **Metadata:** `description`, `summary`, `raw_categories`, `opening_hours`
-- **External IDs:** `google_place_id`, `osm_id`, etc.
-
-**Forbidden Outputs:**
-
-- ❌ `canonical_activities`
-- ❌ `canonical_roles`
-- ❌ `canonical_place_types`
-- ❌ `canonical_access`
-- ❌ `modules` (JSONB)
-
-### Phase 2: Lens Application
-
-After Phase 1 extraction, the Lens Application phase populates canonical dimensions and modules using Lens mapping rules and module triggers.
-
-**Process:**
-
-1. Load mapping rules from Lens contract
-2. Match patterns against evidence surfaces (`entity_name`, `description`, `raw_categories`)
-3. Populate `canonical_activities[]`, `canonical_place_types[]`, etc.
-4. Evaluate module triggers (e.g., if `canonical_activities` contains "tennis", add `sports_facility` module)
-5. Execute module field rules to extract structured module data
-
-**Example:**
-
-```python
-from engine.lenses.mapping_engine import execute_mapping_rules
-
-entity = {
-    "entity_name": "Edinburgh Tennis Club",
-    "description": "Premier tennis facility with 8 courts",
-    "raw_categories": ["sports_club", "tennis"]
-}
-
-mapping_rules = [
-    {
-        "pattern": r"(?i)tennis",
-        "canonical": "tennis",
-        "dimension": "canonical_activities",
-        "source_fields": ["entity_name", "description", "raw_categories"]
-    }
-]
-
-canonical_dims = execute_mapping_rules(mapping_rules, entity)
-# Returns: {"canonical_activities": ["tennis"]}
-```
-
-### LLM Integration (Instructor + Claude)
-
-**File:** `engine/extraction/llm_client.py`
-
-Wraps Anthropic Claude with Instructor for structured output validation.
-
-**Configuration:**
-
-```python
-from engine.extraction.llm_client import InstructorClient
-from engine.extraction.models.entity_extraction import EntityExtraction
-
-client = InstructorClient()
-
-response = client.extract_structured(
-    system_message="You are an expert at extracting venue data...",
-    user_message="Extract details from: Premier tennis club with 8 courts...",
-    response_model=EntityExtraction
-)
-
-# Returns validated Pydantic model instance
-print(response.entity_name)  # "Edinburgh Tennis Club"
-print(response.latitude)     # 55.9533
-```
-
-**Cost Tracking:**
-
-```python
-from engine.extraction.llm_cost import LLMCostTracker
-
-tracker = LLMCostTracker()
-tracker.log_call(prompt_tokens=245, completion_tokens=120, model="claude-sonnet-4")
-print(tracker.get_total_cost())  # "$0.0234"
-```
-
-### Validation (Pydantic)
-
-All extractor outputs are validated against Pydantic schemas auto-generated from YAML definitions.
-
-**Example:**
-
-```python
-from pydantic import BaseModel, validator
-from typing import Optional
-
-class EntityExtraction(BaseModel):
-    entity_name: str
-    latitude: Optional[float] = None
-    longitude: Optional[float] = None
-    phone: Optional[str] = None
-
-    @validator('latitude')
-    def validate_latitude(cls, v):
-        if v is not None and not (-90 <= v <= 90):
-            raise ValueError("Latitude must be between -90 and 90")
-        return v
-```
-
-### Source Extractors
-
-Each connector has a dedicated extractor implementing `BaseExtractor`:
-
-**Base Interface:**
-
-```python
-from abc import ABC, abstractmethod
-from typing import Dict, Any
-
-class BaseExtractor(ABC):
-    @property
-    @abstractmethod
-    def source_name(self) -> str:
-        """Unique identifier for this extractor's data source."""
-        pass
-
-    @abstractmethod
-    async def extract(
-        self,
-        raw_payload: Dict[str, Any],
-        context: ExecutionContext
-    ) -> Dict[str, Any]:
-        """Extract structured data from raw payload."""
-        pass
-```
-
-**Example: Serper Extractor**
-
-**File:** `engine/extraction/extractors/serper_extractor.py`
-
-```python
-class SerperExtractor(BaseExtractor):
-    def __init__(self, llm_client=None):
-        self.llm_client = llm_client or InstructorClient()
-        # Load Serper-specific prompt template
-        with open("engine/extraction/prompts/serper_extraction.txt") as f:
-            self.system_message = f.read()
-
-    @property
-    def source_name(self) -> str:
-        return "serper"
-
-    async def extract(self, raw_payload: Dict, context: ExecutionContext) -> Dict:
-        # Aggregate search snippets
-        snippets = [
-            result["snippet"]
-            for result in raw_payload.get("organic", [])
-        ]
-
-        # LLM extraction
-        response = self.llm_client.extract_structured(
-            system_message=self.system_message,
-            user_message=f"Extract venue from snippets: {snippets}",
-            response_model=EntityExtraction
-        )
-
-        # Return ONLY primitives (Phase 1 contract)
-        return {
-            "entity_name": response.entity_name,
-            "street_address": response.street_address,
-            "city": response.city,
-            "phone": response.phone,
-            "website": response.website,
-            "description": response.description,
-            # NO canonical_* or modules - those come in Phase 2
-        }
-```
-
-### Entity Classification
-
-**File:** `engine/extraction/entity_classifier.py`
-
-Determines `entity_class` using geographic anchoring rules.
-
-**Rules:**
-
-1. If entity has coordinates, address, city, or postcode → `entity_class = "place"`
-2. Otherwise → Heuristic classification:
-   - Person indicators (titles, pronouns) → `"person"`
-   - Organization indicators (Ltd, Inc, Council) → `"organization"`
-   - Event indicators (date ranges, tickets) → `"event"`
-   - Default → `"thing"`
-
-**Example:**
-
-```python
-from engine.extraction.entity_classifier import classify_entity
-
-entity = {
-    "entity_name": "Edinburgh Tennis Club",
-    "latitude": 55.9533,
-    "longitude": -3.1883
-}
-
-entity_class = classify_entity(entity)
-# Returns: "place" (geographic anchoring present)
-```
-
----
-
-## Lenses
-
-The **Lens Layer** provides vertical-specific interpretation of universal engine data through YAML configuration files.
-
-### Core Principle
-
-- **Engine knows NOTHING about domains** (Padel, Wine, Restaurants)
-- **Lenses provide domain-specific vocabulary and routing rules**
-- **Extensibility: Adding a new vertical requires ZERO engine code changes**
-
-### Lens Structure
-
-Each lens is defined in a single comprehensive YAML file:
-
-**File:** `engine/lenses/<lens_id>/lens.yaml`
-
-**Example Structure:**
-
-```yaml
-# Vocabulary (for query feature extraction)
-vocabulary:
-  activity_keywords:
-    - tennis
-    - padel
-    - squash
-  location_indicators:
-    - edinburgh
-    - leith
-    - portobello
-  role_keywords:
-    - coach
-    - instructor
-
-# Connector Routing Rules (for execution planning)
 connector_rules:
   sport_scotland:
     priority: high
     triggers:
       - type: any_keyword_match
-        keywords: [tennis, padel, squash, swimming]
+        keywords: [tennis, padel, squash]
+        threshold: 1
+      - type: location_match
+        keywords: [edinburgh, scotland]
+```
 
-# Mapping Rules (for canonical dimension population)
+**Output:**
+```python
+@dataclass
+class ExecutionPlan:
+    connectors: List[ConnectorNode]     # Ordered connector execution nodes
+    estimated_cost_usd: float           # Total estimated cost
+    phases: List[ExecutionPhase]        # DISCOVERY, STRUCTURED, ENRICHMENT
+```
+
+#### 4. Orchestrator (`orchestrator.py`)
+
+**Main pipeline coordinator** enforcing phase barriers and deterministic execution.
+
+**Phase Ordering (Strict):**
+1. **DISCOVERY** — Fast, broad coverage (Serper, OSM)
+2. **STRUCTURED** — Authoritative structured data (GooglePlaces, SportScotland)
+3. **ENRICHMENT** — Specialized vertical data (EdinburghCouncil, OpenChargeMap)
+
+**Execution Guarantees:**
+- Phases execute sequentially (no reordering)
+- Connectors within phase execute in alphabetical order (determinism)
+- Shared ExecutionContext passed through all stages
+- Early stopping based on budget/confidence thresholds
+
+**Example Usage:**
+```python
+orchestrator = Orchestrator(plan=execution_plan)
+context = orchestrator.execute(request, query_features)
+# context.accepted_entities contains final results
+```
+
+#### 5. EntityFinalizer (`entity_finalizer.py`)
+
+**Slug generation and persistence** layer.
+
+**Responsibilities:**
+- Group entities by slug candidates
+- Generate URL-safe slugs (`"The Padel Club"` → `"padel-club"`)
+- Upsert to Entity table (idempotent)
+- Preserve provenance metadata
+
+**Slug Generation Rules:**
+```python
+def generate_slug(entity_name: str) -> str:
+    # 1. Lowercase
+    # 2. Remove articles (the, a, an)
+    # 3. Replace non-alphanumeric with hyphens
+    # 4. Deduplicate hyphens
+    # 5. Strip leading/trailing hyphens
+```
+
+---
+
+## Ingestion System
+
+**Location:** `engine/ingestion/`
+**Purpose:** Fetch raw data from 6 external sources
+
+### Connector Registry
+
+**File:** `engine/orchestration/registry.py`
+
+**Central metadata store** for all connectors (trust, cost, phase, timeout).
+
+```python
+@dataclass(frozen=True)
+class ConnectorSpec:
+    name: str                       # "serper", "google_places", etc.
+    connector_class: str            # Full Python path
+    phase: str                      # "discovery" | "enrichment"
+    cost_per_call_usd: float        # Avg cost per API call
+    trust_level: float              # 0.0 to 1.0 (1.0 = authoritative)
+    timeout_seconds: int            # Max execution timeout
+    rate_limit_per_day: int         # Daily request limit
+```
+
+**6 Registered Connectors:**
+
+| Connector | Phase | Trust | Cost/Call | Rate Limit |
+|-----------|-------|-------|-----------|------------|
+| `serper` | DISCOVERY | 0.75 | $0.01 | 2,500/day |
+| `google_places` | STRUCTURED | 0.95 | $0.017 | 1,000/day |
+| `openstreetmap` | DISCOVERY | 0.70 | $0.00 | 10,000/day |
+| `sport_scotland` | ENRICHMENT | 0.90 | $0.00 | 10,000/day |
+| `edinburgh_council` | ENRICHMENT | 0.90 | $0.00 | 10,000/day |
+| `open_charge_map` | ENRICHMENT | 0.80 | $0.00 | 10,000/day |
+
+**Usage:**
+```python
+from engine.orchestration.registry import CONNECTOR_REGISTRY, get_connector_instance
+
+spec = CONNECTOR_REGISTRY["serper"]
+connector = get_connector_instance("serper")
+await connector.db.connect()
+results = await connector.fetch("padel courts Edinburgh")
+```
+
+### BaseConnector Interface
+
+**File:** `engine/ingestion/base.py`
+
+All connectors implement a common abstract interface:
+
+```python
+class BaseConnector(ABC):
+    @abstractmethod
+    async def fetch(self, query: str) -> RawData:
+        """Fetch raw data from external source."""
+
+    @abstractmethod
+    async def is_duplicate(self, data: RawData) -> bool:
+        """Detect ingestion-level duplicates."""
+```
+
+**Connector Responsibilities:**
+- Fetch raw payloads from external APIs
+- Detect duplicate ingestions (content hash)
+- Return raw data + metadata to engine for persistence
+- NEVER directly write to Entity table (engine owns persistence)
+
+### Data Flow
+
+```
+Query
+  ↓
+Planner selects connectors based on lens rules
+  ↓
+Orchestrator executes connectors in phase order
+  ↓
+Connectors fetch raw payloads
+  ↓
+Engine persists to RawIngestion table (immutable)
+  ↓
+Extraction stage processes raw artifacts
+```
+
+---
+
+## Extraction System
+
+**Location:** `engine/extraction/`
+**Purpose:** Transform raw payloads into structured ExtractedEntity records
+
+### Locked Extraction Contract
+
+**Critical Boundary ([architecture.md Section 4.2](../target/architecture.md#42-boundary-contracts)):**
+
+#### Phase 1: Source Extraction (Extractors)
+
+**Output:** Schema primitives + raw observations ONLY
+
+```python
+# ✅ ALLOWED outputs
+{
+    "entity_name": "The Padel Club",
+    "latitude": 55.9533,
+    "longitude": -3.1883,
+    "street_address": "123 Main St",
+    "phone": "+44 131 555 1234",
+    "website_url": "https://example.com",
+    "description": "Premier padel facility...",
+    "raw_categories": ["Sports Club", "Tennis Court"]
+}
+
+# ❌ FORBIDDEN outputs (Phase 2 only)
+{
+    "canonical_activities": ["padel", "tennis"],  # Lens-owned
+    "canonical_place_types": ["sports_facility"],  # Lens-owned
+    "modules": {...}                               # Lens-owned
+}
+```
+
+**Rationale:**
+- Prevents domain semantics leaking into extractors
+- Makes purity mechanically testable
+- Centralizes interpretation in Lens layer
+
+#### Phase 2: Lens Application (Engine-Owned)
+
+**Input:** Primitives + raw observations
+**Output:** Canonical dimensions + modules
+
+```python
+def apply_lens_contract(primitives: dict, lens_contract: dict) -> dict:
+    """
+    Apply lens mapping rules to populate canonical dimensions.
+
+    1. Match patterns against evidence surfaces:
+       - entity_name, description, raw_categories, summary, street_address
+    2. Populate canonical_activities[] via mapping rules
+    3. Populate canonical_place_types[] via mapping rules
+    4. Evaluate module triggers
+    5. Execute module field rules
+    """
+```
+
+**Evidence Surfaces (Default):**
+If mapping rule omits `source_fields`, engine searches:
+- `entity_name`
+- `summary`
+- `description`
+- `raw_categories`
+- `street_address`
+
+### Extractor Implementations
+
+**6 Source-Specific Extractors:**
+
+| Extractor | Source | Strategy |
+|-----------|--------|----------|
+| `SerperExtractor` | Serper web search | Hybrid (deterministic + LLM for unstructured) |
+| `GooglePlacesExtractor` | Google Places API | Deterministic field mapping |
+| `OSMExtractor` | OpenStreetMap | Deterministic tag normalization |
+| `SportScotlandExtractor` | Sport Scotland API | Deterministic schema alignment |
+| `EdinburghCouncilExtractor` | Edinburgh Council API | Deterministic field mapping |
+| `OpenChargeMapExtractor` | OpenChargeMap API | Deterministic field extraction |
+
+**Example: GooglePlacesExtractor**
+
+```python
+class GooglePlacesExtractor:
+    def extract(self, raw_payload: dict, *, ctx: ExecutionContext) -> dict:
+        """
+        Extract schema primitives from Google Places payload.
+
+        MUST emit only universal schema fields:
+        - entity_name, latitude, longitude
+        - street_address, city, postcode
+        - phone, website_url
+        - raw_categories (for Phase 2 lens application)
+        """
+        result = raw_payload.get("result", {})
+
+        # Geographic primitives
+        location = result.get("geometry", {}).get("location", {})
+
+        # Address components (deterministic parsing)
+        address_components = self._parse_address_components(
+            result.get("address_components", [])
+        )
+
+        return {
+            "entity_name": result.get("name"),
+            "latitude": location.get("lat"),
+            "longitude": location.get("lng"),
+            "street_address": address_components.get("street_address"),
+            "city": address_components.get("city"),
+            "postcode": address_components.get("postcode"),
+            "phone": result.get("formatted_phone_number"),
+            "website_url": result.get("website"),
+            "raw_categories": result.get("types", []),
+            "description": result.get("editorial_summary", {}).get("overview")
+        }
+```
+
+### LLM Extraction Engine
+
+**File:** `engine/extraction/llm_client.py`
+
+**Schema-Bound LLM Usage:**
+- LLMs produce ONLY Pydantic-validated structured output
+- Free-form or unvalidated LLM output is forbidden
+- Instructor library enforces schema compliance
+
+```python
+from instructor import from_anthropic
+from anthropic import Anthropic
+
+client = from_anthropic(Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY")))
+
+response = client.messages.create(
+    model="claude-3-5-sonnet-20241022",
+    response_model=EntityExtraction,  # Pydantic schema
+    messages=[{"role": "user", "content": prompt}]
+)
+# response is guaranteed to match EntityExtraction schema
+```
+
+**LLM Constraints:**
+- Deterministic rules ALWAYS run first
+- LLM extraction only when deterministic extraction insufficient
+- Maximum 1 LLM call per module per payload
+- Confidence scores tracked for merge decisions
+
+### Entity Classifier
+
+**File:** `engine/extraction/entity_classifier.py`
+
+**Deterministic classification** using geographic anchoring rules.
+
+```python
+def classify_entity(extracted: dict) -> str:
+    """
+    Determine entity_class using universal rules.
+
+    Classification logic:
+    - Has geographic anchoring? → "place"
+      - Anchoring = coordinates OR street_address OR city OR postcode
+    - Has time_range? → "event"
+    - Organization signals? → "organization"
+    - Person signals? → "person"
+    - Default → "thing"
+    """
+```
+
+**No domain semantics:** Classifier never uses activity keywords or domain heuristics.
+
+---
+
+## Lens Layer
+
+**Location:** `engine/lenses/`
+**Purpose:** Pluggable vertical interpretation through YAML contracts
+
+### Core Principle
+
+**Engine:** Knows NOTHING about domains
+**Lenses:** Provide ALL domain-specific vocabulary and routing
+
+**Extensibility:** Adding a new vertical requires ZERO engine code changes.
+
+### Lens Structure
+
+Each lens is defined in `engine/lenses/<lens_id>/lens.yaml`:
+
+```yaml
+# Example: engine/lenses/edinburgh_finds/lens.yaml
+
+vocabulary:
+  activity_keywords:
+    - tennis
+    - padel
+    - squash
+    - football
+  location_indicators:
+    - edinburgh
+    - leith
+    - stockbridge
+  facility_keywords:
+    - court
+    - club
+    - venue
+
+connector_rules:
+  sport_scotland:
+    priority: high
+    triggers:
+      - type: any_keyword_match
+        keywords: [tennis, padel, squash]
+        threshold: 1
+
 mapping_rules:
-  - pattern: "(?i)tennis|racket sports"
-    canonical: tennis
+  - id: map_tennis_activity
+    pattern: "(?i)tennis|racket sports"
     dimension: canonical_activities
+    value: tennis
     confidence: 0.95
-    source_fields: [entity_name, description, raw_categories]
+    source_fields: [entity_name, raw_categories, description]
 
-  - pattern: "(?i)indoor|outdoor"
-    canonical: outdoor
-    dimension: canonical_access
-    confidence: 0.85
-    source_fields: [description]
+  - id: map_sports_facility_type
+    pattern: "(?i)sports club|tennis club|padel club"
+    dimension: canonical_place_types
+    value: sports_facility
+    confidence: 0.90
 
-# Module Triggers (for conditional module attachment)
 module_triggers:
   - when:
       dimension: canonical_activities
       values: [tennis, padel, squash]
     add_modules: [sports_facility]
 
-# Canonical Values (interpretation metadata)
-values:
-  - key: tennis
-    facet: activity
+canonical_values:
+  tennis:
     display_name: "Tennis"
-    description: "Racquet sport played on a rectangular court"
     seo_slug: "tennis"
-    search_keywords: ["tennis", "racquet", "court"]
-    icon_url: "/icons/tennis.svg"
-    color: "#4CAF50"
+    icon: "racquet"
+  sports_facility:
+    display_name: "Sports Facility"
+    seo_slug: "sports-facility"
 ```
 
-### Lens Loading & Validation
+### Lens Loading Lifecycle
 
-**File:** `engine/lenses/loader.py`
-
-Loads and validates lens configuration at bootstrap (fail-fast).
-
-**Validation Checks:**
-
-1. **Schema Validation:** YAML structure matches expected schema
-2. **Registry Completeness:** All canonical values declared in `values` section
-3. **Rule Validity:** Regex patterns compile, referenced dimensions exist
-4. **Connector Existence:** Referenced connectors exist in registry
-5. **Module Namespacing:** Module keys follow `<namespace>_<name>` pattern
-
-**Example:**
+**Bootstrap Validation (Fail-Fast):**
 
 ```python
-from engine.lenses.loader import VerticalLens
-from pathlib import Path
+# 1. Load lens.yaml from disk
+lens_path = Path(f"engine/lenses/{lens_id}/lens.yaml")
+with lens_path.open() as f:
+    lens_config = yaml.safe_load(f)
 
-# Load and validate (fails if invalid)
-lens_path = Path("engine/lenses/edinburgh_finds/lens.yaml")
-lens = VerticalLens(lens_path)
+# 2. Validate schema structure
+validate_lens_schema(lens_config)
 
-# Access compiled data
-print(lens.activity_keywords)  # ["tennis", "padel", "squash"]
-print(lens.mapping_rules)      # [MappingRule(...), ...]
-print(lens.facets)             # {"activity": FacetDefinition(...)}
+# 3. Validate canonical registry integrity
+validate_canonical_registry(lens_config["canonical_values"])
+
+# 4. Validate connector references
+validate_connector_references(
+    lens_config["connector_rules"],
+    CONNECTOR_REGISTRY
+)
+
+# 5. Compile regex patterns
+compile_mapping_patterns(lens_config["mapping_rules"])
+
+# 6. Compute deterministic hash
+lens_hash = hash_lens_content(lens_config)
+
+# 7. Materialize runtime contract
+lens_contract = materialize_lens_contract(lens_config, lens_hash)
+
+# 8. Inject into ExecutionContext
+ctx = ExecutionContext(
+    lens_id=lens_id,
+    lens_contract=lens_contract,
+    lens_hash=lens_hash
+)
 ```
 
-### Mapping Rule Engine
+**Any validation failure → abort execution immediately.**
 
-**File:** `engine/lenses/mapping_engine.py`
+### Mapping Rule Execution
 
-Applies pattern-based rules to populate canonical dimensions.
-
-**Algorithm:**
-
-1. For each mapping rule:
-   - Get `source_fields` (defaults to `["entity_name", "description", "raw_categories"]`)
-   - Search pattern across union of source fields
-   - First match wins (within source_fields)
-   - Emit `{dimension: canonical_value}`
-2. Group matches by dimension
-3. Deduplicate values
-4. Sort deterministically (lexicographic)
-
-**Example:**
+**Generic, domain-blind engine logic:**
 
 ```python
-from engine.lenses.mapping_engine import execute_mapping_rules
+def apply_mapping_rules(
+    primitives: dict,
+    mapping_rules: List[dict],
+    canonical_registry: dict
+) -> dict:
+    """
+    Apply lens mapping rules to populate canonical dimensions.
 
-entity = {
-    "entity_name": "Edinburgh Tennis & Padel Centre",
-    "description": "Premier indoor/outdoor facility",
-    "raw_categories": ["sports_club", "tennis"]
-}
+    Execution semantics:
+    1. Rules execute over union of source_fields (or default surfaces)
+    2. First match wins per rule
+    3. Multiple rules may contribute to same dimension
+    4. Duplicate values deduplicated
+    5. Ordering stabilized deterministically
+    """
+    canonical_dimensions = {
+        "canonical_activities": [],
+        "canonical_roles": [],
+        "canonical_place_types": [],
+        "canonical_access": []
+    }
 
-rules = [
-    {"pattern": r"(?i)tennis", "canonical": "tennis", "dimension": "canonical_activities"},
-    {"pattern": r"(?i)padel", "canonical": "padel", "dimension": "canonical_activities"},
-    {"pattern": r"(?i)indoor", "canonical": "indoor", "dimension": "canonical_access"}
-]
+    for rule in mapping_rules:
+        # Get evidence surfaces
+        fields = rule.get("source_fields") or DEFAULT_EVIDENCE_SURFACES
+        evidence = " ".join(str(primitives.get(f, "")) for f in fields)
 
-result = execute_mapping_rules(rules, entity)
-# Returns: {
-#     "canonical_activities": ["padel", "tennis"],  # Sorted lexicographically
-#     "canonical_access": ["indoor"]
-# }
+        # Match pattern
+        pattern = re.compile(rule["pattern"], re.IGNORECASE)
+        if pattern.search(evidence):
+            dimension = rule["dimension"]
+            value = rule["value"]
+
+            # Validate against registry
+            if value not in canonical_registry:
+                raise ValueError(f"Undeclared canonical value: {value}")
+
+            # Append to dimension (deduplicated later)
+            canonical_dimensions[dimension].append(value)
+
+    # Deduplicate and sort deterministically
+    for dimension in canonical_dimensions:
+        canonical_dimensions[dimension] = sorted(set(canonical_dimensions[dimension]))
+
+    return canonical_dimensions
 ```
 
-### Module Trigger Engine
+### QueryLens Integration
 
-**File:** `engine/lenses/ops.py` (via module extraction system)
+**File:** `engine/lenses/query_lens.py`
 
-Evaluates conditional rules to determine which modules to attach.
+**Lightweight lens accessor** for query orchestration:
 
-**Trigger Structure:**
+```python
+class QueryLens:
+    def get_activity_keywords(self) -> List[str]:
+        """Return lens-defined activity terms for query analysis."""
+
+    def get_location_indicators(self) -> List[str]:
+        """Return lens-defined location keywords."""
+
+    def get_connectors_for_query(
+        self,
+        query: str,
+        query_features: QueryFeatures
+    ) -> List[str]:
+        """Determine which connectors should run based on trigger rules."""
+```
+
+**Usage:**
+```python
+lens = get_active_lens("edinburgh_finds")
+keywords = lens.get_activity_keywords()
+features = QueryFeatureExtractor(lens).extract("padel courts Edinburgh")
+connectors = lens.get_connectors_for_query(query, features)
+# connectors = ["sport_scotland", "edinburgh_council"]
+```
+
+---
+
+## Schema Generation
+
+**Location:** `engine/schema/`
+**Purpose:** Single source of truth for all data models
+
+### Architecture
+
+**YAML → Auto-Generated Schemas:**
+
+```
+engine/config/schemas/*.yaml (Single Source of Truth)
+    ↓
+engine/schema/generate.py
+    ↓
+├─→ Python FieldSpecs (engine/schema/<entity>.py)
+├─→ Prisma Schema (web/prisma/schema.prisma)
+└─→ TypeScript Interfaces (web/lib/types/generated/<entity>.ts)
+```
+
+### YAML Schema Example
+
+**File:** `engine/config/schemas/entity.yaml`
 
 ```yaml
-module_triggers:
-  - when:
-      dimension: canonical_activities
-      values: [tennis, padel]
-    add_modules: [sports_facility]
+entity_name: Entity
+fields:
+  - name: id
+    type: string
+    required: true
+    description: Unique entity identifier
 
-  - when:
-      dimension: canonical_place_types
-      values: [restaurant, cafe]
-    add_modules: [hospitality_venue]
+  - name: entity_name
+    type: string
+    required: true
+    description: Primary display name
+
+  - name: entity_class
+    type: enum
+    values: [place, person, organization, event, thing]
+    required: true
+
+  - name: canonical_activities
+    type: array
+    item_type: string
+    description: Opaque activity identifiers (lens-owned)
+
+  - name: canonical_place_types
+    type: array
+    item_type: string
+    description: Opaque place type identifiers (lens-owned)
+
+  - name: modules
+    type: json
+    description: Namespaced structured modules
 ```
 
-**Evaluation Logic:**
+### Generation Command
 
+```bash
+# Validate schemas
+python -m engine.schema.generate --validate
+
+# Regenerate all derived schemas
+python -m engine.schema.generate --all
+
+# Generated files are marked "DO NOT EDIT" - never modify directly
+```
+
+### Schema Validation
+
+**Enforcement:**
+- Schema changes require regeneration before commit
+- Generated files have "DO NOT EDIT" headers
+- CI validates schema consistency
+- Eliminates schema drift across Python/Prisma/TypeScript
+
+**Prohibited Patterns:**
 ```python
-def should_trigger_module(entity: Dict, trigger: Dict) -> bool:
-    """Check if module trigger conditions are met."""
-    dimension = trigger["when"]["dimension"]
-    required_values = set(trigger["when"]["values"])
+# ❌ WRONG: Manual Prisma schema edits
+# web/prisma/schema.prisma (GENERATED FILE)
 
-    entity_values = set(entity.get(dimension, []))
-
-    # Trigger if ANY required value is present
-    return bool(required_values & entity_values)
+# ✅ RIGHT: Edit YAML source
+# engine/config/schemas/entity.yaml
 ```
 
-### Module Field Rules
+---
 
-Once a module is triggered, field rules extract structured data for that module.
+## Module System
 
-**Example:**
+**Location:** `engine/extraction/module_extractor.py`
+**Purpose:** Declarative, lens-owned structured data extraction
+
+### Core Principle
+
+**Module field extraction is:**
+- Declarative (rules in lens YAML)
+- Lens-owned (semantics in lens contracts)
+- Schema-driven (Pydantic validation)
+- Executed by generic engine interpreter
+- Fully domain-blind inside engine code
+
+### Module Definition (Lens YAML)
 
 ```yaml
 modules:
   sports_facility:
-    fields:
-      - name: num_courts
+    description: "Structured data for sports facilities"
+    field_rules:
+      - rule_id: extract_tennis_courts
+        target_path: tennis_courts.total
+        source_fields: [NumTennisCourts, tennis_count]
         extractor: numeric_parser
-        config:
-          pattern: "(?i)(\\d+)\\s*courts?"
-          source_fields: [description, summary]
+        confidence: 0.90
+        applicability:
+          source: [sport_scotland, google_places]
+          entity_class: [place]
+        normalizers: [round_integer]
 
-      - name: court_surface
+      - rule_id: extract_surface_type
+        target_path: tennis_courts.surface
+        source_fields: [SurfaceType, court_surface]
         extractor: regex_capture
-        config:
-          pattern: "(?i)surface:\\s*(\\w+)"
-          source_fields: [description]
+        pattern: "(?i)(hard|clay|grass|artificial)"
+        confidence: 0.85
+        normalizers: [lowercase, list_wrap]
 ```
 
-**Execution:**
+### Extractor Vocabulary
+
+**Deterministic Extractors:**
+- `numeric_parser` — Parse numeric values
+- `regex_capture` — Extract via regex patterns
+- `json_path` — Navigate JSON structures
+- `boolean_coercion` — Convert to boolean
+- `coalesce` — First non-null value
+- `array_builder` — Construct arrays
+- `string_template` — String interpolation
+
+**LLM Extractors:**
+- `llm_structured` — Schema-bound LLM extraction (max 1 call per module)
+
+**Normalizers (Post-Processing):**
+- `trim`, `lowercase`, `uppercase`
+- `list_wrap`, `comma_split`
+- `round_integer`
+
+### Execution Semantics
 
 ```python
-from engine.lenses.extractors.numeric_parser import extract_numeric
-from engine.lenses.extractors.regex_capture import extract_regex
+def extract_module_fields(
+    raw_data: dict,
+    module_def: dict,
+    source: str,
+    entity_class: str
+) -> dict:
+    """
+    Execute module field rules generically.
 
-entity = {"description": "Facility with 8 courts. Surface: clay."}
-
-num_courts = extract_numeric(
-    entity,
-    pattern=r"(?i)(\d+)\s*courts?",
-    source_fields=["description"]
-)  # Returns: 8
-
-court_surface = extract_regex(
-    entity,
-    pattern=r"(?i)surface:\s*(\w+)",
-    source_fields=["description"]
-)  # Returns: "clay"
+    Process:
+    1. Filter rules by applicability (source, entity_class)
+    2. Execute deterministic rules first
+    3. Evaluate conditions for remaining LLM rules
+    4. Build schema covering only remaining fields
+    5. Execute single batched LLM call if required
+    6. Validate and normalize outputs
+    7. Write results to target paths
+    """
 ```
+
+**Error Handling:**
+- Deterministic rule failures → log, skip field, continue
+- LLM failures → log, continue with partial module data
+- Lens validation failures → fail fast at bootstrap
 
 ---
 
-## Persistence
-
-The **Persistence Layer** handles slug generation, provenance tracking, and idempotent database upserts.
-
-### Entity Repository
-
-**Database Schema (Prisma):**
-
-```prisma
-model Entity {
-  id                    String   @id @default(cuid())
-  slug                  String   @unique  // URL-safe identifier
-  entity_name           String
-  entity_class          String?  // place, person, organization, event, thing
-
-  // Geographic
-  latitude              Float?
-  longitude             Float?
-  street_address        String?
-  city                  String?
-  postcode              String?
-  country               String?   @default("GB")
-
-  // Contact
-  phone                 String?
-  email                 String?
-  website               String?
-
-  // Content
-  description           String?
-  summary               String?
-
-  // Canonical Dimensions (multi-valued)
-  canonical_activities  String[]  // ["tennis", "padel"]
-  canonical_roles       String[]  // ["coach", "venue"]
-  canonical_place_types String[]  // ["sports_club", "gym"]
-  canonical_access      String[]  // ["indoor", "outdoor", "public"]
-
-  // Modules (vertical-specific structured data)
-  modules               Json?     // {"sports_facility": {...}, ...}
-
-  // External IDs
-  google_place_id       String?   @unique
-  osm_id                String?   @unique
-
-  // Metadata
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
-
-  @@index([entity_class])
-  @@index([city])
-  @@index([canonical_activities])
-}
-```
-
-### Slug Generation
-
-**File:** `engine/extraction/deduplication.py`
-
-Generates URL-safe slugs from entity names using deterministic rules.
-
-**Algorithm:**
-
-1. Lowercase the name
-2. Remove articles ("the", "a", "an")
-3. Remove punctuation except hyphens
-4. Replace spaces with hyphens
-5. Remove consecutive hyphens
-6. Trim leading/trailing hyphens
-
-**Example:**
-
-```python
-from engine.extraction.deduplication import SlugGenerator
-
-slug_gen = SlugGenerator()
-
-slugs = [
-    slug_gen.generate("The Padel Club"),            # "padel-club"
-    slug_gen.generate("Edinburgh Tennis Centre"),   # "edinburgh-tennis-centre"
-    slug_gen.generate("O'Neill's Sports Bar"),      # "oneills-sports-bar"
-]
-```
-
-### Upsert Logic
-
-**File:** `engine/orchestration/persistence.py`
-
-Implements idempotent upsert with deterministic conflict resolution.
-
-**Process:**
-
-1. Check if `Entity` with matching `slug` exists
-2. If exists:
-   - Merge new data with existing using trust hierarchy
-   - Update `updatedAt` timestamp
-3. If not exists:
-   - Create new `Entity` record
-   - Initialize `createdAt` timestamp
-
-**Example:**
-
-```python
-from engine.orchestration.persistence import PersistenceManager
-
-manager = PersistenceManager(db)
-
-entity_data = {
-    "slug": "padel-club",
-    "entity_name": "The Padel Club",
-    "latitude": 55.9533,
-    "longitude": -3.1883,
-    "canonical_activities": ["padel"],
-    "modules": {"sports_facility": {"num_courts": 4}}
-}
-
-entity_id = await manager.upsert_entity(entity_data)
-# Returns: "cuid_abc123" (created or updated)
-```
-
-### Provenance Tracking
-
-**Database Schema:**
-
-```prisma
-model EntityProvenance {
-  id                  String   @id @default(cuid())
-  entity_id           String
-  source              String   // "serper", "google_places", etc.
-  extracted_entity_id String   @unique
-  trust_level         Float
-  createdAt           DateTime @default(now())
-
-  entity              Entity   @relation(fields: [entity_id], references: [id])
-
-  @@index([entity_id])
-  @@index([source])
-}
-```
-
-**Purpose:**
-
-- Track which sources contributed to each entity
-- Enable trust-based conflict resolution during merges
-- Support data lineage auditing
-- Allow re-extraction from specific sources
-
----
-
-## Schema System
-
-The **Schema Generation System** maintains YAML as the single source of truth and auto-generates Python, Prisma, and TypeScript schemas.
-
-### Architecture
-
-```
-YAML Schemas                Generated Artifacts
-(engine/config/schemas/)
-
-entity.yaml         ──►     engine/schema/entity.py (Python FieldSpecs)
-                    ──►     engine/prisma/schema.prisma (Prisma schema)
-                    ──►     web/prisma/schema.prisma (Prisma schema)
-                    ──►     web/lib/types/generated/entity.ts (TypeScript)
-                    ──►     engine/extraction/models/entity_extraction.py (Pydantic)
-```
-
-### YAML Schema Format
-
-**File:** `engine/config/schemas/entity.yaml`
-
-**Structure:**
-
-```yaml
-schema:
-  name: Entity
-  description: Base schema for all entity types
-  extends: null
-
-fields:
-  - name: entity_name
-    type: string
-    description: Official name of the entity
-    nullable: false
-    required: true
-    index: true
-    search:
-      category: identity
-      keywords: [name, called, named]
-    python:
-      validators: [non_empty]
-      extraction_required: true
-
-  - name: latitude
-    type: float
-    description: Latitude coordinate (WGS84)
-    nullable: true
-    index: true
-    python:
-      validators: [latitude_range]
-    prisma:
-      type: "Float"
-
-  - name: canonical_activities
-    type: array
-    description: Multi-valued activity dimension
-    nullable: false
-    default: []
-    prisma:
-      type: "String[]"
-      attributes: ["@default([])"]
-    exclude: true  # Not for LLM extraction (populated by Lens)
-```
-
-### Generators
-
-#### 1. Python FieldSpec Generator
-
-**File:** `engine/schema/generators/python_fieldspec.py`
-
-Generates Python FieldSpec definitions for use in schema validation.
-
-**Output:** `engine/schema/entity.py`
-
-```python
-# AUTO-GENERATED - DO NOT EDIT
-# Source: engine/config/schemas/entity.yaml
-
-from engine.schema.field import FieldSpec
-
-ENTITY_FIELDS = {
-    "entity_name": FieldSpec(
-        name="entity_name",
-        type="string",
-        description="Official name of the entity",
-        nullable=False,
-        required=True,
-        validators=["non_empty"]
-    ),
-    "latitude": FieldSpec(
-        name="latitude",
-        type="float",
-        description="Latitude coordinate (WGS84)",
-        nullable=True,
-        validators=["latitude_range"]
-    ),
-}
-```
-
-#### 2. Prisma Schema Generator
-
-**File:** `engine/schema/generators/prisma.py`
-
-Generates Prisma schema files for database ORM.
-
-**Output:** `web/prisma/schema.prisma`
-
-```prisma
-// AUTO-GENERATED - DO NOT EDIT
-// Source: engine/config/schemas/entity.yaml
-
-model Entity {
-  id                    String   @id @default(cuid())
-  entity_name           String
-  latitude              Float?
-  canonical_activities  String[] @default([])
-
-  @@index([entity_name])
-  @@index([latitude])
-}
-```
-
-#### 3. TypeScript Generator
-
-**File:** `engine/schema/generators/typescript.py`
-
-Generates TypeScript interfaces for frontend type safety.
-
-**Output:** `web/lib/types/generated/entity.ts`
-
-```typescript
-// AUTO-GENERATED - DO NOT EDIT
-// Source: engine/config/schemas/entity.yaml
-
-export interface Entity {
-  id: string;
-  entity_name: string;
-  latitude?: number | null;
-  canonical_activities: string[];
-}
-```
-
-#### 4. Pydantic Extraction Model Generator
-
-**File:** `engine/schema/generators/pydantic_extraction.py`
-
-Generates Pydantic models for LLM extraction validation.
-
-**Output:** `engine/extraction/models/entity_extraction.py`
-
-```python
-# AUTO-GENERATED - DO NOT EDIT
-# Source: engine/config/schemas/entity.yaml
-
-from pydantic import BaseModel, validator
-from typing import Optional
-
-class EntityExtraction(BaseModel):
-    entity_name: str
-    latitude: Optional[float] = None
-
-    @validator('latitude')
-    def validate_latitude(cls, v):
-        if v is not None and not (-90 <= v <= 90):
-            raise ValueError("Latitude must be between -90 and 90")
-        return v
-```
-
-### Regeneration Workflow
-
-**Command:**
-
-```bash
-python -m engine.schema.generate --all
-```
-
-**Process:**
-
-1. Parse all YAML schemas in `engine/config/schemas/`
-2. Validate schema structure
-3. Generate Python FieldSpecs
-4. Generate Prisma schemas (backend + frontend)
-5. Generate TypeScript interfaces
-6. Generate Pydantic extraction models
-7. Write files with "DO NOT EDIT" headers
-
-**Validation:**
-
-```bash
-# Validate schemas without generating
-python -m engine.schema.generate --validate
-
-# Generate specific schema only
-python -m engine.schema.generate --schema entity
-```
-
----
-
-## Testing
-
-The engine uses **pytest** with strict TDD (Test-Driven Development) practices and >80% coverage target.
-
-### Test Organization
-
-```
-tests/engine/
-├── config/
-│   └── test_entity_model_purity.py  # Schema validation tests
-├── orchestration/
-│   ├── test_registry.py              # Connector registry tests
-│   ├── test_planner.py               # Execution planning tests
-│   ├── test_query_features.py        # Query analysis tests
-│   └── test_orchestrator.py          # End-to-end orchestration tests
-├── ingestion/
-│   ├── connectors/
-│   │   ├── test_serper.py
-│   │   ├── test_google_places.py
-│   │   └── ...
-│   └── test_storage.py               # Raw ingestion storage tests
-├── extraction/
-│   ├── extractors/
-│   │   ├── test_serper_extractor.py
-│   │   ├── test_google_places_extractor.py
-│   │   └── ...
-│   ├── test_entity_classifier.py     # Classification tests
-│   ├── test_merging.py               # Merge logic tests
-│   └── test_lens_integration.py      # Lens application tests
-├── lenses/
-│   ├── test_loader.py                # Lens loading tests
-│   ├── test_mapping_engine.py        # Mapping rule tests
-│   └── test_validator.py             # Lens validation tests
-└── schema/
-    ├── test_parser.py                # YAML parsing tests
-    └── test_generators.py            # Schema generation tests
-```
-
-### Test Configuration
-
-**File:** `pytest.ini`
-
-```ini
-[pytest]
-markers =
-    slow: marks tests as slow (deselect with '-m "not slow"')
-    integration: marks tests as integration tests (require real API calls)
-asyncio_mode = auto
-asyncio_default_fixture_loop_scope = function
-norecursedirs = archive/* conductor/* node_modules/* .git/* web/node_modules/*
-```
+## Testing Strategy
+
+**Location:** `tests/engine/`
+**Coverage Target:** >80%
+
+### Test Categories
+
+**1. Unit Tests**
+- Mock external dependencies (APIs, LLM calls)
+- Test success and failure cases
+- Use fixtures for common setup
+
+**2. Integration Tests**
+- Test complete data flows (ingest → extract → merge)
+- Verify database transactions
+- Snapshot testing for extraction outputs
+
+**3. Contract Tests**
+- Validate extractor output contracts (Phase 1 primitives only)
+- Validate lens application outputs (canonical dimensions + modules)
+- Enforce purity boundaries
+
+**4. Purity Tests**
+- Detect domain literals in engine code
+- Validate import boundaries (engine must not import lens implementations)
+- Flag connector-specific logic in merge
 
 ### Running Tests
 
 ```bash
-# Run all tests
+# All tests
 pytest
 
-# Run fast tests only (excludes slow tests)
+# Fast tests only (excludes @pytest.mark.slow)
 pytest -m "not slow"
 
-# Run specific module tests
-pytest tests/engine/orchestration/
-
-# Run with coverage report
+# Coverage report
 pytest --cov=engine --cov-report=html
 
-# Run with verbose output
+# Specific module
+pytest engine/orchestration/
+
+# With verbose output
 pytest -v
-
-# Run specific test function
-pytest tests/engine/extraction/test_entity_classifier.py::test_classify_place
 ```
 
-### Test Patterns
-
-#### Unit Tests
-
-**Example: Query Feature Extraction**
+### Test Markers
 
 ```python
-# tests/engine/orchestration/test_query_features.py
-
 import pytest
-from engine.orchestration.query_features import QueryFeatures
-from engine.orchestration.types import IngestRequest
-
-def test_category_search_detection():
-    """Category searches like 'padel courts' should be detected."""
-    request = IngestRequest(query="padel courts in Edinburgh", lens="edinburgh_finds")
-    features = QueryFeatures.extract(request.query, request)
-
-    assert features.looks_like_category_search is True
-    assert features.has_geo_intent is True
-
-def test_specific_venue_search():
-    """Specific venue names should NOT be detected as category searches."""
-    request = IngestRequest(query="Oriam Scotland", lens="edinburgh_finds")
-    features = QueryFeatures.extract(request.query, request)
-
-    assert features.looks_like_category_search is False
-    assert features.has_geo_intent is False
-```
-
-#### Integration Tests
-
-**Example: End-to-End Extraction**
-
-```python
-# tests/engine/extraction/test_lens_integration.py
-
-import pytest
-from engine.extraction.extractors.serper_extractor import SerperExtractor
-from engine.lenses.mapping_engine import execute_mapping_rules
-from engine.orchestration.execution_context import ExecutionContext
 
 @pytest.mark.slow
+def test_llm_extraction_end_to_end():
+    """Mark tests >1 second as 'slow' for fast iteration."""
+
 @pytest.mark.integration
-async def test_end_to_end_extraction():
-    """Test complete extraction flow: raw → primitives → lens application."""
-    # Phase 1: Extract primitives
-    extractor = SerperExtractor()
-    raw_payload = load_fixture("serper_tennis_response.json")
-
-    primitives = await extractor.extract(raw_payload, context)
-
-    # Verify Phase 1 contract (no canonical_* or modules)
-    assert "entity_name" in primitives
-    assert "canonical_activities" not in primitives
-    assert "modules" not in primitives
-
-    # Phase 2: Apply lens
-    lens = load_lens("edinburgh_finds")
-    canonical_dims = execute_mapping_rules(lens.mapping_rules, primitives)
-
-    # Verify lens application
-    assert "tennis" in canonical_dims["canonical_activities"]
+def test_full_pipeline():
+    """Integration tests span multiple subsystems."""
 ```
 
-#### Mock LLM Calls
+### Fixtures
+
+**Example:** `tests/engine/fixtures/raw_payloads/`
 
 ```python
-# tests/engine/extraction/test_serper_extractor.py
+# tests/conftest.py
 
-from unittest.mock import Mock
-from engine.extraction.extractors.serper_extractor import SerperExtractor
-from engine.extraction.models.entity_extraction import EntityExtraction
+@pytest.fixture
+def serper_padel_payload():
+    """Real Serper API response for 'padel courts Edinburgh'."""
+    fixture_path = Path("tests/engine/fixtures/raw_payloads/serper_padel.json")
+    return json.loads(fixture_path.read_text())
 
-def test_serper_extraction_with_mock_llm():
-    """Test extractor with mocked LLM client."""
-    # Create mock LLM client
-    mock_llm = Mock()
-    mock_llm.extract_structured.return_value = EntityExtraction(
-        entity_name="Edinburgh Tennis Club",
-        latitude=55.9533,
-        longitude=-3.1883,
-        phone="+441315551234"
-    )
-
-    # Test extractor
-    extractor = SerperExtractor(llm_client=mock_llm)
-    raw_payload = {"organic": [{"snippet": "Edinburgh Tennis Club..."}]}
-
-    result = extractor.extract(raw_payload, context)
-
-    assert result["entity_name"] == "Edinburgh Tennis Club"
-    assert result["latitude"] == 55.9533
-    mock_llm.extract_structured.assert_called_once()
-```
-
-### Coverage Requirements
-
-**Target:** >80% coverage for all new engine code
-
-**Check Coverage:**
-
-```bash
-pytest --cov=engine --cov-report=html
-# Opens htmlcov/index.html in browser
-```
-
-**Coverage Exclusions:**
-
-- CLI entry points
-- Type stubs
-- Legacy code (marked with `# pragma: no cover`)
-
----
-
-## CLI Tools
-
-The engine provides three CLI tools for manual execution of pipeline stages.
-
-### 1. Orchestration CLI
-
-**File:** `engine/orchestration/cli.py`
-
-Executes intelligent multi-source orchestration.
-
-**Usage:**
-
-```bash
-# Run full orchestration
-python -m engine.orchestration.cli run "padel courts in Edinburgh"
-
-# Specify lens
-python -m engine.orchestration.cli run "wine bars in Leith" --lens edinburgh_wine
-
-# Specify ingestion mode
-python -m engine.orchestration.cli run "Oriam Scotland" --mode resolve_one
-
-# Dry run (no persistence)
-python -m engine.orchestration.cli run "tennis clubs" --dry-run
-```
-
-**Output:**
-
-```
-==========================================
-Orchestration Execution Report
-==========================================
-Query: "padel courts in Edinburgh"
-Lens: edinburgh_finds
-Mode: DISCOVER_MANY
-
-Query Features:
-  ✓ looks_like_category_search: True
-  ✓ has_geo_intent: True
-
-Execution Plan: [serper, openstreetmap, google_places, sport_scotland]
-
-Connector Results:
-┌─────────────────┬──────────┬──────────┬───────────┐
-│ Connector       │ Latency  │ Cost     │ Candidates│
-├─────────────────┼──────────┼──────────┼───────────┤
-│ serper          │ 342ms    │ $0.01    │ 8         │
-│ openstreetmap   │ 789ms    │ $0.00    │ 3         │
-│ google_places   │ 456ms    │ $0.017   │ 12        │
-│ sport_scotland  │ 623ms    │ $0.00    │ 5         │
-└─────────────────┴──────────┴──────────┴───────────┘
-
-Deduplication: 28 candidates → 14 unique entities
-Merge: 14 entities merged into 9 final entities
-
-Finalization:
-  ✓ Entities created: 7
-  ✓ Entities updated: 2
-
-Total Cost: $0.027
-Total Latency: 2,210ms
-==========================================
-```
-
-### 2. Ingestion CLI
-
-**File:** `engine/ingestion/cli.py`
-
-Manually fetch raw data from specific connectors.
-
-**Usage:**
-
-```bash
-# Fetch from Serper
-python -m engine.ingestion.cli fetch serper "padel courts Edinburgh"
-
-# Fetch from Google Places
-python -m engine.ingestion.cli fetch google_places "Edinburgh Tennis Club"
-
-# Fetch from multiple sources
-python -m engine.ingestion.cli fetch-all "sports facilities" --sources serper,openstreetmap
-
-# List available connectors
-python -m engine.ingestion.cli list-connectors
-```
-
-**Output:**
-
-```
-Fetching from serper: "padel courts Edinburgh"
-✓ Fetched 10 results in 342ms
-✓ Saved to: engine/data/raw/serper/2026-02-08_14-23-45_abc123.json
-✓ Database record: raw_ingestion_abc123
-```
-
-### 3. Extraction CLI
-
-**File:** `engine/extraction/cli.py`
-
-Extract structured data from raw ingestion records.
-
-**Usage:**
-
-```bash
-# Extract from single RawIngestion record
-python -m engine.extraction.cli single <raw_ingestion_id>
-
-# Extract from all records for a source
-python -m engine.extraction.cli source serper --limit 10
-
-# Extract from recent records
-python -m engine.extraction.cli recent --hours 24
-
-# Extract with lens application
-python -m engine.extraction.cli single <id> --apply-lens edinburgh_finds
-
-# Cost report
-python -m engine.extraction.cli cost-report --since 2026-02-01
-```
-
-**Output:**
-
-```
-Extracting from RawIngestion: raw_ingestion_abc123
-Source: serper
-
-Phase 1: Schema Primitives
-✓ Extracted entity_name: "Edinburgh Padel Centre"
-✓ Extracted latitude: 55.9533
-✓ Extracted longitude: -3.1883
-✓ Extracted phone: "+441315551234"
-
-Phase 2: Lens Application (lens: edinburgh_finds)
-✓ Matched rule: "(?i)padel" → canonical_activities: ["padel"]
-✓ Matched rule: "(?i)sports club" → canonical_place_types: ["sports_club"]
-✓ Triggered module: sports_facility
-✓ Extracted module field: num_courts = 4
-
-✓ Saved ExtractedEntity: extracted_entity_def456
-
-LLM Cost: $0.0018 (prompt: 245 tokens, completion: 120 tokens)
+@pytest.fixture
+def mock_lens_contract():
+    """Minimal valid lens contract for testing."""
+    return {
+        "lens_id": "test_lens",
+        "vocabulary": {"activity_keywords": ["test"]},
+        "canonical_values": {"test_activity": {"display_name": "Test"}},
+        "mapping_rules": [],
+        "connector_rules": {}
+    }
 ```
 
 ---
 
 ## Development Workflow
 
-### 1. Setup
+### Daily Commands
 
 ```bash
-# Install dependencies
-python -m pip install -r engine/requirements.txt
+# Backend Tests
+pytest                        # All tests
+pytest -m "not slow"          # Fast tests only
+pytest --cov=engine --cov-report=html  # Coverage report
 
-# Set up environment variables
-cp .env.example .env
-# Edit .env: ANTHROPIC_API_KEY, SERPER_API_KEY, etc.
+# Schema Management
+python -m engine.schema.generate --validate   # Validate YAML schemas
+python -m engine.schema.generate --all        # Regenerate derived schemas
 
-# Initialize database
-cd web && npx prisma db push
+# Data Pipeline
+python -m engine.ingestion.cli run --query "padel courts Edinburgh"
+python -m engine.extraction.cli single <raw_ingestion_id>
+python -m engine.orchestration.cli run "padel clubs in Edinburgh"
 ```
 
-### 2. Schema Changes
+### TDD Workflow (Red → Green → Refactor)
+
+**1. Red — Write Failing Test**
+```python
+def test_extract_tennis_courts_from_sport_scotland():
+    """Test that SportScotlandExtractor emits primitives only."""
+    raw_payload = load_fixture("sport_scotland_facility.json")
+    extractor = SportScotlandExtractor()
+
+    result = extractor.extract(raw_payload, ctx=mock_context)
+
+    # Phase 1 contract: primitives only
+    assert "entity_name" in result
+    assert "latitude" in result
+    assert "raw_categories" in result
+
+    # Phase 1 contract: NO canonical dimensions
+    assert "canonical_activities" not in result
+    assert "modules" not in result
+```
+
+**2. Green — Implement Minimum Code**
+```python
+class SportScotlandExtractor:
+    def extract(self, raw_payload: dict, *, ctx: ExecutionContext) -> dict:
+        facility = raw_payload.get("facility", {})
+
+        return {
+            "entity_name": facility.get("name"),
+            "latitude": facility.get("latitude"),
+            "longitude": facility.get("longitude"),
+            "raw_categories": facility.get("activities", [])
+        }
+```
+
+**3. Refactor — Improve While Green**
+```python
+class SportScotlandExtractor:
+    def extract(self, raw_payload: dict, *, ctx: ExecutionContext) -> dict:
+        facility = raw_payload.get("facility", {})
+
+        # Extract geographic primitives
+        coordinates = self._extract_coordinates(facility)
+
+        # Extract address components
+        address = self._parse_address(facility.get("address", {}))
+
+        return {
+            **coordinates,
+            **address,
+            "entity_name": facility.get("name"),
+            "raw_categories": facility.get("activities", [])
+        }
+```
+
+### Quality Gates (All Required)
+
+✅ All tests pass (`pytest`)
+✅ >80% test coverage (`pytest --cov=engine`)
+✅ Schema validation passes (`python -m engine.schema.generate --validate`)
+✅ No domain literals in engine code (purity tests)
+✅ No legacy naming patterns (field naming validation)
+
+### Before Committing
 
 ```bash
-# Edit YAML schema
-vim engine/config/schemas/entity.yaml
-
-# Validate
+# 1. Validate schemas
 python -m engine.schema.generate --validate
 
-# Regenerate all artifacts
-python -m engine.schema.generate --all
-
-# Sync database
-cd web && npx prisma db push
-```
-
-### 3. Adding a Connector
-
-```bash
-# 1. Create connector class
-vim engine/ingestion/connectors/new_source.py
-
-# 2. Register in registry
-vim engine/orchestration/registry.py
-
-# 3. Create extractor
-vim engine/extraction/extractors/new_source_extractor.py
-
-# 4. Write tests
-vim tests/engine/ingestion/connectors/test_new_source.py
-
-# 5. Run tests
-pytest tests/engine/ingestion/connectors/test_new_source.py
-```
-
-### 4. Adding a Lens
-
-```bash
-# 1. Create lens directory
-mkdir engine/lenses/my_vertical
-
-# 2. Create lens.yaml
-vim engine/lenses/my_vertical/lens.yaml
-
-# 3. Validate
-python -m engine.orchestration.cli run "test query" --lens my_vertical --dry-run
-
-# 4. Test extraction
-python -m engine.extraction.cli single <id> --apply-lens my_vertical
-```
-
-### 5. TDD Workflow
-
-```bash
-# 1. Write failing test
-vim tests/engine/orchestration/test_new_feature.py
-
-# 2. Confirm test fails
-pytest tests/engine/orchestration/test_new_feature.py
-
-# 3. Implement feature
-vim engine/orchestration/new_feature.py
-
-# 4. Confirm test passes
-pytest tests/engine/orchestration/test_new_feature.py
-
-# 5. Refactor
-vim engine/orchestration/new_feature.py
-
-# 6. Confirm tests still pass
-pytest tests/engine/orchestration/
-```
-
-### 6. Pre-Commit Checklist
-
-```bash
-# Run all tests
+# 2. Run tests
 pytest
 
-# Check coverage
+# 3. Check coverage
 pytest --cov=engine --cov-report=term-missing
 
-# Validate schemas
-python -m engine.schema.generate --validate
+# 4. Regenerate schemas if modified
+python -m engine.schema.generate --all
 
-# Type checking (if using mypy)
-mypy engine/
+# 5. Commit with conventional format
+git add .
+git commit -m "feat(extraction): add SportScotland extractor
 
-# Lint (if using ruff)
-ruff check engine/
+- Implement Phase 1 contract (primitives only)
+- Add fixture for SportScotland API response
+- Validate extractor purity (no canonical dimensions)
+
+Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
+```
+
+---
+
+## Architectural Guardrails
+
+### Prohibited Patterns
+
+❌ Domain terms in engine code ("Padel", "Wine", "Tennis", "Venue")
+❌ Connector-specific logic in merge
+❌ Lens semantics embedded in engine
+❌ Permanent translation layers
+❌ Silent fallbacks or hidden defaults
+❌ Extractors emitting canonical_* or modules
+❌ Non-deterministic behavior in core processing
+
+### Enforcement Mechanisms
+
+**1. Import Boundary Tests**
+```python
+def test_engine_does_not_import_lens_implementations():
+    """Engine code must not import lens loaders or registries."""
+    engine_modules = get_all_python_files("engine/")
+
+    for module in engine_modules:
+        if "lenses/loader.py" in module:
+            continue  # Allowed: query_lens.py for orchestration
+
+        assert "from engine.lenses." not in read_file(module)
+```
+
+**2. Literal Detection Tests**
+```python
+def test_no_domain_literals_in_engine():
+    """Prevent hardcoded canonical values in engine code."""
+    engine_code = get_all_python_files("engine/")
+    domain_terms = ["padel", "wine", "tennis", "venue"]
+
+    for file in engine_code:
+        content = read_file(file).lower()
+        for term in domain_terms:
+            assert term not in content, f"Domain literal '{term}' found in {file}"
+```
+
+**3. Contract Validation Tests**
+```python
+def test_extractor_output_contract():
+    """Extractors must emit primitives only (Phase 1)."""
+    extractor = SerperExtractor()
+    result = extractor.extract(raw_payload, ctx=mock_context)
+
+    # Allowed: Universal schema primitives
+    allowed_fields = {"entity_name", "latitude", "longitude", "street_address",
+                      "phone", "website_url", "raw_categories", "description"}
+
+    # Forbidden: Lens-owned fields
+    forbidden_fields = {"canonical_activities", "canonical_roles",
+                        "canonical_place_types", "modules"}
+
+    for field in result.keys():
+        assert field in allowed_fields or field.startswith("_raw_"), \
+            f"Extractor emitted forbidden field: {field}"
 ```
 
 ---
 
 ## Key Files Reference
 
-| File | Purpose |
-|------|---------|
-| `engine/orchestration/orchestrator.py` | Main orchestration control loop |
-| `engine/orchestration/planner.py` | Connector selection and execution planning |
-| `engine/orchestration/registry.py` | Connector metadata registry |
-| `engine/orchestration/query_features.py` | Query analysis and feature extraction |
-| `engine/orchestration/entity_finalizer.py` | Entity finalization and persistence |
-| `engine/ingestion/base.py` | Base connector interface |
-| `engine/ingestion/storage.py` | Raw ingestion persistence |
-| `engine/extraction/base.py` | Base extractor interface |
-| `engine/extraction/llm_client.py` | LLM integration (Instructor + Claude) |
-| `engine/extraction/entity_classifier.py` | Entity class determination |
-| `engine/extraction/merging.py` | Deterministic merge logic |
-| `engine/lenses/loader.py` | Lens configuration loading |
-| `engine/lenses/mapping_engine.py` | Mapping rule execution |
-| `engine/lenses/validator.py` | Lens validation |
-| `engine/schema/cli.py` | Schema generation CLI |
-| `engine/schema/generators/*` | Schema generators (Python, Prisma, TypeScript) |
-| `engine/config/schemas/entity.yaml` | Entity schema definition (YAML) |
-| `pytest.ini` | pytest configuration |
+- **Architectural Constitution:** [docs/target/system-vision.md](../target/system-vision.md) (immutable invariants)
+- **Runtime Specification:** [docs/target/architecture.md](../target/architecture.md) (concrete pipeline, contracts)
+- **Schema Authority:** `engine/config/schemas/*.yaml` (single source of truth)
+- **Orchestration Kernel:** `engine/orchestration/` (planner, orchestrator, context)
+- **Ingestion System:** `engine/ingestion/` (6 connectors, registry)
+- **Extraction System:** `engine/extraction/` (extractors, LLM client, classifiers)
+- **Lens Layer:** `engine/lenses/` (query_lens.py, loader.py)
+- **Schema Generation:** `engine/schema/` (generate.py, generators/)
 
 ---
 
-## Architecture Authorities
+## Success Criteria
 
-- **Immutable Constitution:** `docs/target/system-vision.md` (10 invariants, Engine vs Lens boundaries)
-- **Runtime Specification:** `docs/target/architecture.md` (11-stage pipeline, extraction contract)
-- **Implementation Plans:** `docs/plans/*` (phase-by-phase implementation strategies)
+### One Perfect Entity (OPE) Validation Gate
+
+At least ONE entity must flow end-to-end with:
+- Correct `entity_class`
+- Non-empty canonical dimensions (where evidence exists)
+- All triggered modules attached + at least one module field populated
+- Accurate universal primitives
+- Provenance preserved
+
+### Multi-Source Merge Validation Gate
+
+At least ONE entity from multiple sources merged deterministically:
+- Cross-source deduplication working
+- Idempotent re-runs converge to same output
+- Metadata-driven conflict resolution (no connector-specific logic)
 
 ---
 
-**Document Version:** 1.0
-**Last Updated:** 2026-02-08
-**Lines:** ~1,650
-**Status:** Complete
+## Environment Setup
+
+### Required Environment Variables
+
+```bash
+# Engine (.env or environment)
+ANTHROPIC_API_KEY=<your_key>      # For LLM extraction
+SERPER_API_KEY=<your_key>         # For Serper connector
+GOOGLE_PLACES_API_KEY=<your_key>  # For Google Places connector
+
+# Database (shared with web)
+DATABASE_URL=<supabase_postgres_url>
+```
+
+### Database Setup
+
+```bash
+cd web
+npx prisma generate  # Generate Prisma client from schema
+npx prisma db push   # Sync schema to Supabase (dev)
+npx prisma migrate dev  # Create migration (production)
+```
+
+---
+
+## Next Steps
+
+1. **Understand the Architecture**
+   - Read [system-vision.md](../target/system-vision.md) (immutable architectural constitution)
+   - Read [architecture.md](../target/architecture.md) (runtime mechanics)
+
+2. **Explore the Code**
+   - Browse `engine/orchestration/` for pipeline control flow
+   - Browse `engine/extraction/extractors/` for data source adapters
+   - Browse `engine/lenses/` for lens configuration examples
+
+3. **Run the Pipeline**
+   ```bash
+   python -m engine.orchestration.cli run "padel courts in Edinburgh"
+   ```
+
+4. **Contribute**
+   - Follow TDD workflow (Red → Green → Refactor)
+   - Preserve engine purity (no domain terms)
+   - Validate against quality gates before committing
+
+---
+
+**Questions?** Consult [system-vision.md Section 8](../target/system-vision.md#8-how-humans-and-ai-agents-should-use-this-document) for architectural guidance.

@@ -5,6 +5,8 @@ tools:
   - Read
   - Glob
   - Grep
+  - Write
+  - Edit
 ---
 
 You are a database documentation specialist.

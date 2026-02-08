@@ -5,6 +5,8 @@ tools:
   - Read
   - Glob
   - Grep
+  - Write
+  - Edit
 ---
 
 You are a frontend architecture documentation specialist.
