@@ -1,0 +1,41 @@
+graph TB
+    subgraph "Lens Layer (Domain Semantics)"
+        Vocab[Vocabulary & Query Interpretation]
+        Routing[Connector Routing Rules]
+        Mapping[Mapping Rules<br/>Raw → Canonical]
+        Registry[Canonical Registry]
+        ModSchema[Module Schemas]
+    end
+    
+    subgraph "Engine Layer (Universal Execution)"
+        Orch[Orchestration]
+        Ingest[Ingestion]
+        Extract[Extraction]
+        Dedup[Deduplication]
+        Merge[Merge]
+        Persist[Persistence]
+    end
+    
+    Vocab --> Orch
+    Routing --> Orch
+    Mapping --> Extract
+    Registry --> Extract
+    ModSchema --> Extract
+    
+    Orch --> Ingest
+    Ingest --> Extract
+    Extract --> Dedup
+    Dedup --> Merge
+    Merge --> Persist
+    
+    style Vocab fill:#fff4e1
+    style Routing fill:#fff4e1
+    style Mapping fill:#fff4e1
+    style Registry fill:#fff4e1
+    style ModSchema fill:#fff4e1
+    style Orch fill:#e1f5ff
+    style Ingest fill:#e1f5ff
+    style Extract fill:#e1f5ff
+    style Dedup fill:#e1f5ff
+    style Merge fill:#e1f5ff
+    style Persist fill:#e1f5ff

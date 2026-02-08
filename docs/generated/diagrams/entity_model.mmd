@@ -1,0 +1,32 @@
+erDiagram
+    Entity ||--o{ Module : contains
+    Entity ||--o{ ExternalID : has
+    Entity {
+        string id PK
+        string entity_class
+        string entity_name
+        array canonical_activities
+        array canonical_roles
+        array canonical_place_types
+        array canonical_access
+        float latitude
+        float longitude
+        string street_address
+        string city
+        string postcode
+        string phone
+        string email
+        string website_url
+        json modules
+        json provenance
+    }
+    Module {
+        string namespace
+        json fields
+        array sources
+    }
+    ExternalID {
+        string source
+        string external_id
+        string url
+    }

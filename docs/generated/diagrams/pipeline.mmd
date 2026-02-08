@@ -1,0 +1,16 @@
+graph TB
+    Input[Query or Entity ID] --> LensRes[Lens Resolution & Validation]
+    LensRes --> Planning[Planning & Orchestration]
+    Planning --> ConnExec[Connector Execution]
+    ConnExec --> RawIngest[Raw Ingestion Persistence]
+    RawIngest --> SourceExt[Source Extraction<br/>Primitives Only]
+    SourceExt --> LensApp[Lens Application<br/>Canonical + Modules]
+    LensApp --> Classification[Classification<br/>entity_class]
+    Classification --> Dedup[Cross-Source Deduplication]
+    Dedup --> Merge[Deterministic Merge]
+    Merge --> Final[Finalization & Persistence]
+    Final --> EntityStore[(Entity Store)]
+    
+    style SourceExt fill:#e1f5ff
+    style LensApp fill:#fff4e1
+    style EntityStore fill:#e8f5e9
