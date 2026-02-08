@@ -1,41 +1,125 @@
 ---
-description: Incrementally update documentation based on codebase changes since last doc generation. Only regenerates affected sections/docs.
+description: Incrementally update documentation using parallel background agents that write directly to files, keeping orchestrator context minimal.
 allowed-tools:
   - Read
   - Glob
   - Grep
   - Write
   - Edit
+  - Task
+  - TaskOutput
   - Bash
 ---
 
 # Update Documentation Incrementally
 
-You are the incremental doc updater. Instead of regenerating everything, you detect changes and update only affected documentation.
+You are the incremental doc updater. Instead of regenerating everything, you detect changes and update only affected documentation using parallel background agents.
 
-## Core Principle
+## Core Principle: Parallel Background Section Updates
 
-Analyze what changed in the codebase since the last doc generation, map those changes to affected docs, and regenerate only the necessary sections using the same outline→section-chunks pattern.
+The orchestrator NEVER receives section content. Instead:
+1. Detect changes since last generation
+2. Map changes to affected docs/sections
+3. Spawn background agents in parallel (one per section)
+4. Background agents write directly to files
+5. Orchestrator monitors completion and validates
+
+**Context Budget:** Orchestrator stays under 1,500 lines total
 
 ## Workflow
 
 ### Phase 1: Detect Changes
 
 **Step 1a: Find Last Doc Generation Timestamp**
-1. Read `docs/generated/CHANGELOG.md` to find last generation timestamp
-2. If CHANGELOG doesn't exist, fall back to full generation (recommend using `/generate-docs` instead)
+```bash
+# Read timestamp from CHANGELOG
+grep "^## Generation:" docs/generated/CHANGELOG.md | head -1
+```
+
+Example output:
+```
+## Generation: 2026-02-05 10:23
+```
+
+**If CHANGELOG doesn't exist:**
+```
+⚠️ Cannot find last doc generation timestamp.
+
+Recommendation: Run /generate-docs first to establish baseline.
+
+Proceed anyway? [Choose date manually / Abort]
+```
 
 **Step 1b: Identify Changed Files**
-Use one of these methods:
-- If timestamp available: `git diff --name-only HEAD@{YYYY-MM-DD}`
-- Alternative: `git log --since="YYYY-MM-DD" --name-only --pretty=format: | sort -u`
-- Fallback: Check file modification times in key directories
+```bash
+# Get files changed since last generation
+git diff --name-only HEAD@{2026-02-05}
 
-**Step 1c: Categorize Changes**
-Map changed files to doc categories:
-
+# Or use git log
+git log --since="2026-02-05 10:23" --name-only --pretty=format: | sort -u
 ```
-Changed files → Affected docs mapping:
+
+**Step 1c: Count Changes**
+```bash
+# Count changed files
+git diff --name-only HEAD@{2026-02-05} | wc -l
+```
+
+**Decision Logic:**
+```
+If >20 files changed across >3 areas:
+  → Recommend /generate-docs (too extensive)
+  → Ask user: "Switch to full regeneration? [Y/n]"
+
+If 0 files changed:
+  → "No changes detected since last generation"
+  → Exit
+
+Else:
+  → Proceed with incremental update
+```
+
+### Phase 2: Categorize Changes & Map to Docs
+
+**Read changed file list and map to affected docs:**
+
+```json
+{
+  "changed_files": [
+    "engine/orchestration/planner.py",
+    "engine/orchestration/registry.py",
+    "engine/schema/generators/prisma_generator.py",
+    "web/app/search/page.tsx",
+    "docs/target/architecture.md"
+  ],
+  "affected_docs": {
+    "ARCHITECTURE.md": {
+      "reason": "docs/target/architecture.md changed (GLOBAL CONSTRAINTS source)",
+      "action": "regenerate_full",
+      "sections": ["all"]
+    },
+    "BACKEND.md": {
+      "reason": "engine/orchestration/* changed",
+      "action": "update_sections",
+      "sections": ["Orchestration System", "Query Planning"]
+    },
+    "DATABASE.md": {
+      "reason": "engine/schema/generators/prisma_generator.py changed",
+      "action": "update_sections",
+      "sections": ["Schema Generation", "Prisma Integration"]
+    },
+    "FRONTEND.md": {
+      "reason": "web/app/search/page.tsx changed",
+      "action": "update_sections",
+      "sections": ["Search Interface"]
+    }
+  }
+}
+```
+
+**Change → Doc Mapping Rules:**
+```
+Changed files → Affected docs:
 
 engine/ingestion/*, engine/extraction/* → BACKEND.md, ARCHITECTURE.md
 engine/orchestration/* → BACKEND.md, ARCHITECTURE.md
@@ -54,226 +138,420 @@ engine/config/schemas/* → DATABASE.md, BACKEND.md, API.md
 tests/* → DEVELOPMENT.md
 .github/workflows/* → DEPLOYMENT.md
 README.md, CLAUDE.md → ONBOARDING.md
-
-New features (infer from commit messages) → FEATURES.md
 ```
 
-### Phase 2: Re-extract Global Constraints (If Needed)
-
-If `docs/target/system-vision.md` or `docs/target/architecture.md` changed:
-1. Re-read both files
-2. Re-extract GLOBAL CONSTRAINTS (max 100 lines)
-3. Use these updated constraints for all doc updates
-
-Otherwise, read existing GLOBAL CONSTRAINTS from last generation.
-
-### Phase 3: Identify Affected Sections
-
-For each affected doc, determine which sections need updating:
-
-**Heuristics:**
-- If schema files changed → Update relevant table/model sections in DATABASE.md
-- If new endpoints added → Update endpoint sections in API.md
-- If new components added → Update component sections in FRONTEND.md
-- If architectural changes → May need full doc regeneration
-
-**Decision Logic:**
-- **Minor changes** (few files, localized): Update specific sections
-- **Major changes** (cross-cutting, architectural): Regenerate entire doc
-- **Uncertainty**: Default to regenerating entire doc (safer)
-
-### Phase 4: Update Affected Docs
-
-For each affected doc:
-
-**If regenerating entire doc:**
-1. Call doc subagent with `task: "outline"`
-2. Receive new outline
-3. Compare with existing doc sections
-4. Regenerate changed sections only (or all if structure changed significantly)
-
-**If updating specific sections:**
-1. Read existing doc
-2. Identify section to update (e.g., "## Core Tables")
-3. Call doc subagent with `task: "section: [section heading]"`
-4. Replace old section content with new content using Edit tool
-
-**Section Update Process:**
+**Display Analysis:**
 ```
-For section "Core Tables" in DATABASE.md:
-1. Read docs/generated/DATABASE.md
-2. Extract current "## Core Tables" section
-3. Call database-docs with:
-   - GLOBAL CONSTRAINTS
-   - Required diagrams (may reuse existing if not changed)
-   - Current doc skeleton
-   - task: "section: Core Tables"
-4. Receive new section content (≤400 lines)
-5. Edit doc to replace old section with new section
+📊 Change Analysis
+
+Files changed: 5
+Areas affected: backend, database, frontend, architecture
+
+Affected Documentation:
+✅ ARCHITECTURE.md - Full regeneration (GLOBAL CONSTRAINTS changed)
+✅ BACKEND.md - Update 2 sections
+✅ DATABASE.md - Update 2 sections
+✅ FRONTEND.md - Update 1 section
+⏭️ API.md - No changes
+⏭️ FEATURES.md - No changes
+⏭️ ONBOARDING.md - No changes
+⏭️ DEPLOYMENT.md - No changes
+⏭️ DEVELOPMENT.md - No changes
+⏭️ CONFIGURATION.md - No changes
+
+Estimated time: ~2 minutes (parallel updates)
 ```
 
-### Phase 5: Update Diagrams (If Needed)
+### Phase 3: Re-extract Global Constraints (If Needed)
 
-**Diagram Update Logic:**
-- If architectural changes detected → Regenerate architecture diagrams
-- If schema changes detected → Regenerate ERD
-- If new user journeys mentioned in commits → Regenerate user journey diagram
-- Otherwise → Reuse existing diagrams (faster)
+**If docs/target/system-vision.md or docs/target/architecture.md changed:**
 
-To regenerate a diagram:
-1. Call appropriate diagram subagent (e.g., diagram-er for ERD)
-2. Receive updated Mermaid code (≤150 lines)
-3. Update diagram references in affected docs
+1. **Read both files**
+2. **Re-extract GLOBAL CONSTRAINTS** (max 100 lines)
+3. **Write to /tmp/global_constraints.md**
+4. **Flag all docs for regeneration** (not just updates)
 
-### Phase 6: Review Updated Docs
+**Otherwise:**
+```bash
+# Reuse existing GLOBAL CONSTRAINTS from last generation
+cp docs/generated/.global_constraints_cache.md /tmp/global_constraints.md
+```
 
-For each updated doc:
-1. Call review-docs subagent with:
-   - The updated doc file path
-   - GLOBAL CONSTRAINTS
-   - All other docs (for cross-reference checking)
-2. Receive patch instructions (if any issues found)
-3. Apply patches using Edit tool
+### Phase 4: Spawn Background Update Agents (Parallel)
 
-### Phase 7: Update CHANGELOG
+**For each affected doc, determine update strategy:**
 
-Append to `docs/generated/CHANGELOG.md`:
+**Strategy 1: Full Doc Regeneration**
+- Used when: GLOBAL CONSTRAINTS changed, or structural changes detected
+- Process: Same as generate-docs (spawn one agent for entire doc)
+
+**Strategy 2: Section-Level Updates** (most common)
+- Used when: Localized changes to specific areas
+- Process: Spawn one agent per section that needs updating
+
+#### Strategy 2 Example: Update Specific Sections
+
+**For BACKEND.md → Update 2 sections:**
+
+```python
+# Spawn 2 background agents in parallel (one per section)
+
+Task(
+  subagent_type="general-purpose",
+  description="Update BACKEND.md: Orchestration System",
+  prompt=f"""
+You are a background agent updating a specific section in BACKEND.md.
+
+## Task
+Update section: "## Orchestration System"
+
+## Instructions
+1. Read GLOBAL CONSTRAINTS from /tmp/global_constraints.md
+2. Read changed source files:
+   - engine/orchestration/planner.py
+   - engine/orchestration/registry.py
+3. Read current section content from docs/generated/BACKEND.md
+4. Generate updated section content (≤400 lines) incorporating recent changes
+5. Use Edit tool to replace old section with new section
+6. Return concise confirmation (see _shared-direct-write-pattern.md)
+
+## Important
+- Edit docs/generated/BACKEND.md directly
+- Only modify the "Orchestration System" section
+- Preserve surrounding sections unchanged
+- Keep your final message under 50 lines
+  """,
+  run_in_background=True
+)
+
+Task(
+  subagent_type="general-purpose",
+  description="Update BACKEND.md: Query Planning",
+  prompt=f"""
+[Similar prompt for "Query Planning" section]
+  """,
+  run_in_background=True
+)
+
+# Repeat for all sections across all affected docs
+```
+
+**Track agents:**
+```json
+{
+  "updates": [
+    {
+      "doc": "BACKEND.md",
+      "section": "Orchestration System",
+      "agent_id": "task_20",
+      "output_file": "/tmp/agent_20.log"
+    },
+    {
+      "doc": "BACKEND.md",
+      "section": "Query Planning",
+      "agent_id": "task_21",
+      "output_file": "/tmp/agent_21.log"
+    },
+    {
+      "doc": "DATABASE.md",
+      "section": "Schema Generation",
+      "agent_id": "task_22",
+      "output_file": "/tmp/agent_22.log"
+    },
+    ...
+  ]
+}
+```
+
+### Phase 5: Monitor Progress
+
+**Poll output files periodically:**
+
+```bash
+# Every 15 seconds, check agent progress
+tail -n 10 /tmp/agent_20.log  # Look for "✅ Section complete"
+tail -n 10 /tmp/agent_21.log
+...
+```
+
+**Display progress:**
+```
+📊 Update Progress (7 agents running in parallel)
+
+ARCHITECTURE.md (full regeneration):
+  ⏳ Section 5/12 in progress
+
+BACKEND.md (2 section updates):
+  ✅ Orchestration System - Complete
+  ⏳ Query Planning - In progress
+
+DATABASE.md (2 section updates):
+  ✅ Schema Generation - Complete
+  ✅ Prisma Integration - Complete
+
+FRONTEND.md (1 section update):
+  ⏳ Search Interface - In progress
+```
+
+**Wait for completion:**
+```python
+for agent_id in update_agent_ids:
+    TaskOutput(task_id=agent_id, block=true, timeout=300000)  # 5min max per section
+```
+
+### Phase 6: Validate Updates
+
+**For each updated doc:**
+
+1. **Check file still exists and is valid:**
+   ```bash
+   ls -lh docs/generated/BACKEND.md
+   wc -l docs/generated/BACKEND.md
+   ```
+
+2. **Verify sections were actually updated:**
+   ```bash
+   # Check if section heading exists
+   grep "^## Orchestration System" docs/generated/BACKEND.md
+   ```
+
+3. **Quick content sanity check:**
+   ```bash
+   # Check that the section has reasonable content (not just heading)
+   awk '/^## Orchestration System/,/^## / {count++} END {print count}' docs/generated/BACKEND.md
+   ```
+
+**If validation fails:**
+```
+⚠️ Section update validation failed: BACKEND.md → Orchestration System
+- Section heading found, but content is only 5 lines (expected >50)
+
+Reading agent output...
+[tail /tmp/agent_20.log]
+
+Issue: [diagnosis]
+Options:
+1. Retry this section
+2. Skip (keep old content)
+3. Abort
+```
+
+### Phase 7: Review Updated Sections (Parallel)
+
+**Spawn review agents for updated docs:**
+
+```python
+# Only review docs that were modified
+for doc in updated_docs:
+    Task(
+      subagent_type="review-docs",
+      description=f"Review {doc}",
+      prompt=f"""
+Review docs/generated/{doc}
+
+Focus on updated sections:
+{list_of_updated_sections}
+
+Check for:
+- Compliance with GLOBAL CONSTRAINTS
+- Cross-reference correctness
+- Consistency with other docs
+- Integration with unchanged sections
+
+Return patch instructions if issues found, or confirm "✅ No issues".
+
+Keep response under 100 lines.
+      """,
+      run_in_background=True
+    )
+```
+
+**Wait for reviews:**
+```python
+for review_agent_id in review_agent_ids:
+    result = TaskOutput(task_id=review_agent_id, block=true)
+    # Parse and apply patches if needed
+```
+
+### Phase 8: Update CHANGELOG
+
+**Append to docs/generated/CHANGELOG.md:**
 
 ```markdown
-## Update: YYYY-MM-DD HH:MM
+## Update: 2026-02-08 14:55
 
 ### Changes Detected
-- X files changed since last generation (YYYY-MM-DD)
-- Changed areas: [list categories]
+- 5 files changed since last generation (2026-02-05 10:23)
+- Changed areas: backend, database, frontend, architecture
+
+### Strategy
+- Mode: Parallel background agents (section-level updates)
+- Time: 1 minute 42 seconds
+- Agents: 7 update agents + 4 review agents
 
 ### Docs Updated
-- BACKEND.md: Updated sections [list sections]
-- DATABASE.md: Regenerated due to schema changes
-- FRONTEND.md: Added new component documentation
+
+**ARCHITECTURE.md**
+- Action: Full regeneration (GLOBAL CONSTRAINTS changed)
+- Lines: 2,567 (was 2,456)
+
+**BACKEND.md**
+- Action: Section updates
+- Sections: Orchestration System, Query Planning
+- Lines: 1,589 (was 1,567)
+
+**DATABASE.md**
+- Action: Section updates
+- Sections: Schema Generation, Prisma Integration
+- Lines: 1,145 (was 1,123)
+
+**FRONTEND.md**
+- Action: Section updates
+- Sections: Search Interface
+- Lines: 1,112 (was 1,098)
 
 ### Files Changed
-[List of changed files from git diff]
+- engine/orchestration/planner.py
+- engine/orchestration/registry.py
+- engine/schema/generators/prisma_generator.py
+- web/app/search/page.tsx
+- docs/target/architecture.md
 
-### Review Issues
-- X blocking, Y important, Z minor
-- [Summary of issues and resolutions]
+### Review Summary
+- Blocking issues: 0
+- Important issues: 1 (applied automatically)
+- Minor issues: 3 (applied automatically)
 
-### Context Budget
-- Peak context usage: XXX lines
-- Sections updated: X
-- Time saved vs. full regeneration: ~XX%
+### Context Efficiency
+- Orchestrator peak context: ~1,200 lines
+- vs. Full regeneration: ~15,000 lines
+- Time saved: ~93% vs. full regeneration (1.7min vs. 25min)
 ```
 
-## Smart Update Strategies
+### Phase 9: Cleanup
 
-### Strategy 1: Section-Level Updates (Fastest)
-**Use when:** Small, localized changes (1-3 files in same area)
-**Process:** Update only affected sections
-**Context usage:** ~400 lines per section
+**Remove temporary files:**
+```bash
+rm /tmp/global_constraints.md
+rm /tmp/agent_*.log
+```
 
-### Strategy 2: Doc-Level Updates (Moderate)
-**Use when:** Multiple changes across a doc, but other docs unaffected
-**Process:** Regenerate entire affected doc(s)
-**Context usage:** ~550 lines peak per doc
+### Final Output
 
-### Strategy 3: Full Regeneration (Thorough)
-**Use when:**
-- Major architectural changes
-- Changes to GLOBAL CONSTRAINTS sources
-- >10 files changed across multiple areas
-- Uncertain about change impact
-**Process:** Recommend using `/generate-docs` instead
-**Note:** This command will inform user and offer to switch to full regeneration
+```
+✅ Documentation Update Complete
+
+Strategy: Parallel background agents (section-level updates)
+Time: 1 minute 42 seconds
+Agents: 11 total (7 update + 4 review)
+
+Changes Detected:
+- 5 files changed since 2026-02-05 10:23
+- Areas: backend, database, frontend, architecture
+
+Docs Updated:
+✅ ARCHITECTURE.md - Full regeneration (2,567 lines)
+✅ BACKEND.md - 2 sections updated (1,589 lines)
+✅ DATABASE.md - 2 sections updated (1,145 lines)
+✅ FRONTEND.md - 1 section updated (1,112 lines)
+
+Docs Unchanged:
+⏭️ API.md (987 lines)
+⏭️ FEATURES.md (1,234 lines)
+⏭️ ONBOARDING.md (756 lines)
+⏭️ DEPLOYMENT.md (654 lines)
+⏭️ DEVELOPMENT.md (892 lines)
+⏭️ CONFIGURATION.md (445 lines)
+
+Quality:
+- Cross-references validated: ✅
+- GLOBAL CONSTRAINTS compliance: ✅
+- Review issues: 0 blocking, 1 important (fixed), 3 minor (fixed)
+
+Context Efficiency:
+- Orchestrator peak: 1,234 lines
+- vs. Full regeneration: ~15,000 lines
+- Improvement: 92% reduction
+- Time saved: 93% (1.7min vs. 25min)
+
+Next Steps:
+- Review updated docs in docs/generated/
+- Run /generate-docs if changes seem incomplete
+- Continue with incremental updates for future changes
+```
+
+## Performance Comparison
+
+| Metric | Sequential Update | Parallel Update | Improvement |
+|--------|-------------------|-----------------|-------------|
+| Time (5 sections) | ~8 minutes | ~2 minutes | 75% faster |
+| Orchestrator context | ~3,000 lines | ~1,200 lines | 60% reduction |
+| Scalability | Linear with section count | Constant (parallel) | Scales better |
+
+## When to Use Update vs. Generate
+
+**Use /update-docs (this command):**
+- 1-20 files changed
+- Changes are localized (not architectural)
+- Need fast refresh
+- Daily/routine updates
+
+**Use /generate-docs:**
+- First time generating docs
+- >20 files changed
+- GLOBAL CONSTRAINTS sources changed significantly
+- Major architectural refactoring
+- Weekly/milestone comprehensive updates
+- When uncertain about change impact
+
+**Decision threshold:**
+```
+If changed_files > 20 OR architectural_changes:
+    recommend /generate-docs
+Else:
+    proceed with /update-docs
+```
 
 ## Error Handling
 
-**If unable to determine last generation date:**
+**No changes detected:**
 ```
-⚠️ Cannot find last doc generation timestamp.
-Options:
-1. Run full generation: /generate-docs
-2. Specify date manually: [prompt user for date]
-3. Update all docs regardless of changes
+ℹ️ No changes detected since last generation (2026-02-05 10:23)
+
+Documentation is up to date.
 ```
 
-**If changes are too extensive:**
+**Changes too extensive:**
 ```
-⚠️ Detected extensive changes (X files across Y areas)
-Recommendation: Run full doc regeneration for consistency
+⚠️ Extensive changes detected (32 files across 6 areas)
+
+Recommendation: Run full doc regeneration for consistency.
 Run /generate-docs? [Y/n]
 ```
 
-**If section not found in existing doc:**
+**Section not found in existing doc:**
 ```
-⚠️ Section "[heading]" not found in existing doc
-This may indicate structural changes. Options:
-1. Regenerate entire doc
-2. Add as new section
+⚠️ Section "Query Planning" not found in BACKEND.md
+
+This may indicate structural changes.
+
+Options:
+1. Regenerate entire BACKEND.md
+2. Add as new section (specify location)
 3. Skip this update
+
+Choose [1/2/3]:
 ```
 
-## Output Format
-
+**Agent failure:**
 ```
-🔄 Documentation Update
+⚠️ Update agent failed: task_22 (DATABASE.md → Schema Generation)
 
-Changes Detected:
-- 8 files changed since 2026-02-01
-- Affected areas: backend, database, frontend
+Reading agent output...
+[diagnosis from /tmp/agent_22.log]
 
-Analysis:
-✅ BACKEND.md: Update 2 sections (Module Structure, Business Logic)
-✅ DATABASE.md: Regenerate entire doc (schema changes)
-✅ FRONTEND.md: Update 1 section (Component Architecture)
-⏭️ ARCHITECTURE.md: No changes needed
-⏭️ API.md: No changes needed
-⏭️ [other docs]: No changes needed
-
-Updating...
-[Progress indicators as each section/doc updates]
-
-✅ Update Complete
-
-Updated:
-- docs/generated/BACKEND.md (2 sections, 800 lines total)
-- docs/generated/DATABASE.md (regenerated, 450 lines)
-- docs/generated/FRONTEND.md (1 section, 600 lines total)
-- docs/generated/CHANGELOG.md (update log appended)
-
-Context used: Peak 550 lines (vs. 5,500 for full regeneration)
-Time saved: ~85% vs. full regeneration
-
-Review: 0 blocking, 2 minor issues (applied automatically)
-
-Next steps:
-- Review updated docs in docs/generated/
-- Run full regeneration if updates seem incomplete
+Options:
+1. Retry with adjusted prompt
+2. Skip this section (keep old content)
+3. Switch to full doc regeneration
 ```
-
-## Command Usage
-
-```bash
-# From Claude Code CLI
-claude update-docs
-
-# Or as skill
-/update-docs
-
-# With date override
-/update-docs --since=2026-01-15
-
-# Force full regeneration of specific doc
-/update-docs --doc=DATABASE.md --full
-```
-
-## Comparison: update-docs vs. generate-docs
-
-| Aspect | update-docs | generate-docs |
-|--------|-------------|---------------|
-| Speed | Fast (seconds-minutes) | Thorough (minutes-hours) |
-| Context | ~550 lines peak | ~550 lines peak (per doc) |
-| Use case | Incremental changes | First time or major changes |
-| Safety | May miss cross-cutting issues | Comprehensive |
-| When to use | Daily updates, small changes | Weekly/major milestones |
-
-**Rule of thumb:** Use `update-docs` for routine changes, `generate-docs` for major milestones or when uncertain about change impact.

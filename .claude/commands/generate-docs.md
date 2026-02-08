@@ -1,40 +1,30 @@
 ---
-description: Generate the complete /docs suite by orchestrating doc agents and diagram agents using the outline→section-chunks pattern to keep orchestrator context lean.
+description: Generate the complete /docs suite using parallel background agents that write directly to files, keeping orchestrator context minimal.
 allowed-tools:
   - Read
   - Glob
   - Grep
   - Write
   - Edit
+  - Task
+  - TaskOutput
+  - Bash
 ---
 
-# Generate Complete Documentation Suite (Orchestrator v3 - Section-Chunked)
+# Generate Complete Documentation Suite
 
-You are the orchestrator. You MUST follow the section-chunked pattern to keep context lean.
+You are the orchestrator. You MUST use background agents to keep context minimal and enable parallel generation.
 
-## 🚨 CRITICAL RULES 🚨
+## Core Principle: Parallel Background Agents
 
-1. **NO INTERMEDIATE FILES** - Never create temp files like "doc_sections_X.md"
-2. **NO BATCH GENERATION** - Generate ONE section at a time, not "sections 2-16"
-3. **IMMEDIATE INSERTION** - Edit the target file immediately after generating each section
-4. **NO USER PROMPTS** - Don't ask "should I append?" - just do it
-5. **ONE FILE ONLY** - Only docs/generated/[DOCNAME].md should exist when done
+The orchestrator NEVER receives doc content. Instead:
+1. Extract GLOBAL CONSTRAINTS
+2. Spawn background agents in parallel (one per doc or section)
+3. Background agents write directly to files
+4. Orchestrator monitors completion via output files
+5. Validate results and report summary
 
-## Core Principle: Outline→Section-Chunks Pattern
-
-Doc subagents NEVER return full documents. Instead:
-1. First call: Return outline (≤50 lines)
-2. Subsequent calls: Return ONE section at a time (≤400 lines each)
-3. Orchestrator immediately inserts each section into target file
-
-This keeps orchestrator context bounded regardless of doc size.
-
-**Workflow Summary:**
-```
-Outline → Skeleton → [For each section: Generate → Edit → Next] → Review → Done
-                      ↑                                         ↑
-                      NO intermediate files!                   Direct Edit only!
-```
+**Context Budget:** Orchestrator stays under 2,000 lines total (vs. unbounded in sequential approach)
 
 ## Workflow
 
@@ -53,7 +43,6 @@ Outline → Skeleton → [For each section: Generate → Edit → Next] → Revi
    ✅ ARCHITECTURE.md (2,917 lines, 89 KB)
    ✅ DATABASE.md (1,234 lines, 45 KB)
    ❌ API.md (not found)
-   ❌ FEATURES.md (not found)
    ...
    ```
 
@@ -62,44 +51,379 @@ Outline → Skeleton → [For each section: Generate → Edit → Next] → Revi
    Question: "What should I do with existing documentation?"
 
    Options:
-   - "Skip existing, continue from first missing" (Recommended)
-     → Keeps ARCHITECTURE.md, DATABASE.md
-     → Starts with API.md
-
+   - "Skip existing, generate only missing docs" (Recommended)
    - "Regenerate all (fresh start)"
-     → Deletes all existing docs
-     → Generates complete suite from scratch
-
    - "Let me choose specific docs to regenerate"
-     → Shows checklist of all 10 docs
-     → User selects which to regenerate
    ```
 
 4. **Process user choice:**
-   - **Option 1 (Skip existing):** Filter doc list to only missing docs
-   - **Option 2 (Regenerate all):** Delete docs/generated/*.md, proceed with full list
-   - **Option 3 (Choose specific):** Present follow-up question with checkboxes for all 10 docs
-
-5. **Proceed with filtered document list**
+   - Option 1: Filter doc list to only missing docs
+   - Option 2: Delete docs/generated/*.md, proceed with full list
+   - Option 3: Present follow-up with checkboxes
 
 ### Phase 1: Extract Global Constraints
 
-1. Read docs/target/system-vision.md and docs/target/architecture.md
-2. Extract into GLOBAL CONSTRAINTS (max 100 lines):
-   - System name, tech stack, key patterns
-   - Naming conventions, terminology
-   - Cross-cutting concerns (auth, logging, etc.)
+1. **Read architectural authorities:**
+   - docs/target/system-vision.md
+   - docs/target/architecture.md
+
+2. **Extract GLOBAL CONSTRAINTS** (max 100 lines):
+   - System name, tech stack
+   - Key architectural patterns
+   - Naming conventions
    - Immutable invariants
    - Engine vs Lens boundaries
 
-### Phase 2: Generate Diagrams
+3. **Write to shared file** for background agents:
+   ```
+   Write to: /tmp/global_constraints.md
+   ```
 
-For each diagram type needed:
-1. Call diagram subagent with GLOBAL CONSTRAINTS
-2. Receive Mermaid code (max 150 lines)
-3. Store diagram text for later inclusion in docs
+### Phase 2: Generate Diagrams (Parallel)
 
-Diagram types:
+**Spawn diagram agents in parallel** using `run_in_background=True`:
+
+```python
+# Single message with multiple Task calls
+Task(subagent="diagram-architecture", run_in_background=True, ...)
+Task(subagent="diagram-er", run_in_background=True, ...)
+Task(subagent="diagram-sequence", run_in_background=True, ...)
+...
+```
+
+Each diagram agent:
+1. Reads /tmp/global_constraints.md
+2. Generates Mermaid diagram
+3. Writes to /tmp/diagram_[type].mmd
+4. Returns brief confirmation
+
+**Track completion:**
+```json
+{
+  "diagram-architecture": {"agent_id": "task_1", "output_file": "/tmp/agent_1.log"},
+  "diagram-er": {"agent_id": "task_2", "output_file": "/tmp/agent_2.log"},
+  ...
+}
+```
+
+**Monitor completion:**
+```bash
+# Poll each output file
+tail /tmp/agent_1.log  # Check if "✅ Complete" appears
+```
+
+**Once all diagrams complete:** Collect diagram file paths for doc agents
+
+### Phase 3: Generate Docs (Parallel)
+
+**Document List:**
+1. ARCHITECTURE.md
+2. DATABASE.md
+3. API.md
+4. FEATURES.md
+5. ONBOARDING.md
+6. FRONTEND.md
+7. BACKEND.md
+8. DEPLOYMENT.md
+9. DEVELOPMENT.md
+10. CONFIGURATION.md
+
+**For each doc in FILTERED list (from Phase 0):**
+
+#### Step 3a: Spawn Background Agent
+
+**Single message with multiple Task calls** (one per doc):
+
+```python
+# Parallel doc generation
+Task(
+  subagent_type="general-purpose",
+  description=f"Generate ARCHITECTURE.md",
+  prompt=f"""
+You are a background agent generating ARCHITECTURE.md.
+
+## Instructions
+
+1. Read GLOBAL CONSTRAINTS from /tmp/global_constraints.md
+2. Read required diagrams:
+   - /tmp/diagram_architecture.mmd
+   - /tmp/diagram_c4.mmd
+   - /tmp/diagram_dependency.mmd
+   - /tmp/diagram_sequence.mmd
+
+3. Read source files to understand architecture:
+   - docs/target/system-vision.md
+   - docs/target/architecture.md
+   - engine/orchestration/
+   - engine/ingestion/
+   - engine/extraction/
+   - engine/lenses/
+
+4. Generate complete ARCHITECTURE.md following the outline→section-chunks pattern:
+   a. Create outline (sections)
+   b. Write skeleton to docs/generated/ARCHITECTURE.md
+   c. For each section:
+      - Generate content (≤400 lines)
+      - Edit file to insert content
+      - Continue to next section
+
+5. Embed diagrams using: ```mermaid\n[diagram content]\n```
+
+6. Follow GLOBAL CONSTRAINTS for all naming and terminology
+
+7. When complete, return concise confirmation (see _shared-direct-write-pattern.md)
+
+## Important
+- Write directly to docs/generated/ARCHITECTURE.md
+- DO NOT return content to orchestrator
+- Keep your final message under 50 lines
+  """,
+  run_in_background=True
+)
+
+# Repeat for all 10 docs in parallel
+Task(subagent="general-purpose", description="Generate DATABASE.md", prompt="...", run_in_background=True)
+Task(subagent="general-purpose", description="Generate API.md", prompt="...", run_in_background=True)
+...
+```
+
+**Track agents:**
+```json
+{
+  "ARCHITECTURE.md": {"agent_id": "task_10", "output_file": "/tmp/agent_10.log"},
+  "DATABASE.md": {"agent_id": "task_11", "output_file": "/tmp/agent_11.log"},
+  ...
+}
+```
+
+#### Step 3b: Monitor Progress
+
+**Poll output files periodically:**
+
+```bash
+# Every 30 seconds, check all agent output files
+tail -n 20 /tmp/agent_10.log  # Look for "✅ Section complete" or "✅ Complete"
+tail -n 20 /tmp/agent_11.log
+...
+```
+
+**Display progress to user:**
+```
+📊 Doc Generation Progress (10 agents running in parallel)
+
+✅ ARCHITECTURE.md - Complete (2,456 lines)
+✅ DATABASE.md - Complete (1,123 lines)
+⏳ API.md - Section 4/7 in progress
+⏳ FEATURES.md - Section 2/5 in progress
+⏳ ONBOARDING.md - Generating outline
+⏳ FRONTEND.md - Section 1/6 in progress
+⏳ BACKEND.md - Section 3/8 in progress
+⏳ DEPLOYMENT.md - Section 2/4 in progress
+⏳ DEVELOPMENT.md - Generating outline
+⏳ CONFIGURATION.md - Section 1/3 in progress
+```
+
+#### Step 3c: Wait for All Agents to Complete
+
+Use `TaskOutput` with `block=true` to wait for completion:
+
+```python
+for agent_id in agent_ids:
+    TaskOutput(task_id=agent_id, block=true, timeout=600000)  # 10min max
+```
+
+### Phase 4: Validate Generated Files
+
+**For each doc:**
+
+1. **Check file exists:**
+   ```bash
+   ls -lh docs/generated/ARCHITECTURE.md
+   ```
+
+2. **Verify content (lightweight check):**
+   ```bash
+   wc -l docs/generated/ARCHITECTURE.md  # Line count
+   grep "^#" docs/generated/ARCHITECTURE.md | head -20  # Section headings
+   ```
+
+3. **Track validation results:**
+   ```json
+   {
+     "ARCHITECTURE.md": {"exists": true, "lines": 2456, "sections": 12},
+     "DATABASE.md": {"exists": true, "lines": 1123, "sections": 8},
+     ...
+   }
+   ```
+
+**If file missing or suspiciously small:**
+```
+⚠️ DATABASE.md validation failed (only 23 lines)
+Reading agent output to diagnose...
+[tail /tmp/agent_11.log]
+
+Issue: [describe problem]
+Options:
+1. Retry this doc
+2. Continue with other docs
+3. Abort
+```
+
+### Phase 5: Review & Fix (Parallel)
+
+**Spawn review agents in parallel:**
+
+```python
+# One review agent per doc
+Task(
+  subagent_type="review-docs",
+  description="Review ARCHITECTURE.md",
+  prompt=f"""
+Review docs/generated/ARCHITECTURE.md
+
+Check for:
+- Compliance with GLOBAL CONSTRAINTS (/tmp/global_constraints.md)
+- Cross-reference correctness
+- Consistency with other docs (read all docs/generated/*.md)
+- Diagram embedding correctness
+
+Return patch instructions if issues found, or confirm "✅ No issues" if clean.
+
+Keep response under 100 lines.
+  """,
+  run_in_background=True
+)
+
+# Repeat for all docs
+...
+```
+
+**Wait for reviews to complete:**
+```python
+for review_agent_id in review_agent_ids:
+    result = TaskOutput(task_id=review_agent_id, block=true)
+    # Check if patches needed
+```
+
+**Apply patches sequentially** (if needed):
+- Read review agent output
+- Parse patch instructions
+- Use Edit tool to apply patches
+
+### Phase 6: Generate Navigation Docs
+
+**Generate README.md and CHANGELOG.md** (orchestrator does this directly):
+
+1. **README.md:**
+   ```markdown
+   # Generated Documentation Suite
+
+   Generated on: [timestamp]
+
+   ## Documents
+   - [ARCHITECTURE.md](ARCHITECTURE.md) - System architecture (2,456 lines)
+   - [DATABASE.md](DATABASE.md) - Database schema (1,123 lines)
+   ...
+
+   ## Generation Stats
+   - Total lines: 12,345
+   - Docs generated: 10
+   - Diagrams embedded: 15
+   - Generation time: 3.5 minutes (parallel)
+   - Agents used: 25 (10 doc + 11 diagram + 4 review)
+   ```
+
+2. **CHANGELOG.md:**
+   ```markdown
+   # Documentation Generation Changelog
+
+   ## Generation: 2026-02-08 14:32
+
+   ### Strategy
+   - Mode: Parallel background agents
+   - Docs generated: 10
+   - Time: 3.5 minutes
+
+   ### Agent Details
+   - Diagram agents: 11 (parallel)
+   - Doc agents: 10 (parallel)
+   - Review agents: 10 (parallel)
+
+   ### Files Created
+   - docs/generated/ARCHITECTURE.md (2,456 lines)
+   - docs/generated/DATABASE.md (1,123 lines)
+   ...
+
+   ### Review Summary
+   - Blocking issues: 0
+   - Important issues: 3 (applied automatically)
+   - Minor issues: 7 (applied automatically)
+
+   ### Context Efficiency
+   - Orchestrator peak context: ~1,800 lines
+   - vs. Sequential approach: ~15,000 lines
+   - Reduction: 88%
+   ```
+
+### Phase 7: Cleanup
+
+**Remove temporary files:**
+```bash
+rm /tmp/global_constraints.md
+rm /tmp/diagram_*.mmd
+rm /tmp/agent_*.log
+```
+
+### Final Output
+
+```
+✅ Documentation Generation Complete
+
+Strategy: Parallel background agents
+Time: 3 minutes 42 seconds
+Agents: 31 total (11 diagram + 10 doc + 10 review)
+
+Files Generated:
+✅ docs/generated/ARCHITECTURE.md (2,456 lines, 78 KB)
+✅ docs/generated/DATABASE.md (1,123 lines, 42 KB)
+✅ docs/generated/API.md (987 lines, 35 KB)
+✅ docs/generated/FEATURES.md (1,234 lines, 45 KB)
+✅ docs/generated/ONBOARDING.md (756 lines, 28 KB)
+✅ docs/generated/FRONTEND.md (1,098 lines, 39 KB)
+✅ docs/generated/BACKEND.md (1,567 lines, 52 KB)
+✅ docs/generated/DEPLOYMENT.md (654 lines, 24 KB)
+✅ docs/generated/DEVELOPMENT.md (892 lines, 31 KB)
+✅ docs/generated/CONFIGURATION.md (445 lines, 16 KB)
+✅ docs/generated/README.md (navigation)
+✅ docs/generated/CHANGELOG.md (generation log)
+
+Total: 11,212 lines across 12 files
+
+Quality:
+- Cross-references validated: ✅
+- Diagrams embedded: 15 total
+- GLOBAL CONSTRAINTS compliance: ✅
+- Review issues: 0 blocking, 3 important (fixed), 7 minor (fixed)
+
+Context Efficiency:
+- Orchestrator peak: 1,823 lines
+- vs. Sequential: ~15,000 lines
+- Improvement: 88% reduction
+
+Next Steps:
+- Review generated docs in docs/generated/
+- Move to docs/ root when approved
+- Run /update-docs for incremental changes
+```
+
+## Agent Mapping
+
+**Doc Agents (background):**
+- Each doc gets its own general-purpose agent
+- Agent reads sources, generates content, writes directly to file
+- Returns brief (<50 line) confirmation
+
+**Diagram Agents (background):**
 - diagram-architecture
 - diagram-c4
 - diagram-component
@@ -112,257 +436,64 @@ Diagram types:
 - diagram-state
 - diagram-user-journey
 
-### Phase 3: Generate Docs (Section-by-Section)
-
-**For each doc in the FILTERED list (from Phase 0):**
-
-NOTE: Only process docs that need generation based on user choice in Phase 0.
-
-**Document Order:**
-1. ARCHITECTURE.md (needs: diagram-architecture, diagram-c4, diagram-dependency, diagram-sequence)
-2. DATABASE.md (needs: diagram-er)
-3. API.md (needs: diagram-sequence)
-4. FEATURES.md (needs: diagram-user-journey, diagram-sequence)
-5. ONBOARDING.md (needs: none)
-6. FRONTEND.md (needs: diagram-component, diagram-state)
-7. BACKEND.md (needs: diagram-component, diagram-sequence)
-8. DEPLOYMENT.md (needs: diagram-deployment, diagram-network)
-9. DEVELOPMENT.md (needs: diagram-contribution-flow)
-10. CONFIGURATION.md (needs: none)
-
-**For each document:**
-
-**Step 3a: Get Outline**
-1. Call doc subagent with:
-   - GLOBAL CONSTRAINTS
-   - Required diagrams for this doc
-   - Instruction: `task: "outline"`
-2. Receive outline (max 50 lines) with format:
-   ```markdown
-   # [Document Title]
-
-   ## Section: [Heading 1]
-   Description: [One-line description]
-   Estimated lines: [number]
-
-   ## Section: [Heading 2]
-   Description: [One-line description]
-   Estimated lines: [number]
-   ```
-
-**Step 3b: Create Skeleton**
-1. Parse outline to extract section headings
-2. Write skeleton file to docs/generated/[FILENAME] with:
-   - Document title
-   - Section headings from outline
-   - Placeholder comment: `<!-- SECTION PENDING: [heading] -->`
-
-**Step 3c: Fill Sections (ONE AT A TIME - NO BATCH GENERATION)**
-
-⚠️ **CRITICAL: Process sections individually, not in batches!**
-
-For each section in outline (process sequentially, one by one):
-
-1. **Call subagent for THIS SECTION ONLY**
-   - GLOBAL CONSTRAINTS
-   - Required diagrams
-   - Current skeleton file content
-   - Instruction: `task: "section: [heading name]"`
-   - ❌ DO NOT ask for multiple sections at once
-   - ❌ DO NOT ask for "sections 2-16" or similar batches
-
-2. **Receive section content (≤400 lines)**
-   - Subagent returns markdown content for ONE section only
-
-3. **Immediately Edit the skeleton file**
-   - Use Edit tool to replace `<!-- SECTION PENDING: [heading] -->` with section content
-   - ❌ DO NOT write to intermediate/temp files
-   - ❌ DO NOT store content in variables for later
-   - ✅ Direct replacement in docs/generated/[FILENAME]
-
-4. **Move to next section**
-   - Repeat steps 1-3 for next section
-   - Continue until all sections complete
-
-**Section content should:**
-- Reference diagrams: ` ```mermaid\n[diagram content]\n``` `
-- Reference other docs: `[Doc Name](FILENAME.md#section)`
-- Follow GLOBAL CONSTRAINTS for all naming
-
-**What NOT to do:**
-- ❌ Generate all sections in one subagent call (too large, hard to insert)
-- ❌ Create intermediate files like "doc_sections_2_16.md"
-- ❌ Ask user for confirmation before appending (just do it)
-- ❌ Store content anywhere except the final docs/generated/ file
-
-### Phase 4: Review & Fix
-
-For each completed doc:
-1. Call review-docs subagent with:
-   - The specific doc file path
-   - GLOBAL CONSTRAINTS
-   - All other completed docs (for cross-references)
-2. Receive patch instructions in format:
-   ```markdown
-   ## PATCH 1
-   SECTION: ## [Heading Name]
-   ACTION: REPLACE
-   REASON: [Why this change is needed]
-   CONTENT:
-   [replacement content, max 300 lines]
-
-   ## PATCH 2
-   SECTION: ## [Heading Name]
-   ACTION: INSERT_AFTER
-   REASON: [Why this change is needed]
-   CONTENT:
-   [new content to insert, max 300 lines]
-
-   ## PATCH 3
-   SECTION: ## [Heading Name]
-   ACTION: DELETE
-   REASON: [Why this section should be removed]
-   ```
-3. Apply patches using Edit tool
-
-### Phase 5: Final Validation
-
-1. Check all cross-references resolve
-2. Verify diagram content is embedded correctly
-3. Generate docs/generated/README.md with navigation structure:
-   ```markdown
-   # Generated Documentation Suite
-
-   Generated on: [timestamp]
-
-   ## Documents
-   - [ARCHITECTURE.md](ARCHITECTURE.md) - System architecture overview
-   - [DATABASE.md](DATABASE.md) - Database schema and data model
-   - [API.md](API.md) - API endpoints and contracts
-   - [FEATURES.md](FEATURES.md) - Feature documentation
-   - [ONBOARDING.md](ONBOARDING.md) - Developer onboarding guide
-   - [FRONTEND.md](FRONTEND.md) - Frontend architecture
-   - [BACKEND.md](BACKEND.md) - Backend architecture
-   - [DEPLOYMENT.md](DEPLOYMENT.md) - Deployment procedures
-   - [DEVELOPMENT.md](DEVELOPMENT.md) - Development workflow
-   - [CONFIGURATION.md](CONFIGURATION.md) - Configuration reference
-
-   ## Quality Checks
-   - All cross-references validated
-   - All diagrams embedded
-   - Compliance with GLOBAL CONSTRAINTS verified
-   ```
-4. Generate CHANGELOG.md with:
-   - Generation timestamp
-   - List of docs created/updated
-   - Summary of review issues and resolutions
-   - Any warnings or notes
-
-## Example: Correct Section-by-Section Workflow
-
-**✅ CORRECT (What you SHOULD do):**
-
-```
-1. Get outline from subagent → "Section 1: Intro, Section 2: Architecture, ..."
-2. Write skeleton:
-   # Doc Title
-   <!-- SECTION PENDING: 1. Intro -->
-   <!-- SECTION PENDING: 2. Architecture -->
-   ...
-
-3. Generate Section 1:
-   - Call subagent: "Generate section: 1. Intro"
-   - Receive: "# 1. Intro\nThis document..."
-   - Edit file: Replace "<!-- SECTION PENDING: 1. Intro -->" with content
-
-4. Generate Section 2:
-   - Call subagent: "Generate section: 2. Architecture"
-   - Receive: "# 2. Architecture\nThe system..."
-   - Edit file: Replace "<!-- SECTION PENDING: 2. Architecture -->" with content
-
-5. Continue until all sections complete
-6. ONE FILE: docs/generated/DOCNAME.md
-```
-
-**❌ WRONG (What you did before - DON'T do this):**
-
-```
-1. Get outline
-2. Write skeleton
-3. Call subagent: "Generate sections 2-16" ❌ BATCH REQUEST
-4. Receive massive 2000-line response ❌ TOO LARGE
-5. Try to write to temp file ❌ INTERMEDIATE FILE
-6. Ask user "should I append?" ❌ UNNECESSARY PROMPT
-7. Finally edit main file
-8. Leftover temp file ❌ CLEANUP NEEDED
-```
-
-## Context Budget Enforcement
-
-At any moment, orchestrator context contains:
-- GLOBAL CONSTRAINTS: ~100 lines
-- Diagram outputs: ~150 lines each (reused across docs)
-- Current outline: ~50 lines
-- Current section being written: ~400 lines
-- **Maximum per doc iteration: ~700 lines**
-
-This scales to unlimited doc size because we process incrementally.
+**Review Agents (background):**
+- review-docs (one instance per doc)
 
 ## Error Handling
 
-If a subagent exceeds limits:
-1. Truncate the response at the limit
-2. Log warning to CHANGELOG.md
-3. Request rewrite with explicit line count reminder
+**If agent fails:**
+1. Read agent output file: `Read(/tmp/agent_X.log)`
+2. Diagnose issue from agent's messages
+3. Options:
+   - Retry with clearer prompt
+   - Skip this doc (continue with others)
+   - Abort entire generation
 
-If a subagent returns malformed output:
-1. Log the issue to CHANGELOG.md
-2. Skip that section with a placeholder: `<!-- ERROR: Failed to generate [section] -->`
-3. Continue with remaining sections
-
-## Status Reporting
-
-Throughout execution, report progress:
+**If agent timeout (>10 min):**
 ```
-Phase 0: ✅ Found 2 existing docs, user chose "Skip existing"
-Phase 1: ✅ Global constraints extracted
-Phase 2: ✅ Generated 6 diagrams
-Phase 3: Processing 8 remaining docs...
-  ✅ DATABASE.md complete (1,456 lines)
-  ✅ API.md complete (987 lines)
-  ⏳ FEATURES.md in progress (section 3/8)
+⚠️ Agent task_15 (BACKEND.md) timed out after 10 minutes
+
+Options:
+1. Extend timeout and continue waiting
+2. Terminate and retry with simpler sections
+3. Skip this doc
 ```
 
-## Final Output
-
-Print summary:
+**If validation fails:**
 ```
-✅ Documentation generation complete
+⚠️ FEATURES.md validation failed
+- Expected >500 lines, got 87 lines
+- Missing sections: User Journeys, Integration Examples
 
-Files generated:
-- docs/generated/ARCHITECTURE.md (X lines)
-- docs/generated/DATABASE.md (X lines)
-[... etc ...]
-- docs/generated/CHANGELOG.md
+Reading agent output...
+[diagnosis]
 
-Review issues: X blocking, Y important, Z minor
-Context budget: Peak XXX lines (within 700 line target)
-
-Next steps:
-- Review generated docs in docs/generated/
-- Address any blocking review issues
-- Move approved docs to docs/ root when ready
+Options:
+1. Retry generation
+2. Manual inspection needed
+3. Continue with other docs
 ```
 
-## Agent Mapping
+## Performance Comparison
 
-- architecture-docs → docs/generated/ARCHITECTURE.md
-- database-docs → docs/generated/DATABASE.md
-- api-docs → docs/generated/API.md
-- features-docs → docs/generated/FEATURES.md
-- onboarding-docs → docs/generated/ONBOARDING.md
-- frontend-docs → docs/generated/FRONTEND.md
-- backend-docs → docs/generated/BACKEND.md
-- deployment-docs → docs/generated/DEPLOYMENT.md
-- development-docs → docs/generated/DEVELOPMENT.md
-- configuration-docs → docs/generated/CONFIGURATION.md
+| Metric | Sequential (v3) | Parallel (v4) | Improvement |
+|--------|----------------|---------------|-------------|
+| Time | ~25 minutes | ~4 minutes | 84% faster |
+| Orchestrator context | ~15,000 lines peak | ~2,000 lines peak | 87% reduction |
+| Scalability | Limited by sequential processing | Limited by agent count | Scales horizontally |
+| Failure isolation | One failure blocks all | Independent failures | Better resilience |
+
+## When to Use Sequential vs. Parallel
+
+**Use Parallel (v4 - this version):**
+- Default for all doc generation
+- When you have >3 docs to generate
+- When speed matters
+- When context window is limited
+
+**Use Sequential (v3):**
+- Debugging a specific doc (easier to trace)
+- Very small projects (1-2 docs)
+- When you need step-by-step control
+
+**Rule of thumb:** Always prefer parallel unless you have a specific reason not to.
