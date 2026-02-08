@@ -24,7 +24,9 @@ The orchestrator NEVER receives section content. Instead:
 4. Background agents write directly to files
 5. Orchestrator monitors completion and validates
 
-**Context Budget:** Orchestrator stays under 1,500 lines total
+**Context Budget:** Orchestrator stays under 1,200 lines total
+
+**Note:** Review is now handled by separate `/review-docs` command after updates complete.
 
 ## Workflow
 
@@ -293,11 +295,76 @@ FRONTEND.md (1 section update):
   ⏳ Search Interface - In progress
 ```
 
-**Wait for completion:**
-```python
-for agent_id in update_agent_ids:
-    TaskOutput(task_id=agent_id, block=true, timeout=300000)  # 5min max per section
+### Phase 5.5: WAIT for ALL Agents to Complete (CRITICAL SYNCHRONIZATION GATE)
+
+**⚠️ THIS IS CRITICAL - DO NOT SKIP**
+
+**Step 1: Display Waiting Message**
+
 ```
+⏳ Waiting for all update agents to complete...
+Tracking {len(update_agents)} agents
+
+This may take 1-2 minutes. Progress will be shown below.
+```
+
+**Step 2: Sequential Completion Waiting**
+
+**CRITICAL:** Use `TaskOutput(block=True)` to wait for EACH agent sequentially:
+
+```python
+print("\n⏳ Waiting for all update agents to complete...")
+print(f"Tracking {len(update_agents)} agents\n")
+
+for i, agent in enumerate(update_agents):
+    print(f"[{i+1}/{len(update_agents)}] Waiting for {agent['doc']} → {agent['section']}...")
+
+    # BLOCKING WAIT - do not proceed until this agent completes
+    result = TaskOutput(
+        task_id=agent['agent_id'],
+        block=True,
+        timeout=300000  # 5 minutes max per section
+    )
+
+    agent['status'] = 'complete'
+    print(f"  ✅ {agent['doc']} → {agent['section']} complete\n")
+
+print("\n✅ All agents complete. Proceeding to validation...\n")
+```
+
+**Step 3: Display Live Progress to User**
+
+Example output:
+
+```
+⏳ Waiting for all update agents to complete...
+Tracking 7 agents
+
+[1/7] Waiting for ARCHITECTURE.md → Full doc...
+  ✅ ARCHITECTURE.md → Full doc complete
+
+[2/7] Waiting for BACKEND.md → Orchestration System...
+  ✅ BACKEND.md → Orchestration System complete
+
+[3/7] Waiting for BACKEND.md → Query Planning...
+  ✅ BACKEND.md → Query Planning complete
+
+[4/7] Waiting for DATABASE.md → Schema Generation...
+  ✅ DATABASE.md → Schema Generation complete
+
+[5/7] Waiting for DATABASE.md → Prisma Integration...
+  ✅ DATABASE.md → Prisma Integration complete
+
+[6/7] Waiting for FRONTEND.md → Search Interface...
+  ✅ FRONTEND.md → Search Interface complete
+
+[7/7] Waiting for FRONTEND.md → Component Library...
+  ✅ FRONTEND.md → Component Library complete
+
+✅ All agents complete. Proceeding to validation...
+```
+
+**ONLY AFTER THIS PHASE MAY YOU PROCEED TO PHASE 6 (VALIDATION).**
 
 ### Phase 6: Validate Updates
 
@@ -336,44 +403,7 @@ Options:
 3. Abort
 ```
 
-### Phase 7: Review Updated Sections (Parallel)
-
-**Spawn review agents for updated docs:**
-
-```python
-# Only review docs that were modified
-for doc in updated_docs:
-    Task(
-      subagent_type="review-docs",
-      description=f"Review {doc}",
-      prompt=f"""
-Review docs/generated/{doc}
-
-Focus on updated sections:
-{list_of_updated_sections}
-
-Check for:
-- Compliance with GLOBAL CONSTRAINTS
-- Cross-reference correctness
-- Consistency with other docs
-- Integration with unchanged sections
-
-Return patch instructions if issues found, or confirm "✅ No issues".
-
-Keep response under 100 lines.
-      """,
-      run_in_background=True
-    )
-```
-
-**Wait for reviews:**
-```python
-for review_agent_id in review_agent_ids:
-    result = TaskOutput(task_id=review_agent_id, block=true)
-    # Parse and apply patches if needed
-```
-
-### Phase 8: Update CHANGELOG
+### Phase 7: Update CHANGELOG
 
 **Append to docs/generated/CHANGELOG.md:**
 
@@ -386,8 +416,8 @@ for review_agent_id in review_agent_ids:
 
 ### Strategy
 - Mode: Parallel background agents (section-level updates)
-- Time: 1 minute 42 seconds
-- Agents: 7 update agents + 4 review agents
+- Time: 1 minute 15 seconds
+- Agents: 7 update agents
 
 ### Docs Updated
 
@@ -417,18 +447,13 @@ for review_agent_id in review_agent_ids:
 - web/app/search/page.tsx
 - docs/target/architecture.md
 
-### Review Summary
-- Blocking issues: 0
-- Important issues: 1 (applied automatically)
-- Minor issues: 3 (applied automatically)
-
 ### Context Efficiency
 - Orchestrator peak context: ~1,200 lines
 - vs. Full regeneration: ~15,000 lines
 - Time saved: ~93% vs. full regeneration (1.7min vs. 25min)
 ```
 
-### Phase 9: Cleanup
+### Phase 8: Cleanup
 
 **Remove temporary files:**
 ```bash
@@ -442,8 +467,8 @@ rm .claude/tmp/global_constraints.md
 ✅ Documentation Update Complete
 
 Strategy: Parallel background agents (section-level updates)
-Time: 1 minute 42 seconds
-Agents: 11 total (7 update + 4 review)
+Time: 1 minute 15 seconds
+Agents: 7 update agents
 
 Changes Detected:
 - 5 files changed since 2026-02-05 10:23
@@ -463,11 +488,6 @@ Docs Unchanged:
 ⏭️ DEVELOPMENT.md (892 lines)
 ⏭️ CONFIGURATION.md (445 lines)
 
-Quality:
-- Cross-references validated: ✅
-- GLOBAL CONSTRAINTS compliance: ✅
-- Review issues: 0 blocking, 1 important (fixed), 3 minor (fixed)
-
 Context Efficiency:
 - Orchestrator peak: 1,234 lines
 - vs. Full regeneration: ~15,000 lines
@@ -476,6 +496,7 @@ Context Efficiency:
 
 Next Steps:
 - Review updated docs in docs/generated/
+- Run /review-docs to review quality (optional)
 - Run /generate-docs if changes seem incomplete
 - Continue with incremental updates for future changes
 ```
