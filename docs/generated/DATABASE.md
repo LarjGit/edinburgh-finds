@@ -1,875 +1,1486 @@
-# DATABASE.md - Universal Entity Extraction Engine Database Design
+# DATABASE.md - Universal Entity Extraction Engine
+
+**Generated:** 2026-02-08
+**Source Files:**
+- `engine/config/schemas/entity.yaml`
+- `web/prisma/schema.prisma`
+- `engine/orchestration/entity_finalizer.py`
+- `docs/generated/diagrams/entity_model.mmd`
+
+**System:** Universal Entity Extraction Engine
+**Reference Application:** Edinburgh Finds (padel/sports discovery)
+
+---
+
+## Table of Contents
+
+1. [Overview](#overview)
+2. [Schema Architecture](#schema-architecture)
+3. [Entity Model](#entity-model)
+4. [Canonical Dimensions](#canonical-dimensions)
+5. [Modules System](#modules-system)
+6. [Pipeline Tables](#pipeline-tables)
+7. [Indexes & Performance](#indexes--performance)
+8. [Schema Generation](#schema-generation)
+9. [Data Integrity](#data-integrity)
+10. [Migrations](#migrations)
+
+---
 
 ## Overview
 
-The Universal Entity Extraction Engine uses PostgreSQL (hosted on Supabase) as its canonical data store, reflecting an architecture where **database structure is universal** but **data semantics are lens-owned**.
+### Database Role
 
-This design directly operationalizes the engine's core invariant: the engine owns structure, indexing, persistence, and lifecycle guarantees, while Lenses own all domain interpretation, vocabulary, and meaning.
+The database is the authoritative record of all discovered entities and their pipeline provenance. It serves three primary functions:
 
-**Architectural Philosophy**
+1. **Entity Storage** — Validated, deduplicated, merged entities ready for frontend consumption
+2. **Pipeline State** — Raw ingestion → extracted entities → finalized entities with full lineage tracking
+3. **Operational Metadata** — Orchestration runs, merge conflicts, failed extractions, connector usage
 
-The database schema embodies three critical separation-of-concerns principles:
+### Technology Stack
 
-1. **Universal Structure, Opaque Values** — All entities conform to a stable universal schema (`entity_class`, canonical dimension arrays, namespaced modules, provenance) regardless of vertical. Field names are authoritative end-to-end; the engine never translates or interprets domain values.
+- **Database:** PostgreSQL (via Supabase)
+- **ORM:** Prisma 7.3+ (TypeScript/JavaScript frontend), Prisma Client Python (Python engine)
+- **Indexing:** GIN indexes for multi-valued TEXT[] arrays (canonical dimensions)
+- **Data Structures:** JSONB for flexible vertical-specific modules
 
-2. **No Domain Semantics in Schema** — The database stores opaque identifiers like `canonical_activities: ["tennis", "padel"]` or `canonical_roles: ["coaching_provider"]` without knowing what "tennis" or "coaching_provider" mean. All semantic interpretation lives exclusively in Lens YAML contracts.
+### Database Independence
 
-3. **Deterministic Persistence** — The schema enforces determinism through GIN-indexed arrays, stable primary keys, and idempotent upsert contracts. Re-running the same execution updates existing entities rather than creating duplicates.
+The engine's database schema is **vertical-agnostic**. Adding a new vertical (e.g., Wine Discovery, Restaurant Finder) requires:
+- ✅ New Lens YAML configuration
+- ❌ **NO** database schema changes
+- ❌ **NO** table migrations
 
-**Technology Rationale**
+All domain-specific data lives in:
+- **Canonical dimensions** (opaque TEXT[] arrays interpreted by Lens)
+- **Modules** (namespaced JSONB interpreted by Lens)
 
-- **PostgreSQL** — Provides native array types with GIN indexing for efficient multi-valued dimension queries, JSONB for structured modules, and ACID guarantees for deterministic persistence
-- **Supabase** — Managed PostgreSQL with built-in auth, real-time subscriptions, and edge functions for future frontend needs
-- **Prisma ORM** — Schema-driven client generation ensures TypeScript and Python access layers remain synchronized with the canonical schema
+---
 
-**Schema Single Source of Truth**
+## Schema Architecture
 
-All schema definitions originate from `engine/config/schemas/*.yaml`. These YAML files auto-generate three derived artifacts:
+### Single Source of Truth: YAML Schemas
 
-- `engine/schema/*.py` (Python FieldSpecs for validation)
-- `web/prisma/schema.prisma` and `engine/prisma/schema.prisma` (Prisma schemas)
-- `web/lib/types/generated/*.ts` (TypeScript interfaces)
+The database schema is **auto-generated** from YAML definitions. This eliminates schema drift and enables horizontal scaling.
 
-Generated files are marked "DO NOT EDIT" and overwritten on regeneration. This eliminates schema drift and enables horizontal scaling: adding a new vertical requires only a new YAML file, not database migrations or ORM changes.
+**YAML Schema Location:** `engine/config/schemas/*.yaml`
 
-**Separation of Structure vs Semantics**
-
-The database enforces structural contracts (arrays never null, no duplicate dimension values, stable ordering) but never validates semantic correctness (whether "tennis" is a valid activity or whether an entity should have that value). Semantic validation occurs exclusively through Lens mapping rules during the extraction pipeline.
-
-This boundary is absolute: the engine persists structure, Lenses define meaning.
-
-## Core Tables
-
-The database implements a three-tier artifact pipeline that preserves immutability guarantees while enabling deterministic entity formation through multi-source merge.
-
-### RawIngestion (Immutable Source Artifacts)
-
-Stores raw payloads from connectors as immutable artifacts. Once persisted, these records are never modified.
-
-```sql
-RawIngestion {
-  id: String (CUID)
-  source: String                    -- Connector identifier (e.g., "serper", "google_places")
-  source_url: String                -- Original query or URL
-  file_path: String                 -- Physical location of raw JSON payload
-  status: String                    -- "success" | "failed" | "pending"
-  hash: String                      -- Content hash for ingestion-level deduplication
-  ingested_at: DateTime
-  metadata_json: String             -- Connector-specific metadata
-  orchestration_run_id: String?     -- Parent orchestration context
-}
-
-Indexes: [source], [status], [hash], [ingested_at], [orchestration_run_id]
+**Generation Pipeline:**
+```
+YAML Definition
+    ↓
+Python FieldSpecs (engine/schema/*.py)
+    ↓
+Prisma Schema (web/prisma/schema.prisma, engine/prisma/schema.prisma)
+    ↓
+TypeScript Interfaces (web/lib/types/generated/*.ts)
 ```
 
-**Immutability Contract:** Raw ingestion records are write-once. Downstream stages consume these artifacts as read-only inputs. Re-running identical queries produces idempotent hash-based deduplication rather than duplicate records.
+**Critical Rule:** NEVER edit generated files directly. They contain `DO NOT EDIT` headers and are overwritten on regeneration.
 
-### ExtractedEntity (Phase 1 Output)
+### Schema Regeneration Command
 
-Stores structured primitives and raw observations from source-specific extractors. Per the locked extraction contract (architecture.md §4.2), extractors emit **only** schema primitives and raw observations—never canonical dimensions or modules.
+```bash
+# Validate YAML schemas
+python -m engine.schema.generate --validate
 
-```sql
-ExtractedEntity {
-  id: String (CUID)
-  raw_ingestion_id: String          -- FK to RawIngestion
-  source: String                    -- Connector identifier
-  entity_class: String              -- Universal classification: place|person|organization|event|thing
-  attributes: String                -- Schema primitives (entity_name, latitude, longitude, street_address, etc.)
-  discovered_attributes: String     -- Raw observations for downstream lens interpretation
-  external_ids: String              -- Source-native identifiers for cross-source deduplication
-  extraction_hash: String           -- Deterministic hash of extraction output
-  model_used: String?               -- LLM model identifier if applicable
-  createdAt: DateTime
-}
+# Regenerate all derived schemas
+python -m engine.schema.generate --all
 
-Indexes: [raw_ingestion_id], [source], [entity_class], [extraction_hash]
+# Apply to database (development)
+cd web && npx prisma db push
+
+# Apply to database (production)
+cd web && npx prisma migrate dev
 ```
 
-**Phase Boundary Enforcement:** Extractors populate `attributes` (primitives like `entity_name`, `latitude`, `street_address`) and `discovered_attributes` (raw categories, descriptions). Canonical dimensions (`canonical_activities`, `canonical_roles`, etc.) and modules are populated exclusively by Phase 2 lens application.
+### Schema Extension Pattern
 
-### Entity (Canonical Merged Entities)
+```yaml
+# engine/config/schemas/entity.yaml
+schema:
+  name: Entity
+  description: Base schema for all entity types
+  extends: null  # Top-level schema
 
-Stores final canonical entities after cross-source deduplication, deterministic merge, and finalization. This is the authoritative representation of real-world entities.
-
-```sql
-Entity {
-  id: String (CUID)
-  slug: String (unique)             -- URL-safe stable identifier
-  entity_name: String
-  entity_class: String              -- place | person | organization | event | thing
-
-  -- Universal Primitives
-  summary: String?
-  description: String?
-  street_address: String?
-  city: String?
-  postcode: String?
-  country: String?
-  latitude: Float?
-  longitude: Float?
-  phone: String?
-  email: String?
-  website_url: String?
-
-  -- Social Media
-  instagram_url: String?
-  facebook_url: String?
-  twitter_url: String?
-  linkedin_url: String?
-  mainImage: String?
-
-  -- Canonical Dimensions (Lens-Owned Values)
-  canonical_activities: String[]    -- Multi-valued opaque identifiers
-  canonical_roles: String[]
-  canonical_place_types: String[]
-  canonical_access: String[]
-
-  -- Raw Observations
-  raw_categories: String[]
-  discovered_attributes: Json       -- Unstructured observations
-
-  -- Structured Modules (Lens-Defined Schemas)
-  modules: Json                     -- Namespaced domain-specific attributes
-
-  -- Provenance
-  source_info: Json                 -- Contributing sources and trust metadata
-  external_ids: Json                -- Cross-source identifiers
-  field_confidence: Json            -- Per-field confidence scores
-  opening_hours: Json
-
-  createdAt: DateTime
-  updatedAt: DateTime
-}
-
-Indexes: [slug], [entity_name], [entity_class], [city], [postcode], [latitude, longitude]
+fields:
+  - name: entity_name
+    type: string
+    nullable: false
+    required: true
+    index: true
 ```
 
-**Canonical Dimensions Contract:** The four canonical dimension arrays are universal structures defined by the engine, but all values are opaque identifiers defined exclusively by lens contracts. The engine never interprets semantic meaning—it only enforces structural integrity (no nulls, no duplicates, deterministic ordering).
+---
 
-**Module Storage:** The `modules` field stores namespaced JSON structures (e.g., `modules.sports_facility`, `modules.amenities`). Universal modules are always available; domain modules are attached conditionally via lens triggers. Module schemas are defined in lens contracts and validated at load time.
+## Entity Model
 
-**Immutability vs Upsert:** Entity records are updated via idempotent upsert keyed on `slug`. Re-running the same query with identical inputs produces deterministic convergence to the same canonical state rather than duplicate entities. Provenance metadata accumulates rather than overwrites.
+### Entity Table Structure
 
-### Artifact Flow Summary
+The `Entity` table is the **final published record** of all discovered entities. It represents the output of the 11-stage pipeline (Lens Resolution → Planning → Ingestion → Extraction → Lens Application → Classification → Deduplication → Merge → Finalization).
 
+```mermaid
+erDiagram
+    %% ============================================================
+    %% ENTITY MODEL - Universal Entity Extraction Engine
+    %% ============================================================
+    %% Shows the core entity schema structure with:
+    %% - Universal entity classification (place/person/organization/event/thing)
+    %% - Canonical dimensions (TEXT[] arrays for faceted filtering)
+    %% - Modules system (JSONB for vertical-specific structured data)
+    %% - Provenance tracking and confidence scoring
+    %% - Relationships between RawIngestion, ExtractedEntity, and Entity
+    %%
+    %% Generated: 2026-02-08
+    %% Source: engine/config/schemas/entity.yaml, web/prisma/schema.prisma
+    %% ============================================================
+
+    Entity {
+        string id PK "entity_id - Auto-generated CUID"
+        string entity_name "Official name (required, indexed)"
+        string entity_class "Universal classification: place, person, organization, event, thing"
+        string slug UK "URL-safe identifier (auto-generated, unique)"
+        string summary "Short description summary"
+        string description "Long-form aggregated evidence"
+
+        %% CLASSIFICATION
+        string[] raw_categories "Uncontrolled observational labels (NOT indexed)"
+
+        %% CANONICAL DIMENSIONS - Postgres TEXT[] with GIN indexes
+        string[] canonical_activities "Activities provided/supported (opaque, lens-interpreted)"
+        string[] canonical_roles "Functional roles (provides_facility, sells_goods, etc.)"
+        string[] canonical_place_types "Physical place classifications (lens-interpreted)"
+        string[] canonical_access "Access requirements (membership, pay_and_play, free, etc.)"
+
+        %% FLEXIBLE DATA STRUCTURES
+        json discovered_attributes "Extra attributes not in core schema"
+        json modules "Namespaced JSONB: {sports_facility: {}, hospitality_venue: {}}"
+
+        %% LOCATION
+        string street_address "Full address"
+        string city "City/town (indexed)"
+        string postcode "UK postcode format (indexed)"
+        string country "Country name"
+        float latitude "WGS84 decimal degrees"
+        float longitude "WGS84 decimal degrees"
+
+        %% CONTACT
+        string phone "E.164 format (+441315397071)"
+        string email "Public email address"
+        string website_url "Official website"
+
+        %% SOCIAL MEDIA
+        string instagram_url "Instagram profile"
+        string facebook_url "Facebook page"
+        string twitter_url "Twitter/X profile"
+        string linkedin_url "LinkedIn company page"
+
+        %% OPERATING HOURS
+        json opening_hours "{monday: {open: '05:30', close: '22:00'}, sunday: 'CLOSED'}"
+
+        %% PROVENANCE AND METADATA
+        json source_info "URLs, method, timestamps, notes"
+        json field_confidence "Per-field confidence scores (0.0-1.0)"
+        json external_ids "{google: 'abc123', osm: '456'}"
+        datetime createdAt "Creation timestamp"
+        datetime updatedAt "Last update timestamp"
+    }
+
+    ExtractedEntity {
+        string id PK "Auto-generated CUID"
+        string raw_ingestion_id FK "Link to source RawIngestion"
+        string source "Connector name (serper, google_places, osm, etc.)"
+        string entity_class "Universal classification"
+        string attributes "Structured attributes from extraction"
+        string discovered_attributes "Additional discovered fields"
+        string external_ids "External system identifiers"
+        string extraction_hash "Content hash for deduplication"
+        string model_used "LLM model identifier (if used)"
+        datetime createdAt "Extraction timestamp"
+        datetime updatedAt "Last update timestamp"
+    }
+
+    RawIngestion {
+        string id PK "Auto-generated CUID"
+        string source "Connector name (serper, google_places, osm, sport_scotland, etc.)"
+        string source_url "Original URL or query"
+        string file_path "Path to raw JSON: engine/data/raw/source/timestamp_id.json"
+        string status "success, failed, pending"
+        string hash "Content hash for deduplication"
+        string metadata_json "Additional metadata as JSON"
+        string orchestration_run_id FK "Link to parent OrchestrationRun (nullable)"
+        datetime ingested_at "Ingestion timestamp"
+    }
+
+    OrchestrationRun {
+        string id PK "Auto-generated CUID"
+        string query "Original user query"
+        string ingestion_mode "discover_many, verify_one, etc."
+        string status "in_progress, completed, failed"
+        int candidates_found "Number of entities discovered"
+        int accepted_entities "Number of entities persisted"
+        float budget_spent_usd "Cost tracking"
+        string metadata_json "Additional orchestration metadata"
+        datetime createdAt "Run start timestamp"
+        datetime updatedAt "Last update timestamp"
+    }
+
+    FailedExtraction {
+        string id PK "Auto-generated CUID"
+        string raw_ingestion_id FK "Link to failed RawIngestion"
+        string source "Connector name"
+        string error_message "Error description"
+        string error_details "Detailed error trace"
+        int retry_count "Number of retry attempts"
+        datetime last_attempt_at "Last retry timestamp"
+        datetime createdAt "Initial failure timestamp"
+        datetime updatedAt "Last update timestamp"
+    }
+
+    MergeConflict {
+        string id PK "Auto-generated CUID"
+        string field_name "Field with conflict"
+        string conflicting_values "JSON array of conflicting values"
+        string winner_source "Source that won conflict resolution"
+        string winner_value "Final value selected"
+        int trust_difference "Trust delta between sources"
+        float severity "Conflict severity score"
+        string entity_id FK "Link to Entity (nullable)"
+        boolean resolved "Conflict resolution status"
+        string resolution_notes "Human notes on resolution"
+        datetime createdAt "Conflict detected timestamp"
+        datetime updatedAt "Last update timestamp"
+    }
+
+    EntityRelationship {
+        string id PK "Auto-generated CUID"
+        string sourceEntityId FK "Source entity"
+        string targetEntityId FK "Target entity"
+        string type "Relationship type: teaches_at, plays_at, part_of, etc."
+        float confidence "Confidence score (0.0-1.0)"
+        string source "Connector that discovered relationship"
+        datetime createdAt "Relationship created timestamp"
+        datetime updatedAt "Last update timestamp"
+    }
+
+    LensEntity {
+        string lensId PK "Lens identifier"
+        string entityId PK,FK "Entity identifier"
+        datetime createdAt "Membership timestamp"
+    }
+
+    %% ============================================================
+    %% RELATIONSHIPS
+    %% ============================================================
+
+    %% Data Pipeline Flow
+    OrchestrationRun ||--o{ RawIngestion : "executes"
+    RawIngestion ||--o{ ExtractedEntity : "extracts"
+    RawIngestion ||--o{ FailedExtraction : "may fail"
+    ExtractedEntity }o--|| Entity : "merges into"
+
+    %% Entity Relationships
+    Entity ||--o{ EntityRelationship : "source of"
+    Entity ||--o{ EntityRelationship : "target of"
+    Entity ||--o{ LensEntity : "member of lenses"
+    Entity ||--o{ MergeConflict : "may have conflicts"
+
+    %% ============================================================
+    %% NOTES ON MODULE STRUCTURE
+    %% ============================================================
+    %% modules JSONB Examples:
+    %%
+    %% Universal Modules (all entity types):
+    %% - core: {entity_id, entity_name, slug}
+    %% - location: {street_address, city, postcode, latitude, longitude}
+    %% - contact: {phone, email, website_url, social_media}
+    %% - hours: {opening_hours, special_hours}
+    %%
+    %% Vertical-Specific Modules (lens-triggered):
+    %% - sports_facility: {court_count, court_types, indoor_outdoor, equipment_rental}
+    %% - fitness_facility: {class_schedule, equipment_list, membership_tiers}
+    %% - hospitality_venue: {cuisine_types, dietary_options, price_range, booking_required}
+    %% - retail_store: {product_categories, brands_carried, payment_methods}
+    %%
+    %% Module Trigger Logic (from lens.yaml):
+    %% - IF canonical_activities contains 'tennis' → add sports_facility module
+    %% - IF canonical_place_types contains 'restaurant' → add hospitality_venue module
+    %% - IF canonical_roles contains 'sells_goods' → add retail_store module
+    %%
+    %% ============================================================
 ```
-Query → Orchestrator → Connectors
-                           ↓
-                    RawIngestion (immutable)
-                           ↓
-               Source Extractors (Phase 1)
-                           ↓
-                  ExtractedEntity (immutable, primitives only)
-                           ↓
-            Lens Application (Phase 2: canonical dimensions + modules)
-                           ↓
-              Deduplication + Deterministic Merge
-                           ↓
-                 Finalization (slug generation)
-                           ↓
-                    Entity (idempotent upsert)
-```
 
-**Key Constraints:**
-- `RawIngestion.hash` enables content-based deduplication at ingestion level
-- `ExtractedEntity.raw_ingestion_id` preserves traceability to source artifacts
-- `Entity.slug` provides stable, human-readable identifiers for frontend routing
-- `Entity.external_ids` enables cross-source entity resolution during deduplication
-- GIN indexes on canonical dimension arrays support efficient containment queries (`WHERE 'tennis' = ANY(canonical_activities)`)
+### Core Fields
 
-## Universal Schema Fields
+#### Identification
+- **`id`** (Primary Key): Auto-generated CUID
+- **`entity_name`**: Official name (required, indexed)
+- **`slug`**: URL-safe identifier (unique, auto-generated from entity_name)
+- **`entity_class`**: Universal classification (`place`, `person`, `organization`, `event`, `thing`)
 
-The engine defines a fixed set of primitive fields that apply to all entities regardless of vertical. These fields represent the universal structure through which all domain data flows.
+#### Content
+- **`summary`**: Short description (1-2 sentences)
+- **`description`**: Long-form aggregated evidence from multiple sources
 
-**Naming Authority:** Field names defined in `engine/config/schemas/entity.yaml` are canonical and immutable across the entire pipeline. Extractors emit these exact names, merge logic consumes these exact names, and finalization persists these exact names. No translation layers exist.
+#### Classification
+- **`raw_categories`**: Uncontrolled observational labels (NOT indexed, NOT used for filtering)
+  - Examples: `["Padel Club", "Sports Centre", "Fitness"]`
+  - Used by Lens mapping rules to populate canonical dimensions
 
-### Identity Fields
+#### Location
+- **`street_address`**: Full address
+- **`city`**: City/town (indexed)
+- **`postcode`**: UK postcode format (indexed)
+- **`country`**: Country name
+- **`latitude`** / **`longitude`**: WGS84 decimal degrees
 
-**`entity_name`** (String, required)
-- Official name of the entity
-- Primary human-readable identifier
-- Used in slug generation and search ranking
-- Validators: non-empty
-- Example: `"The Padel Club Edinburgh"`
+#### Contact
+- **`phone`**: E.164 format (e.g., `+441315397071`)
+- **`email`**: Public email address
+- **`website_url`**: Official website
 
-**`entity_class`** (String, engine-populated)
-- Universal classification: `place | person | organization | event | thing`
-- Determined by `entity_classifier.py` using deterministic rules based on geographic anchoring (coordinates, street address, city, postcode)
-- Never populated by extractors or LLMs
-- Opaque to domain logic—engine uses this for structural routing only
-- Example: `"place"`
+#### Social Media
+- **`instagram_url`**, **`facebook_url`**, **`twitter_url`**, **`linkedin_url`**
 
-**`slug`** (String, unique, engine-generated)
-- URL-safe stable identifier derived from `entity_name`
-- Auto-generated by `SlugGenerator` during finalization
-- Used for frontend routing and canonical URLs
-- Example: `"padel-club-edinburgh"`
+#### Operating Hours
+- **`opening_hours`**: JSONB structure
+  ```json
+  {
+    "monday": {"open": "05:30", "close": "22:00"},
+    "tuesday": {"open": "05:30", "close": "22:00"},
+    "sunday": "CLOSED"
+  }
+  ```
 
-### Geographic Fields
+#### Provenance and Metadata
+- **`source_info`**: JSONB — URLs, extraction method, timestamps, notes
+- **`field_confidence`**: JSONB — Per-field confidence scores (0.0-1.0)
+- **`external_ids`**: JSONB — External system identifiers (e.g., `{"google": "ChIJ...", "osm": "123456"}`)
+- **`createdAt`** / **`updatedAt`**: Timestamps
 
-**`latitude`** (Float, nullable)
-- WGS84 decimal degrees
-- Populated by source extractors from connector payloads
-- Used for classification (any geo anchor → likely `place`) and geo queries
-- Example: `55.953251`
-
-**`longitude`** (Float, nullable)
-- WGS84 decimal degrees
-- Must be paired with latitude for valid geocoding
-- Example: `-3.188267`
-
-**`street_address`** (String, nullable)
-- Full street address including building number, street name
-- Does not include city or postcode (separate fields)
-- Example: `"12 Lochrin Place"`
-
-**`city`** (String, nullable, indexed)
-- City or town name
-- Used for geographic filtering and classification
-- Example: `"Edinburgh"`
-
-**`postcode`** (String, nullable, indexed)
-- Full UK postcode with correct spacing
-- Validators: `postcode_uk` (e.g., `"EH3 9QX"`)
-- Example: `"EH3 9QX"`
-
-**`country`** (String, nullable)
-- Country name
-- Currently UK-focused but schema supports international expansion
-- Example: `"United Kingdom"`
-
-### Contact Fields
-
-**`phone`** (String, nullable)
-- Primary contact phone number
-- Validators: `e164_phone` (must include country code)
-- Format: E.164 UK standard (e.g., `"+441315397071"`)
-
-**`email`** (String, nullable)
-- Primary public email address
-- Example: `"info@padelclub.co.uk"`
-
-**`website_url`** (String, nullable)
-- Official website URL
-- Validators: `url_http` (must be valid HTTP/HTTPS URL)
-- Example: `"https://www.padelclub.co.uk"`
-
-### Social Media URLs
-
-**`instagram_url`** (String, nullable)
-- Instagram profile URL or handle
-- Example: `"https://instagram.com/padelclub"`
-
-**`facebook_url`** (String, nullable)
-- Facebook page URL
-
-**`twitter_url`** (String, nullable)
-- Twitter/X profile URL or handle
-
-**`linkedin_url`** (String, nullable)
-- LinkedIn company page URL
-
-### Content Fields
-
-**`summary`** (String, nullable)
-- Short overall description summarizing all gathered data
-- Typically 1-3 sentences
-- Used for search snippets and card previews
-- Example: `"Edinburgh's premier indoor padel facility with 6 courts, coaching programs, and a pro shop."`
-
-**`description`** (String, nullable)
-- Long-form aggregated evidence from multiple sources
-- May include reviews, snippets, editorial summaries
-- Used for entity detail pages
-
-### Legacy Naming Patterns (FORBIDDEN)
-
-The following naming patterns are **permanently forbidden** and will cause validation failures:
-
-- **`location_*`** (e.g., `location_lat`, `location_lng`, `location_address`) → Use `latitude`, `longitude`, `street_address`
-- **`contact_*`** (e.g., `contact_phone`, `contact_email`) → Use `phone`, `email`
-- **`address_*`** (e.g., `address_street`, `address_city`) → Use `street_address`, `city`
-- **Ambiguous aliases** (e.g., `website` instead of `website_url`, `name` instead of `entity_name`)
-
-**Enforcement:** Legacy detection runs during extraction validation. In Phase 1 (migration), legacy patterns emit warnings. In Phase 2 (enforcement), they trigger fatal errors and block execution.
-
-**Rationale:** Permanent translation layers introduce hidden coupling, ambiguity, and long-term technical debt. The universal schema is the single source of truth across all stages.
-
-### Field Ownership by Stage
-
-**Source Extractors (Phase 1):**
-- Emit ONLY universal primitives listed above
-- NEVER emit `canonical_*` dimensions or `modules` fields
-- Example valid output: `{entity_name, latitude, longitude, street_address, phone, website_url}`
-
-**Lens Application (Phase 2):**
-- Consumes universal primitives
-- Populates `canonical_activities`, `canonical_roles`, `canonical_place_types`, `canonical_access`
-- Populates `modules` using lens-defined field rules
-
-**Finalization:**
-- Consumes merged primitives and canonical dimensions
-- Generates `slug` from `entity_name`
-- Persists to `Entity` table using **only canonical keys** (no legacy naming)
-
-### Validation Strategy
-
-Universal schema validation occurs at three enforcement points:
-
-1. **Extractor Output Validation** — Ensures extractors emit only permitted primitive fields and use exact canonical names
-2. **Merge Contract Validation** — Verifies merge logic operates on canonical field names without translation
-3. **Finalization Validation** — Confirms slug generation and upsert use canonical schema keys only
-
-**Permissive Mode (Phase 1):** Warn on legacy naming, allow execution to continue for migration
-**Strict Mode (Phase 2):** Treat legacy naming as fatal error, block execution
+---
 
 ## Canonical Dimensions
 
-The engine maintains exactly four canonical dimension arrays that provide queryable structure across all verticals. These dimensions are defined in `engine/config/schemas/entity.yaml` and represent the universal structural contract through which domain-specific vocabulary flows.
+### Purpose
 
-**Constitutional Status:** Adding, removing, or redefining canonical dimensions requires explicit architectural review and amendment to `docs/target/system-vision.md` (§5.2). The current four-dimension model is architecturally locked.
+Canonical dimensions are **PostgreSQL TEXT[] arrays with GIN indexes** that enable fast faceted filtering without requiring domain-specific columns. They store multi-valued dimension values as native PostgreSQL arrays.
 
-### The Four Dimensions
+**Key Principle:** Values are **completely opaque to the engine**. The engine stores and indexes these arrays but assigns no meaning to their contents. All semantic interpretation is provided exclusively by the Lens layer via `canonical_values` and `mapping_rules` in `lens.yaml`.
 
-**`canonical_activities`** (TEXT[])
-- What activities occur at or are provided by the entity
-- Examples (opaque to engine): `["tennis", "padel", "squash"]`, `["wine_tasting", "vineyard_tours"]`
-- Lens interpretation: Maps raw categories/descriptions to standardized activity identifiers
-- Used for: Activity-based filtering, "Find places offering [activity]" queries
+**Technical Implementation:**
+- Storage: Native PostgreSQL `TEXT[]` type
+- Indexing: GIN (Generalized Inverted Index) for containment queries
+- Engine Behavior: Stores, indexes, and queries arrays without interpreting values
+- Lens Responsibility: Defines all vocabulary, display names, icons, and semantic meaning
 
-**`canonical_roles`** (TEXT[])
-- What functional roles the entity serves in its domain
-- Examples (opaque to engine): `["coaching_provider", "facility_operator"]`, `["retailer", "venue"]`
-- Lens interpretation: Determines entity purpose and service model
-- Used for: Internal faceting (not typically shown in UI), query routing, module triggers
+### The Four Canonical Dimensions
 
-**`canonical_place_types`** (TEXT[])
-- Physical infrastructure classification (applicable to `entity_class: place` only)
-- Examples (opaque to engine): `["sports_club", "gym"]`, `["winery", "tasting_room"]`
-- Lens interpretation: Maps venue types to standardized place classifications
-- Used for: Venue-type filtering, "Find [type] near me" queries
+#### 1. `canonical_activities` (TEXT[])
+Activities provided or supported by the entity.
 
-**`canonical_access`** (TEXT[])
-- How users engage with or access the entity
-- Examples (opaque to engine): `["membership", "pay_and_play"]`, `["free", "ticketed"]`
-- Lens interpretation: Business model and accessibility constraints
-- Used for: Access-model filtering, "Show only [access type]" queries
+**Examples:**
+- `["tennis", "padel", "squash"]` (sports facility)
+- `["wine_tasting", "vineyard_tours"]` (winery)
+- `["yoga", "pilates", "strength_training"]` (fitness studio)
 
-### Storage Guarantees
-
-**Postgres Implementation:**
-```sql
-canonical_activities     TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[]
-canonical_roles          TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[]
-canonical_place_types    TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[]
-canonical_access         TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[]
-
-CREATE INDEX idx_entity_activities USING GIN (canonical_activities);
-CREATE INDEX idx_entity_roles USING GIN (canonical_roles);
-CREATE INDEX idx_entity_place_types USING GIN (canonical_place_types);
-CREATE INDEX idx_entity_access USING GIN (canonical_access);
-```
-
-**Engine Guarantees:**
-1. **Never Null** — Arrays are always present (empty array `[]` indicates no observed values)
-2. **No Duplicates** — Merge logic deduplicates values before persistence
-3. **Deterministic Ordering** — Values are lexicographically sorted for stable comparison
-4. **Opaque Values** — Engine never interprets semantic meaning of identifiers
-5. **GIN Indexing** — Efficient containment queries (`@>`, `&&` operators) for faceted search
-
-### Population Contract (Lens-Driven)
-
-**Phase 1 (Source Extraction):**
-- Extractors MUST NOT populate canonical dimensions
-- Extractors emit only `raw_categories` and other raw observations
-- Violation of this contract is an architectural defect (architecture.md §4.2)
-
-**Phase 2 (Lens Application):**
-- Generic lens interpreter applies mapping rules to raw observations
-- Rules match patterns in evidence surfaces (entity_name, description, raw_categories, summary, street_address)
-- Successful matches append values to appropriate dimension arrays
-- Example rule: `pattern: "(?i)tennis|racket sports" → canonical_activities += ["tennis"]`
-
-**Phase 3 (Deterministic Merge):**
-- Union all values from contributing sources
-- Deduplicate identical values
-- Lexicographically sort for deterministic output
-- No weighting or ranking (all sources contribute equally after deduplication)
-
-### Semantic Interpretation (Lens Responsibility)
-
-The engine treats dimension values as opaque strings. All semantic meaning lives in lens canonical registries:
-
+**Lens Mapping (from `lens.yaml`):**
 ```yaml
-# Lens YAML: Canonical registry provides display metadata
+mapping_rules:
+  - pattern: "(?i)tennis|racket sports"
+    dimension: canonical_activities
+    value: tennis
+    confidence: 0.95
+
 canonical_values:
   tennis:
     display_name: "Tennis"
-    description: "Tennis courts and programs"
     seo_slug: "tennis"
     icon: "racquet"
-    related_activities: ["padel", "squash"]
 ```
 
-**Registry Authority:** All values in canonical dimensions MUST exist in the lens canonical registry. Orphaned references fail lens validation at bootstrap (architecture.md §3.3).
+#### 2. `canonical_roles` (TEXT[])
+Functional roles this entity plays (internal-only facet, not shown in UI by default).
 
-### Query Patterns
+**Examples:**
+- `["provides_facility"]` (venue with courts/equipment)
+- `["provides_instruction"]` (coaching service)
+- `["sells_goods"]` (retail store)
+- `["membership_org"]` (sports club, association)
+- `["produces_goods"]` (manufacturer, winery)
 
-**Containment (Has Activity):**
+**Purpose:** Query optimization and module triggering logic.
+
+#### 3. `canonical_place_types` (TEXT[])
+Physical place classifications (applicable to `entity_class="place"` only).
+
+**Examples:**
+- `["sports_centre"]` (multi-sport facility)
+- `["private_club"]` (members-only club)
+- `["restaurant"]` (hospitality venue)
+- `["retail_store"]` (shop)
+- `["winery"]` (wine production facility)
+
+**Lens Mapping:**
+```yaml
+mapping_rules:
+  - pattern: "(?i)sports (centre|center)|leisure centre"
+    dimension: canonical_place_types
+    value: sports_centre
+    confidence: 0.90
+```
+
+#### 4. `canonical_access` (TEXT[])
+Access requirements and models.
+
+**Examples:**
+- `["membership"]` (members-only facility)
+- `["pay_and_play"]` (public access, pay per session)
+- `["free"]` (public parks, open spaces)
+- `["private_club"]` (invitation/application required)
+
+### Database Implementation
+
+**Postgres Type:** `TEXT[]` (native array type)
+
+**Index Type:** GIN (Generalized Inverted Index) for fast containment queries
+
+**Example Prisma Schema:**
+```prisma
+model Entity {
+  canonical_activities   String[]   @default([])
+  canonical_roles        String[]   @default([])
+  canonical_place_types  String[]   @default([])
+  canonical_access       String[]   @default([])
+}
+```
+
+**Example Query (Prisma):**
+```typescript
+// Find all entities that provide tennis or padel
+const entities = await prisma.entity.findMany({
+  where: {
+    canonical_activities: {
+      hasSome: ["tennis", "padel"]
+    }
+  }
+});
+```
+
+**Example Query (SQL):**
 ```sql
-SELECT * FROM Entity WHERE canonical_activities @> ARRAY['tennis'];
+-- Find entities with tennis AND padel
+SELECT * FROM "Entity"
+WHERE canonical_activities @> ARRAY['tennis', 'padel'];
+
+-- Find entities with tennis OR padel
+SELECT * FROM "Entity"
+WHERE canonical_activities && ARRAY['tennis', 'padel'];
 ```
 
-**Overlap (Has Any Of):**
-```sql
-SELECT * FROM Entity WHERE canonical_activities && ARRAY['tennis', 'padel', 'squash'];
-```
+### Extraction Contract: Who Populates Canonical Dimensions?
 
-**Multi-Dimension Filter:**
-```sql
-SELECT * FROM Entity
-WHERE canonical_activities @> ARRAY['tennis']
-  AND canonical_access && ARRAY['pay_and_play', 'membership'];
-```
+**Phase 1 (Extractors):**
+- Return ONLY schema primitives + raw observations
+- MUST NOT emit `canonical_*` fields
 
-GIN indexes make these queries efficient even at scale (millions of entities).
+**Phase 2 (Lens Application):**
+- Populate canonical dimensions using Lens `mapping_rules`
+- Apply pattern matching to `raw_categories` and raw text fields
+- Example:
+  ```yaml
+  mapping_rules:
+    - pattern: "(?i)tennis|racket sports"
+      dimension: canonical_activities
+      value: tennis
+      confidence: 0.95
+  ```
 
-### Validation and Enforcement
+**Current Implementation Status:**
+⚠️ Lens Application (Phase 2) is **partially implemented**. Extractors currently don't populate canonical dimensions from lens mapping rules. See `docs/target/architecture.md` Section 4.2 (Extraction Contract) for full pipeline specification.
 
-**Bootstrap Validation:**
-- Lens loading validates all mapping rule outputs exist in canonical registry
-- Missing registry entries abort execution before any ingestion begins
+---
 
-**Runtime Validation:**
-- Extraction boundary tests ensure extractors never emit canonical dimensions
-- Merge validation confirms union/deduplicate/sort semantics
+## Modules System
 
-**Database Constraints:**
-- NOT NULL with DEFAULT ensures arrays never become null
-- No uniqueness constraint on array contents (union merge strategy permits duplicates across sources)
+### Purpose
 
-## Modules Storage
+Modules provide **namespaced structured data** for vertical-specific attributes that don't fit the universal schema. They are stored as JSONB in the `modules` field.
 
-Modules store structured domain-specific attributes that don't belong in the universal schema. The engine enforces namespaced JSONB structure while treating module semantics as opaque lens-owned data.
+**Key Principle:** Modules are triggered by Lens rules based on `entity_class` and canonical dimension values.
 
-**Storage Format:**
-```sql
-modules JSONB DEFAULT '{}'::JSONB
-```
+### Module Structure
 
-**Namespaced Structure:**
 ```json
 {
-  "sports_facility": {
-    "tennis_courts": {
-      "total": 12,
-      "indoor": 8,
-      "outdoor": 4,
-      "surfaces": ["hard_court", "clay"]
-    },
-    "coaching_available": true,
-    "equipment_rental": true
+  "core": {
+    "entity_id": "cm5xyz...",
+    "entity_name": "The Padel Club Edinburgh",
+    "slug": "padel-club-edinburgh"
   },
-  "amenities": {
-    "parking": {
-      "available": true,
-      "spaces": 50,
-      "cost": "free"
-    },
-    "facilities": ["changing_rooms", "showers", "cafe"]
+  "location": {
+    "street_address": "123 Example St",
+    "city": "Edinburgh",
+    "postcode": "EH1 2AB",
+    "latitude": 55.9533,
+    "longitude": -3.1883
+  },
+  "contact": {
+    "phone": "+441315551234",
+    "email": "info@padelclub.com",
+    "website_url": "https://padelclub.com"
+  },
+  "sports_facility": {
+    "court_count": 4,
+    "court_types": ["indoor_padel", "outdoor_padel"],
+    "equipment_rental": true,
+    "coaching_available": true
   }
 }
 ```
 
-**Universal Modules (Always Available):**
-- `core` — Entity identity and metadata
-- `location` — Geographic and address details
-- `contact` — Contact information and social links
-- `hours` — Opening hours and availability
-- `amenities` — General facility attributes
-- `time_range` — Temporal constraints for events
+### Universal Modules (All Entity Types)
 
-**Domain Modules (Lens-Defined):**
-- `sports_facility` — Courts, fields, equipment (sports lens)
-- `fitness_facility` — Classes, trainers, equipment (fitness lens)
-- `wine_attributes` — Varietals, vintage, tasting notes (wine lens)
+These modules are always present:
 
-**Module Attachment (Trigger-Driven):**
+1. **`core`**: `{entity_id, entity_name, slug}`
+2. **`location`**: `{street_address, city, postcode, latitude, longitude}`
+3. **`contact`**: `{phone, email, website_url, social_media}`
+4. **`hours`**: `{opening_hours, special_hours}`
 
-Lenses define module triggers that conditionally attach modules based on entity classification and canonical dimensions:
+### Vertical-Specific Modules (Lens-Triggered)
+
+These modules are added based on Lens `module_triggers` rules:
+
+#### `sports_facility`
+**Triggered When:** `canonical_activities` contains sports-related values (e.g., `tennis`, `padel`, `squash`)
+
+**Fields:**
+```json
+{
+  "court_count": 4,
+  "court_types": ["indoor_padel", "outdoor_padel"],
+  "indoor_outdoor": "both",
+  "equipment_rental": true,
+  "coaching_available": true,
+  "membership_required": false,
+  "booking_system": "https://booking.example.com"
+}
+```
+
+#### `fitness_facility`
+**Triggered When:** `canonical_activities` contains fitness-related values (e.g., `yoga`, `pilates`, `strength_training`)
+
+**Fields:**
+```json
+{
+  "class_schedule": "https://classes.example.com",
+  "equipment_list": ["free_weights", "cardio_machines", "yoga_mats"],
+  "membership_tiers": ["basic", "premium", "vip"],
+  "personal_training": true
+}
+```
+
+#### `hospitality_venue`
+**Triggered When:** `canonical_place_types` contains `restaurant`, `cafe`, `bar`
+
+**Fields:**
+```json
+{
+  "cuisine_types": ["italian", "mediterranean"],
+  "dietary_options": ["vegetarian", "vegan", "gluten_free"],
+  "price_range": "$$",
+  "booking_required": true,
+  "outdoor_seating": true
+}
+```
+
+#### `retail_store`
+**Triggered When:** `canonical_roles` contains `sells_goods`
+
+**Fields:**
+```json
+{
+  "product_categories": ["sports_equipment", "clothing"],
+  "brands_carried": ["Wilson", "Head", "Babolat"],
+  "payment_methods": ["cash", "card", "contactless"],
+  "online_shop": "https://shop.example.com"
+}
+```
+
+### Module Trigger Logic (from `lens.yaml`)
 
 ```yaml
 module_triggers:
   - when:
-      entity_class: place
-      canonical_activities: [tennis, padel]
+      dimension: canonical_activities
+      values: [tennis, padel, squash]
     add_modules: [sports_facility]
+
+  - when:
+      dimension: canonical_place_types
+      values: [restaurant, cafe, bar]
+    add_modules: [hospitality_venue]
+
+  - when:
+      dimension: canonical_roles
+      values: [sells_goods]
+    add_modules: [retail_store]
 ```
 
-**Population Contract:**
+### Database Implementation
 
-Modules are populated exclusively by Phase 2 lens application using declarative field rules. Each rule specifies a target JSON path, source fields, and extraction strategy (numeric parser, regex capture, LLM structured extraction).
+**Postgres Type:** `JSONB` (binary JSON for efficient indexing)
 
-**Engine Guarantees:**
-- Namespace isolation prevents field collisions across modules
-- Structural validation ensures valid JSONB at persistence time
-- No semantic interpretation of module field names or values
-- Merge strategy: recursive deep merge with trust-based conflict resolution
-
-## Indexes and Performance
-
-The database schema employs strategic indexing to support the three primary query patterns: identity lookup, geographic proximity, and multi-dimensional faceting.
-
-**Primary Indexes:**
-
-```sql
--- Identity and routing
-CREATE UNIQUE INDEX idx_entity_slug ON Entity(slug);
-CREATE INDEX idx_entity_name ON Entity(entity_name);
-CREATE INDEX idx_entity_class ON Entity(entity_class);
-
--- Geographic queries
-CREATE INDEX idx_entity_location ON Entity(latitude, longitude) WHERE latitude IS NOT NULL;
-CREATE INDEX idx_entity_city ON Entity(city);
-CREATE INDEX idx_entity_postcode ON Entity(postcode);
-
--- Canonical dimensions (GIN for array containment)
-CREATE INDEX idx_entity_activities USING GIN (canonical_activities);
-CREATE INDEX idx_entity_roles USING GIN (canonical_roles);
-CREATE INDEX idx_entity_place_types USING GIN (canonical_place_types);
-CREATE INDEX idx_entity_access USING GIN (canonical_access);
-
--- Provenance and lineage
-CREATE INDEX idx_raw_ingestion_source ON RawIngestion(source);
-CREATE INDEX idx_raw_ingestion_hash ON RawIngestion(hash);
-CREATE INDEX idx_extracted_entity_raw_id ON ExtractedEntity(raw_ingestion_id);
-CREATE INDEX idx_extracted_entity_hash ON ExtractedEntity(extraction_hash);
-```
-
-**GIN Index Strategy:**
-
-GIN (Generalized Inverted Index) indexes enable efficient containment queries on TEXT[] arrays:
-
-- `@>` operator (contains): "Find entities offering tennis" → `canonical_activities @> ARRAY['tennis']`
-- `&&` operator (overlaps): "Find entities offering any racket sport" → `canonical_activities && ARRAY['tennis', 'padel', 'squash']`
-- Time complexity: O(log n) for containment checks vs O(n) table scan
-- Space overhead: ~30-50% additional storage per indexed array (acceptable for query performance gains)
-
-**Geographic Index Strategy:**
-
-Composite (latitude, longitude) index with partial `WHERE latitude IS NOT NULL` clause:
-
-- Supports bounding box queries for "near me" searches
-- Avoids indexing non-place entities (person, organization) that lack coordinates
-- PostGIS extension not required for simple proximity queries (Haversine formula in application layer)
-
-**JSONB Module Indexing (Future):**
-
-Currently modules are unindexed JSONB. Future optimization may add:
-
-```sql
-CREATE INDEX idx_modules_gin ON Entity USING GIN (modules jsonb_path_ops);
-```
-
-This enables efficient existence checks (`modules @> '{"sports_facility": {}}'`) but adds write overhead. Defer until query patterns demonstrate need.
-
-**Query Performance Targets:**
-
-- Identity lookup (by slug): <5ms (unique index, single row)
-- City filter: <50ms (B-tree index, typically <10k rows per city)
-- Single dimension filter: <100ms (GIN index, typically <5k matching entities)
-- Multi-dimension filter (2-3 dimensions): <200ms (GIN index intersection)
-- Geographic proximity (10km radius): <300ms (composite index + Haversine calculation)
-
-**Deduplication Hash Indexes:**
-
-Hash-based deduplication at ingestion and extraction stages prevents duplicate work:
-
-- `RawIngestion.hash` — Content hash of raw payload (prevents re-ingesting identical API responses)
-- `ExtractedEntity.extraction_hash` — Deterministic hash of extraction output (detects when re-extraction would produce identical results)
-
-Both indexes support idempotent replay: re-running same query skips duplicate processing while allowing intentional refresh operations.
-
-**Monitoring Strategy:**
-
-Track slow query log for queries >200ms. Common anti-patterns:
-
-- Full table scans on Entity (missing WHERE clause on indexed field)
-- Unindexed JSONB traversal (`modules->>'sports_facility'` without GIN index)
-- Geographic queries without composite index (separate latitude/longitude filters)
-
-## Provenance Tracking
-
-Every entity retains explicit provenance metadata that enables traceability, debugging, trust evaluation, and incremental enrichment strategies.
-
-**Provenance Fields:**
-
-```sql
-Entity {
-  source_info: JSONB              -- Contributing sources, URLs, timestamps
-  field_confidence: JSONB         -- Per-field confidence scores
-  external_ids: JSONB             -- Source-native identifiers
+**Example Prisma Schema:**
+```prisma
+model Entity {
+  modules   Json  // JSONB in PostgreSQL
 }
 ```
 
-**Source Info Structure:**
-```json
-{
-  "contributors": ["serper", "google_places", "sport_scotland"],
-  "primary_source": "google_places",
-  "urls": {
-    "serper": "https://google.com/search?q=...",
-    "google_places": "place_id:ChIJ..."
+**Example Query (Prisma):**
+```typescript
+// Find entities with sports_facility module
+const entities = await prisma.entity.findMany({
+  where: {
+    modules: {
+      path: ['sports_facility'],
+      not: Prisma.JsonNull
+    }
+  }
+});
+
+// Find entities with 4+ courts
+const entities = await prisma.entity.findMany({
+  where: {
+    modules: {
+      path: ['sports_facility', 'court_count'],
+      gte: 4
+    }
+  }
+});
+```
+
+**Example Query (SQL):**
+```sql
+-- Find entities with sports_facility module
+SELECT * FROM "Entity"
+WHERE modules ? 'sports_facility';
+
+-- Find entities with 4+ courts
+SELECT * FROM "Entity"
+WHERE (modules->'sports_facility'->>'court_count')::int >= 4;
+```
+
+---
+
+## Pipeline Tables
+
+### Data Flow Overview
+
+```
+Query
+  ↓
+OrchestrationRun (tracks query execution)
+  ↓
+RawIngestion (stores raw JSON from connectors)
+  ↓
+ExtractedEntity (structured extraction output)
+  ↓
+Entity (final published record)
+```
+
+### OrchestrationRun
+
+Tracks multi-source query execution.
+
+**Fields:**
+- `id` (PK): Auto-generated CUID
+- `query`: Original user query (e.g., "padel courts in Edinburgh")
+- `ingestion_mode`: `discover_many`, `verify_one`, `enrich_existing`
+- `status`: `in_progress`, `completed`, `failed`
+- `candidates_found`: Number of entities discovered
+- `accepted_entities`: Number of entities persisted to `Entity` table
+- `budget_spent_usd`: Cost tracking (connector API costs + LLM costs)
+- `metadata_json`: Additional orchestration metadata (connector timing, errors)
+- `createdAt` / `updatedAt`: Timestamps
+
+**Relationships:**
+- `OrchestrationRun` 1→N `RawIngestion`
+
+### RawIngestion
+
+Stores raw JSON data from connectors (Serper, GooglePlaces, OSM, etc.).
+
+**Fields:**
+- `id` (PK): Auto-generated CUID
+- `source`: Connector name (e.g., `serper`, `google_places`, `osm`)
+- `source_url`: Original URL or query that generated this data
+- `file_path`: Path to raw JSON file (`engine/data/raw/<source>/<timestamp>_<id>.json`)
+- `status`: `success`, `failed`, `pending`
+- `hash`: Content hash for deduplication (prevents duplicate ingestion)
+- `metadata_json`: Additional metadata (API rate limits, request timing)
+- `orchestration_run_id` (FK): Link to parent `OrchestrationRun` (nullable for backward compatibility)
+- `ingested_at`: Ingestion timestamp
+
+**Relationships:**
+- `RawIngestion` N→1 `OrchestrationRun`
+- `RawIngestion` 1→N `ExtractedEntity`
+- `RawIngestion` 1→N `FailedExtraction`
+
+**Deduplication:**
+Raw ingestion records are deduplicated by content hash. If the same data is ingested twice (e.g., same query re-run), the existing `RawIngestion` record is reused.
+
+### ExtractedEntity
+
+Structured extraction output from raw ingestion data.
+
+**Fields:**
+- `id` (PK): Auto-generated CUID
+- `raw_ingestion_id` (FK): Link to source `RawIngestion`
+- `source`: Connector name (redundant with `RawIngestion.source` for query optimization)
+- `entity_class`: Universal classification (`place`, `person`, `organization`, `event`, `thing`)
+- `attributes`: JSON string containing structured attributes (e.g., `{"entity_name": "...", "street_address": "..."}`)
+- `discovered_attributes`: JSON string containing extra attributes not in core schema
+- `external_ids`: JSON string containing external system IDs (e.g., `{"google": "ChIJ...", "osm": "123456"}`)
+- `extraction_hash`: Content hash for deduplication (detects duplicate entities from different sources)
+- `model_used`: LLM model identifier if LLM extraction was used (e.g., `claude-sonnet-4.5-20250929`)
+- `createdAt` / `updatedAt`: Timestamps
+
+**Relationships:**
+- `ExtractedEntity` N→1 `RawIngestion`
+- `ExtractedEntity` N→1 `Entity` (via merge/finalization)
+
+**Extraction Contract:**
+- **Phase 1 (Extractors):** Populate `attributes`, `discovered_attributes`, `external_ids` with schema primitives only
+- **Phase 2 (Lens Application):** Canonical dimensions and modules are populated during finalization
+
+### Entity
+
+Final published record (see [Entity Model](#entity-model) section for full details).
+
+**Relationships:**
+- `Entity` N→1 `ExtractedEntity` (many-to-one: multiple `ExtractedEntity` records can merge into one `Entity`)
+- `Entity` 1→N `EntityRelationship` (source of relationships)
+- `Entity` 1→N `EntityRelationship` (target of relationships)
+- `Entity` 1→N `LensEntity` (membership in vertical lenses)
+- `Entity` 1→N `MergeConflict` (conflicts encountered during merge)
+
+### FailedExtraction
+
+Tracks extraction failures for retry and debugging.
+
+**Fields:**
+- `id` (PK): Auto-generated CUID
+- `raw_ingestion_id` (FK): Link to failed `RawIngestion`
+- `source`: Connector name
+- `error_message`: Error description (e.g., "LLM extraction timeout")
+- `error_details`: Detailed error trace (stack trace, LLM response)
+- `retry_count`: Number of retry attempts
+- `last_attempt_at`: Last retry timestamp
+- `createdAt` / `updatedAt`: Timestamps
+
+**Relationships:**
+- `FailedExtraction` N→1 `RawIngestion`
+
+### MergeConflict
+
+Tracks conflicts encountered during entity merge (when multiple sources provide conflicting values for the same field).
+
+**Fields:**
+- `id` (PK): Auto-generated CUID
+- `field_name`: Field with conflict (e.g., `phone`)
+- `conflicting_values`: JSON array of conflicting values (e.g., `["+441315551234", "+441315559999"]`)
+- `winner_source`: Source that won conflict resolution (e.g., `google_places`)
+- `winner_value`: Final value selected
+- `trust_difference`: Trust delta between sources (higher trust source wins)
+- `severity`: Conflict severity score (0.0-1.0)
+- `entity_id` (FK): Link to `Entity` (nullable)
+- `resolved`: Conflict resolution status (true if resolved by human/automated process)
+- `resolution_notes`: Human notes on resolution
+- `createdAt` / `updatedAt`: Timestamps
+
+**Relationships:**
+- `MergeConflict` N→1 `Entity`
+
+**Trust Hierarchy (defined in `engine/extraction/merging.py`):**
+```python
+TRUST_LEVELS = {
+    "google_places": 10,  # Highest trust
+    "osm": 8,
+    "sport_scotland": 7,
+    "serper": 5,
+    "tavily": 5,
+    "overpass": 4,
+}
+```
+
+### EntityRelationship
+
+Tracks relationships between entities (e.g., coach teaches at venue, player plays at club).
+
+**Fields:**
+- `id` (PK): Auto-generated CUID
+- `sourceEntityId` (FK): Source entity
+- `targetEntityId` (FK): Target entity
+- `type`: Relationship type (e.g., `teaches_at`, `plays_at`, `part_of`, `member_of`)
+- `confidence`: Confidence score (0.0-1.0)
+- `source`: Connector that discovered relationship
+- `createdAt` / `updatedAt`: Timestamps
+
+**Relationships:**
+- `EntityRelationship` N→1 `Entity` (source)
+- `EntityRelationship` N→1 `Entity` (target)
+
+**Example Queries:**
+```typescript
+// Find all coaches at a venue
+const coaches = await prisma.entityRelationship.findMany({
+  where: {
+    targetEntityId: venueId,
+    type: "teaches_at"
   },
-  "timestamps": {
-    "serper": "2026-02-07T10:30:00Z",
-    "google_places": "2026-02-07T10:31:15Z"
-  },
-  "method": "orchestrated_query"
+  include: {
+    sourceEntity: true
+  }
+});
+```
+
+### LensEntity
+
+Junction table tracking entity membership in vertical lenses.
+
+**Fields:**
+- `lensId` (PK1): Lens identifier (e.g., `edinburgh_finds_padel`)
+- `entityId` (PK2, FK): Entity identifier
+- `createdAt`: Membership timestamp
+
+**Relationships:**
+- `LensEntity` N→1 `Entity`
+
+**Purpose:** Allows entities to be members of multiple verticals (e.g., a sports center might be in both "Padel" and "Tennis" lenses).
+
+### ConnectorUsage
+
+Tracks daily connector API usage for rate limit monitoring.
+
+**Fields:**
+- `id` (PK): Auto-generated CUID
+- `connector_name`: Connector name (e.g., `serper`, `google_places`)
+- `date`: Date (PostgreSQL `DATE` type)
+- `request_count`: Number of requests made on this date
+- `createdAt` / `updatedAt`: Timestamps
+
+**Unique Constraint:** `(connector_name, date)`
+
+**Purpose:** Rate limit monitoring and budget tracking.
+
+---
+
+## Indexes & Performance
+
+### Primary Indexes
+
+#### Entity Table Indexes
+```prisma
+model Entity {
+  @@index([entity_name])        // Name search
+  @@index([entity_class])       // Filter by type
+  @@index([slug])               // Unique slug lookup (also @@unique)
+  @@index([city])               // Location filtering
+  @@index([postcode])           // Postcode search
+  @@index([latitude, longitude]) // Geospatial queries
+  @@index([createdAt])          // Recent entities
+  @@index([updatedAt])          // Recently modified
 }
 ```
 
-**Field Confidence Structure:**
-```json
-{
-  "entity_name": 0.95,
-  "latitude": 0.98,
-  "phone": 0.80,
-  "modules.sports_facility.tennis_courts.total": 0.85
-}
-```
+#### GIN Indexes for Canonical Dimensions
 
-**External IDs Structure:**
-```json
-{
-  "google_places": "ChIJN1t_tDeuEmsRUsoyG83frY4",
-  "osm": "node/123456789",
-  "sport_scotland": "facility/456"
-}
-```
+**Purpose:** Fast containment queries on TEXT[] arrays
 
-**Provenance Guarantees:**
-
-1. **Never Discarded** — Merge logic unions provenance from all contributing sources
-2. **Deterministic Primary Source** — Highest trust_tier source becomes primary (tie-break by priority then connector_id)
-3. **Field-Level Attribution** — Confidence scores enable auditing which source won for each field
-4. **Reproducibility** — Timestamps and method metadata enable exact replay of extraction logic
-
-**Use Cases:**
-
-- **Trust Evaluation** — Prefer fields from high-confidence sources during merge
-- **Conflict Resolution** — Audit why one value won over another in multi-source merge
-- **Incremental Refresh** — Re-fetch only from sources that haven't been updated recently
-- **Cross-Reference** — Link entities across external systems using external_ids
-- **Quality Monitoring** — Track which connectors produce low-confidence extractions
-
-## Entity Relationships
-
-The current schema deliberately avoids explicit foreign key relationships between entities, favoring a document-oriented model where each Entity is a self-contained canonical record.
-
-**No Explicit Relations (Current State):**
-
-The Entity table has no FK columns pointing to other entities. This design reflects the current system phase where entities are independently discovered and merged from multiple sources without relationship inference.
-
-**Implicit Relationships (Discovery Metadata):**
-
-Relationships exist implicitly through:
-
-1. **Shared External IDs** — Multiple entities with same `external_ids.google_places` indicate duplicate detection candidates
-2. **Geographic Proximity** — Entities with similar (latitude, longitude) may represent same real-world place
-3. **Name Similarity** — Normalized entity_name matching used in cross-source deduplication
-
-**Artifact Lineage (Explicit FKs):**
-
-The ingestion pipeline maintains explicit parent-child relationships:
-
+**Implementation:**
 ```sql
-ExtractedEntity.raw_ingestion_id → RawIngestion.id
-ExtractedEntity.orchestration_run_id → OrchestrationRun.id (future)
+-- Auto-generated by Prisma during migration
+CREATE INDEX "idx_canonical_activities_gin" ON "Entity" USING GIN (canonical_activities);
+CREATE INDEX "idx_canonical_roles_gin" ON "Entity" USING GIN (canonical_roles);
+CREATE INDEX "idx_canonical_place_types_gin" ON "Entity" USING GIN (canonical_place_types);
+CREATE INDEX "idx_canonical_access_gin" ON "Entity" USING GIN (canonical_access);
 ```
 
-These FKs enable tracing canonical entities back to raw source artifacts for debugging and provenance auditing.
+**Query Performance:**
+- **`@>` (contains):** O(log n) with GIN index
+- **`&&` (overlaps):** O(log n) with GIN index
+- **`hasSome` (Prisma):** Translates to `&&` operator
 
-**Future Relationship Model:**
+**Example Query Patterns:**
+```typescript
+// Fast: Uses GIN index
+const entities = await prisma.entity.findMany({
+  where: {
+    canonical_activities: {
+      hasSome: ["tennis", "padel"]
+    }
+  }
+});
 
-Phase 3+ may introduce explicit entity relationships:
+// Fast: Uses GIN index
+const entities = await prisma.entity.findMany({
+  where: {
+    canonical_activities: {
+      hasEvery: ["tennis", "coaching"]
+    }
+  }
+});
+```
 
-- **Organizational Hierarchy** — `Entity(coaching_provider)` → `Entity(parent_facility)`
-- **Event-Venue Links** — `Entity(event)` → `Entity(venue)`
-- **Person-Organization** — `Entity(coach)` → `Entity(coaching_company)`
+#### Pipeline Table Indexes
+```prisma
+model RawIngestion {
+  @@index([source])
+  @@index([status])
+  @@index([hash])              // Deduplication
+  @@index([ingested_at])       // Time-based queries
+  @@index([orchestration_run_id])
+  @@index([source, status])    // Composite for connector health
+  @@index([status, ingested_at]) // Composite for pending tasks
+}
 
-**Design Constraints for Future Relations:**
+model ExtractedEntity {
+  @@index([raw_ingestion_id])
+  @@index([source])
+  @@index([entity_class])
+  @@index([extraction_hash])   // Deduplication
+  @@index([source, entity_class]) // Composite for source analysis
+  @@index([createdAt])         // Time-based queries
+}
+```
 
-1. **Deterministic Resolution** — Relationship inference must be deterministic and reproducible
-2. **Provenance Retention** — Relationships must carry confidence scores and source attribution
-3. **Lens-Driven Semantics** — Relationship types defined in lens contracts, not hardcoded in engine
-4. **No Cascading Deletes** — Entity deletion must be explicit operator action, not automatic
+### Query Optimization Patterns
+
+#### 1. Faceted Filtering (Canonical Dimensions)
+```typescript
+// Combine multiple facets
+const entities = await prisma.entity.findMany({
+  where: {
+    canonical_activities: {
+      hasSome: ["tennis", "padel"]
+    },
+    canonical_access: {
+      hasSome: ["pay_and_play"]
+    },
+    city: "Edinburgh"
+  }
+});
+```
+
+#### 2. Geospatial Queries
+```typescript
+// Find entities within bounding box
+const entities = await prisma.entity.findMany({
+  where: {
+    latitude: {
+      gte: minLat,
+      lte: maxLat
+    },
+    longitude: {
+      gte: minLng,
+      lte: maxLng
+    }
+  }
+});
+```
+
+#### 3. Module-Based Queries
+```typescript
+// Find entities with specific module
+const entities = await prisma.entity.findMany({
+  where: {
+    modules: {
+      path: ['sports_facility'],
+      not: Prisma.JsonNull
+    }
+  }
+});
+```
+
+#### 4. Full-Text Search (Future)
+```sql
+-- Add tsvector column for full-text search
+ALTER TABLE "Entity" ADD COLUMN search_vector tsvector;
+
+-- Update search vector
+UPDATE "Entity" SET search_vector =
+  to_tsvector('english',
+    coalesce(entity_name, '') || ' ' ||
+    coalesce(summary, '') || ' ' ||
+    coalesce(description, '')
+  );
+
+-- Create GIN index
+CREATE INDEX "idx_entity_search_vector" ON "Entity" USING GIN (search_vector);
+```
+
+---
+
+## Schema Generation
+
+### Generation Workflow
+
+```
+1. Edit YAML schema
+   └─ engine/config/schemas/entity.yaml
+
+2. Validate YAML
+   └─ python -m engine.schema.generate --validate
+
+3. Generate Python FieldSpecs
+   └─ engine/schema/entity.py (DO NOT EDIT)
+
+4. Generate Prisma schema
+   └─ web/prisma/schema.prisma (DO NOT EDIT)
+   └─ engine/prisma/schema.prisma (DO NOT EDIT)
+
+5. Generate TypeScript interfaces
+   └─ web/lib/types/generated/entity.ts (DO NOT EDIT)
+
+6. Apply to database
+   └─ cd web && npx prisma db push (dev)
+   └─ cd web && npx prisma migrate dev (prod)
+```
+
+### YAML Schema Structure
+
+```yaml
+schema:
+  name: Entity
+  description: Base schema for all entity types
+  extends: null
+
+fields:
+  - name: entity_name
+    type: string
+    description: Official name of the entity
+    nullable: false
+    required: true
+    index: true
+    python:
+      validators:
+        - non_empty
+      extraction_required: true
+    prisma:
+      name: entity_name
+      type: "String"
+    search:
+      category: identity
+      keywords:
+        - name
+        - called
+```
+
+### Field Attributes
+
+#### Core Attributes
+- **`name`**: Field name (Python/Prisma compatible)
+- **`type`**: Data type (`string`, `integer`, `float`, `boolean`, `datetime`, `json`, `list[string]`)
+- **`description`**: Human-readable description
+- **`nullable`**: Allow NULL values
+- **`required`**: Required for LLM extraction
+- **`default`**: Default value
+- **`unique`**: Unique constraint
+- **`index`**: Create database index
+- **`primary_key`**: Primary key field
+- **`exclude`**: Exclude from LLM extraction (auto-generated or engine-populated)
+
+#### Python-Specific Attributes
+```yaml
+python:
+  validators:
+    - non_empty
+    - e164_phone
+    - postcode_uk
+    - url_http
+  extraction_required: true
+  extraction_name: website  # Different name in extraction
+  default: "default_factory=list"
+  sa_column: "Column(ARRAY(String))"  # SQLAlchemy override
+  type_annotation: "Dict[str, Any]"
+```
+
+#### Prisma-Specific Attributes
+```yaml
+prisma:
+  name: id  # Different name in Prisma
+  type: "String"
+  attributes:
+    - "@id"
+    - "@default(cuid())"
+    - "@unique"
+```
+
+#### Search Attributes
+```yaml
+search:
+  category: identity  # Category for LLM prompt grouping
+  keywords:
+    - name
+    - called
+    - named
+```
+
+### Regeneration Commands
+
+```bash
+# Full regeneration
+python -m engine.schema.generate --all
+
+# Validate only (no generation)
+python -m engine.schema.generate --validate
+
+# Generate specific targets
+python -m engine.schema.generate --python
+python -m engine.schema.generate --prisma
+python -m engine.schema.generate --typescript
+```
+
+### Generated File Markers
+
+All generated files contain a header to prevent manual editing:
+
+```python
+# ============================================================
+# GENERATED FILE - DO NOT EDIT
+# ============================================================
+# This file is automatically generated from YAML schemas.
+# Source: engine/config/schemas/entity.yaml
+# Generated: 2026-02-03 09:13:48
+```
+
+---
 
 ## Data Integrity
 
-The database enforces integrity through schema constraints, validation rules, and deterministic upsert contracts that prevent corruption while enabling idempotent evolution.
+### Determinism and Idempotency
 
-**Schema-Level Constraints:**
+**Invariant 4 (from `docs/target/system-vision.md`):**
+> Given the same inputs and lens contract, the system produces identical outputs.
 
-```sql
--- Identity uniqueness
-CONSTRAINT pk_entity PRIMARY KEY (id)
-CONSTRAINT unique_entity_slug UNIQUE (slug)
+**Database Implications:**
+1. **Content Hashing**: `RawIngestion.hash` and `ExtractedEntity.extraction_hash` prevent duplicate data
+2. **Deterministic Merge**: Trust-based conflict resolution (no randomness)
+3. **Idempotent Upserts**: Re-running same query updates existing entities (no duplicates)
 
--- Required fields
-CONSTRAINT entity_name_not_empty CHECK (entity_name <> '')
-CONSTRAINT entity_class_valid CHECK (entity_class IN ('place', 'person', 'organization', 'event', 'thing'))
+### Validation Layers
 
--- Array defaults prevent null
-canonical_activities TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[]
-canonical_roles TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[]
-
--- Referential integrity
-CONSTRAINT fk_extracted_raw FOREIGN KEY (raw_ingestion_id) REFERENCES RawIngestion(id)
+#### 1. YAML Schema Validation
+```bash
+python -m engine.schema.generate --validate
 ```
+- Ensures YAML schemas are well-formed
+- Validates field types and constraints
+- Checks for invalid Prisma/Python mappings
 
-**Application-Level Validation:**
-
-Python extractors and TypeScript frontend both validate against generated Pydantic/Zod schemas derived from `entity.yaml`. This three-tier validation (YAML → Python → Postgres) prevents invalid data from reaching the database.
-
-**Field Validators (Python):**
-- `phone` — E.164 format with country code
-- `postcode` — UK postcode format with space
-- `website_url` — Valid HTTP/HTTPS URL
-- `entity_name` — Non-empty string
-
-**Deterministic Upsert Contract:**
-
-The finalization stage uses `ON CONFLICT (slug) DO UPDATE` semantics:
-
+#### 2. Pydantic Validation (Python)
 ```python
-# Idempotent upsert ensures re-running same execution updates, not duplicates
-upsert_entity(
-    slug=generated_slug,
-    entity_name=merged.entity_name,
-    # ... all fields
+from engine.schema.entity import EntityFieldSpec
+
+# Pydantic validates at runtime
+entity = EntityFieldSpec(
+    entity_name="The Padel Club",
+    entity_class="place",
+    phone="+441315551234"  # Must be E.164 format
 )
 ```
 
-**Upsert Key Stability:** Slug generation is deterministic (same entity_name → same slug). This guarantees repeated executions converge to stable entity records rather than creating duplicates.
+#### 3. Prisma Validation (TypeScript)
+```typescript
+// Prisma validates at compile time
+await prisma.entity.create({
+  data: {
+    entity_name: "The Padel Club",
+    slug: "padel-club",  // Must be unique
+    entity_class: "place"
+  }
+});
+```
 
-**Integrity Violation Responses:**
+#### 4. Database Constraints
+```sql
+-- Unique constraints
+ALTER TABLE "Entity" ADD CONSTRAINT "Entity_slug_key" UNIQUE (slug);
 
-- **Duplicate slug collision** — Append numeric suffix (`padel-club-2`) deterministically
-- **Missing required field** — Fail extraction, log error, continue with partial entity data
-- **Invalid enum value** — Fail validation at extraction boundary, never reach database
-- **Constraint violation** — Abort transaction, surface diagnostic, require manual intervention
+-- Check constraints (future)
+ALTER TABLE "Entity" ADD CONSTRAINT "check_entity_class"
+  CHECK (entity_class IN ('place', 'person', 'organization', 'event', 'thing'));
+```
 
-**Immutability Guarantees:**
+### Provenance Tracking
 
-- `RawIngestion` records are write-once (no UPDATE queries)
-- `ExtractedEntity` records are write-once (no UPDATE queries)
-- `Entity` records are write-many via deterministic upsert only
+Every entity records its data lineage:
 
-**Audit Trail (Future):**
+```json
+{
+  "source_info": {
+    "primary_source": "google_places",
+    "contributing_sources": ["serper", "osm"],
+    "extraction_method": "llm",
+    "extraction_timestamp": "2026-02-08T10:30:00Z",
+    "urls": [
+      "https://maps.google.com/...",
+      "https://www.openstreetmap.org/..."
+    ]
+  },
+  "field_confidence": {
+    "entity_name": 1.0,
+    "street_address": 0.95,
+    "phone": 0.85
+  },
+  "external_ids": {
+    "google": "ChIJxyz...",
+    "osm": "123456",
+    "facebook": "padelclub"
+  }
+}
+```
 
-Currently no audit log of Entity changes. Phase 3+ may add:
-- `EntityHistory` table capturing snapshots before each upsert
-- Timestamp and lens_hash metadata for change attribution
+### Conflict Resolution
 
-## Migrations Strategy
+**Trust Hierarchy (from `engine/extraction/merging.py`):**
+```python
+TRUST_LEVELS = {
+    "google_places": 10,
+    "osm": 8,
+    "sport_scotland": 7,
+    "serper": 5,
+    "tavily": 5,
+    "overpass": 4,
+}
+```
 
-Schema evolution follows a staged validation approach that preserves backward compatibility while enabling deliberate architectural evolution.
+**Merge Rules:**
+1. **Higher trust wins** (e.g., `google_places` beats `serper`)
+2. **Missingness filtering** (don't overwrite real values with NULL)
+3. **Conflict logging** (all conflicts recorded in `MergeConflict` table)
 
-**Migration Philosophy:**
+**Example Conflict:**
+```json
+{
+  "field_name": "phone",
+  "conflicting_values": ["+441315551234", "+441315559999"],
+  "winner_source": "google_places",
+  "winner_value": "+441315551234",
+  "trust_difference": 5,
+  "severity": 0.8
+}
+```
 
-1. **Additive Changes Preferred** — New fields are nullable; removing fields requires explicit deprecation window
-2. **No Permanent Translation Layers** — Field renames require full pipeline migration, not runtime translation
-3. **Schema-First Evolution** — All changes originate in `entity.yaml`, never manual SQL or Prisma edits
-4. **Reproducible Rollouts** — Migrations are versioned, tested on fixtures, and deterministic
+---
 
-**Migration Workflow:**
+## Migrations
+
+### Development Workflow
 
 ```bash
-# 1. Edit canonical schema
+# 1. Edit YAML schema
 vim engine/config/schemas/entity.yaml
 
-# 2. Regenerate derived schemas
+# 2. Regenerate Prisma schema
 python -m engine.schema.generate --all
 
-# 3. Create Prisma migration
-cd web && npx prisma migrate dev --name add_new_field
+# 3. Push to development database (no migration files)
+cd web
+npx prisma db push
 
-# 4. Apply to production
+# 4. Verify in database
+npx prisma studio
+```
+
+### Production Workflow
+
+```bash
+# 1. Edit YAML schema
+vim engine/config/schemas/entity.yaml
+
+# 2. Regenerate Prisma schema
+python -m engine.schema.generate --all
+
+# 3. Create migration
+cd web
+npx prisma migrate dev --name add_canonical_dimensions
+
+# 4. Review migration SQL
+cat prisma/migrations/<timestamp>_add_canonical_dimensions/migration.sql
+
+# 5. Apply to production
 npx prisma migrate deploy
-
-# 5. Backfill existing entities if needed (rare)
-python -m engine.migrations.backfill_field --field new_field
 ```
 
-**Backward Compatibility Contract:**
+### Migration Best Practices
 
-- **Adding Fields** — Always nullable with sensible defaults; existing entities unaffected
-- **Removing Fields** — Deprecate first (mark as `deprecated: true` in YAML), remove after migration window
-- **Renaming Fields** — Treated as remove + add; requires full pipeline re-extraction or backfill script
-- **Changing Types** — Requires explicit migration script; never silent coercion
+#### 1. Always Create Migrations for Production
+```bash
+# ❌ BAD (production)
+npx prisma db push
 
-**Legacy Field Deprecation (Example):**
-
-The `location_*` → universal schema migration follows this pattern:
-
-Phase 1 (Warning): Extractors emit warnings when using legacy keys; finalization accepts both
-Phase 2 (Enforcement): Extractors fail validation on legacy keys; database rejects legacy columns
-
-**Testing Strategy:**
-
-All migrations must pass:
-1. Schema validation (`python -m engine.schema.generate --validate`)
-2. Prisma migration dry-run (`npx prisma migrate dev --create-only`)
-3. Fixture-based regression tests (ensure existing entities remain valid)
-4. Production snapshot test (sample 100 entities, verify no corruption)
-
-## ER Diagram
-
-```mermaid
-erDiagram
-    RawIngestion ||--o{ ExtractedEntity : "produces"
-    ExtractedEntity }o--|| Entity : "merges into"
-
-    RawIngestion {
-        string id PK
-        string source
-        string source_url
-        string file_path
-        string status
-        string hash UK
-        datetime ingested_at
-        json metadata_json
-    }
-
-    ExtractedEntity {
-        string id PK
-        string raw_ingestion_id FK
-        string source
-        string entity_class
-        json attributes
-        json discovered_attributes
-        json external_ids
-        string extraction_hash UK
-        datetime createdAt
-    }
-
-    Entity {
-        string id PK
-        string slug UK
-        string entity_name
-        string entity_class
-        text_array canonical_activities
-        text_array canonical_roles
-        text_array canonical_place_types
-        text_array canonical_access
-        jsonb modules
-        float latitude
-        float longitude
-        string street_address
-        string city
-        string postcode
-        json source_info
-        json external_ids
-    }
+# ✅ GOOD (production)
+npx prisma migrate dev --name descriptive_name
+npx prisma migrate deploy
 ```
+
+#### 2. Test Migrations on Seed Data
+```bash
+# 1. Create migration
+npx prisma migrate dev --name add_field
+
+# 2. Seed database
+npx prisma db seed
+
+# 3. Verify data integrity
+npm run test:integration
+```
+
+#### 3. Backward Compatibility
+When adding new fields, use default values to avoid breaking existing data:
+
+```prisma
+model Entity {
+  // ✅ GOOD: Default value prevents NULL errors
+  canonical_activities String[] @default([])
+
+  // ❌ BAD: Required field breaks existing records
+  required_field String
+}
+```
+
+#### 4. Handle Array Field Migrations
+When adding new canonical dimensions:
+
+```sql
+-- Migration: add canonical_roles field
+ALTER TABLE "Entity" ADD COLUMN "canonical_roles" TEXT[] DEFAULT '{}';
+
+-- Create GIN index
+CREATE INDEX "idx_canonical_roles_gin" ON "Entity" USING GIN (canonical_roles);
+```
+
+### Common Migration Scenarios
+
+#### Scenario 1: Add New Canonical Dimension
+```yaml
+# 1. Edit entity.yaml
+fields:
+  - name: canonical_certifications
+    type: list[string]
+    description: "Professional certifications (opaque values)"
+    nullable: true
+    exclude: true
+    python:
+      sa_column: "Column(ARRAY(String))"
+      default: "default_factory=list"
+    prisma:
+      type: "String[]"
+      attributes:
+        - "@default([])"
+```
+
+```bash
+# 2. Regenerate
+python -m engine.schema.generate --all
+
+# 3. Create migration
+cd web
+npx prisma migrate dev --name add_canonical_certifications
+```
+
+#### Scenario 2: Add New Module
+No database migration required! Modules are stored in JSONB.
+
+```yaml
+# 1. Edit lens.yaml
+module_triggers:
+  - when:
+      dimension: canonical_activities
+      values: [wine_tasting]
+    add_modules: [winery]
+```
+
+```yaml
+# 2. Define module schema in lens.yaml
+module_schemas:
+  winery:
+    vineyard_size_hectares: float
+    grape_varieties: list[string]
+    wine_types: list[string]
+    tasting_room: boolean
+```
+
+#### Scenario 3: Rename Field
+```prisma
+// ❌ BAD: Breaks existing data
+model Entity {
+  new_name String
+}
+
+// ✅ GOOD: Multi-step migration
+// Step 1: Add new field with default
+model Entity {
+  old_name String?
+  new_name String?
+}
+
+// Step 2: Backfill data
+UPDATE "Entity" SET new_name = old_name WHERE new_name IS NULL;
+
+// Step 3: Make new field required, drop old field
+model Entity {
+  new_name String
+}
+```
+
+### Prisma Studio (Database GUI)
+
+```bash
+# Launch Prisma Studio
+cd web
+npx prisma studio
+
+# Opens http://localhost:5555
+```
+
+**Features:**
+- Browse all tables
+- Edit records (use with caution)
+- View relationships
+- Execute queries
+
+---
+
+## Appendix: Key File References
+
+### Schema Definitions
+- **YAML Schema:** `engine/config/schemas/entity.yaml`
+- **Python FieldSpecs:** `engine/schema/entity.py` (generated)
+- **Prisma Schema (Web):** `web/prisma/schema.prisma` (generated)
+- **Prisma Schema (Engine):** `engine/prisma/schema.prisma` (generated)
+- **TypeScript Interfaces:** `web/lib/types/generated/entity.ts` (generated)
+
+### Schema Generation
+- **Generator Entry Point:** `engine/schema/generate.py`
+- **Python Generator:** `engine/schema/generators/python.py`
+- **Prisma Generator:** `engine/schema/generators/prisma.py`
+- **TypeScript Generator:** `engine/schema/generators/typescript.py`
+
+### Pipeline Components
+- **Entity Finalizer:** `engine/orchestration/entity_finalizer.py`
+- **Entity Merger:** `engine/extraction/merging.py`
+- **Slug Generator:** `engine/extraction/deduplication.py`
+- **Orchestrator:** `engine/orchestration/orchestrator.py`
+
+### Architectural Authority
+- **System Vision:** `docs/target/system-vision.md` (immutable invariants)
+- **Runtime Architecture:** `docs/target/architecture.md` (pipeline specification)
+
+---
+
+**End of DATABASE.md**

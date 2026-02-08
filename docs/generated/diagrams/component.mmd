@@ -1,0 +1,157 @@
+graph TD
+    %% Orchestration Layer
+    subgraph Orchestration["Orchestration Layer"]
+        ExecutionContext["ExecutionContext<br/>(Immutable context carrier)"]
+        QueryFeatures["QueryFeatureExtractor<br/>(Vocabulary-based analysis)"]
+        ExecutionPlanner["ExecutionPlanner<br/>(Connector selection)"]
+        Orchestrator["Orchestrator<br/>(Pipeline coordinator)"]
+        EntityFinalizer["EntityFinalizer<br/>(Slug generation & persistence)"]
+    end
+
+    %% Lens Layer
+    subgraph LensLayer["Lens Layer"]
+        LensLoader["LensLoader<br/>(YAML → runtime contract)"]
+        LensValidator["LensValidator<br/>(Bootstrap validation)"]
+        MappingEngine["MappingEngine<br/>(Pattern → canonical values)"]
+        ModuleTriggerEngine["ModuleTriggerEngine<br/>(Conditional module attachment)"]
+    end
+
+    %% Ingestion Layer
+    subgraph IngestionLayer["Ingestion Layer"]
+        ConnectorRegistry["ConnectorRegistry<br/>(Metadata: trust, cost, phase)"]
+        ConnectorAdapters["ConnectorAdapters<br/>(Async bridge & normalization)"]
+        RawIngestionStorage["RawIngestionStorage<br/>(Immutable artifact persistence)"]
+
+        subgraph Connectors["Connectors"]
+            Serper["Serper"]
+            GooglePlaces["GooglePlaces"]
+            OSM["OpenStreetMap"]
+            SportScotland["SportScotland"]
+            EdinburghCouncil["EdinburghCouncil"]
+            OpenChargeMap["OpenChargeMap"]
+        end
+    end
+
+    %% Extraction Layer
+    subgraph ExtractionLayer["Extraction Layer"]
+        ValidationEngine["ValidationEngine<br/>(Pydantic schemas)"]
+        LLMExtractionEngine["LLMExtractionEngine<br/>(Instructor + Claude)"]
+
+        subgraph SourceExtractors["Source Extractors"]
+            SerperExtractor["SerperExtractor<br/>(Primitives only)"]
+            GooglePlacesExtractor["GooglePlacesExtractor<br/>(Primitives only)"]
+            OSMExtractor["OSMExtractor<br/>(Primitives only)"]
+            SportScotlandExtractor["SportScotlandExtractor<br/>(Primitives only)"]
+            EdinburghCouncilExtractor["EdinburghCouncilExtractor<br/>(Primitives only)"]
+            OpenChargeMapExtractor["OpenChargeMapExtractor<br/>(Primitives only)"]
+        end
+
+        EntityClassifier["EntityClassifier<br/>(Geographic anchoring rules)"]
+        ModuleExtractor["ModuleExtractor<br/>(Generic field rule executor)"]
+    end
+
+    %% Deduplication & Merge Layer
+    subgraph MergeLayer["Deduplication & Merge"]
+        DeduplicationEngine["DeduplicationEngine<br/>(Cross-source grouping)"]
+        MergeEngine["MergeEngine<br/>(Metadata-driven conflict resolution)"]
+    end
+
+    %% Persistence Layer
+    subgraph PersistenceLayer["Persistence Layer"]
+        EntityRepository["EntityRepository<br/>(Idempotent upsert)"]
+        ProvenanceTracker["ProvenanceTracker<br/>(Source metadata)"]
+    end
+
+    %% Schema Generation System
+    subgraph SchemaGeneration["Schema Generation"]
+        SchemaParser["SchemaParser<br/>(YAML reader)"]
+        PythonGenerator["PythonGenerator<br/>(FieldSpecs)"]
+        PrismaGenerator["PrismaGenerator<br/>(Database schema)"]
+        TypeScriptGenerator["TypeScriptGenerator<br/>(Frontend types)"]
+    end
+
+    %% Dependencies - Orchestration
+    LensLoader --> ExecutionContext
+    LensValidator --> LensLoader
+    ExecutionContext --> QueryFeatures
+    ExecutionContext --> ExecutionPlanner
+    QueryFeatures --> ExecutionPlanner
+    ConnectorRegistry --> ExecutionPlanner
+    ExecutionPlanner --> Orchestrator
+    Orchestrator --> ConnectorAdapters
+    Orchestrator --> EntityFinalizer
+
+    %% Dependencies - Lens Layer
+    LensLoader --> LensValidator
+    LensLoader --> MappingEngine
+    LensLoader --> ModuleTriggerEngine
+
+    %% Dependencies - Ingestion
+    ConnectorAdapters --> Serper
+    ConnectorAdapters --> GooglePlaces
+    ConnectorAdapters --> OSM
+    ConnectorAdapters --> SportScotland
+    ConnectorAdapters --> EdinburghCouncil
+    ConnectorAdapters --> OpenChargeMap
+    ConnectorAdapters --> RawIngestionStorage
+    ConnectorRegistry --> ConnectorAdapters
+
+    %% Dependencies - Extraction
+    RawIngestionStorage --> SerperExtractor
+    RawIngestionStorage --> GooglePlacesExtractor
+    RawIngestionStorage --> OSMExtractor
+    RawIngestionStorage --> SportScotlandExtractor
+    RawIngestionStorage --> EdinburghCouncilExtractor
+    RawIngestionStorage --> OpenChargeMapExtractor
+
+    SerperExtractor --> ValidationEngine
+    GooglePlacesExtractor --> ValidationEngine
+    OSMExtractor --> ValidationEngine
+    SportScotlandExtractor --> ValidationEngine
+    EdinburghCouncilExtractor --> ValidationEngine
+    OpenChargeMapExtractor --> ValidationEngine
+
+    SerperExtractor --> LLMExtractionEngine
+    GooglePlacesExtractor --> LLMExtractionEngine
+    OSMExtractor --> LLMExtractionEngine
+    SportScotlandExtractor --> LLMExtractionEngine
+    EdinburghCouncilExtractor --> LLMExtractionEngine
+    OpenChargeMapExtractor --> LLMExtractionEngine
+
+    %% Dependencies - Phase 2: Lens Application (Post-Extraction)
+    Orchestrator --> MappingEngine
+    Orchestrator --> ModuleTriggerEngine
+    MappingEngine --> EntityClassifier
+    ModuleTriggerEngine --> EntityClassifier
+
+    %% Dependencies - Merge & Persistence
+    EntityClassifier --> DeduplicationEngine
+    DeduplicationEngine --> MergeEngine
+    ConnectorRegistry --> MergeEngine
+    MergeEngine --> EntityFinalizer
+    EntityFinalizer --> EntityRepository
+    EntityFinalizer --> ProvenanceTracker
+
+    %% Dependencies - Schema Generation
+    SchemaParser --> PythonGenerator
+    SchemaParser --> PrismaGenerator
+    SchemaParser --> TypeScriptGenerator
+    PythonGenerator --> ValidationEngine
+    PrismaGenerator --> EntityRepository
+
+    %% Styling
+    classDef orchestration fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+    classDef lens fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef ingestion fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef extraction fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+    classDef merge fill:#fff8e1,stroke:#f57f17,stroke-width:2px
+    classDef persistence fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+    classDef schema fill:#e0f2f1,stroke:#004d40,stroke-width:2px
+
+    class ExecutionContext,QueryFeatures,ExecutionPlanner,Orchestrator,EntityFinalizer orchestration
+    class LensLoader,LensValidator,MappingEngine,ModuleTriggerEngine lens
+    class ConnectorRegistry,ConnectorAdapters,RawIngestionStorage,Serper,GooglePlaces,OSM,SportScotland,EdinburghCouncil,OpenChargeMap ingestion
+    class ValidationEngine,LLMExtractionEngine,SerperExtractor,GooglePlacesExtractor,OSMExtractor,SportScotlandExtractor,EdinburghCouncilExtractor,OpenChargeMapExtractor,EntityClassifier,ModuleExtractor extraction
+    class DeduplicationEngine,MergeEngine merge
+    class EntityRepository,ProvenanceTracker persistence
+    class SchemaParser,PythonGenerator,PrismaGenerator,TypeScriptGenerator schema

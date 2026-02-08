@@ -1,32 +1,188 @@
 erDiagram
-    Entity ||--o{ Module : contains
-    Entity ||--o{ ExternalID : has
+    %% ============================================================
+    %% ENTITY MODEL - Universal Entity Extraction Engine
+    %% ============================================================
+    %% Shows the core entity schema structure with:
+    %% - Universal entity classification (place/person/organization/event/thing)
+    %% - Canonical dimensions (TEXT[] arrays for faceted filtering)
+    %% - Modules system (JSONB for vertical-specific structured data)
+    %% - Provenance tracking and confidence scoring
+    %% - Relationships between RawIngestion, ExtractedEntity, and Entity
+    %%
+    %% Generated: 2026-02-08
+    %% Source: engine/config/schemas/entity.yaml, web/prisma/schema.prisma
+    %% ============================================================
+
     Entity {
-        string id PK
-        string entity_class
-        string entity_name
-        array canonical_activities
-        array canonical_roles
-        array canonical_place_types
-        array canonical_access
-        float latitude
-        float longitude
-        string street_address
-        string city
-        string postcode
-        string phone
-        string email
-        string website_url
-        json modules
-        json provenance
+        string id PK "entity_id - Auto-generated CUID"
+        string entity_name "Official name (required, indexed)"
+        string entity_class "Universal classification: place, person, organization, event, thing"
+        string slug UK "URL-safe identifier (auto-generated, unique)"
+        string summary "Short description summary"
+        string description "Long-form aggregated evidence"
+
+        %% CLASSIFICATION
+        string[] raw_categories "Uncontrolled observational labels (NOT indexed)"
+
+        %% CANONICAL DIMENSIONS - Postgres TEXT[] with GIN indexes
+        string[] canonical_activities "Activities provided/supported (opaque, lens-interpreted)"
+        string[] canonical_roles "Functional roles (provides_facility, sells_goods, etc.)"
+        string[] canonical_place_types "Physical place classifications (lens-interpreted)"
+        string[] canonical_access "Access requirements (membership, pay_and_play, free, etc.)"
+
+        %% FLEXIBLE DATA STRUCTURES
+        Json discovered_attributes "Extra attributes not in core schema"
+        Json modules "Namespaced JSONB: {sports_facility: {}, hospitality_venue: {}}"
+
+        %% LOCATION
+        string street_address "Full address"
+        string city "City/town (indexed)"
+        string postcode "UK postcode format (indexed)"
+        string country "Country name"
+        float latitude "WGS84 decimal degrees"
+        float longitude "WGS84 decimal degrees"
+
+        %% CONTACT
+        string phone "E.164 format (+441315397071)"
+        string email "Public email address"
+        string website_url "Official website"
+
+        %% SOCIAL MEDIA
+        string instagram_url "Instagram profile"
+        string facebook_url "Facebook page"
+        string twitter_url "Twitter/X profile"
+        string linkedin_url "LinkedIn company page"
+
+        %% OPERATING HOURS
+        Json opening_hours "{monday: {open: '05:30', close: '22:00'}, sunday: 'CLOSED'}"
+
+        %% PROVENANCE AND METADATA
+        Json source_info "URLs, method, timestamps, notes"
+        Json field_confidence "Per-field confidence scores (0.0-1.0)"
+        Json external_ids "{google: 'abc123', osm: '456'} - External system identifiers"
+        DateTime createdAt "Creation timestamp"
+        DateTime updatedAt "Last update timestamp"
     }
-    Module {
-        string namespace
-        json fields
-        array sources
+
+    ExtractedEntity {
+        string id PK "Auto-generated CUID"
+        string raw_ingestion_id FK "Link to source RawIngestion"
+        string source "Connector name (serper, google_places, osm, etc.)"
+        string entity_class "Universal classification (place, person, organization, event, thing)"
+        Json attributes "Structured entity attributes from extraction (Phase 1: primitives only)"
+        Json discovered_attributes "Additional discovered fields not in schema"
+        Json external_ids "External system identifiers {google: 'id', osm: 'id'}"
+        string extraction_hash "Content hash for deduplication (SHA-256)"
+        string model_used "LLM model identifier if AI extraction used"
+        DateTime createdAt "Extraction timestamp"
+        DateTime updatedAt "Last update timestamp"
     }
-    ExternalID {
-        string source
-        string external_id
-        string url
+
+    RawIngestion {
+        string id PK "Auto-generated CUID"
+        string source "Connector name (serper, google_places, osm, sport_scotland, etc.)"
+        string source_url "Original URL or query"
+        string file_path "Path to raw JSON: engine/data/raw/source/timestamp_id.json"
+        string status "success, failed, pending"
+        string hash "Content hash for deduplication (SHA-256)"
+        Json metadata_json "Additional metadata as JSON"
+        string orchestration_run_id FK "Link to parent OrchestrationRun (nullable)"
+        DateTime ingested_at "Ingestion timestamp"
     }
+
+    OrchestrationRun {
+        string id PK "Auto-generated CUID"
+        string query "Original user query"
+        string ingestion_mode "discover_many, verify_one, etc."
+        string status "in_progress, completed, failed"
+        int candidates_found "Number of entities discovered"
+        int accepted_entities "Number of entities persisted"
+        float budget_spent_usd "Cost tracking"
+        Json metadata_json "Additional orchestration metadata"
+        DateTime createdAt "Run start timestamp"
+        DateTime updatedAt "Last update timestamp"
+    }
+
+    FailedExtraction {
+        string id PK "Auto-generated CUID"
+        string raw_ingestion_id FK "Link to failed RawIngestion"
+        string source "Connector name"
+        string error_message "Error description"
+        string error_details "Detailed error trace"
+        int retry_count "Number of retry attempts"
+        DateTime last_attempt_at "Last retry timestamp"
+        DateTime createdAt "Initial failure timestamp"
+        DateTime updatedAt "Last update timestamp"
+    }
+
+    MergeConflict {
+        string id PK "Auto-generated CUID"
+        string field_name "Field with conflict"
+        string conflicting_values "JSON array of conflicting values"
+        string winner_source "Source that won conflict resolution"
+        string winner_value "Final value selected"
+        int trust_difference "Trust delta between sources"
+        float severity "Conflict severity score"
+        string entity_id FK "Link to Entity (nullable)"
+        boolean resolved "Conflict resolution status"
+        string resolution_notes "Human notes on resolution"
+        DateTime createdAt "Conflict detected timestamp"
+        DateTime updatedAt "Last update timestamp"
+    }
+
+    EntityRelationship {
+        string id PK "Auto-generated CUID"
+        string sourceEntityId FK "Source entity"
+        string targetEntityId FK "Target entity"
+        string type "Relationship type: teaches_at, plays_at, part_of, etc."
+        float confidence "Confidence score (0.0-1.0)"
+        string source "Connector that discovered relationship"
+        DateTime createdAt "Relationship created timestamp"
+        DateTime updatedAt "Last update timestamp"
+    }
+
+    LensEntity {
+        string lensId PK "Lens identifier"
+        string entityId PK,FK "Entity identifier"
+        DateTime createdAt "Membership timestamp"
+    }
+
+    %% ============================================================
+    %% RELATIONSHIPS
+    %% ============================================================
+
+    %% Data Pipeline Flow
+    OrchestrationRun ||--o{ RawIngestion : "executes"
+    RawIngestion ||--o{ ExtractedEntity : "extracts"
+    RawIngestion ||--o{ FailedExtraction : "may fail"
+    ExtractedEntity }o--|| Entity : "merges into"
+
+    %% Entity Relationships
+    Entity ||--o{ EntityRelationship : "source of"
+    Entity ||--o{ EntityRelationship : "target of"
+    Entity ||--o{ LensEntity : "member of lenses"
+    Entity ||--o{ MergeConflict : "may have conflicts"
+
+    %% ============================================================
+    %% NOTES ON MODULE STRUCTURE
+    %% ============================================================
+    %% modules JSONB Examples:
+    %%
+    %% Universal Modules (all entity types):
+    %% - core: {entity_id, entity_name, slug}
+    %% - location: {street_address, city, postcode, latitude, longitude}
+    %% - contact: {phone, email, website_url, social_media}
+    %% - hours: {opening_hours, special_hours}
+    %%
+    %% Vertical-Specific Modules (lens-triggered):
+    %% - sports_facility: {court_count, court_types, indoor_outdoor, equipment_rental}
+    %% - fitness_facility: {class_schedule, equipment_list, membership_tiers}
+    %% - hospitality_venue: {cuisine_types, dietary_options, price_range, booking_required}
+    %% - retail_store: {product_categories, brands_carried, payment_methods}
+    %%
+    %% Module Trigger Logic (from lens.yaml):
+    %% - IF canonical_activities contains 'tennis' → add sports_facility module
+    %% - IF canonical_place_types contains 'restaurant' → add hospitality_venue module
+    %% - IF canonical_roles contains 'sells_goods' → add retail_store module
+    %%
+    %% ============================================================

@@ -1,16 +1,93 @@
-graph TB
-    Input[Query or Entity ID] --> LensRes[Lens Resolution & Validation]
-    LensRes --> Planning[Planning & Orchestration]
-    Planning --> ConnExec[Connector Execution]
-    ConnExec --> RawIngest[Raw Ingestion Persistence]
-    RawIngest --> SourceExt[Source Extraction<br/>Primitives Only]
-    SourceExt --> LensApp[Lens Application<br/>Canonical + Modules]
-    LensApp --> Classification[Classification<br/>entity_class]
-    Classification --> Dedup[Cross-Source Deduplication]
-    Dedup --> Merge[Deterministic Merge]
-    Merge --> Final[Finalization & Persistence]
-    Final --> EntityStore[(Entity Store)]
-    
-    style SourceExt fill:#e1f5ff
-    style LensApp fill:#fff4e1
-    style EntityStore fill:#e8f5e9
+graph TD
+    %% Input Stage
+    Input[Input: Query or Entity Identifier]
+
+    %% Stage 1: Lens Resolution & Validation
+    Input --> LensResolution[Lens Resolution & Validation]
+    LensResolution --> LensLoad[Load lens.yaml]
+    LensLoad --> LensValidate[Validate Schema, Registry, Rules]
+    LensValidate --> LensHash[Compute Content Hash]
+    LensHash --> ExecContext[Create ExecutionContext]
+
+    %% Stage 2: Planning
+    ExecContext --> Planning[Planning: Connector Selection]
+    Planning --> QueryFeatures[Derive Query Features]
+    QueryFeatures --> LensRouting[Apply Lens Routing Rules]
+    LensRouting --> ExecPlan[Generate Execution Plan]
+
+    %% Stage 3: Connector Execution
+    ExecPlan --> ConnectorExec[Connector Execution: Parallel Ingestion]
+    ConnectorExec --> Conn1[Connector 1<br/>Serper]
+    ConnectorExec --> Conn2[Connector 2<br/>GooglePlaces]
+    ConnectorExec --> Conn3[Connector 3<br/>OSM]
+    ConnectorExec --> Conn4[Connector 4<br/>SportScotland]
+    ConnectorExec --> Conn5[Connector 5<br/>...]
+
+    %% Stage 4: Raw Ingestion
+    Conn1 --> RawIngestion[Raw Ingestion Persistence]
+    Conn2 --> RawIngestion
+    Conn3 --> RawIngestion
+    Conn4 --> RawIngestion
+    Conn5 --> RawIngestion
+    RawIngestion --> RawArtifacts[(RawIngestion Records<br/>Immutable Artifacts)]
+
+    %% Stage 6: Source Extraction
+    RawArtifacts --> SourceExtraction[Source Extraction]
+    SourceExtraction --> ExtractPrimitives[Extract Schema Primitives<br/>entity_name, lat, lng, address, phone, etc.]
+    ExtractPrimitives --> ExtractRaw[Extract Raw Observations<br/>raw_categories, description, etc.]
+    ExtractRaw --> ExtractedEntity[(ExtractedEntity Records<br/>NO canonical_* or modules)]
+
+    %% Stage 7: Lens Application
+    ExtractedEntity --> LensApp[Lens Application]
+    LensApp --> MappingRules[Apply Mapping Rules<br/>Pattern → canonical_*]
+    MappingRules --> ModuleTriggers[Evaluate Module Triggers]
+    ModuleTriggers --> ModuleExtraction[Execute Module Field Rules]
+    ModuleExtraction --> CanonicalPopulated[(Canonical Dimensions<br/>+ Modules Populated)]
+
+    %% Stage 8: Classification
+    CanonicalPopulated --> Classification[Classification: Entity Class Assignment]
+    Classification --> GeoCheck{Geographic<br/>Anchoring?}
+    GeoCheck -->|Yes: coords, address,<br/>city, or postcode| ClassPlace[entity_class = place]
+    GeoCheck -->|No| ClassOther[entity_class = person,<br/>organization, event, thing]
+    ClassPlace --> Classified[(Classified Entities)]
+    ClassOther --> Classified
+
+    %% Stage 9: Cross-Source Deduplication Grouping
+    Classified --> Dedup[Cross-Source Deduplication Grouping]
+    Dedup --> MatchExternal[Match External Identifiers]
+    MatchExternal --> MatchGeo[Geo Similarity Matching]
+    MatchGeo --> MatchName[Normalized Name Matching]
+    MatchName --> MatchContent[Content Fingerprint Matching]
+    MatchContent --> DedupGroups[(Deduplication Groups)]
+
+    %% Stage 10: Deterministic Merge
+    DedupGroups --> Merge[Deterministic Merge]
+    Merge --> MergeIdentity[Merge Identity Fields<br/>trust → priority → connector_id]
+    MergeIdentity --> MergeGeo[Merge Geo Fields<br/>precision → trust → decimal]
+    MergeGeo --> MergeContact[Merge Contact Fields<br/>quality → trust → priority]
+    MergeContact --> MergeCanonical[Merge Canonical Arrays<br/>union, dedupe, sort]
+    MergeCanonical --> MergeModules[Merge Modules<br/>recursive, trust-driven]
+    MergeModules --> MergedEntity[(Merged Entities<br/>Single Canonical Record)]
+
+    %% Stage 11: Finalization and Persistence
+    MergedEntity --> Finalization[Finalization & Persistence]
+    Finalization --> SlugGen[Generate Stable Slugs]
+    SlugGen --> Provenance[Persist Provenance Metadata]
+    Provenance --> Upsert[Idempotent Upsert]
+    Upsert --> EntityTable[(Entity Table<br/>Canonical Schema Only)]
+
+    %% Output
+    EntityTable --> Output[Output: Persisted Entities<br/>Ready for Display]
+
+    %% Styling
+    classDef inputClass fill:#e1f5ff,stroke:#0066cc,stroke-width:2px
+    classDef processClass fill:#fff4e6,stroke:#ff8c00,stroke-width:2px
+    classDef artifactClass fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    classDef decisionClass fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef outputClass fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+
+    class Input,ExecContext inputClass
+    class LensResolution,LensLoad,LensValidate,LensHash,Planning,QueryFeatures,LensRouting,ExecPlan,ConnectorExec,SourceExtraction,ExtractPrimitives,ExtractRaw,LensApp,MappingRules,ModuleTriggers,ModuleExtraction,Classification,Dedup,MatchExternal,MatchGeo,MatchName,MatchContent,Merge,MergeIdentity,MergeGeo,MergeContact,MergeCanonical,MergeModules,Finalization,SlugGen,Provenance,Upsert processClass
+    class RawArtifacts,ExtractedEntity,CanonicalPopulated,Classified,DedupGroups,MergedEntity,EntityTable artifactClass
+    class GeoCheck decisionClass
+    class Conn1,Conn2,Conn3,Conn4,Conn5,ClassPlace,ClassOther,Output outputClass
