@@ -1,3 +1,8 @@
+---
+name: shared-context-budget
+description: Shared context budget rules for all documentation agents to prevent context bloat
+---
+
 # Context Budget Rules
 
 All agents must respect these limits to prevent context bloat in the orchestrator.

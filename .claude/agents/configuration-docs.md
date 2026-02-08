@@ -1,4 +1,4 @@
-﻿---
+---
 name: configuration-docs
 description: Generate docs/CONFIGURATION.md (env vars, config files, feature flags, third-party keys) from repo inspection.
 tools:

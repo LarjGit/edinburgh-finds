@@ -1,4 +1,4 @@
-﻿---
+---
 name: diagram-contribution-flow
 description: Produce a Mermaid flowchart for the developer contribution workflow (branch->PR->CI->merge->deploy).
 tools:

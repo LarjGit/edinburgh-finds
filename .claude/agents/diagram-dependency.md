@@ -1,4 +1,4 @@
-﻿---
+---
 name: diagram-dependency
 description: Produce a Mermaid dependency graph between major modules/packages/services.
 tools:

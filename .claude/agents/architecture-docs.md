@@ -1,4 +1,4 @@
-﻿---
+---
 name: architecture-docs
 description: Generate docs/ARCHITECTURE.md (system architecture overview) using provided diagrams/artifacts and repository inspection.
 tools:

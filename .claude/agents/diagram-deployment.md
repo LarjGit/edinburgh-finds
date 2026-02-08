@@ -1,4 +1,4 @@
-﻿---
+---
 name: diagram-deployment
 description: Produce a Mermaid deployment diagram showing runtime nodes/services/environments.
 tools:

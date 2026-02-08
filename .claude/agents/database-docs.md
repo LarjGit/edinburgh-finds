@@ -1,4 +1,4 @@
-﻿---
+---
 name: database-docs
 description: Generate docs/DATABASE.md (schema + models + performance + migrations) using provided ERD artifact and repository inspection.
 tools:

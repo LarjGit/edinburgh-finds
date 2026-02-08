@@ -1,4 +1,4 @@
-﻿---
+---
 name: diagram-architecture
 description: Produce a high-level Mermaid architecture diagram of major components and their connections.
 tools:

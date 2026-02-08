@@ -1,4 +1,4 @@
-﻿---
+---
 name: index-repo
 description: Produce a concise repo inventory: key entrypoints, modules, config files, scripts, and tests.
 tools:

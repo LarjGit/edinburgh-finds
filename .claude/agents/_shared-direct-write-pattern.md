@@ -1,3 +1,8 @@
+---
+name: shared-direct-write-pattern
+description: Shared pattern for background agents that write documentation directly to files
+---
+
 # Direct Write Pattern for Background Agents
 
 When you are a background agent generating documentation sections:

@@ -1,4 +1,4 @@
-﻿---
+---
 name: diagram-network
 description: Produce a Mermaid diagram showing network/infrastructure flows: ingress, services, databases, external APIs.
 tools:

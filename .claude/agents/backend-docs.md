@@ -1,4 +1,4 @@
-﻿---
+---
 name: backend-docs
 description: Generate docs/BACKEND.md (backend structure, modules, business logic, storage, services). Embed component/sequence diagram artifacts.
 tools:

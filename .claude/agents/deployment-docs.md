@@ -1,4 +1,4 @@
-﻿---
+---
 name: deployment-docs
 description: Generate docs/DEPLOYMENT.md (CI/CD + environments + ops). Embed deployment/network diagram artifacts.
 tools:

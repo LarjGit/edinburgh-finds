@@ -1,4 +1,4 @@
-﻿---
+---
 name: diagram-sequence
 description: Produce Mermaid sequence diagram(s) for key request/processing flows found in the codebase.
 tools:

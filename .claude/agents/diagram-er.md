@@ -1,4 +1,4 @@
-﻿---
+---
 name: diagram-er
 description: Produce a Mermaid ERD based on the schema (Prisma/ORM/SQL).
 tools:

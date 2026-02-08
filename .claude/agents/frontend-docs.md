@@ -1,4 +1,4 @@
-﻿---
+---
 name: frontend-docs
 description: Generate docs/FRONTEND.md (frontend architecture, patterns, state, routing). Embed component/state diagram artifacts.
 tools:

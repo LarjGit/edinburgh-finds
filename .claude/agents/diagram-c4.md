@@ -1,4 +1,4 @@
-﻿---
+---
 name: diagram-c4
 description: Produce Mermaid C4-style diagrams (context/container/component) for the system.
 tools:

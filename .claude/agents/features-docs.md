@@ -1,4 +1,4 @@
-﻿---
+---
 name: features-docs
 description: Generate docs/FEATURES.md (feature catalog) mapping user-visible features to code modules/files. Embed user journey and sequence artifacts.
 tools:

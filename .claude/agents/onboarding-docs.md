@@ -1,4 +1,4 @@
-﻿---
+---
 name: onboarding-docs
 description: Generate docs/ONBOARDING.md (setup guide) from package manifests, env examples, scripts, and repo structure.
 tools:

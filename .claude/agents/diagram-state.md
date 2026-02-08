@@ -1,4 +1,4 @@
-﻿---
+---
 name: diagram-state
 description: Produce Mermaid state diagram(s) for key stateful processes (UI state, pipeline state, job state).
 tools:

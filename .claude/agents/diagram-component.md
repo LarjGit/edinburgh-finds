@@ -1,4 +1,4 @@
-﻿---
+---
 name: diagram-component
 description: Produce Mermaid component-style diagrams for frontend and backend internal components/modules.
 tools:

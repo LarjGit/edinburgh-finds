@@ -1,4 +1,4 @@
-﻿---
+---
 name: development-docs
 description: Generate docs/DEVELOPMENT.md (developer workflow, standards, contributing). Embed contribution-flow diagram artifact.
 tools:

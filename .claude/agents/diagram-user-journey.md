@@ -1,4 +1,4 @@
-﻿---
+---
 name: diagram-user-journey
 description: Produce a Mermaid flowchart representing the main user journey(s) through key features.
 tools:

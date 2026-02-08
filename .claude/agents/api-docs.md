@@ -1,4 +1,4 @@
-﻿---
+---
 name: api-docs
 description: Generate docs/API.md (endpoint reference) from backend code. Include auth, errors, examples, and embed relevant sequence diagram artifact.
 tools:
