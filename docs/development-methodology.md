@@ -6,6 +6,17 @@
 
 ---
 
+## Related Documents
+
+- **CLAUDE.md:** Project overview, architecture quick reference, commands, tech stack
+- **docs/system-vision.md:** Architectural constitution (10 immutable invariants)
+- **docs/target-architecture.md:** Runtime execution pipeline (11 stages)
+- **docs/progress/audit-catalog.md:** Living progress tracker (work items, completion status)
+
+**Navigation:** For reading path guidance, see CLAUDE.md "Document Navigation" section.
+
+---
+
 ## Table of Contents
 
 1. [The Problem](#1-the-problem)

@@ -21,10 +21,9 @@ The Edinburgh Finds documentation represents exceptional quality and sophisticat
 1. **`docs/system-vision.md`** (21KB) - Architectural constitution with 10 immutable invariants
 2. **`docs/target-architecture.md`** (56KB) - Executable runtime specification
 3. **`docs/development-methodology.md`** (37KB) - Reality-based incremental alignment process
-4. **`docs/ai-operating-rules.md`** (2KB) - AI agent behavioral constraints
-5. **`docs/architecture.md`** (14KB) - Legacy architectural documentation
-6. **`docs/progress/audit-catalog.md`** - Living progress tracking with executable proofs
-7. **`engine/lenses/edinburgh_finds/lens.yaml`** - Practical implementation example
+4. **`docs/architecture.md`** (14KB) - Legacy architectural documentation
+5. **`docs/progress/audit-catalog.md`** - Living progress tracking with executable proofs
+6. **`engine/lenses/edinburgh_finds/lens.yaml`** - Practical implementation example
 
 ---
 
