@@ -30,3 +30,4 @@ engine/data/raw/**/*.json
 .coverage.*
 htmlcov/
 coverage.xml
+.aider*
