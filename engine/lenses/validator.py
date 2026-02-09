@@ -1,7 +1,7 @@
 """
 Lens configuration validator.
 
-Enforces all 7 validation gates required by architecture.md 6.7:
+Enforces all 7 validation gates required by docs/target-architecture.md 6.7:
 
 GATE 1: Schema validation - Required top-level sections must be present
 GATE 2: Canonical reference integrity - All references must be valid
@@ -54,7 +54,7 @@ def validate_lens_config(config: Dict[str, Any]) -> None:
     """
     Validate lens configuration against all 7 architectural validation gates.
 
-    Implements architecture.md 6.7 validation gates:
+    Implements docs/target-architecture.md 6.7 validation gates:
         GATE 1: Schema validation
         GATE 2: Canonical reference integrity
         GATE 3: Connector reference validation

@@ -313,7 +313,7 @@ class TestBootstrapLens:
         """
         bootstrap_lens() should return ExecutionContext with lens contract.
 
-        Per architecture.md 3.2: Bootstrap loads lens once and creates context.
+        Per docs/target-architecture.md 3.2: Bootstrap loads lens once and creates context.
         """
         from engine.orchestration.execution_context import ExecutionContext
 
@@ -337,7 +337,7 @@ class TestBootstrapLens:
         ctx = bootstrap_lens("edinburgh_finds")
 
         # Verify all required fields present
-        # Verify ExecutionContext has lens_id as top-level field per architecture.md 3.6
+        # Verify ExecutionContext has lens_id as top-level field per docs/target-architecture.md 3.6
         assert ctx.lens_id == "edinburgh_finds", "ExecutionContext should have lens_id field"
 
         # Verify lens_contract contains required fields (but NOT lens_id, which is top-level)
@@ -357,7 +357,7 @@ class TestBootstrapLens:
         """
         bootstrap_lens() should fail fast on invalid lens (LensConfigError).
 
-        Per architecture.md 3.2: "Fail fast on invalid lens."
+        Per docs/target-architecture.md 3.2: "Fail fast on invalid lens."
         """
         with pytest.raises((LensConfigError, FileNotFoundError)):
             bootstrap_lens("nonexistent_lens")
@@ -366,7 +366,7 @@ class TestBootstrapLens:
         """
         ExecutionContext should be immutable (frozen dataclass).
 
-        Per architecture.md 3.6: ExecutionContext is a frozen dataclass
+        Per docs/target-architecture.md 3.6: ExecutionContext is a frozen dataclass
         that cannot be mutated.
         """
         from dataclasses import FrozenInstanceError
@@ -388,7 +388,7 @@ class TestBootstrapLens:
         # Bootstrap should succeed if file exists
         ctx = bootstrap_lens("edinburgh_finds")
 
-        # Verify lens_id field matches (top-level field per architecture.md 3.6)
+        # Verify lens_id field matches (top-level field per docs/target-architecture.md 3.6)
         assert ctx.lens_id == "edinburgh_finds"
 
         # Verify lens file exists at expected path

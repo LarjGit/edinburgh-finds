@@ -4,14 +4,14 @@ This document defines mandatory behavior for AI agents that plan or modify this 
 
 It exists to ensure architectural integrity, repo-grounded planning, and predictable evolution.
 It does not define system architecture or domain behavior — those are governed by
-`docs/target/system-vision.md` and `docs/target/architecture.md`.
+`docs/system-vision.md` and `docs/target-architecture.md`.
 
 ---
 
 ## 1. Architectural Authority
 
-- `docs/target/system-vision.md` is the architectural constitution.
-- `docs/target/architecture.md` defines the executable runtime model.
+- `docs/system-vision.md` is the architectural constitution.
+- `docs/target-architecture.md` defines the executable runtime model.
 - These documents are authoritative and must not be weakened or bypassed.
 
 ---

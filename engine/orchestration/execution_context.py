@@ -1,7 +1,7 @@
 """
 Execution Context for Universal Entity Extraction Engine.
 
-This module provides the ExecutionContext class per architecture.md 3.6.
+This module provides the ExecutionContext class per docs/target-architecture.md 3.6.
 
 ExecutionContext is an immutable carrier object that holds:
 - lens_id: Identifier for the active lens
@@ -25,7 +25,7 @@ class ExecutionContext:
     """
     Immutable carrier object for lens contract and metadata.
 
-    Per architecture.md 3.6, ExecutionContext is a frozen dataclass that:
+    Per docs/target-architecture.md 3.6, ExecutionContext is a frozen dataclass that:
     - Identifies the active lens
     - Carries the validated lens runtime contract
     - Carries reproducibility metadata

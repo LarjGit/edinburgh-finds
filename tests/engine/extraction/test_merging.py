@@ -410,7 +410,7 @@ class TestCanonicalArrayMerge:
 
 
 class TestModulesDeepMerge:
-    """modules field: deep recursive merge per architecture.md 9.4.
+    """modules field: deep recursive merge per docs/target-architecture.md 9.4.
 
     - Object vs object → recursive merge
     - Scalar arrays → concatenate, deduplicate, sort (strings trimmed only)

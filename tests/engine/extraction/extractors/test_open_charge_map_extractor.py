@@ -3,7 +3,7 @@ Tests for OpenChargeMap Extractor
 
 Validates compliance with:
 - system-vision.md Invariant 1 (Engine Purity)
-- architecture.md Section 4.2 (Extraction Boundary Contract)
+- docs/target-architecture.md Section 4.2 (Extraction Boundary Contract)
 """
 
 import inspect
@@ -41,11 +41,11 @@ class TestEnginePurity:
 
 
 class TestExtractionBoundary:
-    """Validates architecture.md Section 4.2: Extraction Boundary Contract"""
+    """Validates docs/target-architecture.md Section 4.2: Extraction Boundary Contract"""
 
     def test_extractor_outputs_only_primitives_and_raw_observations(self, mock_ctx):
         """
-        Validates: architecture.md Section 4.2 (Extraction Boundary)
+        Validates: docs/target-architecture.md Section 4.2 (Extraction Boundary)
 
         Phase 1 extractors must output ONLY:
         - Schema primitives (entity_name, latitude, longitude, etc.)
@@ -136,7 +136,7 @@ class TestExtractionBoundary:
     def test_split_attributes_separates_schema_and_discovered(self, mock_ctx):
         """
         Validates split_attributes() correctly separates schema-defined fields
-        from discovered attributes per architecture.md 4.2
+        from discovered attributes per docs/target-architecture.md 4.2
         """
         extractor = OpenChargeMapExtractor()
 

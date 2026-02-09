@@ -6,7 +6,7 @@ All lens and domain semantics live in the functions it calls (mapping_engine, mo
 and the lens contract itself. This file contains only structural adapter logic where lens.yaml
 omits required fields (e.g., source_fields defaults).
 
-Per architecture.md Section 4.2 (Extraction Boundary):
+Per docs/target-architecture.md Section 4.2 (Extraction Boundary):
 - Phase 1 (extractors): Primitives + raw observations ONLY
 - Phase 2 (this file): Canonical dimensions + modules ONLY
 

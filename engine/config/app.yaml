@@ -1,5 +1,5 @@
 # Application-level configuration
-# Per architecture.md 3.1: Lens resolution precedence (level 3)
+# Per docs/target-architecture.md 3.1: Lens resolution precedence (level 3)
 #
 # Precedence order:
 #   1. CLI override (--lens flag)

@@ -4,7 +4,7 @@ Lens Mapping Engine
 Applies lens mapping rules to populate canonical dimensions from raw entity data.
 Phase 2 extraction: Runs after source extractors (Phase 1).
 
-Architecture: Per architecture.md Section 6.4
+Architecture: Per docs/target-architecture.md Section 6.4
 - Rules execute over union of declared source_fields
 - First match wins per rule
 - Multiple rules may contribute to same dimension
@@ -87,7 +87,7 @@ def execute_mapping_rules(rules: List[Dict[str, Any]], entity: Dict[str, Any]) -
     """
     Execute all mapping rules against entity, collect matches.
 
-    Per architecture.md 6.4:
+    Per docs/target-architecture.md 6.4:
     - First match wins per rule (within source_fields)
     - Multiple rules may contribute to same dimension
 
@@ -165,7 +165,7 @@ def apply_lens_mapping(entity: Dict[str, Any], ctx: Any) -> Dict[str, Any]:
 
     Called after Phase 1 extraction (primitives), before classification.
 
-    Per architecture.md Section 4.2 (Extraction Boundary):
+    Per docs/target-architecture.md Section 4.2 (Extraction Boundary):
     - Phase 1: Source extractors return primitives only
     - Phase 2: Lens application populates canonical_* dimensions
 

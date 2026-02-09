@@ -3,7 +3,7 @@ Tests for Sport Scotland Extractor
 
 Validates compliance with:
 - system-vision.md Invariant 1 (Engine Purity)
-- architecture.md Section 4.2 (Extraction Boundary Contract)
+- docs/target-architecture.md Section 4.2 (Extraction Boundary Contract)
 """
 
 import inspect
@@ -41,11 +41,11 @@ class TestEnginePurity:
 
 
 class TestExtractionBoundary:
-    """Validates architecture.md Section 4.2: Extraction Boundary Contract"""
+    """Validates docs/target-architecture.md Section 4.2: Extraction Boundary Contract"""
 
     def test_extractor_outputs_only_primitives_and_raw_observations(self, mock_ctx):
         """
-        Validates: architecture.md Section 4.2 (Extraction Boundary)
+        Validates: docs/target-architecture.md Section 4.2 (Extraction Boundary)
 
         Phase 1 extractors must output ONLY:
         - Schema primitives (entity_name, latitude, longitude, etc.)

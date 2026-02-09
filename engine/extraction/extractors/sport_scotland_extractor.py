@@ -55,7 +55,7 @@ class SportScotlandExtractor(BaseExtractor):
     - indoor_outdoor: stored in discovered_attributes
     - floodlit: stored in discovered_attributes
 
-    Per architecture.md Section 4.2 (Extraction Boundary Contract), this extractor
+    Per docs/target-architecture.md Section 4.2 (Extraction Boundary Contract), this extractor
     outputs ONLY schema primitives and raw observations. Domain interpretation
     (e.g., facility-specific fields) is handled by Phase 2 (Lens Application).
     """
@@ -140,7 +140,7 @@ class SportScotlandExtractor(BaseExtractor):
         # Capture connector-native fields as raw observations
         # These fields (number_of_courts, indoor_outdoor, floodlit) will be stored
         # in discovered_attributes and interpreted by Phase 2 (Lens Application)
-        # per architecture.md Section 4.2 - Extraction Boundary Contract
+        # per docs/target-architecture.md Section 4.2 - Extraction Boundary Contract
         if "number_of_courts" in properties:
             extracted["number_of_courts"] = properties["number_of_courts"]
 

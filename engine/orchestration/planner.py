@@ -194,7 +194,7 @@ async def orchestrate(
     Args:
         request: The ingestion request containing query and parameters
         ctx: REQUIRED ExecutionContext with pre-loaded lens contract.
-             Per architecture.md 3.2: Lens contracts are loaded once at
+             Per docs/target-architecture.md 3.2: Lens contracts are loaded once at
              bootstrap and injected via ExecutionContext. All callers must
              bootstrap lens before calling orchestrate() (LR-003).
 
@@ -240,15 +240,15 @@ async def orchestrate(
             })
 
         # 3. Use execution context from bootstrap
-        # Per architecture.md 3.2: Lens loading occurs only during engine bootstrap
+        # Per docs/target-architecture.md 3.2: Lens loading occurs only during engine bootstrap
         # All callers must bootstrap lens before calling orchestrate()
         context = ctx
 
-        # Create mutable orchestrator state (separate from immutable context per architecture.md 3.6)
+        # Create mutable orchestrator state (separate from immutable context per docs/target-architecture.md 3.6)
         state = OrchestratorState()
 
         # 4. Execute connectors via adapters (phase-aware with parallelism per PL-003)
-        # Per architecture.md 4.1 Stage 3: "Establish execution phases" implies
+        # Per docs/target-architecture.md 4.1 Stage 3: "Establish execution phases" implies
         # phase barriers with parallelism within phases
         from collections import defaultdict
 

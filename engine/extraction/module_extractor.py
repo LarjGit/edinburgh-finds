@@ -4,7 +4,7 @@ Module Extraction Engine
 Applies module triggers and extracts module fields using deterministic extractors.
 Phase 2 extraction: Runs after lens mapping.
 
-Architecture: Per architecture.md Section 7.5
+Architecture: Per docs/target-architecture.md Section 7.5
 - Deterministic extractors execute first
 - Source-aware applicability filtering
 - Normalizer pipeline applied after extraction
@@ -20,7 +20,7 @@ def evaluate_module_triggers(triggers: List[Dict[str, Any]], entity: Dict[str, A
     """
     Determine which modules to attach based on facet values and conditions.
 
-    Per architecture.md 7.2: Module triggers fire when:
+    Per docs/target-architecture.md 7.2: Module triggers fire when:
     - Entity has required facet value
     - All conditions match (entity_class, etc.)
 
@@ -87,7 +87,7 @@ def execute_field_rules(
     """
     Execute field extraction rules with applicability filtering.
 
-    Per architecture.md 7.5:
+    Per docs/target-architecture.md 7.5:
     - Deterministic extractors only (Phase 2 scope)
     - Source-aware applicability filtering
     - Normalizers applied after extraction

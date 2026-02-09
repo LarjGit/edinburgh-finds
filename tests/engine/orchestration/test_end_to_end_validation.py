@@ -34,7 +34,7 @@ async def test_one_perfect_entity_end_to_end_validation():
     End-to-end validation: Query → Orchestration → Extraction → Lens → Entity DB.
 
     Per system-vision.md Section 6.3: "One Perfect Entity" validation requirement.
-    Per architecture.md Section 4.1: Complete 11-stage pipeline validation.
+    Per docs/target-architecture.md Section 4.1: Complete 11-stage pipeline validation.
 
     Validates:
     1. Orchestration executes with explicit lens resolution (--lens edinburgh_finds)
@@ -224,7 +224,7 @@ async def test_canonical_dimensions_coverage():
     """
     Validate that all 4 canonical dimension arrays are supported.
 
-    Per architecture.md 4.1 Stage 7: Lens Application should populate:
+    Per docs/target-architecture.md 4.1 Stage 7: Lens Application should populate:
     - canonical_activities
     - canonical_roles
     - canonical_place_types
@@ -283,7 +283,7 @@ async def test_modules_field_structure():
     """
     Validate that modules field follows correct JSON structure.
 
-    Per architecture.md 4.1 Stage 7: Module Extraction should populate
+    Per docs/target-architecture.md 4.1 Stage 7: Module Extraction should populate
     modules field as JSON object with module-specific data.
 
     This test verifies the modules field structure is correct for

@@ -6,22 +6,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **CRITICAL:** This project has two immutable architectural documents that govern ALL development decisions:
 
-1. **`docs/target/system-vision.md`** — The Architectural Constitution
+1. **`docs/system-vision.md`** — The Architectural Constitution
    - Defines 10 immutable invariants that MUST remain true for the system's lifetime
    - Specifies the Engine vs Lens boundary (Engine = domain-blind, Lenses = all semantics)
    - Defines success criteria: "One Perfect Entity" end-to-end validation requirement
    - Violations are architectural defects regardless of whether functionality appears to work
    - **This document is IMMUTABLE** - treat it as the ultimate authority
 
-2. **`docs/target/architecture.md`** — The Runtime Implementation Specification
+2. **`docs/target-architecture.md`** — The Runtime Implementation Specification
    - Concrete execution pipeline, contracts, and validation rules
    - Operationalizes the system-vision.md invariants into runtime behavior
    - Defines the 11-stage pipeline: Lens Resolution → Planning → Ingestion → Extraction → Lens Application → Classification → Deduplication → Merge → Finalization
    - Specifies the locked extraction contract (Phase 1: primitives only, Phase 2: lens application)
    - May evolve deliberately but MUST preserve system-vision.md invariants
 
-**ENFORCEMENT RULE:**  
-The agent MUST explicitly open and read `docs/target/system-vision.md` and `docs/target/architecture.md` using the Read tool and MUST confirm this in its response BEFORE proposing any plan or change. Until that confirmation appears, NO further actions are permitted.
+**ENFORCEMENT RULE:**
+The agent MUST explicitly open and read `docs/system-vision.md` and `docs/target-architecture.md` using the Read tool and MUST confirm this in its response BEFORE proposing any plan or change. Until that confirmation appears, NO further actions are permitted.
 
 **Before making ANY architectural change:**
 - Ask: Does this preserve engine purity? (No domain semantics in engine code)
@@ -209,7 +209,7 @@ Query → Orchestrator → Connectors → RawIngestion → Extraction → Extrac
 
 The **Lens system** provides vertical-specific interpretation of universal engine data. The engine is completely vertical-agnostic - all domain knowledge lives in YAML configuration files.
 
-**⚠️ IMPLEMENTATION STATUS:** The lens architecture is partially complete (see `docs/target/system-vision.md` Section 6 for validation requirements). Query orchestration and connector routing work, but canonical dimension extraction is not fully wired up. Extractors don't yet populate the canonical dimension arrays from lens mapping rules.
+**⚠️ IMPLEMENTATION STATUS:** The lens architecture is partially complete (see `docs/system-vision.md` Section 6 for validation requirements). Query orchestration and connector routing work, but canonical dimension extraction is not fully wired up. Extractors don't yet populate the canonical dimension arrays from lens mapping rules.
 
 ### Core Principle
 - **Engine:** Knows NOTHING about domains (Padel, Wine, Restaurants)
@@ -335,9 +335,9 @@ This project follows **Test-Driven Development (TDD)** with strict quality gates
 ## Common Gotchas
 
 ### 1. Lens Implementation is Incomplete
-The canonical dimension extraction system is partially implemented. Extractors currently don't populate `canonical_activities`, `canonical_roles`, `canonical_place_types`, or `canonical_access` arrays from lens mapping rules. See `docs/target/architecture.md` Section 4 (Orchestration Pipeline) for the full pipeline specification.
+The canonical dimension extraction system is partially implemented. Extractors currently don't populate `canonical_activities`, `canonical_roles`, `canonical_place_types`, or `canonical_access` arrays from lens mapping rules. See `docs/target-architecture.md` Section 4 (Orchestration Pipeline) for the full pipeline specification.
 
-**Current Workaround:** Manual population or extraction logic until lens-driven extraction is wired up. The system requires at least one "perfect entity" flowing end-to-end through the complete pipeline (see `docs/target/system-vision.md` Section 6.3).
+**Current Workaround:** Manual population or extraction logic until lens-driven extraction is wired up. The system requires at least one "perfect entity" flowing end-to-end through the complete pipeline (see `docs/system-vision.md` Section 6.3).
 
 ### 2. Schema Changes Require Regeneration
 When you modify `engine/config/schemas/*.yaml`:
@@ -388,8 +388,8 @@ When adding a new connector to the orchestration system:
 
 ## Key Files to Reference
 
-- **Architectural Constitution:** `docs/target/system-vision.md` (immutable invariants, Engine vs Lens boundaries, success criteria - READ FIRST for any architectural decision)
-- **Runtime Specification:** `docs/target/architecture.md` (concrete pipeline stages, contracts, execution semantics, validation rules)
+- **Architectural Constitution:** `docs/system-vision.md` (immutable invariants, Engine vs Lens boundaries, success criteria - READ FIRST for any architectural decision)
+- **Runtime Specification:** `docs/target-architecture.md` (concrete pipeline stages, contracts, execution semantics, validation rules)
 - **Implementation Plans:** `docs/plans/` (phase-by-phase implementation strategy for specific features)
 - **Schema Definitions:** `engine/config/schemas/*.yaml` (single source of truth for data models)
 - **Lens System:** `engine/lenses/` (vertical-specific domain knowledge - in progress)
@@ -452,8 +452,8 @@ npx prisma migrate dev  # Create migration (production)
 
 ## Support Resources
 
-- **Architectural Authority:** `docs/target/system-vision.md` is the immutable constitution - consult for ANY architectural decision
-- **Implementation Details:** `docs/target/architecture.md` defines runtime mechanics and concrete contracts
+- **Architectural Authority:** `docs/system-vision.md` is the immutable constitution - consult for ANY architectural decision
+- **Implementation Details:** `docs/target-architecture.md` defines runtime mechanics and concrete contracts
 - **Implementation Plans:** `docs/plans/` contains phase-by-phase implementation strategies
 - **Documentation:** `engine/docs/` contains detailed guides for extraction, ingestion, schema management
 - **Test Examples:** Browse `tests/engine/` for testing patterns and fixtures
@@ -491,4 +491,4 @@ When working on this codebase, you MUST:
    - The reference lens (Edinburgh Finds) gets NO special treatment
    - If a feature can't be expressed through Lens contracts → architectural defect
 
-**When uncertain:** Read `docs/target/system-vision.md` Section 8 ("How Humans and AI Agents Should Use This Document")
+**When uncertain:** Read `docs/system-vision.md` Section 8 ("How Humans and AI Agents Should Use This Document")

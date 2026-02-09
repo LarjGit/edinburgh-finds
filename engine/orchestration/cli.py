@@ -33,7 +33,7 @@ def bootstrap_lens(lens_id: str) -> ExecutionContext:
     """
     Bootstrap: Load and validate lens configuration ONCE at CLI entry point.
 
-    Per architecture.md 3.2: "Lens loading occurs only during engine bootstrap."
+    Per docs/target-architecture.md 3.2: "Lens loading occurs only during engine bootstrap."
     This function enforces the bootstrap boundary by loading the lens exactly
     once and creating an ExecutionContext for runtime use.
 
@@ -76,7 +76,7 @@ def bootstrap_lens(lens_id: str) -> ExecutionContext:
     canonical_contract = json.dumps(lens_contract, sort_keys=True)
     lens_hash = hashlib.sha256(canonical_contract.encode("utf-8")).hexdigest()
 
-    # Create and return ExecutionContext with lens metadata per architecture.md 3.6
+    # Create and return ExecutionContext with lens metadata per docs/target-architecture.md 3.6
     return ExecutionContext(
         lens_id=lens_id,
         lens_contract=lens_contract,
@@ -310,8 +310,8 @@ def main():
     # Execute command
     if args.command == "run":
         # Bootstrap: Load lens configuration ONCE at entry point
-        # Per architecture.md 3.2: Lens loading occurs only during bootstrap
-        # Lens resolution precedence per architecture.md 3.1:
+        # Per docs/target-architecture.md 3.2: Lens loading occurs only during bootstrap
+        # Lens resolution precedence per docs/target-architecture.md 3.1:
         # 1. CLI override (--lens)
         # 2. Environment variable (LENS_ID)
         # 3. Application config (engine/config/app.yaml → default_lens)
@@ -336,7 +336,7 @@ def main():
                     sys.exit(1)
 
         # Level 4: Dev/Test fallback (LR-002)
-        # Per architecture.md 3.1: "Must be explicitly enabled with --allow-default-lens"
+        # Per docs/target-architecture.md 3.1: "Must be explicitly enabled with --allow-default-lens"
         if not lens_id:
             if args.allow_default_lens:
                 # Use fallback lens with prominent warning

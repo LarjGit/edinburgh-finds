@@ -39,7 +39,7 @@ def _is_missing(value: Any) -> bool:
 
 
 # ---------------------------------------------------------------------------
-# Field-group sets — architecture.md 9.4 strategy routing
+# Field-group sets — docs/target-architecture.md 9.4 strategy routing
 # ---------------------------------------------------------------------------
 GEO_FIELDS = {"latitude", "longitude"}
 NARRATIVE_FIELDS = {"summary", "description"}
@@ -273,7 +273,7 @@ class FieldMerger:
 
 
     # ------------------------------------------------------------------
-    # Modules deep merge — architecture.md 9.4 "Modules JSON Structures"
+    # Modules deep merge — docs/target-architecture.md 9.4 "Modules JSON Structures"
     # ------------------------------------------------------------------
 
     def _merge_modules_deep(

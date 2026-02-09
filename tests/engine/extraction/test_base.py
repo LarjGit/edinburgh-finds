@@ -1,7 +1,7 @@
 """
 Tests for BaseExtractor interface contract.
 
-Validates architecture.md Section 3.8 (Extractor Interface Contract).
+Validates docs/target-architecture.md Section 3.8 (Extractor Interface Contract).
 """
 
 import inspect
@@ -13,12 +13,12 @@ from engine.extraction.base import BaseExtractor
 class TestExtractorInterfaceContract:
     """
     Validates that BaseExtractor enforces the required interface contract
-    per architecture.md Section 3.8.
+    per docs/target-architecture.md Section 3.8.
     """
 
     def test_base_extractor_requires_ctx_parameter(self):
         """
-        Validates architecture.md 3.8: Extractor Interface Contract.
+        Validates docs/target-architecture.md 3.8: Extractor Interface Contract.
 
         The abstract extract() method must require an ExecutionContext parameter
         to enable lens contract access and maintain boundary purity.
@@ -35,7 +35,7 @@ class TestExtractorInterfaceContract:
         # Must be keyword-only (enforced by * in signature)
         ctx_param = sig.parameters['ctx']
         assert ctx_param.kind == inspect.Parameter.KEYWORD_ONLY, \
-            "ctx parameter must be keyword-only (*, ctx: ...) per architecture.md 3.8"
+            "ctx parameter must be keyword-only (*, ctx: ...) per docs/target-architecture.md 3.8"
 
     def test_extract_with_logging_accepts_ctx(self):
         """
@@ -54,7 +54,7 @@ class TestExtractorInterfaceContract:
         """
         Validates CP-001b: All extractor implementations accept ctx parameter.
 
-        Per architecture.md 3.8, all concrete extractors must implement the
+        Per docs/target-architecture.md 3.8, all concrete extractors must implement the
         extract(raw_data, *, ctx) signature to receive ExecutionContext.
 
         This test ensures all 6 extractors comply with the interface contract.
@@ -85,4 +85,4 @@ class TestExtractorInterfaceContract:
             # Must be keyword-only
             ctx_param = sig.parameters['ctx']
             assert ctx_param.kind == inspect.Parameter.KEYWORD_ONLY, \
-                f"{extractor_class.__name__}.extract() ctx must be keyword-only (*, ctx: ...) per architecture.md 3.8"
+                f"{extractor_class.__name__}.extract() ctx must be keyword-only (*, ctx: ...) per docs/target-architecture.md 3.8"

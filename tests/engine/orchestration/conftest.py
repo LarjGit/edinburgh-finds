@@ -31,7 +31,7 @@ def mock_context():
     """
     Create mock ExecutionContext for tests (EC-001b).
 
-    Per architecture.md 3.6: ExecutionContext is immutable and contains only lens contract.
+    Per docs/target-architecture.md 3.6: ExecutionContext is immutable and contains only lens contract.
     For mutable state (candidates, errors, metrics), use mock_state fixture instead.
     """
     return ExecutionContext(
@@ -52,7 +52,7 @@ def mock_state():
     """
     Create OrchestratorState for tests (EC-001b).
 
-    Per architecture.md 3.6: OrchestratorState holds mutable execution state
+    Per docs/target-architecture.md 3.6: OrchestratorState holds mutable execution state
     (candidates, accepted_entities, errors, metrics).
     """
     return OrchestratorState()

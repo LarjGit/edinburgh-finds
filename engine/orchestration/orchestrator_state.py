@@ -3,7 +3,7 @@ Orchestrator State for Intelligent Ingestion Orchestration.
 
 This module provides the OrchestratorState class, which holds mutable state
 during orchestration execution. This is separate from ExecutionContext, which
-carries immutable lens contract data per architecture.md 3.6.
+carries immutable lens contract data per docs/target-architecture.md 3.6.
 
 OrchestratorState serves as a container for:
 - candidates: Entities discovered but not yet accepted
@@ -35,7 +35,7 @@ class OrchestratorState:
     the orchestration lifecycle. All fields are initialized as empty containers.
 
     This is separate from ExecutionContext, which carries only immutable
-    lens contract data per architecture.md 3.6.
+    lens contract data per docs/target-architecture.md 3.6.
 
     Attributes:
         candidates: List of candidate entities discovered during ingestion

@@ -591,7 +591,7 @@ class TestLensLoadingBoundary:
         """
         orchestrate() must accept ExecutionContext parameter (LB-001).
 
-        Per architecture.md 3.2: "Lens contracts enter runtime exclusively
+        Per docs/target-architecture.md 3.2: "Lens contracts enter runtime exclusively
         through ExecutionContext." The orchestrate() function should receive
         lens contract via ctx parameter, not load it internally.
         """
@@ -633,7 +633,7 @@ class TestLensLoadingBoundary:
         """
         orchestrate() must use lens from context (LB-001 + LR-003).
 
-        Per architecture.md 3.2: "No runtime component may load, reload, or
+        Per docs/target-architecture.md 3.2: "No runtime component may load, reload, or
         mutate lens configuration." After LR-003, orchestrate() requires ctx
         parameter and has NO fallback bootstrap path. Lens loading occurs
         only at bootstrap.
@@ -673,7 +673,7 @@ class TestPhaseBasedParallelExecution:
     """
     Test phase-based parallel execution (PL-003).
 
-    Per architecture.md 4.1 Stage 3: "Establish execution phases" implies
+    Per docs/target-architecture.md 4.1 Stage 3: "Establish execution phases" implies
     phase barriers with parallelism within phases. Connectors in the same
     phase should execute concurrently, while phase order is preserved.
     """

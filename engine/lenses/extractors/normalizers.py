@@ -56,7 +56,7 @@ def apply_normalizers(value: Any, normalizers: List[str]) -> Any:
     """
     Apply normalizer pipeline left-to-right.
 
-    Per architecture.md 7.5: Normalizers execute in order.
+    Per docs/target-architecture.md 7.5: Normalizers execute in order.
 
     Args:
         value: Input value

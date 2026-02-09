@@ -14,10 +14,10 @@ from engine.orchestration.execution_context import ExecutionContext
 
 
 class TestExecutionContextContract:
-    """Test ExecutionContext matches architecture.md 3.6 specification."""
+    """Test ExecutionContext matches docs/target-architecture.md 3.6 specification."""
 
     def test_execution_context_is_frozen_dataclass(self):
-        """ExecutionContext must be a frozen dataclass per architecture.md 3.6."""
+        """ExecutionContext must be a frozen dataclass per docs/target-architecture.md 3.6."""
         ctx = ExecutionContext(
             lens_id="edinburgh_finds",
             lens_contract={"test": "data"},
@@ -44,7 +44,7 @@ class TestExecutionContextContract:
         assert ctx.lens_hash == "def456"
 
     def test_execution_context_lens_hash_optional(self):
-        """lens_hash field must be Optional[str] per architecture.md 3.6."""
+        """lens_hash field must be Optional[str] per docs/target-architecture.md 3.6."""
         ctx = ExecutionContext(
             lens_id="edinburgh_finds",
             lens_contract={},
