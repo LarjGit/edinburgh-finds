@@ -12,6 +12,23 @@ Edinburgh Finds follows a three-stage pipeline:
 
 The system uses **lenses** - YAML configuration files that define domain-specific extraction rules, entity schemas, and confidence thresholds.
 
+## Documentation Guide
+
+This project has comprehensive documentation to help you at different stages:
+
+**Getting Started:**
+- **README.md** (this file) - Quick start, installation, basic usage, and CLI reference
+- Perfect for: First-time users, operators, and day-to-day usage
+
+**Deep Technical Understanding:**
+- **[docs/architecture.md](docs/architecture.md)** - Complete system architecture, data flows, and design decisions
+- Perfect for: Developers, system architects, and anyone extending the system
+
+**When to read what:**
+- 📚 **Start here** → README.md for installation and basic usage
+- 🔧 **Building/extending** → docs/architecture.md for technical deep-dive
+- 🐛 **Troubleshooting** → README.md troubleshooting section, then architecture for system internals
+
 ## Quick Start
 
 ### Prerequisites
