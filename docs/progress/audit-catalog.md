@@ -2,7 +2,7 @@
 
 **Current Phase:** Phase 2: Pipeline Implementation
 **Validation Entity:** West of Scotland Padel (validation) / Edinburgh Sports Club (investigation)
-**Last Updated:** 2026-02-10 (LA-013 COMPLETE: raw_categories schema fix enables canonical_place_types population. Next: modules issue investigation.)
+**Last Updated:** 2026-02-10 (LA-014 added: modules not populated despite canonical dimensions present. CRITICAL blocker for Phase 2 completion.)
 
 ---
 
@@ -1316,6 +1316,30 @@ observability, performance, and real-world data coverage **without altering core
   - **Fix Applied:** Changed `exclude: true` → `exclude: false` in entity.yaml line 109. Regenerated all schemas (EntityExtraction, Prisma). Updated test to expect new correct behavior. Database schema synchronized via `prisma db push`.
   - **Impact:** canonical_place_types now correctly populated via lens mapping rules. Validation entity ("West of Scotland Padel") progresses past canonical_place_types assertion (which was the blocking issue). Test now fails on modules (separate issue, new catalog item needed).
   - **Note:** Modules issue is SEPARATE from LA-013's scope. This fix achieved its core goal: correcting raw_categories schema classification and enabling canonical_place_types population.
+
+- [ ] **LA-014: Modules Not Populated Despite Canonical Dimensions Present (Module Trigger/Extraction Issue)**
+  - **Principle:** Module Architecture (architecture.md 7.1-7.5), One Perfect Entity (system-vision.md 6.3)
+  - **Location:** Module trigger evaluation or field extraction logic (needs investigation)
+  - **Description:** End-to-end test shows canonical dimensions correctly populated (`canonical_activities: ['padel']`, `canonical_place_types: ['sports_facility']`, `entity_class: 'place'`) but `modules: {}` remains empty. Lens configuration has module triggers that should attach `sports_facility` module when `facet: activity, value: padel` with `entity_class: place` condition. Either module triggers are not evaluating/firing, or module field extraction is not executing.
+  - **Evidence:**
+    - Test failure: `pytest tests/engine/orchestration/test_end_to_end_validation.py::test_one_perfect_entity_end_to_end_validation` ❌ FAILS at line 168
+    - Assertion: `assert len(entity.modules) > 0` → `AssertionError: modules should contain at least one module (got: {})`
+    - Entity state: `canonical_activities: ['padel']` ✅, `canonical_place_types: ['sports_facility']` ✅, `entity_class: 'place'` ✅, but `modules: {}` ❌
+    - Lens config: `engine/lenses/edinburgh_finds/lens.yaml` lines 117-123 defines trigger: `when: {facet: activity, value: padel}, add_modules: [sports_facility], conditions: [{entity_class: place}]`
+    - Expected: Module trigger should fire → `sports_facility` module attached → field rules execute → at least one field populated
+  - **Root Cause:** Unknown — requires investigation of:
+    1. Module trigger evaluation logic (`engine/extraction/module_extractor.py` or `lens_integration.py`)
+    2. Module field extraction execution
+    3. Module persistence during finalization
+    4. Potential missing wiring between canonical dimension population and module trigger evaluation
+  - **Estimated Scope:** Unknown until investigation complete (could be 1-3 files)
+  - **Blocking:** **CRITICAL** — Phase 2 completion (One Perfect Entity constitutional requirement per system-vision.md 6.3: "at least one module field populated")
+  - **Investigation Tasks:**
+    1. Verify module trigger evaluation receives correct inputs (canonical_activities, entity_class)
+    2. Check if triggers fire but field extraction fails
+    3. Verify module data flows through finalization/persistence correctly
+    4. Check if there's a missing integration point in extraction_integration.py
+  - **Success Criteria:** Validation entity persists with `modules: {'sports_facility': {...}}` containing at least one non-null field
 
 ---
 
