@@ -3,7 +3,7 @@
 # ============================================================
 #
 # Generated from: engine/config/schemas/entity.yaml
-# Generated at: 2026-02-03 09:13:47
+# Generated at: 2026-02-10 01:05:15
 #
 # To make changes:
 # 1. Edit engine/config/schemas/entity.yaml
@@ -87,7 +87,6 @@ ENTITY_FIELDS: List[FieldSpec] = [
         description="Raw free-form categories detected by the LLM (uncontrolled observational labels - NOT indexed, NOT used for filtering)",
         nullable=True,
         required=False,
-        exclude=True,
         default="default_factory=list",
         sa_column="Column(ARRAY(String))",
     ),

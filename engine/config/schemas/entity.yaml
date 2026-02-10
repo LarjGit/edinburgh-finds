@@ -106,7 +106,7 @@ fields:
     type: list[string]
     description: Raw free-form categories detected by the LLM (uncontrolled observational labels - NOT indexed, NOT used for filtering)
     nullable: true
-    exclude: true  # Populated by extraction engine
+    exclude: false  # Phase 1 primitive field from source APIs
     python:
       sa_column: "Column(ARRAY(String))"
       default: "default_factory=list"

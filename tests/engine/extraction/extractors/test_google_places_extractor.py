@@ -134,7 +134,7 @@ class TestExtractionBoundary:
             "internationalPhoneNumber": "+44 131 234 5678",
             "websiteUri": "https://example.com",
             "googleMapsUri": "https://maps.google.com/?cid=123",  # Non-schema field
-            "types": ["sports_complex"]  # Mapped to categories (non-schema)
+            "types": ["sports_complex"]  # Mapped to raw_categories (schema field)
         }
 
         extracted = extractor.extract(raw_data, ctx=mock_ctx)
@@ -147,13 +147,12 @@ class TestExtractionBoundary:
         assert "longitude" in attributes
         assert "phone" in attributes
         assert "postcode" in attributes
+        assert "raw_categories" in attributes  # Phase 1 primitive observation (LA-013 fix)
 
         # Non-schema fields should be in discovered_attributes
         # Note: "website" goes to discovered because schema field is "website_url"
-        # Note: "raw_categories" excluded from schema but extractors can populate it
         assert "website" in discovered
         assert "google_maps_uri" in discovered
-        assert "raw_categories" in discovered
 
         # Verify no canonical fields in either dict
         for field in ["canonical_activities", "canonical_roles", "canonical_place_types"]:

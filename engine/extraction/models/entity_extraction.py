@@ -3,7 +3,7 @@
 # ============================================================
 #
 # Generated from: engine/config/schemas/entity.yaml
-# Generated at: 2026-02-03 09:13:44
+# Generated at: 2026-02-10 01:05:15
 #
 # To make changes:
 # 1. Edit engine/config/schemas/entity.yaml
@@ -11,7 +11,7 @@
 #
 # ============================================================
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 class EntityExtraction(BaseModel):
@@ -22,6 +22,8 @@ class EntityExtraction(BaseModel):
     summary: Optional[str] = Field(default=None, description="A short overall description of the entity summarising all gathered data Null if not found.")
 
     description: Optional[str] = Field(default=None, description="Long-form aggregated evidence from multiple sources (reviews, snippets, editorial summaries) Null if not found.")
+
+    raw_categories: Optional[List[str]] = Field(default=None, description="Raw free-form categories detected by the LLM (uncontrolled observational labels - NOT indexed, NOT used for filtering) Null if not found.")
 
     discovered_attributes: Optional[Dict[str, Any]] = Field(default=None, description="Dictionary containing any extra attributes not explicitly defined in Listing or Entity models Null if not found.")
 
