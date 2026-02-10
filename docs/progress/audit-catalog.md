@@ -2,7 +2,7 @@
 
 **Current Phase:** Phase 2: Pipeline Implementation
 **Validation Entity:** West of Scotland Padel (validation) / Edinburgh Sports Club (investigation)
-**Last Updated:** 2026-02-05 (Stages 7-11 audited. Stage 7 COMPLIANT ✅. Stage 8: CL-001 ✅ CL-002 ✅. Stage 8 COMPLIANT ✅. Stage 9 COMPLIANT ✅. Stage 10: DM-001 ✅ DM-002 ✅ DM-003 ✅ DM-004 ✅ DM-005 ✅ DM-006 ✅. Stage 10 COMPLIANT ✅. Stage 11 COMPLIANT ✅. Cross-cutting: TI-001 ✅.)
+**Last Updated:** 2026-02-10 (LA-013 COMPLETE: raw_categories schema fix enables canonical_place_types population. Next: modules issue investigation.)
 
 ---
 
@@ -1302,6 +1302,20 @@ observability, performance, and real-world data coverage **without altering core
   - **Assertions:** entity persists + latitude not None + longitude not None (no canonical-dimension checks)
   - **Blocks:** None (optional data-quality gate)
   - **Blocked By:** None — can run independently
+
+- [x] **LA-013: raw_categories Incorrectly Marked exclude: true (Schema Classification Bug)**
+  - **Principle:** Extraction Boundary (architecture.md 4.2), Schema Design (system-vision.md Invariant 7)
+  - **Location:** `engine/config/schemas/entity.yaml:109`
+  - **Description:** `raw_categories` is marked `exclude: true` (not in extraction schema) but is actually a Phase 1 primitive field extracted from source APIs. This causes split_attributes() to misclassify it as non-schema data, sending it to discovered_attributes instead of top-level entity fields.
+  - **Completed:** 2026-02-10
+  - **Commit:** 8c44c3f
+  - **Executable Proof:**
+    - `pytest tests/engine/extraction/ -q` ✅ 166/166 PASSED (no regressions)
+    - `pytest tests/engine/extraction/extractors/test_google_places_extractor.py::TestExtractionBoundary::test_split_attributes_separates_schema_and_discovered -v` ✅ PASSED (test updated to assert raw_categories in attributes, not discovered)
+    - End-to-end validation shows `canonical_place_types: ['sports_facility']` ✅ NOW POPULATED (was [] before fix)
+  - **Fix Applied:** Changed `exclude: true` → `exclude: false` in entity.yaml line 109. Regenerated all schemas (EntityExtraction, Prisma). Updated test to expect new correct behavior. Database schema synchronized via `prisma db push`.
+  - **Impact:** canonical_place_types now correctly populated via lens mapping rules. Validation entity ("West of Scotland Padel") progresses past canonical_place_types assertion (which was the blocking issue). Test now fails on modules (separate issue, new catalog item needed).
+  - **Note:** Modules issue is SEPARATE from LA-013's scope. This fix achieved its core goal: correcting raw_categories schema classification and enabling canonical_place_types population.
 
 ---
 
