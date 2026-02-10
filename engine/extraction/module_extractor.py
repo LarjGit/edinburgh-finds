@@ -108,36 +108,50 @@ def execute_field_rules(
         {"courts": {"total": 5}}
     """
     result = {}
+    print(f"[DEBUG module_extractor.py] execute_field_rules called with source={source}, rules_count={len(rules)}")
+    print(f"[DEBUG module_extractor.py] entity keys: {list(entity.keys())}")
 
     for rule in rules:
+        print(f"[DEBUG module_extractor.py] Processing rule: {rule.get('rule_id', 'unknown')}")
         # Check applicability
         applicability = rule.get("applicability", {})
+        print(f"[DEBUG module_extractor.py]   applicability: {applicability}")
 
         # Filter by source
         allowed_sources = applicability.get("source", [])
+        print(f"[DEBUG module_extractor.py]   allowed_sources: {allowed_sources}, current source: {source}")
         if allowed_sources and source not in allowed_sources:
+            print(f"[DEBUG module_extractor.py]   SKIPPED: source '{source}' not in allowed_sources")
             continue
 
         # Filter by entity_class
         allowed_classes = applicability.get("entity_class", [])
         entity_class = entity.get("entity_class")
+        print(f"[DEBUG module_extractor.py]   allowed_classes: {allowed_classes}, entity_class: {entity_class}")
         if allowed_classes and entity_class not in allowed_classes:
+            print(f"[DEBUG module_extractor.py]   SKIPPED: entity_class '{entity_class}' not in allowed_classes")
             continue
+
+        print(f"[DEBUG module_extractor.py]   Applicability check PASSED")
 
         # Execute extractor
         extractor = rule.get("extractor")
         source_fields = rule.get("source_fields", [])
+        print(f"[DEBUG module_extractor.py]   extractor: {extractor}, source_fields: {source_fields}")
 
         extracted_value = None
 
         if extractor == "regex_capture":
             pattern = rule.get("pattern")
+            print(f"[DEBUG module_extractor.py]   regex pattern: {pattern}")
 
             # Search across source fields
             for field_name in source_fields:
                 field_value = entity.get(field_name)
+                print(f"[DEBUG module_extractor.py]   Checking field '{field_name}': value={'<missing>' if field_value is None else f'{str(field_value)[:100]}...' if len(str(field_value)) > 100 else str(field_value)}")
                 if field_value:
                     extracted_value = extract_regex_capture(str(field_value), pattern)
+                    print(f"[DEBUG module_extractor.py]   Extraction result: {extracted_value}")
                     if extracted_value:
                         break
 

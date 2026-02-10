@@ -144,7 +144,7 @@ See `docs/target-architecture.md` Section 4.1 for complete 11-stage pipeline spe
 - Query analysis → intelligent connector selection → execution plan
 - CLI: `python -m engine.orchestration.cli run "your query here"`
 
-**⚠️ Current Limitation:** Extractors populate basic fields but don't yet fully use lens mapping rules for canonical dimensions. See `docs/system-vision.md` Section 6 for "One Perfect Entity" validation requirement.
+**⚠️ Known Issue:** Partial lens mapping implementation. `canonical_activities` populates correctly but `canonical_place_types` and `modules` remain empty. End-to-end test `test_one_perfect_entity_end_to_end_validation` currently fails. "One Perfect Entity" constitutional requirement (system-vision.md Section 6.3) not yet achieved. See audit item LA-003.
 
 ---
 
@@ -164,7 +164,7 @@ See `docs/target-architecture.md` Section 4.1 for complete 11-stage pipeline spe
 - Module triggers (when to add sports_facility, wine_producer, etc.)
 - Canonical value definitions (display names, SEO slugs, icons)
 
-**⚠️ Implementation Status:** Lens architecture partially complete. Query orchestration and connector routing work, but canonical dimension extraction not fully wired. See `docs/system-vision.md` Section 6 and `docs/target-architecture.md` Section 4 for details.
+**⚠️ Implementation Status:** Lens architecture partially functional. Query orchestration and connector routing work. Stage 7 (Lens Application) is incomplete: `canonical_activities` mapping works, but `canonical_place_types` and `modules` population failing. Test: `pytest tests/engine/orchestration/test_end_to_end_validation.py::test_one_perfect_entity_end_to_end_validation -v`
 
 **Lens Development Guide:** `docs/lens-development-guide.md`
 

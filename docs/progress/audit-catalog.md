@@ -2,7 +2,7 @@
 
 **Current Phase:** Phase 2: Pipeline Implementation
 **Validation Entity:** West of Scotland Padel (validation) / Edinburgh Sports Club (investigation)
-**Last Updated:** 2026-02-10 (LA-014 added: modules not populated despite canonical dimensions present. CRITICAL blocker for Phase 2 completion.)
+**Last Updated:** 2026-02-10 (LA-017, LA-018, LA-019 added: universal amenity field extraction pipeline (model → prompts → lens mapping). LA-016 added: documentation updates for LA-015. LA-015 ready: entity.yaml vs entity_model.yaml schema/policy separation. LA-014 in progress: modules not populated - CRITICAL blocker for Phase 2 completion.)
 
 ---
 
@@ -1340,6 +1340,258 @@ observability, performance, and real-world data coverage **without altering core
     3. Verify module data flows through finalization/persistence correctly
     4. Check if there's a missing integration point in extraction_integration.py
   - **Success Criteria:** Validation entity persists with `modules: {'sports_facility': {...}}` containing at least one non-null field
+
+- [ ] **LA-015: Schema/Policy Separation — entity.yaml vs entity_model.yaml Shadow Schema Duplication**
+  - **Principle:** Single Source of Truth (system-vision.md Invariant 2), Schema Authority (CLAUDE.md "Schema Single Source of Truth")
+  - **Location:** `engine/config/entity_model.yaml` (dimensions + modules sections), `engine/config/schemas/entity.yaml` (schema definitions), `tests/engine/config/test_entity_model_purity.py` (validation tests)
+  - **Description:** entity_model.yaml contains shadow schema duplicating storage details from entity.yaml, violating separation of concerns. entity_model.yaml should contain ONLY policy/purity rules (semantic guarantees, opaqueness, vertical-agnostic constraints), while entity.yaml should be the ONLY schema/storage truth (fields, types, indexes, codegen). Current duplication creates maintenance burden: changes to dimension storage require editing both files, and the purpose of each file is ambiguous. **Universal amenities are stored as top-level fields in entity.yaml (not under modules JSONB).** **CRITICAL SEMANTICS:** `required_modules` defines required capability groups for an entity_class; it does NOT imply anything must appear under Entity.modules JSONB — this is policy about which modules should be populated, not a data contract guarantee.
+  - **Evidence:**
+    - **Dimensions shadow schema:** entity_model.yaml lines 79-122 contain `storage_type: "text[]"`, `indexed: "GIN"`, `cardinality: "0..N"` — these are storage directives that duplicate entity.yaml definitions and are read ONLY by structure validation tests (test_entity_model_purity.py lines 150-171), NOT by runtime code
+    - **Modules shadow schema:** entity_model.yaml lines 130-287 contain field inventories (name, type, required) for universal modules — these are NEVER read by runtime code
+    - **Runtime usage analysis:** `get_engine_modules()` (entity_classifier.py:366) reads ONLY `entity_classes.*.required_modules` (returns list of module names like `['core', 'location']`), NOT field definitions
+    - **Test usage analysis:** Purity tests validate dimensions are marked "opaque" and modules are "universal only" (semantic policy ✅), but also validate storage_type="text[]" and indexed="GIN" (storage directives ✗)
+    - **Field duplication:** Some universal fields (e.g., location/contact) are duplicated between entity.yaml (top-level columns) and entity_model.yaml (modules.*.fields - shadow schema); amenities/locality exist in entity_model.yaml but not yet in entity.yaml
+  - **Root Cause:** entity_model.yaml evolved to include both policy rules (which entity_class requires which modules - legitimate) AND structural validation (storage types, indexes, field inventories - inappropriate duplication). Original intent was policy/purity documentation, but accumulated storage details that belong in entity.yaml.
+  - **Approach Decision:** Use Option A (Policy-Only Modules). KEEP the `modules:` section in entity_model.yaml. REMOVE all field inventories and schema/storage details. RETAIN only: module names, `applicable_to`, descriptions/notes (policy semantics). Do NOT convert to a flat `universal_module_names` list — we want the minimal, backward-compatible change surface.
+  - **Estimated Scope:** 3 files modified, ~180 lines changed (pruning, not complex logic changes). **NO BEHAVIOR CHANGE** — pruning and alignment only. **SCOPE LIMIT:** Do not modify lens.yaml or module extraction logic in this item.
+  - **Blocking:** Not blocking Phase 2 completion, but causes ongoing maintenance confusion and violates architectural clarity
+  - **Implementation Tasks:**
+    1. **Prune entity_model.yaml dimensions section:**
+       - Remove: `storage_type`, `indexed`, `cardinality` (storage directives)
+       - Keep: `description`, `notes:` (containing policy statements about opaqueness), `applicable_to` (policy)
+       - Note: Keep `notes:` key as-is (zero churn) or rename to `semantic_rules:` if desired — either way, update tests to enforce the chosen key exists
+       - Add: Clear statement that dimensions are opaque, engine does no interpretation
+    2. **Prune entity_model.yaml modules section (Option A - policy-only):**
+       - Remove: ALL `fields:` definitions (field inventories are shadow schema)
+       - Keep: Module names as dict keys, `description`, `applicable_to`, policy notes
+       - Add: Header clarifying "This file defines POLICY and SEMANTIC RULES only — NOT storage schema. Field definitions live in entity.yaml (universal) or lens contracts (domain)."
+       - Remove: `special_hours` concept from entity_model.yaml (unused, not represented in schema)
+       - Document: `required_modules` are capability groups, NOT JSONB key guarantees
+       - Keep: `entity_classes.*.required_modules` lists (read by get_engine_modules)
+    3. **Add missing universal fields to entity.yaml:**
+       - Add: `locality` (string, neighborhood/district)
+       - Add: `wifi`, `parking_available`, `disabled_access` (boolean amenities as top-level columns)
+       - Clarify: `modules` JSONB field notes — state explicitly that universal fields are top-level columns, modules JSONB is for lens-specific enrichment only, and `required_modules` is policy (not JSONB guarantee)
+    4. **Update test_entity_model_purity.py:**
+       - Remove: `test_dimensions_are_postgres_arrays()`, `test_dimensions_have_gin_indexes()` (testing storage)
+       - Remove: `test_amenities_module_universal_only()`, `test_module_fields_well_formed()` (testing field inventories)
+       - Keep/adapt: `test_dimensions_marked_as_opaque()` (semantic policy) — adjust to check that `notes:` key exists (or `semantic_rules:` if renamed in Task 1) and contains opaqueness policy statements
+       - Keep: `test_universal_modules_only()`, `test_no_domain_modules()`, `test_entity_classes_have_required_modules()` (unchanged - work with module names)
+       - Update: Tests to validate only policy/semantics (not storage), ensuring coverage for the invariants they are meant to enforce
+       - Note: Do NOT add new schema completeness test suites in this item (that should be a future audit item if desired)
+    5. **Update entity_model.yaml header comments:**
+       - Clarify: "This file defines POLICY and SEMANTIC RULES, NOT storage schema"
+       - Clarify: "Module names vs module data: required_modules returns capability group names, not field definitions"
+       - Clarify: "`required_modules` defines required capability groups; does NOT imply Entity.modules JSONB keys"
+       - Add: "For storage schema (fields, types, indexes), see engine/config/schemas/entity.yaml"
+    6. **Regenerate schemas after entity.yaml changes:**
+       - Run: `python -m engine.schema.generate --all`
+       - Verify: Prisma schema, SQLAlchemy models, TypeScript interfaces updated
+       - Database migration: Run `prisma db push` or create migration for new top-level amenity fields
+       - Expected diff: Adds four new universal columns (locality, wifi, parking_available, disabled_access), no unintended changes elsewhere
+  - **Success Criteria:**
+    - ✅ entity_model.yaml contains ZERO storage directives (no storage_type, indexed, cardinality)
+    - ✅ entity_model.yaml contains ZERO field inventories (no modules.*.fields sections)
+    - ✅ entity_model.yaml RETAINS module names as dict keys with policy metadata (Option A structure)
+    - ✅ entity.yaml is the ONLY source of field definitions for universal fields
+    - ✅ **NO RUNTIME BEHAVIOR CHANGE:** get_engine_modules() continues to work exactly as today (returns module name lists)
+    - ✅ Purity tests pass (5 of 7 tests unchanged, 2 removed: amenities/field validation)
+    - ✅ Schema generation produces the expected diff: adds four new universal columns, shows no unintended diffs elsewhere
+    - ✅ No runtime code reads removed entity_model.yaml sections (verified via grep)
+    - ✅ Documentation explicitly states: "`required_modules` defines required capability groups for an entity_class; does NOT imply anything must appear under Entity.modules JSONB"
+  - **Final Verification Checklist:**
+    - Regenerate schemas and confirm expected diff only (4 new columns)
+    - Confirm via grep that no runtime code reads removed sections
+    - Confirm 5/7 tests unchanged, 2 removed, no logic rewrites
+    - Verify get_engine_modules() behavior unchanged (integration test)
+  - **Documentation Impact:**
+    - Update CLAUDE.md if it references entity_model.yaml structure
+    - Update development-methodology.md if it mentions schema sources
+    - Add architectural decision record (ADR) explaining the separation: entity.yaml = storage truth, entity_model.yaml = policy truth
+
+- [ ] **LA-016: Documentation Updates for Schema/Policy Separation (LA-015 Follow-up)**
+  - **Principle:** Documentation Accuracy, Architectural Clarity (system-vision.md Invariant 2 - Single Source of Truth)
+  - **Location:** `CLAUDE.md`, `docs/development-methodology.md`, `docs/adr/` (new ADR file)
+  - **Description:** Update repository documentation to reflect the schema/policy separation implemented in LA-015. Clarify that entity.yaml is the single source of truth for storage schema, while entity_model.yaml defines policy and semantic rules only.
+  - **Discovered During:** LA-015 architectural analysis (2026-02-10)
+  - **Depends On:** LA-015 (must be completed first)
+  - **Blocking:** Not blocking Phase 2 completion, but required for architectural clarity and onboarding
+  - **Rationale:** LA-015 is a compliance/cleanup task that enforces existing architectural invariants (system-vision.md Invariant 2). The core architectural documents (system-vision.md, target-architecture.md) already define the correct model and do NOT need updates. However, supporting documentation and ADRs need to reflect the implementation changes.
+  - **Estimated Scope:** 3 files modified/created, ~60-120 lines total (mostly documentation text)
+  - **Implementation Tasks:**
+    1. **Update CLAUDE.md (minor clarification):**
+       - Locate: "Schema Single Source of Truth" section (currently around line 50-60)
+       - Add: Clarify that entity.yaml = storage schema (fields, types, indexes), entity_model.yaml = policy/semantic rules (opaqueness, required_modules, entity_class constraints)
+       - Add: Note that entity_model.yaml does NOT define storage schema or field inventories
+       - Expected change: ~5-10 lines
+    2. **Check and update development-methodology.md (conditional):**
+       - Search: References to entity_model.yaml or schema sources
+       - Update: If methodology mentions entity_model.yaml structure, clarify the policy vs schema separation
+       - Expected change: ~5 lines if updates needed, 0 lines if no references found
+    3. **Create new ADR:**
+       - File: `docs/adr/001-schema-policy-separation.md` (or next available ADR number)
+       - Content:
+         - Context: entity_model.yaml accumulated shadow schema over time
+         - Decision: Separate storage schema (entity.yaml) from policy/semantics (entity_model.yaml)
+         - Rationale: Enforce system-vision.md Invariant 2 (Single Source of Truth), reduce maintenance confusion
+         - Consequences: entity.yaml is ONLY source for field definitions; entity_model.yaml contains policy metadata only
+         - Implementation: LA-015 pruned storage directives and field inventories from entity_model.yaml
+       - Expected length: ~50-100 lines
+  - **Success Criteria:**
+    - ✅ CLAUDE.md explicitly states entity.yaml vs entity_model.yaml separation
+    - ✅ development-methodology.md checked for entity_model.yaml references (updated if found)
+    - ✅ ADR created explaining the separation and its rationale
+    - ✅ Documentation correctly states that system-vision.md and target-architecture.md do NOT need updates (they already got it right)
+    - ✅ New developers reading docs will understand: entity.yaml = schema source, entity_model.yaml = policy source
+  - **Architectural Documents Assessment:**
+    - **system-vision.md:** NO UPDATE NEEDED ✅ (Invariant 2 already covers "Single Source of Truth for Schemas")
+    - **target-architecture.md:** NO UPDATE NEEDED ✅ (No changes to 11-stage pipeline or contracts)
+    - **CLAUDE.md:** UPDATE NEEDED ⚠️ (Clarify entity_model.yaml role)
+    - **development-methodology.md:** CHECK NEEDED ⚠️ (Conditionally update if schema sources mentioned)
+    - **ADR:** NEW FILE NEEDED ✅ (Document the architectural decision)
+
+- [ ] **LA-017: Add Universal Amenity Fields to EntityExtraction Model**
+  - **Principle:** Schema Completeness, Universal Field Coverage (system-vision.md Invariant 1 - Engine Purity)
+  - **Location:** `engine/extraction/models/entity_extraction.py` (Pydantic model), `engine/config/schemas/entity.yaml` (schema definition)
+  - **Description:** Add the 4 new universal fields (locality, wifi, parking_available, disabled_access) to the EntityExtraction Pydantic model so that LLM extractors can populate them. These fields were added to entity.yaml in LA-015 but are not yet present in the extraction model, creating a gap where extractors cannot populate data that the database schema supports.
+  - **Discovered During:** LA-015 knock-on effects analysis (2026-02-10)
+  - **Depends On:** LA-015 (schema must be updated first), LA-016 (documentation clarity)
+  - **Blocking:** LA-018 (extractor prompts need model fields to exist), LA-019 (lens mapping needs extraction fields)
+  - **Rationale:** The EntityExtraction model defines what fields LLM extractors can populate. Without these fields in the model, extractors cannot capture amenity/accessibility data even if source APIs provide it. This creates a data quality gap where universal fields exist in the database but remain unpopulated.
+  - **Estimated Scope:** 2 files modified, ~25 lines added (4 field definitions + docstrings + validation)
+  - **Implementation Tasks:**
+    1. **Add fields to EntityExtraction Pydantic model:**
+       - File: `engine/extraction/models/entity_extraction.py`
+       - Add after existing location fields (around line 32-40):
+         ```python
+         locality: Optional[str] = Field(default=None, description="Neighborhood, district, or locality name within the city Null if not found.")
+         wifi: Optional[bool] = Field(default=None, description="Whether free WiFi is available Null means unknown.")
+         parking_available: Optional[bool] = Field(default=None, description="Whether parking is available (any type: street, lot, garage) Null means unknown.")
+         disabled_access: Optional[bool] = Field(default=None, description="Whether the venue has wheelchair/disability access Null means unknown.")
+         ```
+       - Note: Use Optional[bool] (not str) for boolean amenities - extractors should return True/False/None
+    2. **Verify schema alignment:**
+       - Check: entity.yaml field types match Pydantic model types
+       - Confirm: locality is Optional[str], amenities are Optional[bool]
+       - Run: `python -m engine.schema.generate --all` (should be no-op if already done in LA-015)
+    3. **Update attribute_splitter.py if needed:**
+       - Check: Does attribute_splitter need to know about new fields?
+       - Verify: New fields flow through split_attributes() correctly
+    4. **Add tests for new fields:**
+       - File: `tests/engine/extraction/models/test_entity_extraction.py` (or create if missing)
+       - Test: Model accepts new fields with correct types
+       - Test: Validation works (bool fields reject strings, etc.)
+       - Expected: ~4 new test cases
+  - **Success Criteria:**
+    - ✅ EntityExtraction model has all 4 new fields with correct types (str, bool, bool, bool)
+    - ✅ Field descriptions guide LLM extractors on what to look for
+    - ✅ Model validation passes (pytest tests/engine/extraction/models/)
+    - ✅ Schema generation produces no unexpected diffs
+    - ✅ attribute_splitter handles new fields correctly
+  - **Data Sources with Relevant Data:**
+    - **OSM**: Has `amenity=*`, `wheelchair=*`, `parking=*`, `addr:suburb=*` tags
+    - **Google Places**: Has accessibility attributes, parking info
+    - **Edinburgh Council**: May have accessibility data in venue details
+  - **Note:** This item only adds fields to the extraction MODEL. Updating extractor PROMPTS to actually populate these fields is LA-018.
+
+- [ ] **LA-018: Update Extractor Prompts to Capture Amenity/Accessibility Data**
+  - **Principle:** Data Quality, Universal Field Population (system-vision.md Invariant 1 - Engine Purity)
+  - **Location:** `engine/extraction/prompts/*.txt` (LLM prompts), extractor implementations in `engine/extraction/extractors/*.py`
+  - **Description:** Update LLM extraction prompts to instruct extractors to capture amenity and accessibility data (locality, wifi, parking_available, disabled_access) from source APIs. Currently, extractors may receive this data from sources like OSM or Google Places but don't extract it because prompts don't mention these fields.
+  - **Discovered During:** LA-015 knock-on effects analysis (2026-02-10)
+  - **Depends On:** LA-017 (EntityExtraction model must have these fields first)
+  - **Blocking:** LA-019 (lens mapping needs extracted data to exist)
+  - **Rationale:** Even with LA-017 adding fields to the extraction model, LLM extractors won't populate them unless prompts explicitly instruct them to look for this data in source responses. This is the critical step to actually start capturing amenity/accessibility information.
+  - **Estimated Scope:** 3 prompt files modified, ~50-75 lines added (guidance text for LLMs)
+  - **Priority Extractors (have relevant source data):**
+    1. **OSM Extractor** - OSM tags include `wheelchair=yes/no`, `parking=*`, `internet_access=wlan`, `addr:suburb=*`
+    2. **Google Places Extractor** - Places API has accessibility attributes, parking info
+    3. **Edinburgh Council Extractor** - Council data may include accessibility details
+  - **Implementation Tasks:**
+    1. **Update OSM extraction prompt:**
+       - File: `engine/extraction/prompts/osm_extraction.txt`
+       - Add guidance for mapping OSM tags to universal fields:
+         - `addr:suburb` or `addr:neighbourhood` → locality
+         - `internet_access=wlan` or `internet_access=yes` → wifi=True
+         - `parking=*` (any parking type) → parking_available=True
+         - `wheelchair=yes/designated` → disabled_access=True
+         - `wheelchair=no/limited` → disabled_access=False
+       - Note: LLM should return None if tag absent (not False)
+    2. **Update Google Places extraction prompt:**
+       - File: Check if `engine/extraction/prompts/google_places_extraction.txt` exists
+       - Add guidance for Places API accessibility/amenity fields
+       - Map Places API attributes to universal fields (exact field names TBD - check API response structure)
+    3. **Update Edinburgh Council extraction prompt (if applicable):**
+       - File: Check if council extractor uses a prompt file
+       - Add guidance if source data contains accessibility info
+       - May not be applicable if council data lacks this information
+    4. **Test prompt effectiveness:**
+       - Run extractors on test data with known amenity info
+       - Verify fields populate correctly: True/False/None (not strings)
+       - Check: Does LLM correctly distinguish absent data (None) from explicitly False?
+    5. **Add tests for new field extraction:**
+       - File: `tests/engine/extraction/extractors/test_osm_extractor.py` (and others)
+       - Test: OSM data with wheelchair=yes → disabled_access=True
+       - Test: OSM data without parking tags → parking_available=None
+       - Expected: ~8-12 new test cases across 2-3 extractor test files
+  - **Success Criteria:**
+    - ✅ OSM extractor prompt includes mapping rules for all 4 amenity fields
+    - ✅ Google Places extractor prompt includes amenity field guidance (if applicable)
+    - ✅ Extractor tests verify correct field population (True/False/None handling)
+    - ✅ Test entities with known amenity data extract correctly
+    - ✅ Extractors return None (not False) when data is absent
+  - **Validation Strategy:**
+    - Manual test: Run OSM extractor on Meadowbank Sports Centre (known wheelchair accessible)
+    - Manual test: Run OSM extractor on venue with parking tags
+    - Assert: extracted dict contains `wifi`, `parking_available`, `disabled_access` keys with correct values
+  - **Note:** This item updates PROMPTS only. Adding lens MAPPING rules to route this data is LA-019.
+
+- [ ] **LA-019: Add Lens Mapping Rules for Universal Amenity Fields (Optional)**
+  - **Principle:** Lens Configuration, Data Routing (target-architecture.md Stage 7 - Lens Application)
+  - **Location:** `engine/lenses/edinburgh_finds/lens.yaml`, potentially `engine/lenses/wine/lens.yaml`
+  - **Description:** Consider whether lens mapping rules are needed to route amenity/accessibility data (locality, wifi, parking_available, disabled_access) from raw observations to final entity fields. Determine if these universal fields should be populated directly by extractors (Phase 1) or require lens mapping (Phase 2).
+  - **Discovered During:** LA-015 knock-on effects analysis (2026-02-10)
+  - **Depends On:** LA-017 (model fields), LA-018 (extractors populate data)
+  - **Blocking:** None (data quality enhancement, not a blocker)
+  - **Rationale:** Universal fields like locality/wifi/parking/accessibility may or may not require lens-specific mapping. If extractors populate them directly as schema primitives (Phase 1), no lens rules needed. If they require lens-specific interpretation (Phase 2), mapping rules are needed. This item clarifies the correct approach and implements accordingly.
+  - **Estimated Scope:** 1-2 lens files modified, ~20-40 lines (if mapping rules needed); OR 0 files modified (if Phase 1 extraction sufficient)
+  - **Decision Tree:**
+    ```
+    Are these fields lens-specific or universal?
+    ├─ UNIVERSAL (e.g., wifi is wifi in all verticals)
+    │  └─> Extractors populate directly (Phase 1) → NO lens mapping needed
+    │
+    └─ LENS-SPECIFIC (e.g., "locality" means different things in Wine vs Padel)
+       └─> Lens mapping rules needed (Phase 2) → Implement in lens.yaml
+    ```
+  - **Implementation Tasks:**
+    1. **Analyze field semantics:**
+       - Question: Is "locality" universal (neighborhood name) or lens-specific (wine region vs sports district)?
+       - Question: Is "wifi" universal (boolean) or lens-specific (needs interpretation)?
+       - Question: Is "parking" universal (boolean) or lens-specific (street vs lot vs valet)?
+       - Recommendation: These appear UNIVERSAL → extractors should populate directly (no lens mapping)
+    2. **If lens mapping NOT needed (recommended):**
+       - Verify: Extractors populate fields directly in Phase 1
+       - Verify: Fields flow through to Entity.create() unchanged
+       - Add test: End-to-end test confirms amenity fields persist to database
+       - Document: Add note to lens.yaml clarifying these are Phase 1 fields (no mapping required)
+    3. **If lens mapping IS needed (unlikely):**
+       - Add field_rules to lens.yaml for each amenity field
+       - Create deterministic extractors (no LLM) to route data
+       - Add tests for lens mapping behavior
+    4. **Validation:**
+       - Run end-to-end test with entity containing amenity data
+       - Assert: Entity in database has wifi=True, parking_available=True, etc.
+       - Verify: No lens mapping rules needed (fields flow through directly)
+  - **Success Criteria:**
+    - ✅ Decision documented: Are these Phase 1 (extractor) or Phase 2 (lens) fields?
+    - ✅ If Phase 1: Verify extractors populate directly, no lens rules needed
+    - ✅ If Phase 2: Lens mapping rules implemented and tested
+    - ✅ End-to-end test confirms amenity data flows to database correctly
+  - **Recommended Approach:** Phase 1 (no lens mapping)
+    - **Rationale:** Fields like wifi/parking/disabled_access are universal boolean facts, not lens-specific interpretations. They should be populated by extractors as schema primitives (Phase 1), not require lens mapping (Phase 2).
+    - **Action:** Verify LA-018 extractors populate these fields directly. Add e2e test. Document in lens.yaml that these are Phase 1 fields.
+  - **Note:** This item may result in ZERO code changes if analysis confirms Phase 1 extraction is sufficient. The value is in documenting the decision and validating the data flow.
 
 ---
 
