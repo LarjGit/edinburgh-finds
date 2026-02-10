@@ -1345,7 +1345,7 @@ observability, performance, and real-world data coverage **without altering core
   - **Principle:** Single Source of Truth (system-vision.md Invariant 2), Schema Authority (CLAUDE.md "Schema Single Source of Truth")
   - **Location:** `engine/config/entity_model.yaml` (dimensions + modules sections), `tests/engine/config/test_entity_model_purity.py` (validation tests)
   - **Completed:** 2026-02-10 (Phase 1: Pruning storage directives and field inventories)
-  - **Commit:** [pending]
+  - **Commit:** e66eabf
   - **Note:** Phase 2 (adding missing universal fields to entity.yaml) is tracked in LA-017, LA-018, LA-019
   - **Description:** entity_model.yaml contains shadow schema duplicating storage details from entity.yaml, violating separation of concerns. entity_model.yaml should contain ONLY policy/purity rules (semantic guarantees, opaqueness, vertical-agnostic constraints), while entity.yaml should be the ONLY schema/storage truth (fields, types, indexes, codegen). Current duplication creates maintenance burden: changes to dimension storage require editing both files, and the purpose of each file is ambiguous. **Universal amenities are stored as top-level fields in entity.yaml (not under modules JSONB).** **CRITICAL SEMANTICS:** `required_modules` defines required capability groups for an entity_class; it does NOT imply anything must appear under Entity.modules JSONB — this is policy about which modules should be populated, not a data contract guarantee.
   - **Evidence:**
