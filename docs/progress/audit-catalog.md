@@ -1458,7 +1458,7 @@ observability, performance, and real-world data coverage **without altering core
   - **Location:** `engine/extraction/models/entity_extraction.py` (Pydantic model), `engine/config/schemas/entity.yaml` (schema definition)
   - **Description:** Add the 4 new universal fields (locality, wifi, parking_available, disabled_access) to the EntityExtraction Pydantic model so that LLM extractors can populate them. These fields were added to entity.yaml in LA-015 but are not yet present in the extraction model, creating a gap where extractors cannot populate data that the database schema supports.
   - **Completed:** 2026-02-10
-  - **Commit:** (will be added after commit)
+  - **Commit:** af2ab86
   - **Executable Proof:**
     - `pytest tests/engine/extraction/models/test_entity_extraction.py -v` ✅ 9/9 PASSED
     - `pytest tests/engine/extraction/ -v` ✅ 178/178 PASSED (no regressions)
