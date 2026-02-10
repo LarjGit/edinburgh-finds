@@ -77,6 +77,43 @@ OpenStreetMap provides geographic data as structured key-value tags. These tags:
 - `parking=yes` → Parking available
 - `parking:spaces=50` → parking_spaces: 50
 
+**Universal Amenity & Accessibility Fields (Schema Primitives):**
+
+These fields map directly to the EntityExtraction schema. Extract ONLY from explicit OSM tags - never infer from venue type, name, or context.
+
+**Locality Field:**
+- `addr:suburb` → locality (neighborhood/district name)
+- `addr:neighbourhood` or `addr:neighborhood` → locality
+- If NONE of these tags present → locality: null
+- Do NOT derive locality from entity_name or description
+
+**WiFi Availability:**
+- `internet_access=wlan` → wifi: true
+- `internet_access=yes` → wifi: true
+- `internet_access=no` → wifi: false
+- Tag missing or ambiguous (e.g., `internet_access=terminal`) → wifi: null
+- Do NOT infer wifi from venue category (cafe, hotel, etc.)
+
+**Parking Availability:**
+- `parking=yes` → parking_available: true
+- `parking=surface` → parking_available: true
+- `parking=multi-storey` → parking_available: true
+- `parking=underground` → parking_available: true
+- `parking=no` → parking_available: false
+- Tag missing → parking_available: null
+- Do NOT infer parking from venue type or location
+
+**Disability Access:**
+- `wheelchair=yes` → disabled_access: true
+- `wheelchair=designated` → disabled_access: true
+- `wheelchair=no` → disabled_access: false
+- `wheelchair=limited` → disabled_access: null (uncertain access)
+- Tag missing → disabled_access: null
+- Do NOT infer accessibility from venue type or age
+
+**CRITICAL RULE FOR THESE FIELDS:**
+If OSM tags do not provide explicit evidence, set the field to **null**. Never guess based on venue type, name, description, or other context. These are Phase 1 primitives - extraction only, no inference.
+
 **Opening Hours:**
 - `opening_hours=Mo-Fr 06:00-22:00; Sa-Su 08:00-20:00` → Parse to structured format
 - OSM uses standard format: day ranges with times
