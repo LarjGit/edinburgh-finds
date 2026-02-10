@@ -2,7 +2,7 @@
 
 **Current Phase:** Phase 2: Pipeline Implementation
 **Validation Entity:** West of Scotland Padel (validation) / Edinburgh Sports Club (investigation)
-**Last Updated:** 2026-02-10 (LA-015 completed: entity.yaml vs entity_model.yaml schema/policy separation Phase 1 - pruned storage directives and field inventories. Phase 2 tracked in LA-017/LA-018/LA-019. LA-016 pending: documentation updates. LA-014 in progress: modules not populated - CRITICAL blocker for Phase 2 completion.)
+**Last Updated:** 2026-02-10 (LA-015 completed: schema/policy separation Phase 1. LA-017 completed: universal amenity fields added to entity.yaml + EntityExtraction. LA-018/LA-019 pending: extractor prompts + lens mapping. LA-016 pending: documentation updates. LA-014 in progress: modules not populated - CRITICAL blocker for Phase 2 completion.)
 
 ---
 
@@ -1453,14 +1453,23 @@ observability, performance, and real-world data coverage **without altering core
     - **development-methodology.md:** CHECK NEEDED ⚠️ (Conditionally update if schema sources mentioned)
     - **ADR:** NEW FILE NEEDED ✅ (Document the architectural decision)
 
-- [ ] **LA-017: Add Universal Amenity Fields to EntityExtraction Model**
-  - **Principle:** Schema Completeness, Universal Field Coverage (system-vision.md Invariant 1 - Engine Purity)
+- [x] **LA-017: Add Universal Amenity Fields to EntityExtraction Model**
+  - **Principle:** Schema Completeness, Universal Field Coverage (system-vision.md Invariant 1 - Engine Purity, Invariant 2 - Single Source of Truth)
   - **Location:** `engine/extraction/models/entity_extraction.py` (Pydantic model), `engine/config/schemas/entity.yaml` (schema definition)
   - **Description:** Add the 4 new universal fields (locality, wifi, parking_available, disabled_access) to the EntityExtraction Pydantic model so that LLM extractors can populate them. These fields were added to entity.yaml in LA-015 but are not yet present in the extraction model, creating a gap where extractors cannot populate data that the database schema supports.
+  - **Completed:** 2026-02-10
+  - **Commit:** (will be added after commit)
+  - **Executable Proof:**
+    - `pytest tests/engine/extraction/models/test_entity_extraction.py -v` ✅ 9/9 PASSED
+    - `pytest tests/engine/extraction/ -v` ✅ 178/178 PASSED (no regressions)
+    - Fields exist in EntityExtraction: locality (str), wifi (bool), parking_available (bool), disabled_access (bool)
+    - Fields exist in Prisma schema as DB columns (engine/schema.prisma lines 46-49)
+    - Negative validations pass: NOT in extraction_fields, NOT in entity_model.yaml
   - **Discovered During:** LA-015 knock-on effects analysis (2026-02-10)
   - **Depends On:** LA-015 (schema must be updated first), LA-016 (documentation clarity)
   - **Blocking:** LA-018 (extractor prompts need model fields to exist), LA-019 (lens mapping needs extraction fields)
   - **Rationale:** The EntityExtraction model defines what fields LLM extractors can populate. Without these fields in the model, extractors cannot capture amenity/accessibility data even if source APIs provide it. This creates a data quality gap where universal fields exist in the database but remain unpopulated.
+  - **Implementation Note:** Fields added to entity.yaml `fields:` section with `exclude: false` (Phase 1 primitives), NOT to extraction_fields. Schema generator produced Pydantic model + Prisma schemas. No lens, module, or runtime changes per scope boundary.
   - **Estimated Scope:** 2 files modified, ~25 lines added (4 field definitions + docstrings + validation)
   - **Implementation Tasks:**
     1. **Add fields to EntityExtraction Pydantic model:**

@@ -3,7 +3,7 @@
 # ============================================================
 #
 # Generated from: engine/config/schemas/entity.yaml
-# Generated at: 2026-02-10 01:05:15
+# Generated at: 2026-02-10 19:46:34
 #
 # To make changes:
 # 1. Edit engine/config/schemas/entity.yaml
@@ -196,6 +196,36 @@ ENTITY_FIELDS: List[FieldSpec] = [
         name="longitude",
         type_annotation="Optional[float]",
         description="WGS84 Longitude coordinate (decimal degrees)",
+        nullable=True,
+        required=False,
+    ),
+    FieldSpec(
+        name="locality",
+        type_annotation="Optional[str]",
+        description="Neighborhood, district, or locality name within the city",
+        nullable=True,
+        required=False,
+        search_category="location",
+        search_keywords=["neighborhood", "district", "locality"],
+    ),
+    FieldSpec(
+        name="wifi",
+        type_annotation="Optional[bool]",
+        description="Whether free WiFi is available",
+        nullable=True,
+        required=False,
+    ),
+    FieldSpec(
+        name="parking_available",
+        type_annotation="Optional[bool]",
+        description="Whether parking is available (any type)",
+        nullable=True,
+        required=False,
+    ),
+    FieldSpec(
+        name="disabled_access",
+        type_annotation="Optional[bool]",
+        description="Whether the venue has wheelchair/disability access",
         nullable=True,
         required=False,
     ),

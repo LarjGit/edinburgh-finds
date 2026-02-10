@@ -3,7 +3,7 @@
 # ============================================================
 #
 # Generated from: engine/config/schemas/entity.yaml
-# Generated at: 2026-02-10 01:05:15
+# Generated at: 2026-02-10 19:46:34
 #
 # To make changes:
 # 1. Edit engine/config/schemas/entity.yaml
@@ -38,6 +38,14 @@ class EntityExtraction(BaseModel):
     latitude: Optional[float] = Field(default=None, description="WGS84 Latitude coordinate (decimal degrees) Null if not found.")
 
     longitude: Optional[float] = Field(default=None, description="WGS84 Longitude coordinate (decimal degrees) Null if not found.")
+
+    locality: Optional[str] = Field(default=None, description="Neighborhood, district, or locality name within the city Null if not found.")
+
+    wifi: Optional[bool] = Field(default=None, description="Whether free WiFi is available Null means unknown.")
+
+    parking_available: Optional[bool] = Field(default=None, description="Whether parking is available (any type) Null means unknown.")
+
+    disabled_access: Optional[bool] = Field(default=None, description="Whether the venue has wheelchair/disability access Null means unknown.")
 
     phone: Optional[str] = Field(default=None, description="Primary contact phone number with country code. MUST be E.164 UK format (e.g. '+441315397071') Null if not found.")
 

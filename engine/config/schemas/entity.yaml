@@ -290,6 +290,39 @@ fields:
     nullable: true
 
   # ------------------------------------------------------------------
+  # AMENITIES / ACCESSIBILITY
+  # ------------------------------------------------------------------
+  - name: locality
+    type: string
+    description: Neighborhood, district, or locality name within the city
+    nullable: true
+    exclude: false  # Phase 1 primitive (extractors populate from source APIs)
+    search:
+      category: location
+      keywords:
+        - neighborhood
+        - district
+        - locality
+
+  - name: wifi
+    type: boolean
+    description: Whether free WiFi is available
+    nullable: true
+    exclude: false  # Phase 1 primitive (extractors populate from source APIs)
+
+  - name: parking_available
+    type: boolean
+    description: Whether parking is available (any type)
+    nullable: true
+    exclude: false  # Phase 1 primitive (extractors populate from source APIs)
+
+  - name: disabled_access
+    type: boolean
+    description: Whether the venue has wheelchair/disability access
+    nullable: true
+    exclude: false  # Phase 1 primitive (extractors populate from source APIs)
+
+  # ------------------------------------------------------------------
   # CONTACT
   # ------------------------------------------------------------------
   - name: phone
