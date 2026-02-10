@@ -7,6 +7,20 @@
 # DO NOT EDIT GENERATED FILES (entity.py, schema.prisma)
 # Edit this YAML file and regenerate instead.
 # ============================================================
+#
+# EXCLUDE FLAG SEMANTICS (CRITICAL FOR PHASE 1/2 BOUNDARY):
+# ----------------------------------------------------------
+# exclude: false = Phase 1 primitive (extracted from source APIs,
+#                  included in EntityExtraction schema for split_attributes)
+# exclude: true  = Phase 2/generated field (computed by engine/lens,
+#                  NOT in EntityExtraction schema)
+#
+# Examples:
+#   - street_address, raw_categories, city     → exclude: false (from APIs)
+#   - canonical_activities, entity_id, slug    → exclude: true (computed)
+#
+# See: architecture.md 4.2 (Extraction Boundary), LA-013 (lessons-learned.md)
+# ============================================================
 
 schema:
   name: Entity
