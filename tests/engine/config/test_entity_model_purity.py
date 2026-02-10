@@ -134,7 +134,7 @@ class TestEntityModelPurity:
         )
 
     def test_dimensions_marked_as_opaque(self):
-        """Dimensions must be explicitly marked as opaque."""
+        """Dimensions must be explicitly marked as opaque (policy rule)."""
         config = load_entity_model()
         dimensions = config.get('dimensions', {})
 
@@ -144,30 +144,12 @@ class TestEntityModelPurity:
             notes = str(dim_config.get('notes', [])).lower()
 
             assert 'opaque' in description or 'opaque' in notes, (
-                f"Dimension '{dim_name}' must be explicitly marked as opaque"
+                f"Dimension '{dim_name}' must be explicitly marked as opaque in policy notes"
             )
 
-    def test_dimensions_are_postgres_arrays(self):
-        """Dimensions must be stored as Postgres text[] arrays."""
-        config = load_entity_model()
-        dimensions = config.get('dimensions', {})
-
-        for dim_name, dim_config in dimensions.items():
-            storage_type = dim_config.get('storage_type', '')
-            assert storage_type == 'text[]', (
-                f"Dimension '{dim_name}' must use storage_type: 'text[]', "
-                f"got: '{storage_type}'"
-            )
-
-    def test_dimensions_have_gin_indexes(self):
-        """Dimensions must be GIN indexed."""
-        config = load_entity_model()
-        dimensions = config.get('dimensions', {})
-
-        for dim_name, dim_config in dimensions.items():
-            indexed = dim_config.get('indexed', '')
-            assert indexed == 'GIN', (
-                f"Dimension '{dim_name}' must be GIN indexed, got: '{indexed}'"
+            # Verify notes key exists (policy documentation requirement)
+            assert 'notes' in dim_config, (
+                f"Dimension '{dim_name}' must have 'notes' key with policy statements"
             )
 
     def test_universal_modules_only(self):
@@ -179,27 +161,6 @@ class TestEntityModelPurity:
         assert defined_modules == REQUIRED_UNIVERSAL_MODULES, (
             f"Only universal modules allowed. "
             f"Expected: {REQUIRED_UNIVERSAL_MODULES}, Got: {defined_modules}"
-        )
-
-    def test_amenities_module_universal_only(self):
-        """Amenities module must contain ONLY universal amenities."""
-        config = load_entity_model()
-        amenities = config.get('modules', {}).get('amenities', {})
-        fields = amenities.get('fields', [])
-
-        field_names = {field['name'] for field in fields}
-
-        # Must have exactly the universal amenities
-        assert field_names == REQUIRED_UNIVERSAL_AMENITIES, (
-            f"Amenities must contain ONLY universal amenities. "
-            f"Expected: {REQUIRED_UNIVERSAL_AMENITIES}, Got: {field_names}"
-        )
-
-        # Check notes mention NO food service
-        notes = amenities.get('notes', [])
-        notes_text = ' '.join(notes).lower()
-        assert 'no food service' in notes_text or 'no cafe' in notes_text, (
-            "Amenities notes must explicitly state NO food service amenities"
         )
 
     def test_no_domain_modules(self):
@@ -292,29 +253,6 @@ class TestEntityModelStructure:
             assert module_config['description'].strip(), (
                 f"Module '{module_name}' has empty description"
             )
-
-    def test_module_fields_well_formed(self):
-        """Module fields must be well-formed."""
-        config = load_entity_model()
-        modules = config.get('modules', {})
-
-        for module_name, module_config in modules.items():
-            assert 'fields' in module_config, (
-                f"Module '{module_name}' missing fields"
-            )
-
-            fields = module_config['fields']
-            assert isinstance(fields, list), (
-                f"Module '{module_name}' fields must be a list"
-            )
-
-            for field in fields:
-                assert 'name' in field, (
-                    f"Field in module '{module_name}' missing 'name'"
-                )
-                assert 'type' in field, (
-                    f"Field '{field.get('name')}' in module '{module_name}' missing 'type'"
-                )
 
 
 if __name__ == '__main__':

@@ -1,16 +1,27 @@
-# Entity Model Configuration
+# Entity Model Configuration — POLICY AND SEMANTIC RULES ONLY
 #
-# This file defines the UNIVERSAL, VERTICAL-AGNOSTIC entity model for the engine layer.
-# NO vertical-specific concepts (sports, wine, padel, coach, venue, etc.) are allowed.
-# All vertical-specific interpretation belongs in the lens layer.
+# This file defines POLICY and SEMANTIC RULES for the universal entity model.
+# It does NOT define storage schema, field types, or indexes.
+#
+# For storage schema (fields, types, indexes), see: engine/config/schemas/entity.yaml
+#
+# This file defines:
+# - Entity class taxonomy and required capability groups (required_modules)
+# - Semantic rules for dimensions (opaqueness, engine interpretation boundaries)
+# - Universal module inventory (policy: which modules are universal vs lens-specific)
+# - Module applicability rules (which entity_class can use which modules)
+#
+# IMPORTANT: `required_modules` defines required CAPABILITY GROUPS for an entity_class.
+# It does NOT imply anything must appear under the Entity.modules JSONB field.
+# Universal fields (location, contact) are top-level columns, NOT in modules JSONB.
+# modules JSONB is for lens-specific enrichment only.
 #
 # Key Principles:
 # - entity_class: Universal classification (place, person, organization, event, thing)
-# - Dimensions: Use actual DB column names (canonical_activities, canonical_roles, canonical_place_types, canonical_access)
-# - Dimensions: Explicitly marked as opaque, stored as Postgres text[] arrays
+# - Dimensions: OPAQUE to engine - no interpretation, lens provides all semantics
 # - Modules: Universal modules only (core, location, contact, hours, amenities, time_range)
-# - NO domain modules (sports_facility, wine_production removed)
-# - Amenities: universal only (cafe/restaurant removed)
+# - NO domain modules (sports_facility, wine_production - these belong in lens layer)
+# - NO vertical-specific concepts (sports, wine, padel, coach, venue, etc.)
 
 # ============================================================================
 # ENTITY CLASSES
@@ -69,121 +80,75 @@ entity_classes:
       - "Resource"
 
 # ============================================================================
-# DIMENSIONS (Multi-Valued, Opaque)
+# DIMENSIONS (Multi-Valued, Opaque) — SEMANTIC RULES ONLY
 # ============================================================================
-# Dimensions use actual DB column names and are stored as Postgres text[] arrays
-# Dimensions are OPAQUE to the engine - no interpretation, just storage and indexing
-# All dimensions have GIN indexes for fast faceted filtering
-# Values are lens-interpreted (engine treats as plain strings)
+# Dimensions are OPAQUE to the engine - engine does NO interpretation whatsoever.
+# The engine only stores and indexes these values; lenses provide ALL semantics.
+# For storage schema (Postgres text[] arrays, GIN indexes), see: entity.yaml
 
 dimensions:
   canonical_activities:
     description: "Activities provided/supported (opaque values)"
-    storage_type: "text[]"  # Postgres array
-    cardinality: "0..N"
-    indexed: "GIN"
     notes:
-      - "Opaque to engine - lens provides interpretation"
+      - "Opaque to engine - lens provides ALL interpretation"
+      - "Engine treats as plain opaque strings with no semantic meaning"
       - "Lens-interpreted values stored as plain strings (e.g., ['activity_a', 'activity_b'])"
       - "Vertical-agnostic - same dimension used by all lenses"
 
   canonical_roles:
     description: "Roles this entity plays (opaque values, universal function-style keys)"
-    storage_type: "text[]"  # Postgres array
-    cardinality: "0..N"
-    indexed: "GIN"
     notes:
-      - "Opaque to engine - lens provides interpretation and display labels"
+      - "Opaque to engine - lens provides ALL interpretation and display labels"
+      - "Engine does no interpretation - these are opaque identifiers only"
       - "Universal function-style keys: provides_facility, sells_goods, provides_instruction, membership_org, produces_goods"
       - "Internal-only facet (not shown in UI by default)"
       - "Examples: ['provides_facility', 'membership_org']"
 
   canonical_place_types:
     description: "Physical place classifications (opaque values)"
-    storage_type: "text[]"  # Postgres array
-    cardinality: "0..N"
     applicable_to:
       - place
-    indexed: "GIN"
     notes:
-      - "Opaque to engine - lens provides interpretation"
+      - "Opaque to engine - lens provides ALL interpretation"
+      - "Engine does no interpretation - these are opaque identifiers only"
       - "Represents container place classification (lens-defined values like 'facility_type_a', 'facility_type_b')"
       - "Individual equipment or sub-facilities belong in domain modules (via lens inventory structures), NOT as place_type values"
       - "Equipment items are NOT place_type values"
 
   canonical_access:
     description: "Access requirements (opaque values)"
-    storage_type: "text[]"  # Postgres array
-    cardinality: "0..N"
-    indexed: "GIN"
     notes:
-      - "Opaque to engine - lens provides interpretation"
+      - "Opaque to engine - lens provides ALL interpretation"
+      - "Engine does no interpretation - these are opaque identifiers only"
       - "Examples: ['membership', 'pay_and_play', 'free', 'private_club']"
 
 # ============================================================================
-# UNIVERSAL MODULES
+# UNIVERSAL MODULES — POLICY INVENTORY ONLY
 # ============================================================================
-# Modules stored in JSONB with namespacing: {module_key: {fields}}
-# ONLY universal modules defined here - NO domain modules
-# Domain modules (sports_facility, wine_production, etc.) belong in lens layer
+# This section defines which modules are UNIVERSAL (engine-recognized capability groups).
+# It does NOT define field schemas - those live in entity.yaml (top-level columns)
+# or lens contracts (lens-specific enrichment in modules JSONB).
+#
+# IMPORTANT: Universal modules listed here are CAPABILITY GROUP NAMES, not JSONB keys.
+# Most universal fields (location, contact) are stored as top-level columns, NOT in modules JSONB.
+# modules JSONB is for lens-specific enrichment only.
+#
+# Domain modules (sports_facility, wine_production, etc.) belong in lens layer, NOT here.
 
 modules:
   core:
     description: "Core entity attributes (required for all entities)"
-    fields:
-      - name: entity_id
-        type: string
-        required: true
-        description: "Unique identifier"
-
-      - name: entity_name
-        type: string
-        required: true
-        description: "Display name"
-
-      - name: slug
-        type: string
-        required: true
-        description: "URL-friendly identifier"
-
-      - name: summary
-        type: string
-        required: false
-        description: "Brief description"
+    notes:
+      - "Core identity attributes: entity_id, entity_name, slug, summary"
+      - "Stored as top-level columns in entity.yaml, NOT in modules JSONB"
 
   location:
     description: "Physical location attributes"
     applicable_to:
       - place
-    fields:
-      - name: street_address
-        type: string
-        required: false
-
-      - name: city
-        type: string
-        required: false
-
-      - name: postcode
-        type: string
-        required: false
-
-      - name: country
-        type: string
-        required: false
-
-      - name: latitude
-        type: float
-        required: false
-
-      - name: longitude
-        type: float
-        required: false
-
-      - name: locality
-        type: string
-        required: false
-        description: "Neighborhood or district"
+    notes:
+      - "Geographic and address attributes: street_address, city, postcode, country, latitude, longitude, locality"
+      - "Stored as top-level columns in entity.yaml, NOT in modules JSONB"
 
   contact:
     description: "Contact information"
@@ -191,116 +156,60 @@ modules:
       - person
       - organization
       - place
-    fields:
-      - name: phone
-        type: string
-        required: false
-
-      - name: email
-        type: string
-        required: false
-
-      - name: website_url
-        type: string
-        required: false
-
-      - name: instagram_url
-        type: string
-        required: false
-
-      - name: facebook_url
-        type: string
-        required: false
-
-      - name: twitter_url
-        type: string
-        required: false
-
-      - name: linkedin_url
-        type: string
-        required: false
+    notes:
+      - "Contact attributes: phone, email, website_url, social media URLs"
+      - "Stored as top-level columns in entity.yaml, NOT in modules JSONB"
 
   hours:
     description: "Operating hours"
     applicable_to:
       - place
-    fields:
-      - name: opening_hours
-        type: object
-        required: false
-        description: "Structured opening hours (e.g., {monday: {open: '09:00', close: '17:00'}})"
-
-      - name: special_hours
-        type: array
-        required: false
-        description: "Special hours for holidays or events"
+    notes:
+      - "Hours attributes: opening_hours (structured object)"
+      - "Stored as top-level columns in entity.yaml, NOT in modules JSONB"
 
   amenities:
     description: "UNIVERSAL amenities only (NO vertical-specific amenities)"
     applicable_to:
       - place
-    fields:
-      - name: wifi
-        type: boolean
-        required: false
-        description: "WiFi available"
-
-      - name: parking_available
-        type: boolean
-        required: false
-        description: "Parking available"
-
-      - name: disabled_access
-        type: boolean
-        required: false
-        description: "Wheelchair accessible"
     notes:
-      - "ONLY universal amenities (wifi, parking_available, disabled_access)"
+      - "ONLY universal amenities: wifi, parking_available, disabled_access"
       - "NO food service amenities (cafe, restaurant, bar) - these belong in lens layer food_service module"
       - "NO domain-specific amenities"
+      - "Stored as top-level columns in entity.yaml, NOT in modules JSONB"
 
   time_range:
     description: "Time-bounded occurrence attributes"
     applicable_to:
       - event
-    fields:
-      - name: start_datetime
-        type: datetime
-        required: false
-
-      - name: end_datetime
-        type: datetime
-        required: false
-
-      - name: timezone
-        type: string
-        required: false
-
-      - name: is_recurring
-        type: boolean
-        required: false
-
-      - name: recurrence_rule
-        type: string
-        required: false
-        description: "iCalendar RRULE format"
+    notes:
+      - "Temporal attributes: start_datetime, end_datetime, timezone, recurrence rules"
+      - "Stored as top-level columns in entity.yaml, NOT in modules JSONB"
 
 # ============================================================================
 # VALIDATION NOTES
 # ============================================================================
 #
-# ✅ CORRECT:
+# ✅ CORRECT (Policy Rules):
 # - Universal entity classes (place, person, organization, event, thing)
-# - Opaque dimensions with actual DB column names
-# - Universal modules only (core, location, contact, hours, amenities, time_range)
-# - Universal amenities only (wifi, parking_available, disabled_access)
+# - Opaque dimensions with semantic rules (engine does NO interpretation)
+# - Universal module capability groups (core, location, contact, hours, amenities, time_range)
+# - Universal amenities policy (wifi, parking_available, disabled_access only)
+# - Applicability rules (which entity_class can use which modules)
+# - required_modules lists (capability groups, NOT JSONB key guarantees)
 #
-# ❌ FORBIDDEN (vertical-specific concepts):
+# ❌ FORBIDDEN (Vertical-Specific Concepts):
 # - Domain modules: sports_facility, wine_production, fitness_facility, food_service
 # - Domain amenities: cafe, restaurant, bar
 # - Activity values: padel, tennis, gym, swimming, wine
 # - Role labels: Venue, Coach, Retailer, Club (these are display labels in lens only)
-# - Legacy entity type labels removed - now using entity_class + canonical_roles
-# - Place type values: These are opaque, lens-interpreted
+# - Storage directives: storage_type, indexed, cardinality (belong in entity.yaml)
+# - Schema inventories: attribute names, types, required flags (belong in entity.yaml or lens contracts)
 #
-# If this file contains ANY vertical-specific concepts, it violates engine purity.
+# ✅ SEPARATION OF CONCERNS:
+# - This file: POLICY and SEMANTIC RULES (what's universal, opaqueness rules, applicability)
+# - entity.yaml: STORAGE SCHEMA (field definitions, types, indexes, constraints)
+# - Lens contracts: DOMAIN SEMANTICS (vertical-specific modules, interpretation rules)
+#
+# If this file contains ANY vertical-specific concepts OR storage directives, it violates
+# architectural boundaries.

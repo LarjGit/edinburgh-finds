@@ -2,7 +2,7 @@
 
 **Current Phase:** Phase 2: Pipeline Implementation
 **Validation Entity:** West of Scotland Padel (validation) / Edinburgh Sports Club (investigation)
-**Last Updated:** 2026-02-10 (LA-017, LA-018, LA-019 added: universal amenity field extraction pipeline (model → prompts → lens mapping). LA-016 added: documentation updates for LA-015. LA-015 ready: entity.yaml vs entity_model.yaml schema/policy separation. LA-014 in progress: modules not populated - CRITICAL blocker for Phase 2 completion.)
+**Last Updated:** 2026-02-10 (LA-015 completed: entity.yaml vs entity_model.yaml schema/policy separation Phase 1 - pruned storage directives and field inventories. Phase 2 tracked in LA-017/LA-018/LA-019. LA-016 pending: documentation updates. LA-014 in progress: modules not populated - CRITICAL blocker for Phase 2 completion.)
 
 ---
 
@@ -1341,9 +1341,12 @@ observability, performance, and real-world data coverage **without altering core
     4. Check if there's a missing integration point in extraction_integration.py
   - **Success Criteria:** Validation entity persists with `modules: {'sports_facility': {...}}` containing at least one non-null field
 
-- [ ] **LA-015: Schema/Policy Separation — entity.yaml vs entity_model.yaml Shadow Schema Duplication**
+- [x] **LA-015: Schema/Policy Separation — entity.yaml vs entity_model.yaml Shadow Schema Duplication**
   - **Principle:** Single Source of Truth (system-vision.md Invariant 2), Schema Authority (CLAUDE.md "Schema Single Source of Truth")
-  - **Location:** `engine/config/entity_model.yaml` (dimensions + modules sections), `engine/config/schemas/entity.yaml` (schema definitions), `tests/engine/config/test_entity_model_purity.py` (validation tests)
+  - **Location:** `engine/config/entity_model.yaml` (dimensions + modules sections), `tests/engine/config/test_entity_model_purity.py` (validation tests)
+  - **Completed:** 2026-02-10 (Phase 1: Pruning storage directives and field inventories)
+  - **Commit:** [pending]
+  - **Note:** Phase 2 (adding missing universal fields to entity.yaml) is tracked in LA-017, LA-018, LA-019
   - **Description:** entity_model.yaml contains shadow schema duplicating storage details from entity.yaml, violating separation of concerns. entity_model.yaml should contain ONLY policy/purity rules (semantic guarantees, opaqueness, vertical-agnostic constraints), while entity.yaml should be the ONLY schema/storage truth (fields, types, indexes, codegen). Current duplication creates maintenance burden: changes to dimension storage require editing both files, and the purpose of each file is ambiguous. **Universal amenities are stored as top-level fields in entity.yaml (not under modules JSONB).** **CRITICAL SEMANTICS:** `required_modules` defines required capability groups for an entity_class; it does NOT imply anything must appear under Entity.modules JSONB — this is policy about which modules should be populated, not a data contract guarantee.
   - **Evidence:**
     - **Dimensions shadow schema:** entity_model.yaml lines 79-122 contain `storage_type: "text[]"`, `indexed: "GIN"`, `cardinality: "0..N"` — these are storage directives that duplicate entity.yaml definitions and are read ONLY by structure validation tests (test_entity_model_purity.py lines 150-171), NOT by runtime code
