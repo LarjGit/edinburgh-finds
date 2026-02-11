@@ -188,6 +188,41 @@ class GooglePlacesExtractor(BaseExtractor):
             if postcode:
                 extracted["postcode"] = postcode
 
+        # Universal amenity fields (LA-018b)
+        # Extract locality from addressComponents
+        if "addressComponents" in raw_data:
+            for component in raw_data["addressComponents"]:
+                component_types = component.get("types", [])
+                # Use neighborhood or sublocality types (NOT "locality" which is city)
+                if any(t in ["neighborhood", "sublocality", "sublocality_level_1"] for t in component_types):
+                    extracted["locality"] = component.get("longText") or component.get("shortText")
+                    break
+
+        # WiFi: Not available in Google Places API
+        extracted["wifi"] = None
+
+        # Accessibility options (LA-018b)
+        if "accessibilityOptions" in raw_data:
+            accessibility = raw_data["accessibilityOptions"]
+
+            # Wheelchair-accessible entrance → disabled_access
+            if "wheelchairAccessibleEntrance" in accessibility:
+                extracted["disabled_access"] = accessibility["wheelchairAccessibleEntrance"]
+            else:
+                extracted["disabled_access"] = None
+
+            # Wheelchair-accessible parking → parking_available
+            # Note: false means wheelchair parking not accessible, NOT that parking doesn't exist
+            # Return None for false to avoid false negatives
+            if "wheelchairAccessibleParking" in accessibility:
+                wheelchair_parking = accessibility["wheelchairAccessibleParking"]
+                extracted["parking_available"] = True if wheelchair_parking is True else None
+            else:
+                extracted["parking_available"] = None
+        else:
+            extracted["disabled_access"] = None
+            extracted["parking_available"] = None
+
         # Support both API v1 (location.latitude/longitude) and legacy (geometry.location.lat/lng)
         if "location" in raw_data:
             extracted["latitude"] = raw_data["location"].get("latitude")
