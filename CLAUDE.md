@@ -9,18 +9,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **First time in this codebase?**
 1. Read "Architectural Authority" + "Core Concept" below (10 min)
 2. Read `docs/system-vision.md` (30 min) - immutable architectural constitution
-3. Read `docs/development-methodology.md` (15 min) - how to work incrementally
-4. Return here for reference
+3. Read `docs/process/development-methodology.md` (15 min) - how to work incrementally
+4. Read `docs/process/development-roadmap.md` (5 min) - what we are pursuing next
+5. Return here for reference
 
 **Starting a task?**
-1. Check `docs/progress/audit-catalog.md` for next catalog item
-2. Follow `docs/development-methodology.md` Section 5 (8-step micro-iteration process)
-3. Use `COMMANDS.md` for commands, `TROUBLESHOOTING.md` for debugging
+1. Read `docs/process/development-roadmap.md` to understand the current direction
+2. Select or create the next scoped item in `docs/progress/development-catalog.md`
+3. Execute it using `docs/process/development-methodology.md` (8-step micro-iteration process)
+4. Use `COMMANDS.md` for commands, `TROUBLESHOOTING.md` for debugging
 
 **Need documentation?**
+- **Direction / priorities** → `docs/process/development-roadmap.md`
 - **External libraries** (Next.js, Prisma, Pydantic, pytest, etc.) → Context7 MCP tools
 - **Architecture decisions** → `docs/system-vision.md` or `docs/target-architecture.md`
-- **Process questions** → `docs/development-methodology.md`
+- **Process questions** → `docs/process/development-methodology.md`
 - **Commands** → `COMMANDS.md`
 - **Debugging** → `TROUBLESHOOTING.md`
 
@@ -28,9 +31,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **CLAUDE.md** (this file): Navigation, architectural authority, core concepts, enforcement rules
 - **COMMANDS.md**: All development commands (setup, daily dev, schema, pipeline, environment)
 - **TROUBLESHOOTING.md**: Common gotchas and debugging guide
-- **development-methodology.md**: 8-step micro-iteration process, constraints, validation gates
-- **system-vision.md**: Architectural constitution (10 immutable invariants)
-- **target-architecture.md**: Runtime execution pipeline (11 stages)
+- **docs/process/development-methodology.md**: HOW work is executed (constraints, gates, recovery)
+- **docs/process/development-roadmap.md**: WHAT we are choosing to pursue next
+- **docs/progress/development-catalog.md**: Work ledger (scoped items + completion proofs)
+- **docs/progress/lessons-learned.md**: Compounding knowledge (patterns, pitfalls, doc clarifications)
+- **docs/system-vision.md**: Architectural constitution (10 immutable invariants)
+- **docs/target-architecture.md**: Runtime execution pipeline (11 stages)
 
 ---
 
@@ -69,13 +75,13 @@ If uncertain, **read system-vision.md first**. It defines what must remain true.
 
 **CRITICAL:** This project uses a strict reality-based incremental alignment methodology to prevent AI agent drift and ensure golden-doc compliance.
 
-**Primary Reference:** `docs/development-methodology.md` - READ THIS BEFORE STARTING WORK (15 min)
+**Primary Reference:** `docs/process/development-methodology.md` - READ THIS BEFORE STARTING WORK (15 min)
 
 **Before starting ANY work:**
-1. Read `docs/development-methodology.md` (15 min) - MANDATORY
-2. Check if `docs/progress/audit-catalog.md` exists
-3. If exists: Follow Decision Logic (methodology Section 8) to select next item
-4. If not exists: Run initial audit (methodology Section 12) to create catalog
+1. Read `docs/process/development-methodology.md` (MANDATORY)
+2. Read `docs/process/development-roadmap.md` for current direction
+3. Open `docs/progress/development-catalog.md` and select or draft the next scoped item
+4. Execute that item using the methodology’s micro-iteration process
 
 **Core Constraints:**
 - Work in ultra-small chunks (max 2 files, max 100 lines)
@@ -220,7 +226,7 @@ python -m engine.orchestration.cli run "your query"
 ## Support Resources
 
 - **Architectural Authority:** `docs/system-vision.md` (immutable constitution) + `docs/target-architecture.md` (runtime spec)
-- **Process Manual:** `docs/development-methodology.md` (8-step process, constraints, validation gates, recovery protocol)
+- **Process Manual:** `docs/process/development-methodology.md` (8-step process, constraints, validation gates, recovery protocol)
 - **Commands:** `COMMANDS.md` (setup, daily dev, schema, pipeline, environment)
 - **Debugging:** `TROUBLESHOOTING.md` (common gotchas, testing strategy)
 - **Implementation Examples:** `docs/plans/` (completed plans), `tests/engine/` (testing patterns)
@@ -260,11 +266,11 @@ When working on this codebase, you MUST:
    - The reference lens (Edinburgh Finds) gets NO special treatment
    - If a feature can't be expressed through Lens contracts → architectural defect
 
-7. **Extraction Helper Purity** (development-methodology.md Constraint C8)
+1. **Extraction Helper Purity** (docs/process/development-methodology.md Constraint C8)
    - Extraction helpers may ONLY: validate, normalize, track provenance
    - NEVER: interpret, classify, detect semantics, emit `canonical_*` or `modules`
    - Structural signals allowed: counts, presence checks, data completeness (not interpretation)
 
 **When uncertain:** Read `docs/system-vision.md` Section 8 ("How Humans and AI Agents Should Use This Document")
 
-**Process enforcement:** Follow `docs/development-methodology.md` for 8-step micro-iteration process with 8 mandatory constraints and 6 validation gates.
+**Process enforcement:** Follow `docs/process/development-methodology.md` for 8-step micro-iteration process with 8 mandatory constraints and 6 validation gates.
