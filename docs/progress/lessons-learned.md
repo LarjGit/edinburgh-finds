@@ -102,3 +102,26 @@ Agents must consult this file during Step 2 (Code Reality Audit) to incorporate 
 **Suggested Guardrail (optional)**
 - Add validation test that verifies extractors return None (not False) for inconclusive boolean fields. Example test case: Given wheelchairAccessibleParking=false, assert extracted['parking_available'] is None (not False). This prevents false negatives in availability fields derived from accessibility booleans.
 
+---
+
+## 2026-02-11 — LA-018c — Update Edinburgh Council Extractor for Amenity/Accessibility Data
+
+**Context**
+- Updated Edinburgh Council deterministic extractor to extract 4 universal amenity fields (locality, wifi, parking_available, disabled_access) from council GeoJSON response. Fixed schema mismatch bug: extractor emitted wheelchair_accessible (non-schema field) instead of disabled_access (schema field), causing field to leak into discovered_attributes. Evidence-based approach: inspected test fixtures, found only ACCESSIBLE field exists in Council data, mapped only that field. Set locality/wifi/parking_available to None rather than speculating on field names like NEIGHBOURHOOD/WIFI/PARKING.
+
+**Pattern Candidate**
+- Yes
+- Pattern: "Evidence-Based Field Extraction (No Speculative Mappings)" - When adding universal field extraction to deterministic extractors, only map from field names that exist in test fixtures or observed API responses. Never introduce speculative property names without evidence. Benefit: Prevents maintenance burden of incorrect field mappings and ensures extractor code accurately reflects source API capabilities.
+- Reference: LA-018c examined Council test fixtures (sample_council_response), found only ACCESSIBLE field, mapped only that field. Set locality/wifi/parking_available to None rather than guessing at NEIGHBOURHOOD/DISTRICT/WIFI/PARKING field names, commit b6669bb. This evidence-first approach was reinforced by user feedback during checkpoint 1.
+
+**Documentation Clarity**
+- Yes
+- Section: target-architecture.md Section 4.2 (Extraction Boundary Phase 1) focuses on what extractors must NOT emit (canonical_*, modules, domain-specific fields) but could be clearer about what they MUST emit. Propose adding: "Phase 1 extractors must emit ALL universal schema primitives (entity_name, latitude, longitude, locality, wifi, parking_available, disabled_access, etc.), setting fields to None when source data does not provide them. This ensures consistent field presence across all extractors and prevents schema drift." Rationale: LA-018 series (a/b/c) required updating 3 extractors to add 4 universal fields. Clearer guidance on "must emit all primitives" would make this requirement explicit.
+
+**Pitfall**
+- Yes
+- Schema field name mismatches cause fields to leak into discovered_attributes instead of being properly typed schema fields. When adding new universal fields to entity.yaml, verify ALL extractor output field names exactly match the schema field names. Example: Extractor outputs wheelchair_accessible but schema defines disabled_access → field goes to discovered_attributes (untyped bucket) instead of proper schema field. Detection method: Check split_attributes() output in tests - schema fields should appear in attributes dict, not discovered dict. LA-018c caught this bug where Edinburgh Council extractor emitted wheelchair_accessible (lines 169-171) but schema field is disabled_access (entity.yaml:319), causing data quality issues downstream.
+
+**Suggested Guardrail (optional)**
+- Add schema validation test that verifies extractor output field names exactly match schema field names for all universal primitives. Test would iterate through EntityExtraction model fields and verify each extractor's test fixtures use identical field names. This would catch schema mismatches during development before they leak fields into discovered_attributes in production.
+
