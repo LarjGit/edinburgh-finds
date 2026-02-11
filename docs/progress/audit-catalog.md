@@ -1412,12 +1412,15 @@ observability, performance, and real-world data coverage **without altering core
     - Update development-methodology.md if it mentions schema sources
     - Add architectural decision record (ADR) explaining the separation: entity.yaml = storage truth, entity_model.yaml = policy truth
 
-- [ ] **LA-016: Documentation Updates for Schema/Policy Separation (LA-015 Follow-up)**
+- [x] **LA-016: Documentation Updates for Schema/Policy Separation (LA-015 Follow-up)**
   - **Principle:** Documentation Accuracy, Architectural Clarity (system-vision.md Invariant 2 - Single Source of Truth)
-  - **Location:** `CLAUDE.md`, `docs/development-methodology.md`, `docs/adr/` (new ADR file)
-  - **Description:** Update repository documentation to reflect the schema/policy separation implemented in LA-015. Clarify that entity.yaml is the single source of truth for storage schema, while entity_model.yaml defines policy and semantic rules only.
+  - **Location:** `CLAUDE.md` (Schema Single Source of Truth section, lines 120-133)
+  - **Description:** Update CLAUDE.md to codify schema/policy separation: entity.yaml = storage schema (fields/types/indexes), entity_model.yaml = policy/purity rules. Added Phase boundary reminder (exclude flag semantics).
   - **Discovered During:** LA-015 architectural analysis (2026-02-10)
-  - **Depends On:** LA-015 (must be completed first)
+  - **Completed:** 2026-02-11
+  - **Commit:** 72ec5c5
+  - **Scope Decision:** CLAUDE.md only per user approval; development-methodology.md verification showed no entity_model.yaml references (no update needed); ADR creation explicitly excluded
+  - **Depends On:** LA-015 (completed e66eabf)
   - **Blocking:** Not blocking Phase 2 completion, but required for architectural clarity and onboarding
   - **Rationale:** LA-015 is a compliance/cleanup task that enforces existing architectural invariants (system-vision.md Invariant 2). The core architectural documents (system-vision.md, target-architecture.md) already define the correct model and do NOT need updates. However, supporting documentation and ADRs need to reflect the implementation changes.
   - **Estimated Scope:** 3 files modified/created, ~60-120 lines total (mostly documentation text)

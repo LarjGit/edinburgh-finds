@@ -123,6 +123,15 @@ This is a **vertical-agnostic discovery platform** powered by AI-scale data inge
 - NEVER edit generated files (marked "DO NOT EDIT")
 - Schema regeneration: `python -m engine.schema.generate --all`
 
+**Critical Separation:**
+- **`entity.yaml`** = Storage schema authority (fields, types, indexes) — drives Prisma, Pydantic, TypeScript generation
+- **`entity_model.yaml`** = Policy/purity rules (allowed entity_class values, required_modules, semantic constraints)
+- `entity_model.yaml` must NEVER contain schema details (field lists, types, indexes, storage directives)
+
+**Phase Boundary (`exclude` flag):**
+- `exclude: false` → Phase 1 primitive → included in `EntityExtraction` model (extractor-populated)
+- `exclude: true` → Phase 2 computed field → excluded from `EntityExtraction` (lens/merge-populated)
+
 ### 3. Test-Driven Development (TDD)
 - Red → Green → Refactor workflow (mandatory)
 - Write failing tests FIRST, confirm they fail, then implement
