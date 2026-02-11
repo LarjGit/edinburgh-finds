@@ -173,40 +173,29 @@ def apply_lens_contract(
         "canonical_values_by_facet": canonical_values_by_facet
     }
     required_modules = evaluate_module_triggers(module_triggers, entity_for_triggers)
-    print(f"[DEBUG lens_integration.py] required_modules: {required_modules}")
-    print(f"[DEBUG lens_integration.py] canonical_values_by_facet: {canonical_values_by_facet}")
 
     # Step 5: Execute field rules for each required module
     modules_config = lens_contract.get("modules", {})
     modules_data = {}
-    print(f"[DEBUG lens_integration.py] modules_config keys: {list(modules_config.keys())}")
 
     for module_name in required_modules:
-        print(f"[DEBUG lens_integration.py] Processing module: {module_name}")
         if module_name not in modules_config:
-            print(f"[DEBUG lens_integration.py] WARNING: {module_name} not in modules_config!")
             continue
 
         module_def = modules_config[module_name]
         field_rules = module_def.get("field_rules", [])
-        print(f"[DEBUG lens_integration.py] field_rules count: {len(field_rules)}")
 
         if not field_rules:
-            print(f"[DEBUG lens_integration.py] WARNING: No field_rules for {module_name}")
             continue
 
         # Execute field rules (deterministic extractors only for v1)
         # Add entity_class to extracted_primitives for applicability filtering
         entity_with_class = {**extracted_primitives, "entity_class": entity_class}
         module_fields = execute_field_rules(field_rules, entity_with_class, source)
-        print(f"[DEBUG lens_integration.py] module_fields result: {module_fields}")
 
         # Only include module if it has populated fields
         if module_fields:
             modules_data[module_name] = module_fields
-            print(f"[DEBUG lens_integration.py] Added {module_name} to modules_data")
-        else:
-            print(f"[DEBUG lens_integration.py] WARNING: module_fields empty for {module_name}, not adding to modules_data")
 
     # Step 6: Return augmented entity (Phase 1 + Phase 2)
     return {

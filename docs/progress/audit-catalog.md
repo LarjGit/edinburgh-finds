@@ -281,13 +281,12 @@
 
 ## Phase 2: Pipeline Implementation
 
-**Status:** Stages 1-11 COMPLETE ✅. All gaps resolved.
-**Validation Entity:** Powerleague Portobello Edinburgh (requires complete pipeline)
-**Progress:** Stages 1-11 complete ✅
+**Status:** Stages 1-11 implementation COMPLETE ✅. **Blocked on constitutional validation (LA-020a)** ❌
+**Validation:** One Perfect Entity gate blocked by SERP data drift (LA-014 → LA-020a)
+**Progress:** Pipeline code complete, constitutional test needs fixture-based implementation
 
-**Phase Transition Statement**
-This completes Phase 2 (pipeline correctness). Phase 3 will focus on operational quality:
-observability, performance, and real-world data coverage **without altering core contracts**.
+**Phase Transition Criteria:**
+Phase 2 → Phase 3 requires LA-020a (deterministic fixture-based OPE test) to pass. Pipeline stages 1-11 are implemented and working correctly, but the constitutional validation gate (system-vision.md 6.3 "One Perfect Entity") cannot be satisfied with current live SERP data due to web drift. LA-020a will provide deterministic validation using pinned fixtures.
 ### Stage 1: Input (architecture.md 4.1)
 
 **Status:** Skipped as trivial (agreement with user)
@@ -999,11 +998,11 @@ observability, performance, and real-world data coverage **without altering core
   - **Test Coverage:** 9/9 mapping_engine tests pass, 9/9 lens_integration tests pass, 151/153 full suite pass
   - **Impact:** Expanded match rate - mapping rules now search across all available text fields by default while allowing lens authors to narrow search surface with explicit source_fields when needed
 
-- [x] **LA-003: One Perfect Entity End-to-End Validation** ✅ CONSTITUTIONAL GATE COMPLETE
+- [x] **LA-003: One Perfect Entity End-to-End Validation** ⚠️ REGRESSED (superseded by LA-014)
   - **Principle:** Module Extraction (architecture.md 4.1 Stage 7 - execute module field rules), System Validation (system-vision.md 6.3 - "One Perfect Entity" requirement)
   - **Location:** `tests/engine/orchestration/test_end_to_end_validation.py::test_one_perfect_entity_end_to_end_validation`
   - **Description:** End-to-end validation test that proves the complete 11-stage pipeline works. Asserts ONLY system-vision.md 6.3 requirements: non-empty canonical dimensions + at least one populated module field. Latitude/longitude is NOT asserted here — it was never a constitutional requirement and has been split into the OPE+Geo gate (see LA-012).
-  - **Status:** COMPLETE ✅
+  - **Status:** REGRESSED ❌ — Test passed 2026-02-04 but subsequently regressed. Canonical dimensions populate correctly but modules={} remains empty. Root cause tracked in LA-014 (dimension key mismatch in build_canonical_values_by_facet). Do not mark complete until LA-014 resolved and test passes again.
   - **Validation entity:** "West of Scotland Padel" (Serper-discovered)
   - **Constitutional Requirements (system-vision.md 6.3):**
     - ✅ Non-empty canonical dimensions (canonical_activities=['padel'], canonical_place_types=['sports_facility'])
@@ -1317,29 +1316,84 @@ observability, performance, and real-world data coverage **without altering core
   - **Impact:** canonical_place_types now correctly populated via lens mapping rules. Validation entity ("West of Scotland Padel") progresses past canonical_place_types assertion (which was the blocking issue). Test now fails on modules (separate issue, new catalog item needed).
   - **Note:** Modules issue is SEPARATE from LA-013's scope. This fix achieved its core goal: correcting raw_categories schema classification and enabling canonical_place_types population.
 
-- [ ] **LA-014: Modules Not Populated Despite Canonical Dimensions Present (Module Trigger/Extraction Issue)**
+- [ ] **LA-014: Modules Not Populated Despite Canonical Dimensions Present (SERP Data Drift)**
   - **Principle:** Module Architecture (architecture.md 7.1-7.5), One Perfect Entity (system-vision.md 6.3)
-  - **Location:** Module trigger evaluation or field extraction logic (needs investigation)
-  - **Description:** End-to-end test shows canonical dimensions correctly populated (`canonical_activities: ['padel']`, `canonical_place_types: ['sports_facility']`, `entity_class: 'place'`) but `modules: {}` remains empty. Lens configuration has module triggers that should attach `sports_facility` module when `facet: activity, value: padel` with `entity_class: place` condition. Either module triggers are not evaluating/firing, or module field extraction is not executing.
+  - **Location:** Test validation strategy (test uses live SERP data which has drifted)
+  - **Description:** End-to-end test shows canonical dimensions correctly populated (`canonical_activities: ['padel']`, `canonical_place_types: ['sports_facility']`, `entity_class: 'place'`) but `modules: {}` remains empty. Investigation revealed this is NOT a code defect but a test data stability issue.
   - **Evidence:**
-    - Test failure: `pytest tests/engine/orchestration/test_end_to_end_validation.py::test_one_perfect_entity_end_to_end_validation` ❌ FAILS at line 168
-    - Assertion: `assert len(entity.modules) > 0` → `AssertionError: modules should contain at least one module (got: {})`
+    - Test failure: `pytest tests/engine/orchestration/test_end_to_end_validation.py::test_one_perfect_entity_end_to_end_validation` ❌ FAILS
     - Entity state: `canonical_activities: ['padel']` ✅, `canonical_place_types: ['sports_facility']` ✅, `entity_class: 'place'` ✅, but `modules: {}` ❌
-    - Lens config: `engine/lenses/edinburgh_finds/lens.yaml` lines 117-123 defines trigger: `when: {facet: activity, value: padel}, add_modules: [sports_facility], conditions: [{entity_class: place}]`
-    - Expected: Module trigger should fire → `sports_facility` module attached → field rules execute → at least one field populated
-  - **Root Cause:** Unknown — requires investigation of:
-    1. Module trigger evaluation logic (`engine/extraction/module_extractor.py` or `lens_integration.py`)
-    2. Module field extraction execution
-    3. Module persistence during finalization
-    4. Potential missing wiring between canonical dimension population and module trigger evaluation
-  - **Estimated Scope:** Unknown until investigation complete (could be 1-3 files)
-  - **Blocking:** **CRITICAL** — Phase 2 completion (One Perfect Entity constitutional requirement per system-vision.md 6.3: "at least one module field populated")
-  - **Investigation Tasks:**
-    1. Verify module trigger evaluation receives correct inputs (canonical_activities, entity_class)
-    2. Check if triggers fire but field extraction fails
-    3. Verify module data flows through finalization/persistence correctly
-    4. Check if there's a missing integration point in extraction_integration.py
-  - **Success Criteria:** Validation entity persists with `modules: {'sports_facility': {...}}` containing at least one non-null field
+    - Module triggers fire correctly: `required_modules: ['sports_facility']` ✅
+    - Module field extraction executes but returns empty: `module_fields: {}` ❌
+  - **Root Cause (Confirmed 2026-02-11):** SERP data drift
+    - Module regex: `(?i)(\d+)\s+(?:fully\s+)?(?:covered(?:,\s*|\s+and\s+)?)?(?:heated\s+)?courts?`
+    - Current SERP summaries: "padel sports venue", "padel court facility" (no count)
+    - Expected pattern (when LA-003 passed): "3 fully covered, heated courts"
+    - Zero padel entities in database have extractable module data (confirmed via query)
+    - Live web data is non-deterministic and has degraded since LA-003 completion
+  - **Investigation Summary (2026-02-11):**
+    - ✅ Lens mapping works: canonical_activities=['padel'], canonical_place_types=['sports_facility']
+    - ✅ build_canonical_values_by_facet works: {'activity': ['padel'], 'place_type': ['sports_facility']}
+    - ✅ Module triggers work: required_modules=['sports_facility']
+    - ❌ Module field extraction returns empty: no text matches regex pattern
+    - **Pipeline is correct; test data is unstable**
+  - **Resolution:** Decouple constitutional OPE test from live SERP data (tracked in LA-020a)
+  - **Blocking:** **CRITICAL** — Phase 2 completion (blocked on LA-020a deterministic fixture test)
+  - **Success Criteria:** LA-020a passes (deterministic fixture-based OPE test)
+
+- [ ] **LA-020a: Deterministic OPE Fixture Test (Constitutional Gate)**
+  - **Principle:** Test Stability (prevent SERP drift from breaking constitutional validation), One Perfect Entity (system-vision.md 6.3)
+  - **Location:** `tests/engine/orchestration/test_one_perfect_entity_fixture.py` (NEW), `tests/fixtures/connectors/` (NEW)
+  - **Description:** Create a deterministic OPE test that validates the full 11-stage pipeline using pinned connector inputs with known-good extractable data. Current live test (LA-003/LA-014) fails due to SERP data drift, making the constitutional gate non-deterministic. This fixture-based test decouples the Phase 2 completion gate from external web dependencies.
+  - **Scope:** Tests + fixtures only (no runtime code changes unless a connector-stub hook already exists)
+  - **Deliverables:**
+    1. Create fixture files under `tests/fixtures/connectors/`:
+       - `serper/padel_venue_with_court_count.json` — Serper organic result with "3 fully covered, heated courts" pattern
+       - `google_places/padel_venue.json` (ONLY if needed for place_types mapping)
+       - Include minimum connectors required to satisfy lens/module rules
+    2. Create new test file: `tests/engine/orchestration/test_one_perfect_entity_fixture.py`
+       - Implement connector stubbing via monkeypatch (inject fixtures into fetch methods)
+       - Run full orchestration pipeline (all 11 stages) with fixture data
+       - Assert: canonical dimensions non-empty (canonical_activities=['padel'], canonical_place_types=['sports_facility'])
+       - Assert: modules non-empty with expected key(s) (modules={'sports_facility': {'padel_courts': {'total': 3}}})
+       - Assert: entity persists and is retrievable from database
+    3. Connector stubbing implementation:
+       - Monkeypatch the exact connector fetch methods used by orchestration (e.g., `SerperConnector.fetch`)
+       - Load fixture JSON and return as connector response
+       - **NO changes to production connector logic** — stubs are test-only
+       - Keep stub logic minimal and isolated to test file or conftest.py
+  - **Explicit Exclusions:**
+    - ❌ No relaxing regex rules to "make it pass"
+    - ❌ No widening lens mapping beyond padel in this item
+    - ❌ No runtime behavior changes; this is test determinism work only
+  - **Blocking:** **CRITICAL** — Phase 2 completion (constitutional gate)
+  - **Blocks:** LA-003 completion, LA-014 resolution
+  - **Success Criteria:**
+    - ✅ Fixture-based OPE test passes reliably offline / repeatably
+    - ✅ Test runs without network access (all connector calls stubbed)
+    - ✅ Modules field contains at least one non-empty module with populated field
+    - ✅ Test can be run in CI without external dependencies
+    - ✅ All assertions from original OPE test (system-vision.md 6.3) pass
+
+- [ ] **LA-020b: Rename Existing OPE Test as Live Integration (Non-gating)**
+  - **Principle:** Test Classification, Phase Gate Clarity
+  - **Location:** `tests/engine/orchestration/test_end_to_end_validation.py::test_one_perfect_entity_end_to_end_validation`
+  - **Description:** Rename the current live SERP-dependent OPE test to clearly indicate it is non-deterministic and not a constitutional gate. Keep it as a live integration test for real-world validation, but do not use it as the Phase 2 completion criterion.
+  - **Scope:** Test file only (rename + docstring update)
+  - **Deliverables:**
+    1. Rename test function: `test_one_perfect_entity_end_to_end_validation` → `test_ope_live_integration`
+    2. Update docstring to clarify:
+       - "This is a LIVE integration test that depends on current SERP data"
+       - "It may be flaky due to web data drift — this is acceptable"
+       - "This test is NOT the Phase 2 completion gate (see test_one_perfect_entity_fixture.py)"
+    3. Keep test marked as `@pytest.mark.slow`
+    4. Optionally add `@pytest.mark.flaky` or similar marker
+  - **Blocking:** None (non-critical cleanup)
+  - **Success Criteria:**
+    - ✅ Test renamed with clear non-constitutional naming
+    - ✅ Docstring updated to indicate live/flaky nature
+    - ✅ Test continues to run but does not block Phase gates
+    - ✅ Documentation updated to reference LA-020a as the constitutional gate
 
 - [x] **LA-015: Schema/Policy Separation — entity.yaml vs entity_model.yaml Shadow Schema Duplication**
   - **Principle:** Single Source of Truth (system-vision.md Invariant 2), Schema Authority (CLAUDE.md "Schema Single Source of Truth")
