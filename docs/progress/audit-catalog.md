@@ -2,7 +2,7 @@
 
 **Current Phase:** Phase 2: Pipeline Implementation
 **Validation Entity:** West of Scotland Padel (validation) / Edinburgh Sports Club (investigation)
-**Last Updated:** 2026-02-11 (LA-015 completed: schema/policy separation Phase 1. LA-017 completed: universal amenity fields added to entity.yaml + EntityExtraction. LA-018a completed: OSM extraction prompt updated for amenity fields. LA-018b completed: Google Places extractor updated for amenity fields. LA-018c/LA-019 pending: Council extractor + lens mapping. LA-016 pending: documentation updates. LA-014 in progress: modules not populated - CRITICAL blocker for Phase 2 completion.)
+**Last Updated:** 2026-02-11 (LA-015 completed: schema/policy separation Phase 1. LA-017 completed: universal amenity fields added to entity.yaml + EntityExtraction. LA-018a completed: OSM extraction prompt updated for amenity fields. LA-018b completed: Google Places extractor updated for amenity fields. LA-018c completed: Edinburgh Council extractor updated for amenity fields. LA-019 pending: lens mapping. LA-016 pending: documentation updates. LA-014 in progress: modules not populated - CRITICAL blocker for Phase 2 completion.)
 
 ---
 
@@ -1541,24 +1541,26 @@ observability, performance, and real-world data coverage **without altering core
     - Implemented extraction logic: locality from addressComponents (neighborhood/sublocality types), wifi=None (not available), parking_available from wheelchairAccessibleParking (true→True, else→None), disabled_access from wheelchairAccessibleEntrance (true/false/null)
     - Critical semantic correction: parking_available returns None (not False) when wheelchairAccessibleParking=false to avoid false negatives (parking may exist but not be wheelchair-accessible)
 
-- [ ] **LA-018c: Update Edinburgh Council Extractor for Amenity/Accessibility Data**
+- [x] **LA-018c: Update Edinburgh Council Extractor for Amenity/Accessibility Data**
   - **Principle:** Data Quality, Universal Field Population (target-architecture.md 4.2 - Extraction Boundary Phase 1)
-  - **Location:** `engine/extraction/extractors/edinburgh_council_extractor.py`
+  - **Location:** `engine/extraction/extractors/edinburgh_council_extractor.py`, `tests/engine/extraction/extractors/test_edinburgh_council_extractor.py`
   - **Description:** Update Edinburgh Council deterministic extractor to capture 4 universal amenity/accessibility fields from council GeoJSON response. Council extractor uses deterministic extraction (no LLM prompt), so this requires code changes to extract() method.
-  - **Depends On:** LA-018a (OSM prompt completed)
-  - **Blocking:** LA-019 (lens mapping needs extracted data to exist)
-  - **Estimated Scope:** 1 file modified (~20-30 lines added to extract() method)
-  - **Note:** Line 64 comment mentions `wheelchair_accessible` field exists in council data
-  - **Implementation Tasks:**
-    1. Verify council GeoJSON response contains accessibility/amenity fields
-    2. Add extraction logic in extract() method for: locality, wifi, parking_available, disabled_access
-    3. Map council property names to schema primitives (deterministic mapping)
-    4. Add tests verifying correct field extraction
-  - **Success Criteria:**
-    - ✅ Council extractor populates amenity fields when GeoJSON provides data
-    - ✅ Returns None when data absent (not False)
-    - ✅ Tests verify correct field population
-    - ✅ No inference or domain logic added (Phase 1 primitives only)
+  - **Completed:** 2026-02-11
+  - **Commit:** b6669bb
+  - **Executable Proof:**
+    - All 179 extraction tests pass (no regressions) ✅
+    - New test `test_extract_universal_amenity_fields` validates all 4 fields always present ✅
+    - `pytest tests/engine/extraction/extractors/test_edinburgh_council_extractor.py -v` → 10/10 tests pass ✅
+    - Schema alignment verified: disabled_access in schema fields (not discovered_attributes) ✅
+    - Phase 1 compliance: Returns None when absent, no inference, deterministic mapping only ✅
+  - **Fix Applied:**
+    - Fixed schema mismatch bug: wheelchair_accessible (non-schema) → disabled_access (schema field)
+    - Added disabled_access extraction from ACCESSIBLE field (True/False/None)
+    - Added locality field (None - not available in Council data)
+    - Added wifi field (None - not available in Council data)
+    - Added parking_available field (None - not available in Council data)
+    - Evidence-based approach: Only maps from ACCESSIBLE field observed in Council fixtures
+    - All 4 universal amenity fields now always present in extraction output
 
 - [ ] **LA-019: Add Lens Mapping Rules for Universal Amenity Fields (Optional)**
   - **Principle:** Lens Configuration, Data Routing (target-architecture.md Stage 7 - Lens Application)
