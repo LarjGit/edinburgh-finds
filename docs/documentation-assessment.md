@@ -20,9 +20,9 @@ The Edinburgh Finds documentation represents exceptional quality and sophisticat
 
 1. **`docs/system-vision.md`** (21KB) - Architectural constitution with 10 immutable invariants
 2. **`docs/target-architecture.md`** (56KB) - Executable runtime specification
-3. **`docs/development-methodology.md`** (37KB) - Reality-based incremental alignment process
+3. **`docs/process/development-methodology.md`** (37KB) - Reality-based incremental alignment process
 4. **`docs/architecture.md`** (14KB) - Legacy architectural documentation
-5. **`docs/progress/audit-catalog.md`** - Living progress tracking with executable proofs
+5. **`docs/progress/development-catalog.md`** - Living progress tracking with executable proofs
 6. **`engine/lenses/edinburgh_finds/lens.yaml`** - Practical implementation example
 
 ---
@@ -64,7 +64,7 @@ The Edinburgh Finds documentation represents exceptional quality and sophisticat
 
 ### 4. Implementation Discipline
 
-**Executable Proof Requirements**: Every completed item in the audit catalog must have concrete, runnable validation—no hand-waving allowed.
+**Executable Proof Requirements**: Every completed item in the development catalog must have concrete, runnable validation—no hand-waving allowed.
 
 **Phase Structure**: Foundation → Pipeline → Expansion prevents premature optimization while ensuring solid architectural foundations.
 
@@ -87,7 +87,7 @@ The development methodology represents groundbreaking work in AI-assisted develo
 
 **Theory-to-Practice Coherence**: Seamless mapping from high-level principles through executable architecture to working implementation.
 
-**Active Enforcement**: The audit catalog shows this isn't theoretical—the methodology is being actively followed with detailed progress tracking.
+**Active Enforcement**: The development catalog shows this isn't theoretical—the methodology is being actively followed with detailed progress tracking.
 
 **Architectural Governance**: Built-in mechanisms to prevent architectural drift over time.
 
@@ -131,7 +131,7 @@ module_triggers:
 
 ### Progress Tracking Excellence
 
-The audit catalog shows:
+The development catalog shows:
 
 - **Phase 1 Complete:** All architectural violations resolved with executable proofs
 - **Phase 2 Active:** 11-stage pipeline implementation with detailed gap analysis
