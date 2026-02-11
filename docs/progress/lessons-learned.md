@@ -56,3 +56,26 @@ Agents must consult this file during Step 2 (Code Reality Audit) to incorporate 
 **Suggested Guardrail (optional)**
 - Add schema validation test that verifies no universal persisted fields exist in `extraction_fields:` section (negative validation). Current test suite includes this for LA-017 fields specifically (`test_amenity_fields_not_in_extraction_fields_section`), but a general guardrail could prevent future misplacements by validating extraction_fields contains ONLY expected volatile attributes.
 
+---
+
+## 2026-02-10 — LA-018a — Update OSM Extraction Prompt for Amenity Fields
+
+**Context**
+- Updated OSM LLM extraction prompt to capture 4 universal amenity fields (locality, wifi, parking_available, disabled_access) by adding explicit OSM tag mapping rules. Original LA-018 catalog item assumed "3 prompt files modified" but reality audit revealed only OSM uses LLM prompts - Google Places and Council use deterministic extraction requiring code changes, not prompt changes. Split LA-018 into LA-018a (OSM prompt), LA-018b (Google Places code), LA-018c (Council code) per Constraint C3 (max 2 files).
+
+**Pattern Candidate**
+- Yes
+- Pattern: "Verify Extraction Strategy Before Planning Prompt Changes" - When planning updates to extractors, always verify the extraction strategy (LLM-based vs deterministic) before assuming prompt changes are needed. Not all extractors use LLM prompts - many use deterministic field mapping in extract() methods.
+- Reference: LA-018 split rationale in audit-catalog.md, commit 3470da6 (OSM prompt update). Reality audit showed: osm_extractor.py uses LLM + prompt file (engine/extraction/prompts/osm_extraction.txt), but google_places_extractor.py and edinburgh_council_extractor.py use deterministic extract() methods with NO prompt files.
+
+**Documentation Clarity**
+- Yes
+- Extractor docstrings don't explicitly state extraction strategy (LLM-based vs deterministic), making it unclear which extractors need prompt updates vs code changes. Propose adding "Extraction Strategy" metadata to each extractor's docstring header. Example: "Extraction Strategy: LLM-based (uses Instructor with prompt file: engine/extraction/prompts/osm_extraction.txt)" vs "Extraction Strategy: Deterministic (structured API response mapping, no prompt file)". This would make strategy immediately visible during code audits.
+
+**Pitfall**
+- Yes
+- When creating catalog items for "update extractors to extract field X," don't assume prompt changes are universal. First audit: Which extractors use LLM? Which use deterministic extraction? Split catalog items by extraction strategy: LLM-based (prompt changes) vs deterministic (code changes). Concrete consequence: LA-018 violated Constraint C3 (max 2 files) until split into 3 sub-items, delaying work.
+
+**Suggested Guardrail (optional)**
+- Add "Extraction Strategy: [LLM-based|Deterministic]" field to extractor metadata in connector registry (engine/orchestration/connectors/registry.py) or extractor base class. This would make strategy queryable at runtime and prevent planning assumptions about prompt files existing. Alternative: Add extraction_strategy.md reference document listing all extractors with their strategies.
+
