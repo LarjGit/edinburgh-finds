@@ -1938,8 +1938,13 @@ Items that align the repository with the new governance model (methodology/roadm
 - **Scope:** Line 154: `docs/development-methodology.md` → `docs/process/development-methodology.md`
 - **Files:** TROUBLESHOOTING.md only
 - **Exclusions:** No other changes to troubleshooting content
-- **Status:** Pending
-- **Proof:** Grep confirms zero matches for `docs/development-methodology.md` in TROUBLESHOOTING.md
+- **Status:** Complete
+- **Completed:** 2026-02-11
+- **Commit:** ca3c209
+- **Executable Proof:**
+  - `grep 'docs/development-methodology.md' TROUBLESHOOTING.md` → 0 matches ✅
+  - Line 154 now references: `docs/process/development-methodology.md`
+  - R-01 governance convergence requirement satisfied
 
 ### **R-01.3: Fix Legacy References in documentation-assessment.md**
 - **Principle:** Repository convergence (development-roadmap.md R-01)
