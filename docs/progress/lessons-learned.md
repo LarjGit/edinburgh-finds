@@ -79,3 +79,26 @@ Agents must consult this file during Step 2 (Code Reality Audit) to incorporate 
 **Suggested Guardrail (optional)**
 - Add "Extraction Strategy: [LLM-based|Deterministic]" field to extractor metadata in connector registry (engine/orchestration/connectors/registry.py) or extractor base class. This would make strategy queryable at runtime and prevent planning assumptions about prompt files existing. Alternative: Add extraction_strategy.md reference document listing all extractors with their strategies.
 
+---
+
+## 2026-02-11 — LA-018b — Update Google Places Extractor for Amenity/Accessibility Data
+
+**Context**
+- Updated Google Places deterministic extractor to extract 4 universal amenity fields (locality, wifi, parking_available, disabled_access) from Google Places API v1 response. Added extraction logic in google_places_extractor.py extract() method and updated field_mask in sources.yaml to request addressComponents and accessibilityOptions from API. Critical correction: parking_available maps wheelchairAccessibleParking=false → None (not False) to avoid false negatives where general parking exists but wheelchair parking is not accessible.
+
+**Pattern Candidate**
+- Yes
+- Pattern: "API Field Masking for Deterministic Extractors" - When updating deterministic extractors to extract new fields, check if API requires explicit field masking (like Google Places API v1 X-Goog-FieldMask header). New fields must be added to field_mask configuration BEFORE extraction code will receive data. Two-file scope: (1) config/sources.yaml field_mask, (2) extractor extract() method.
+- Reference: LA-018b added `places.addressComponents,places.accessibilityOptions` to google_places field_mask (sources.yaml:49), then implemented extraction logic (google_places_extractor.py:191-224), commit bc8b323. Without field_mask update, API would not return the data even with correct extraction code.
+
+**Documentation Clarity**
+- Yes
+- Google Places API documentation doesn't prominently warn that wheelchair-accessible parking (wheelchairAccessibleParking) does NOT indicate general parking availability. Returning False when wheelchairAccessibleParking=false creates false negatives (implies parking doesn't exist when it may exist but isn't accessible). Propose adding inline comment in extractor explaining this semantic distinction: "wheelchairAccessibleParking=false means wheelchair parking NOT accessible, not that parking doesn't exist."
+
+**Pitfall**
+- Yes
+- When mapping boolean accessibility fields to availability fields, don't assume accessible=false means unavailable=true. Example: wheelchairAccessibleParking=false could mean (1) no parking at all, or (2) parking exists but isn't wheelchair-accessible. Returning False creates false negatives. Safe pattern: Return True only when explicitly true, else None (inconclusive). Avoid treating false as definitive negative for availability fields.
+
+**Suggested Guardrail (optional)**
+- Add validation test that verifies extractors return None (not False) for inconclusive boolean fields. Example test case: Given wheelchairAccessibleParking=false, assert extracted['parking_available'] is None (not False). This prevents false negatives in availability fields derived from accessibility booleans.
+
