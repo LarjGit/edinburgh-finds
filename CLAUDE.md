@@ -159,7 +159,7 @@ See `docs/target-architecture.md` Section 4.1 for complete 11-stage pipeline spe
 - Query analysis → intelligent connector selection → execution plan
 - CLI: `python -m engine.orchestration.cli run "your query here"`
 
-**⚠️ Known Issue:** Partial lens mapping implementation. `canonical_activities` populates correctly but `canonical_place_types` and `modules` remain empty. End-to-end test `test_one_perfect_entity_end_to_end_validation` currently fails. "One Perfect Entity" constitutional requirement (system-vision.md Section 6.3) not yet achieved. See audit item LA-003.
+**⚠️ Known Issue:** Partial lens mapping implementation. `canonical_activities` populates correctly but `canonical_place_types` and `modules` remain empty. End-to-end test `test_one_perfect_entity_end_to_end_validation` currently fails. "One Perfect Entity" constitutional requirement (system-vision.md Section 6.3) not yet achieved. See catalog item LA-003.
 
 ---
 
