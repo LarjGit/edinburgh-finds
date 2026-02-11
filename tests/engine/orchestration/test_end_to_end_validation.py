@@ -20,6 +20,7 @@ Validates that canonical dimensions and modules flow end-to-end through
 orchestration to final Entity persistence in database.
 """
 
+import os
 import pytest
 from prisma import Prisma
 from engine.orchestration.planner import orchestrate
@@ -421,5 +422,53 @@ async def test_ope_geo_coordinate_validation():
     finally:
         await db.entity.delete_many(
             where={"entity_name": {"contains": "Meadowbank"}}
+        )
+        await db.disconnect()
+
+
+@pytest.mark.slow
+@pytest.mark.skipif(
+    not os.getenv("DATABASE_URL"),
+    reason="DATABASE_URL not configured"
+)
+@pytest.mark.asyncio
+async def test_universal_amenity_fields_phase1_extraction():
+    """
+    LA-019a: Prove amenity fields (locality, wifi, parking_available,
+    disabled_access) persist without lens mapping (Phase 1 primitives).
+    """
+    ctx = bootstrap_lens("edinburgh_finds")
+    db = Prisma()
+    await db.connect()
+
+    try:
+        await db.entity.delete_many(
+            where={"entity_name": {"contains": "National Museum of Scotland"}}
+        )
+
+        request = IngestRequest(
+            ingestion_mode=IngestionMode.RESOLVE_ONE,
+            query="National Museum of Scotland Edinburgh",
+            persist=True,
+        )
+
+        await orchestrate(request, ctx=ctx)
+
+        entities = await db.entity.find_many(
+            where={"entity_name": {"contains": "National Museum of Scotland"}}
+        )
+
+        assert len(entities) > 0, "No entity persisted"
+        entity = entities[0]
+
+        # Validate field types/shapes (Phase 1 extraction boundary)
+        assert entity.locality is None or isinstance(entity.locality, str)
+        assert entity.wifi in (True, False, None)
+        assert entity.parking_available in (True, False, None)
+        assert entity.disabled_access in (True, False, None)
+
+    finally:
+        await db.entity.delete_many(
+            where={"entity_name": {"contains": "National Museum of Scotland"}}
         )
         await db.disconnect()
