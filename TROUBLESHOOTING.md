@@ -151,6 +151,6 @@ pytest --cov=engine --cov-report=html  # Generate HTML coverage report
 ## Getting Help
 
 - **Architectural questions:** Read `docs/system-vision.md` first
-- **Process questions:** Read `docs/development-methodology.md`
+- **Process questions:** Read `docs/process/development-methodology.md`
 - **Implementation details:** Check `docs/target-architecture.md`
 - **Test examples:** Browse `tests/engine/` for patterns and fixtures
