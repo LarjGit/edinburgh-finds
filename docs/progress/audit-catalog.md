@@ -1562,19 +1562,39 @@ observability, performance, and real-world data coverage **without altering core
     - Evidence-based approach: Only maps from ACCESSIBLE field observed in Council fixtures
     - All 4 universal amenity fields now always present in extraction output
 
-- [ ] **LA-019: Add Lens Mapping Rules for Universal Amenity Fields (Optional)**
+- [x] **LA-019: Add Lens Mapping Rules for Universal Amenity Fields (Optional)**
   - **Principle:** Lens Configuration, Data Routing (target-architecture.md Stage 7 - Lens Application)
   - **Location:** `engine/lenses/edinburgh_finds/lens.yaml`, potentially `engine/lenses/wine/lens.yaml`
   - **Description:** Consider whether lens mapping rules are needed to route amenity/accessibility data (locality, wifi, parking_available, disabled_access) from raw observations to final entity fields. Determine if these universal fields should be populated directly by extractors (Phase 1) or require lens mapping (Phase 2).
   - **Discovered During:** LA-015 knock-on effects analysis (2026-02-10)
   - **Depends On:** LA-017 (model fields), LA-018 (extractors populate data)
   - **Blocking:** None (data quality enhancement, not a blocker)
+  - **Completed:** 2026-02-11
+  - **Commit:** 3e500b7
+  - **Decision:** Phase 1 extraction - NO lens mapping required
+    - Universal amenity fields (locality, wifi, parking_available, disabled_access) are Phase 1 primitives
+    - Populated directly by extractors (LA-018a/b/c implementations)
+    - These fields represent universal facts (boolean flags, neighborhood names) that do NOT require lens-specific interpretation
+    - No lens mapping rules needed - fields flow extraction → ExtractedEntity → Entity unchanged
+  - **Evidence:**
+    - E2E test: `test_universal_amenity_fields_phase1_extraction` (tests/engine/orchestration/test_end_to_end_validation.py)
+    - Test validates: Edinburgh Council extractor → amenity fields → database persistence
+    - Test confirms: wifi, parking_available, disabled_access populate without lens involvement
+  - **Files Modified:**
+    - `tests/engine/orchestration/test_end_to_end_validation.py` (added E2E validation test)
+    - NO lens.yaml changes made (fields are Phase 1, not Phase 2)
+    - NO lens mapping rules added (universal primitives, not lens-specific)
+  - **Architectural Note:**
+    - These fields are universal across ALL verticals (Edinburgh Finds, Wine Discovery, etc.)
+    - They represent factual observations, not domain-specific classifications
+    - Extractors (LA-018a/b/c) populate them as schema primitives during Phase 1
+    - Lens Application (Stage 7) does NOT touch these fields - they pass through unchanged
   - **Rationale:** Universal fields like locality/wifi/parking/accessibility may or may not require lens-specific mapping. If extractors populate them directly as schema primitives (Phase 1), no lens rules needed. If they require lens-specific interpretation (Phase 2), mapping rules are needed. This item clarifies the correct approach and implements accordingly.
   - **Estimated Scope:** 1-2 lens files modified, ~20-40 lines (if mapping rules needed); OR 0 files modified (if Phase 1 extraction sufficient)
   - **Decision Tree:**
     ```
     Are these fields lens-specific or universal?
-    ├─ UNIVERSAL (e.g., wifi is wifi in all verticals)
+    ├─ UNIVERSAL (e.g., wifi is wifi in all verticals) ✅ SELECTED
     │  └─> Extractors populate directly (Phase 1) → NO lens mapping needed
     │
     └─ LENS-SPECIFIC (e.g., "locality" means different things in Wine vs Padel)
@@ -1608,6 +1628,36 @@ observability, performance, and real-world data coverage **without altering core
     - **Rationale:** Fields like wifi/parking/disabled_access are universal boolean facts, not lens-specific interpretations. They should be populated by extractors as schema primitives (Phase 1), not require lens mapping (Phase 2).
     - **Action:** Verify LA-018 extractors populate these fields directly. Add e2e test. Document in lens.yaml that these are Phase 1 fields.
   - **Note:** This item may result in ZERO code changes if analysis confirms Phase 1 extraction is sufficient. The value is in documenting the decision and validating the data flow.
+
+- [x] **LA-019b: Record Universal Amenity Fields Decision in Audit Catalog**
+  - **Principle:** Documentation, Architectural Decision Recording
+  - **Location:** `docs/progress/audit-catalog.md`
+  - **Description:** Record the architectural decision that universal amenity fields (locality, wifi, parking_available, disabled_access) are Phase 1 primitives populated directly by extractors and do NOT require lens mapping rules. Document the rationale, evidence, and completion status.
+  - **Discovered During:** LA-019a validation test implementation (2026-02-11)
+  - **Depends On:** LA-019a (E2E validation test)
+  - **Blocking:** None (documentation only)
+  - **Completed:** 2026-02-11
+  - **Rationale:** The LA-019a E2E test proves that amenity fields flow extraction → persistence without lens involvement. This decision must be recorded in the audit catalog to document the architectural approach and prevent future confusion about whether lens mapping is needed for these fields.
+  - **Estimated Scope:** 1 file modified (audit catalog only), ~15 lines added
+  - **Implementation Tasks:**
+    1. **Update LA-019 entry in audit catalog:**
+       - Mark LA-019 as complete with checkbox [x]
+       - Add "Completed:" date (2026-02-11)
+       - Add "Commit:" hash from LA-019a implementation
+       - Add "Decision:" section documenting Phase 1 approach
+       - Add "Evidence:" section referencing E2E test `test_universal_amenity_fields_phase1_extraction`
+       - Add "Rationale:" explaining why these are universal primitives, not lens-specific
+       - Add "Files Modified:" listing test file added in LA-019a
+    2. **Document exclusions:**
+       - Explicitly state: NO lens.yaml changes made (fields are Phase 1, not Phase 2)
+       - Explicitly state: NO lens mapping rules needed
+       - Reference LA-018a/b/c extractor implementations as source of truth
+  - **Success Criteria:**
+    - ✅ LA-019 marked complete in audit catalog
+    - ✅ Decision clearly documented: Phase 1 primitives, no lens mapping
+    - ✅ Evidence cited: E2E test name and location
+    - ✅ Rationale explains why universal fields don't need lens interpretation
+  - **Note:** This is a pure documentation task with ZERO code changes. Completes the LA-019 micro-iteration by recording the decision.
 
 ---
 
