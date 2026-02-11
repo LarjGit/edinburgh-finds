@@ -1905,6 +1905,119 @@ The correct fix is to wire `merging.py` into `entity_finalizer.py` and then add 
 
 ---
 
+## Repository Governance Convergence
+
+Items that align the repository with the new governance model (methodology/roadmap/catalog triad) by eliminating legacy paths and terminology.
+
+### **R-01.1: Update CLAUDE.md Navigation and Document Roles**
+- **Principle:** Repository convergence (development-roadmap.md R-01)
+- **Goal:** Align CLAUDE.md with new governance triad (methodology/roadmap/catalog)
+- **Scope:**
+  - ✅ **MUST modify:**
+    - Navigation sections ("Starting a task?", "Need documentation?")
+    - Document role descriptions
+    - Reading paths
+  - ❌ **MUST NOT modify:**
+    - Architectural guidance sections
+    - Tool instructions
+    - Enforcement rules unrelated to governance triad
+    - Core concepts or tech stack
+- **Files:** CLAUDE.md only
+- **Exclusions:** No changes outside navigation/roles/paths
+- **Status:** Complete
+- **Completed:** 2026-02-11
+- **Commit:** f69c6d2
+- **Executable Proof:**
+  - `grep -i "audit" CLAUDE.md` → Exit code 1 (no matches) ✅
+  - Line 162: "audit item LA-003" → "catalog item LA-003"
+  - Semantic convergence achieved (R-01 requirement)
+
+### **R-01.2: Fix Legacy Methodology Path in TROUBLESHOOTING.md**
+- **Principle:** Repository convergence (development-roadmap.md R-01)
+- **Goal:** Update legacy path reference to current location
+- **Scope:** Line 154: `docs/development-methodology.md` → `docs/process/development-methodology.md`
+- **Files:** TROUBLESHOOTING.md only
+- **Exclusions:** No other changes to troubleshooting content
+- **Status:** Pending
+- **Proof:** Grep confirms zero matches for `docs/development-methodology.md` in TROUBLESHOOTING.md
+
+### **R-01.3: Fix Legacy References in documentation-assessment.md**
+- **Principle:** Repository convergence (development-roadmap.md R-01)
+- **Goal:** Update all legacy paths and terms in documentation assessment
+- **Scope:** Fix methodology path (line 23), audit-catalog path (line 25), and "audit catalog" terms (3 instances)
+- **Files:** documentation-assessment.md only
+- **Exclusions:** No changes to assessment content or structure
+- **Status:** Pending
+- **Proof:**
+  - Grep confirms zero matches for `docs/development-methodology.md`
+  - Grep confirms zero matches for `docs/progress/audit-catalog.md`
+  - Grep confirms zero matches for "audit catalog" (case-insensitive)
+
+### **R-01.4: Update Development Catalog Header (Verify-First)**
+- **Principle:** Repository convergence (development-roadmap.md R-01)
+- **Goal:** Ensure catalog header is "Development Catalog" (not "Architectural Audit Catalog")
+- **Scope:**
+  1. **Check:** Read line 1 of development-catalog.md
+  2. **If already "Development Catalog"** → Mark item NO-OP/satisfied without edit
+  3. **If still "Architectural Audit Catalog"** → Update to "Development Catalog"
+- **Files:** development-catalog.md only (if change needed)
+- **Exclusions:** No changes to catalog entries or historical records
+- **Status:** Pending
+- **Proof:** Assert current header equals "# Development Catalog"
+
+### **R-01.5: Update LA-019b Terminology in Development Catalog**
+- **Principle:** Repository convergence (development-roadmap.md R-01)
+- **Goal:** Replace "audit catalog" with "development catalog" in LA-019b entry where describing the ledger concept
+- **Scope:**
+  - LA-019b entry only (~lines 1689-1713)
+  - Replace phrases describing the ledger concept
+  - ❌ **Do NOT modify:** Intentional historical narration about "audit catalog" era
+- **Files:** development-catalog.md only
+- **Exclusions:** No changes to other entries
+- **Status:** Pending
+- **Proof:**
+  - Diff shows only lexical substitutions ("audit catalog" → "development catalog")
+  - No structural edits
+  - Grep confirms appropriate usage context preserved
+
+### **R-01.6: Delete Legacy audit-catalog.md File (Safety-Checked)**
+- **Principle:** Repository convergence (development-roadmap.md R-01)
+- **Goal:** Remove the legacy file after verifying safety
+- **Scope:**
+  1. **Safety checks:**
+     - Run `git log -- docs/progress/audit-catalog.md`
+     - Confirm no unique content vs development-catalog.md
+  2. **Delete:** `docs/progress/audit-catalog.md`
+- **Files:** Delete 1 file
+- **Exclusions:** No changes to development-catalog.md
+- **Status:** Pending
+- **Proof:**
+  - Git log captured and reviewed
+  - File does not exist at `docs/progress/audit-catalog.md`
+  - Confirmation that development-catalog.md contains equivalent content
+
+### **R-01.7: Final Verification (Comprehensive)**
+- **Principle:** Repository convergence (development-roadmap.md R-01)
+- **Goal:** Confirm all operational legacy references removed repo-wide
+- **Scope:** Run comprehensive grep searches with explicit acceptance criteria
+- **Files:** No file changes
+- **Success Criteria:**
+  - ✅ **Zero matches for:**
+    - `docs/development-methodology.md`
+    - `docs/progress/audit-catalog.md`
+    - Phrase "audit catalog" (case-insensitive)
+  - ✅ **EXCEPT inside** (expected/acceptable):
+    - `docs/process/development-roadmap.md` (documenting legacy terms)
+    - `docs/progress/lessons-learned.md` (historical context)
+    - Historical narration blocks in catalog
+- **Status:** Pending
+- **Proof:**
+  - Grep report showing zero operational legacy references
+  - Document any acceptable exceptions found
+  - Confirm all links resolve correctly
+
+---
+
 ## Cross-Cutting: Test Infrastructure
 
 Tasks here are not bound to a single pipeline stage. They protect test
