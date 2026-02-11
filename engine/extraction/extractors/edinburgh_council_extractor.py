@@ -61,7 +61,10 @@ class EdinburghCouncilExtractor(BaseExtractor):
     - categories: from FACILITY_TYPE, TYPE, CATEGORY
     - external_id: from feature id or OBJECTID or FID
     - capacity: from CAPACITY
-    - wheelchair_accessible: from ACCESSIBLE
+    - disabled_access: from ACCESSIBLE (True/False/None)
+    - locality: None (not available in Council data)
+    - wifi: None (not available in Council data)
+    - parking_available: None (not available in Council data)
     - opening_hours: from OPENING_HOURS
     """
 
@@ -163,12 +166,24 @@ class EdinburghCouncilExtractor(BaseExtractor):
             except (ValueError, TypeError):
                 pass
 
-        # Accessibility
+        # Universal amenity & accessibility fields (LA-018c)
+        # Disabled access: from ACCESSIBLE field
         accessible = properties.get("ACCESSIBLE", "").lower()
         if accessible in ["yes", "y", "true", "1"]:
-            extracted["wheelchair_accessible"] = True
+            extracted["disabled_access"] = True
         elif accessible in ["no", "n", "false", "0"]:
-            extracted["wheelchair_accessible"] = False
+            extracted["disabled_access"] = False
+        else:
+            extracted["disabled_access"] = None
+
+        # Locality: Not available in Edinburgh Council data
+        extracted["locality"] = None
+
+        # WiFi: Not available in Edinburgh Council data
+        extracted["wifi"] = None
+
+        # Parking: Not available in Edinburgh Council data
+        extracted["parking_available"] = None
 
         # Opening hours
         if "OPENING_HOURS" in properties and properties["OPENING_HOURS"]:

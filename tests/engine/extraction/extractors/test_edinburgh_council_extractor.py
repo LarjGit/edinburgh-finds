@@ -173,7 +173,7 @@ class TestExtractionCorrectness:
         assert extracted["website"] == "https://www.edinburghleisure.co.uk/venues/meadowbank-sports-centre"
         assert extracted["summary"] == "Premier sports facility in Edinburgh"
         assert extracted["capacity"] == 500
-        assert extracted["wheelchair_accessible"] is True
+        assert extracted["disabled_access"] is True
 
     def test_extract_categories(self, mock_ctx):
         """
@@ -316,7 +316,7 @@ class TestExtractionCorrectness:
 
     def test_extract_accessibility_flags(self, mock_ctx):
         """
-        Validates wheelchair_accessible boolean extraction from ACCESSIBLE field
+        Validates disabled_access boolean extraction from ACCESSIBLE field
 
         Edinburgh Council uses various formats: Yes/Y/True/1 or No/N/False/0
         """
@@ -329,7 +329,7 @@ class TestExtractionCorrectness:
             "properties": {"NAME": "Accessible Venue", "ACCESSIBLE": "Yes"}
         }
         extracted_yes = extractor.extract(raw_data_yes, ctx=mock_ctx)
-        assert extracted_yes["wheelchair_accessible"] is True
+        assert extracted_yes["disabled_access"] is True
 
         # Test accessible = No
         raw_data_no = {
@@ -338,13 +338,66 @@ class TestExtractionCorrectness:
             "properties": {"NAME": "Non-Accessible Venue", "ACCESSIBLE": "No"}
         }
         extracted_no = extractor.extract(raw_data_no, ctx=mock_ctx)
-        assert extracted_no["wheelchair_accessible"] is False
+        assert extracted_no["disabled_access"] is False
 
-        # Test accessible = missing (should not set field)
+        # Test accessible = missing (should set to None per LA-018c)
         raw_data_missing = {
             "type": "Feature",
             "geometry": {"type": "Point", "coordinates": [-3.18, 55.95]},
             "properties": {"NAME": "Unknown Accessibility"}
         }
         extracted_missing = extractor.extract(raw_data_missing, ctx=mock_ctx)
-        assert "wheelchair_accessible" not in extracted_missing
+        assert extracted_missing["disabled_access"] is None
+
+    def test_extract_universal_amenity_fields(self, mock_ctx):
+        """
+        Validates LA-018c: Universal amenity fields always present in extraction
+
+        Edinburgh Council provides:
+        - disabled_access: from ACCESSIBLE field (True/False/None)
+        - locality: None (not available in Council data)
+        - wifi: None (not available in Council data)
+        - parking_available: None (not available in Council data)
+
+        All 4 universal amenity fields must always be present in extraction output.
+        """
+        extractor = EdinburghCouncilExtractor()
+
+        # Test with ACCESSIBLE="Yes"
+        raw_data_accessible = {
+            "type": "Feature",
+            "geometry": {"type": "Point", "coordinates": [-3.18, 55.95]},
+            "properties": {
+                "NAME": "Test Venue",
+                "ACCESSIBLE": "Yes"
+            }
+        }
+
+        extracted = extractor.extract(raw_data_accessible, ctx=mock_ctx)
+
+        # All 4 universal amenity fields must be present
+        assert "locality" in extracted
+        assert "wifi" in extracted
+        assert "parking_available" in extracted
+        assert "disabled_access" in extracted
+
+        # Values based on available Council data
+        assert extracted["disabled_access"] is True  # From ACCESSIBLE="Yes"
+        assert extracted["locality"] is None  # Not available in Council data
+        assert extracted["wifi"] is None  # Not available in Council data
+        assert extracted["parking_available"] is None  # Not available in Council data
+
+        # Test with no accessibility data
+        raw_data_no_fields = {
+            "type": "Feature",
+            "geometry": {"type": "Point", "coordinates": [-3.18, 55.95]},
+            "properties": {"NAME": "Minimal Venue"}
+        }
+
+        extracted_minimal = extractor.extract(raw_data_no_fields, ctx=mock_ctx)
+
+        # All 4 fields still present, all None
+        assert extracted_minimal["locality"] is None
+        assert extracted_minimal["wifi"] is None
+        assert extracted_minimal["parking_available"] is None
+        assert extracted_minimal["disabled_access"] is None
