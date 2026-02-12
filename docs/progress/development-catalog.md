@@ -1375,6 +1375,39 @@ Phase 2 → Phase 3 requires LA-020a (deterministic fixture-based OPE test) to p
     - ✅ Test can be run in CI without external dependencies
     - ✅ All assertions from original OPE test (system-vision.md 6.3) pass
 
+  **Sub-items (must complete before LA-020a can be checked):**
+
+  - [x] **LA-020a-R1a: Create Merge-Validating Fixtures**
+    - **Principle:** One Perfect Entity (system-vision.md 6.3), Merge Validation (target-architecture.md 9.1)
+    - **Location:** `tests/fixtures/connectors/{serper,google_places}/` (UPDATE)
+    - **Completed:** 2026-02-12
+    - **Description:** Update fixtures so Serper and Google Places represent the SAME venue (matching names → triggers fuzzy deduplication and merge). Google Places provides strong ID (coordinates), Serper provides lens-relevant text ("sports facility", "3 fully covered, heated courts"). This validates that merge preserves lens-relevant text from weaker source.
+    - **Scope:** 3 lines changed (2 files)
+    - **Implementation:**
+      1. Updated `serper/padel_venue_with_court_count.json:11-12`:
+         - Changed title to "Game4Padel | Edinburgh Park"
+         - Changed link to "https://www.game4padel.co.uk/edinburgh-park" (internal consistency)
+         - Verified snippet contains "sports facility" AND "3 fully covered, heated courts"
+      2. Updated `google_places/padel_venue.json:19`:
+         - Changed displayName.text to "Game4Padel | Edinburgh Park" (byte-identical to Serper)
+         - Verified coordinates present (strong ID: 55.930189, -3.315341)
+    - **Rationale:** LA-020a initial implementation bypassed merge by using different names. This violated constitutional requirement to validate that merge preserves lens-relevant text across sources.
+    - **Validation Proof:** All success criteria verified via Python validation script
+    - **Success Criteria:**
+      - ✅ Names are byte-identical across fixtures to guarantee fuzzy dedup path is exercised
+      - ✅ Serper fixture contains required text patterns for lens mapping
+      - ✅ Google Places fixture has coordinates (strong ID)
+
+  - [ ] **LA-020a-R1b: Update Test to Validate Merge-Preserved Text**
+    - **Principle:** Merge Constitutional Behavior (target-architecture.md 9.1), Test Independence (CI-friendly)
+    - **Location:** `tests/engine/orchestration/test_one_perfect_entity_fixture.py`
+    - **Description:** Update test to assert against FINAL merged entity (not single-source bypass). Mock persistence boundary to eliminate live DB dependency for CI execution.
+
+  - [ ] **LA-020a-R2: Document Fixture Scope Accounting**
+    - **Principle:** Methodology Compliance (development-methodology.md C4 ≤100 LOC)
+    - **Location:** `docs/progress/development-catalog.md` (LA-020a completion record)
+    - **Description:** Add explicit note to LA-020a completion record stating that fixture JSON lines counted toward scope, requiring split into R1a/R1b.
+
 - [ ] **LA-020b: Rename Existing OPE Test as Live Integration (Non-gating)**
   - **Principle:** Test Classification, Phase Gate Clarity
   - **Location:** `tests/engine/orchestration/test_end_to_end_validation.py::test_one_perfect_entity_end_to_end_validation`

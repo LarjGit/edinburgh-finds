@@ -1,0 +1,26 @@
+{
+  "searchParameters": {
+    "q": "padel edinburgh",
+    "gl": "uk",
+    "hl": "en",
+    "num": 10,
+    "type": "search"
+  },
+  "organic": [
+    {
+      "title": "Game4Padel | Edinburgh Park",
+      "link": "https://www.game4padel.co.uk/edinburgh-park",
+      "snippet": "Indoor sports facility in Edinburgh's West End offering 3 fully covered, heated courts for padel. Professional coaching, equipment rental, and cafe on-site. Open daily 7am-10pm. Book online or call 0131 555 9000.",
+      "position": 1,
+      "date": "2025-12-15"
+    },
+    {
+      "title": "Edinburgh Indoor Padel Centre - Book Courts Online",
+      "link": "https://edinburghpadel.com",
+      "snippet": "Edinburgh's newest padel venue near Leith. Book your court online today! Indoor and outdoor courts available. 5 courts total, cafe on-site, equipment shop. Address: 45 Ocean Drive, Leith, Edinburgh EH6 6JJ. Call 0131 555 1234 for bookings. We're open 7 days a week from 8am to 10pm.",
+      "position": 2,
+      "date": "2026-01-10"
+    }
+  ],
+  "credits": 1
+}
