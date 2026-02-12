@@ -1398,10 +1398,11 @@ Phase 2 → Phase 3 requires LA-020a (deterministic fixture-based OPE test) to p
       - ✅ Serper fixture contains required text patterns for lens mapping
       - ✅ Google Places fixture has coordinates (strong ID)
 
-  - [ ] **LA-020a-R1b: Update Test to Validate Merge-Preserved Text**
+  - [x] **LA-020a-R1b: Update Test to Validate Merge-Preserved Text**
     - **Principle:** Merge Constitutional Behavior (target-architecture.md 9.1), Test Independence (CI-friendly)
     - **Location:** `tests/engine/orchestration/test_one_perfect_entity_fixture.py`
     - **Description:** Update test to assert against FINAL merged entity (not single-source bypass). Mock persistence boundary to eliminate live DB dependency for CI execution.
+    - **Verification:** Commit `3f16687` - Test updated with mocked persistence, validates merged entity text preservation, CI-friendly execution confirmed
 
   - [ ] **LA-020a-R2: Document Fixture Scope Accounting**
     - **Principle:** Methodology Compliance (development-methodology.md C4 ≤100 LOC)
