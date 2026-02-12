@@ -1686,7 +1686,7 @@ Phase 2 → Phase 3 requires LA-020a (deterministic fixture-based OPE test) to p
     - **Action:** Verify LA-018 extractors populate these fields directly. Add e2e test. Document in lens.yaml that these are Phase 1 fields.
   - **Note:** This item may result in ZERO code changes if analysis confirms Phase 1 extraction is sufficient. The value is in documenting the decision and validating the data flow.
 
-- [x] **LA-019b: Record Universal Amenity Fields Decision in Audit Catalog**
+- [x] **LA-019b: Record Universal Amenity Fields Decision in Development Catalog**
   - **Principle:** Documentation, Architectural Decision Recording
   - **Location:** `docs/progress/audit-catalog.md`
   - **Description:** Record the architectural decision that universal amenity fields (locality, wifi, parking_available, disabled_access) are Phase 1 primitives populated directly by extractors and do NOT require lens mapping rules. Document the rationale, evidence, and completion status.
@@ -1694,10 +1694,10 @@ Phase 2 → Phase 3 requires LA-020a (deterministic fixture-based OPE test) to p
   - **Depends On:** LA-019a (E2E validation test)
   - **Blocking:** None (documentation only)
   - **Completed:** 2026-02-11
-  - **Rationale:** The LA-019a E2E test proves that amenity fields flow extraction → persistence without lens involvement. This decision must be recorded in the audit catalog to document the architectural approach and prevent future confusion about whether lens mapping is needed for these fields.
-  - **Estimated Scope:** 1 file modified (audit catalog only), ~15 lines added
+  - **Rationale:** The LA-019a E2E test proves that amenity fields flow extraction → persistence without lens involvement. This decision must be recorded in the development catalog to document the architectural approach and prevent future confusion about whether lens mapping is needed for these fields.
+  - **Estimated Scope:** 1 file modified (development catalog only), ~15 lines added
   - **Implementation Tasks:**
-    1. **Update LA-019 entry in audit catalog:**
+    1. **Update LA-019 entry in development catalog:**
        - Mark LA-019 as complete with checkbox [x]
        - Add "Completed:" date (2026-02-11)
        - Add "Commit:" hash from LA-019a implementation
@@ -1710,7 +1710,7 @@ Phase 2 → Phase 3 requires LA-020a (deterministic fixture-based OPE test) to p
        - Explicitly state: NO lens mapping rules needed
        - Reference LA-018a/b/c extractor implementations as source of truth
   - **Success Criteria:**
-    - ✅ LA-019 marked complete in audit catalog
+    - ✅ LA-019 marked complete in development catalog
     - ✅ Decision clearly documented: Phase 1 primitives, no lens mapping
     - ✅ Evidence cited: E2E test name and location
     - ✅ Rationale explains why universal fields don't need lens interpretation
@@ -1986,11 +1986,14 @@ Items that align the repository with the new governance model (methodology/roadm
   - ❌ **Do NOT modify:** Intentional historical narration about "audit catalog" era
 - **Files:** development-catalog.md only
 - **Exclusions:** No changes to other entries
-- **Status:** Pending
-- **Proof:**
-  - Diff shows only lexical substitutions ("audit catalog" → "development catalog")
-  - No structural edits
-  - Grep confirms appropriate usage context preserved
+- **Status:** Complete
+- **Completed:** 2026-02-11
+- **Commit:** 8642c43
+- **Executable Proof:**
+  - 5 lexical substitutions made (lines 1689, 1697, 1698, 1700, 1713)
+  - File path `docs/progress/audit-catalog.md` preserved on line 1691 (historical reference)
+  - `git diff docs/progress/development-catalog.md` shows only expected terminology changes
+  - No structural edits to catalog entry
 
 ### **R-01.6: Delete Legacy audit-catalog.md File (Safety-Checked)**
 - **Principle:** Repository convergence (development-roadmap.md R-01)
