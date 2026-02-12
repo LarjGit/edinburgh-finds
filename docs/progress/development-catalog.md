@@ -2029,11 +2029,21 @@ Items that align the repository with the new governance model (methodology/roadm
     - `docs/process/development-roadmap.md` (documenting legacy terms)
     - `docs/progress/lessons-learned.md` (historical context)
     - Historical narration blocks in catalog
-- **Status:** Pending
-- **Proof:**
-  - Grep report showing zero operational legacy references
-  - Document any acceptable exceptions found
-  - Confirm all links resolve correctly
+- **Status:** Completed
+- **Completed:** 2026-02-12
+- **Commit:** [pending]
+- **Executable Proof:**
+  - `git grep -l "docs/development-methodology\.md"` → 2 files (development-roadmap.md, development-catalog.md) ✅ ACCEPTABLE
+  - `git grep -l "docs/progress/audit-catalog\.md"` → 2 files (development-roadmap.md, development-catalog.md) ✅ ACCEPTABLE
+  - `git grep -il "audit catalog"` → 2 files (development-roadmap.md, development-catalog.md) ✅ ACCEPTABLE
+  - **Zero operational matches** — All references are in acceptable locations:
+    - `docs/process/development-roadmap.md` (documenting legacy terms)
+    - `docs/progress/development-catalog.md` (historical narration in R-01.* items)
+  - Current paths verified operational:
+    - `docs/process/development-methodology.md` exists (actively referenced)
+    - `docs/progress/development-catalog.md` exists
+  - Legacy file confirmed deleted: `audit-catalog.md` removed in commit 94a7e4c
+  - R-01 repository convergence complete ✅
 
 ---
 
