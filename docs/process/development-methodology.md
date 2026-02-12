@@ -188,6 +188,38 @@ Confirm C1–C9 are satisfied. If not, split the work into smaller catalog items
 - Implement the minimum change to pass (GREEN)  
 - Refactor only within scope and plan
 
+### Step 5a — Execution Amendment (Adaptive Re-Shaping)
+
+**Purpose:**  
+Acknowledge that reality discovered during execution may legitimately invalidate parts of an approved micro-plan without invalidating the overall goal. This step provides a disciplined path to adapt without restarting Step 1b from zero.
+
+**Trigger Conditions (any of the following):**
+- A technical assumption in the micro-plan proves false (e.g., incorrect patch point, API shape mismatch).
+- New constraints emerge from Code Reality Review performed during execution.
+- The original approach would violate success criteria or architectural invariants if continued.
+- The goal remains unchanged and scope stays within the approved catalog item.
+
+**Required Agent Output:**
+When triggered, the agent MUST produce an **Execution Amendment Notice** containing:
+
+1. **Broken Assumption** – what proved incorrect  
+2. **New Facts** – evidence from code/reality  
+3. **Proposed Delta** – minimal change to plan  
+4. **Impact Statement** – confirmation that:  
+   - success criteria remain satisfied  
+   - scope limits (≤2 files, ≤100 LOC, ≤1 seam) remain intact  
+5. **Updated Proof Strategy** (if needed)
+
+**User Decision:**
+- User may approve the amendment inline without creating a new catalog item.  
+- If scope would expand beyond limits, the agent MUST return to Step 1b and create a new item.
+
+**Guardrails:**
+- ❌ No silent pivots  
+- ❌ No continuation after invalidated assumptions without approval  
+- ✅ Momentum preserved when goal and scope are stable  
+- ✅ Full audit trail maintained via amendment notices
+
 ### Step 6 — Validate Against Golden Docs
 
 Re-read the referenced golden section and confirm:
