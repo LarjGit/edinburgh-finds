@@ -1,7 +1,7 @@
 # Development Roadmap
 
 **Status:** Current Direction (replaceable at any time)  
-**Last Updated:** 2026-02-11  
+**Last Updated:** 2026-02-13  
 
 ---
 
@@ -114,7 +114,7 @@ Data acquisition pipeline, connector integration capabilities.
 
 ### 7. Ordering / Dependencies
 
-Must precede: Launch preparation, bulk venue population  
+Must precede: R-03 (connector portfolio evaluation), Launch preparation, bulk venue population  
 Blocked by: R-01 (governance convergence)  
 Parallel-safe: No
 
@@ -134,3 +134,79 @@ Parallel-safe: No
 - [ ] Tier 2 complete: Enrichment connectors operational
 - [ ] Documentation: Tier system rationale captured
 - [ ] Evaluation framework: Tier 3 promotion criteria defined
+
+---
+
+## R-03: Evaluate and Calibrate Connector Portfolio
+
+### 1. Intent
+After new connectors are integrated, run a complete comparative evaluation across the full connector portfolio (existing + newly introduced) to establish deterministic execution order, calibrated trust metadata, and clear evidence of connector value for entity quality.
+
+### 2. Type
+Infrastructure
+
+### 3. Target Area
+Connector registry metadata, orchestration ordering policy, and connector evaluation governance.
+
+### 4. Scope Boundary
+
+- Evaluate all connectors together:
+  - Existing six: Google Places, OSM, Sport Scotland, Edinburgh Council, Open Charge Map, Serper
+  - Newly introduced connectors from R-02 Tier 1 and Tier 2
+- Assess trust comparatively across connectors (relative trust levels, conflict behavior, provenance quality, external identifier reliability).
+- Define deterministic connector execution order for a given entity run:
+  - Which connectors always run
+  - Which connectors run conditionally
+  - Deterministic tie-break and ordering principles
+- Measure comparative value:
+  - Coverage overlap vs unique yield
+  - Field-group contribution quality
+  - Conflict rates and merge impact
+- Assess operational profile:
+  - Latency
+  - Failure/retry behavior
+  - Rate limits
+  - Cost envelope under free tiers
+- Produce recommended metadata-level calibration updates (trust levels, priority/order, routing constraints).
+
+**Out of Scope:**
+- Building additional new connectors
+- Major connector rewrites unrelated to evaluation findings
+- Schema redesigns unrelated to trust/order calibration
+- Frontend/UI work
+- Paid API tier adoption
+
+### 5. Success Definition
+
+- Complete portfolio evaluation documented for all active connectors.
+- Relative trust model approved and traceable by connector and field group.
+- Deterministic execution ordering policy approved for entity runs.
+- Evidence shows why each connector remains active, conditional, or lower-priority.
+- Calibration outcomes are translated into executable follow-up work items.
+
+### 6. Exclusions
+
+- Changes to `docs/system-vision.md`
+- Changes to `docs/target-architecture.md`
+- Non-deterministic ranking logic
+- Vertical-specific exceptions in engine behavior
+
+### 7. Ordering / Dependencies
+
+Must follow: R-02 Tier 1 and Tier 2 connector onboarding  
+Must precede: Tier 3 connector promotion decisions, launch hardening  
+Blocked by: R-02 (Tier 1 and Tier 2 completion)  
+Parallel-safe: Partial (measurement can parallelize; final calibration decisions cannot)
+
+### 8. Status
+
+- [ ] Planned  
+- [ ] In Progress  
+- [ ] Complete  
+
+**Milestones:**
+- [ ] Connector inventory baseline captured
+- [ ] Comparative trust/quality analysis complete
+- [ ] Deterministic order policy drafted
+- [ ] Calibration decisions approved
+- [ ] Follow-up implementation items filed in catalog
