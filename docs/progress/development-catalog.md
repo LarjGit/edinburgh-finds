@@ -2,7 +2,7 @@
 
 **Current Phase:** Phase 2: Pipeline Implementation
 **Validation Entity:** West of Scotland Padel (validation) / Edinburgh Sports Club (investigation)
-**Last Updated:** 2026-02-11 (LA-015 completed: schema/policy separation Phase 1. LA-017 completed: universal amenity fields added to entity.yaml + EntityExtraction. LA-018a completed: OSM extraction prompt updated for amenity fields. LA-018b completed: Google Places extractor updated for amenity fields. LA-018c completed: Edinburgh Council extractor updated for amenity fields. LA-019 pending: lens mapping. LA-016 pending: documentation updates. LA-014 in progress: modules not populated - CRITICAL blocker for Phase 2 completion.)
+**Last Updated:** 2026-02-13 (LA-014 completed: modules population issue confirmed as live SERP drift and closed via deterministic constitutional gate LA-020a.)
 
 ---
 
@@ -281,12 +281,12 @@
 
 ## Phase 2: Pipeline Implementation
 
-**Status:** Stages 1-11 implementation COMPLETE ✅. **Blocked on constitutional validation (LA-020a)** ❌
-**Validation:** One Perfect Entity gate blocked by SERP data drift (LA-014 → LA-020a)
-**Progress:** Pipeline code complete, constitutional test needs fixture-based implementation
+**Status:** Stages 1-11 implementation COMPLETE ✅. Constitutional validation gate satisfied via LA-020a ✅
+**Validation:** One Perfect Entity constitutional gate is deterministic and passing (`test_one_perfect_entity_fixture.py`).
+**Progress:** Pipeline code complete; live SERP OPE coverage remains non-gating integration validation (LA-020b).
 
 **Phase Transition Criteria:**
-Phase 2 → Phase 3 requires LA-020a (deterministic fixture-based OPE test) to pass. Pipeline stages 1-11 are implemented and working correctly, but the constitutional validation gate (system-vision.md 6.3 "One Perfect Entity") cannot be satisfied with current live SERP data due to web drift. LA-020a will provide deterministic validation using pinned fixtures.
+Phase 2 → Phase 3 required LA-020a (deterministic fixture-based OPE test) to pass. This gate is now satisfied.
 ### Stage 1: Input (architecture.md 4.1)
 
 **Status:** Skipped as trivial (agreement with user)
@@ -1316,7 +1316,7 @@ Phase 2 → Phase 3 requires LA-020a (deterministic fixture-based OPE test) to p
   - **Impact:** canonical_place_types now correctly populated via lens mapping rules. Validation entity ("West of Scotland Padel") progresses past canonical_place_types assertion (which was the blocking issue). Test now fails on modules (separate issue, new catalog item needed).
   - **Note:** Modules issue is SEPARATE from LA-013's scope. This fix achieved its core goal: correcting raw_categories schema classification and enabling canonical_place_types population.
 
-- [ ] **LA-014: Modules Not Populated Despite Canonical Dimensions Present (SERP Data Drift)**
+- [x] **LA-014: Modules Not Populated Despite Canonical Dimensions Present (SERP Data Drift)**
   - **Principle:** Module Architecture (architecture.md 7.1-7.5), One Perfect Entity (system-vision.md 6.3)
   - **Location:** Test validation strategy (test uses live SERP data which has drifted)
   - **Description:** End-to-end test shows canonical dimensions correctly populated (`canonical_activities: ['padel']`, `canonical_place_types: ['sports_facility']`, `entity_class: 'place'`) but `modules: {}` remains empty. Investigation revealed this is NOT a code defect but a test data stability issue.
@@ -1338,8 +1338,13 @@ Phase 2 → Phase 3 requires LA-020a (deterministic fixture-based OPE test) to p
     - ❌ Module field extraction returns empty: no text matches regex pattern
     - **Pipeline is correct; test data is unstable**
   - **Resolution:** Decouple constitutional OPE test from live SERP data (tracked in LA-020a)
-  - **Blocking:** **CRITICAL** — Phase 2 completion (blocked on LA-020a deterministic fixture test)
+  - **Blocking:** Resolved
   - **Success Criteria:** LA-020a passes (deterministic fixture-based OPE test)
+  - **Completed:** 2026-02-13
+  - **Commit:** (pending)
+  - **Executable Proof:**
+    - `pytest tests/engine/orchestration/test_one_perfect_entity_fixture.py -v -p no:cacheprovider` ✅ 1 passed (2026-02-13)
+  - **Resolution Outcome:** Closed as test-strategy issue (not runtime defect). Constitutional validation now runs through deterministic fixture-based gate (LA-020a); live SERP test remains non-gating by design (LA-020b).
 
 - [x] **LA-020a: Deterministic OPE Fixture Test (Constitutional Gate)**
   - **Principle:** Test Stability (prevent SERP drift from breaking constitutional validation), One Perfect Entity (system-vision.md 6.3)

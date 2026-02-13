@@ -2,165 +2,135 @@
 
 **Status:** Current Direction (replaceable at any time)  
 **Last Updated:** 2026-02-11  
-**Purpose:** Describe WHAT we are choosing to work toward and WHY.  
-**Nature:** This document is strategic and narrative. It does not prescribe how work is executed.
 
 ---
 
-# CURRENT ROADMAP
+## R-01: Converge Repository to New Governance Model
 
----
+### 1. Intent
+Complete repository-wide alignment to the governance triad so that:
+- Methodology governs execution (HOW)
+- Roadmap defines direction (WHAT/WHY)
+- Catalog functions as neutral work ledger (RECORD)
 
-## R-01 — Converge Repository to New Governance Model (Kill Legacy Paths & Naming)
+Eliminate all operational remnants of the legacy governance model.
 
-### Bootstrap Context
+### 2. Type
+Infrastructure
 
-This transition is already in motion:
+### 3. Target Area
+Repository documentation, navigation, prompts, comments, and governance terminology.
 
-- The **Methodology** now lives at: `docs/process/development-methodology.md`
-- The **Roadmap** now lives at: `docs/process/development-roadmap.md`
-- The **Catalog** now lives at: `docs/progress/development-catalog.md`
-- **Lessons Learned** now lives at: `docs/progress/lessons-learned.md`
+### 4. Scope Boundary
+- Update all legacy document paths:
+  - `docs/development-methodology.md` → `docs/process/development-methodology.md`
+  - `docs/progress/audit-catalog.md` → `docs/progress/development-catalog.md`
+- Remove operational use of “audit” terminology.
+- Align CLAUDE.md navigation with the governance triad.
+- Ensure catalog reads as neutral ledger (items + proofs only).
+- May update broken references to golden docs, but not their contents.
 
-R-01 completes the repo-wide convergence so **nothing operational still points at the legacy model**.
-
-### Golden Docs (Do Not Change)
-
-These are authoritative and out of scope for modification during R-01:
-
-- `docs/system-vision.md` — Architectural Constitution (immutable)
-- `docs/target-architecture.md` — Runtime Pipeline Specification
-
-R-01 may update **references to these** if broken, but must not alter their contents.
-
-### Legacy Terms / Locations to Eliminate
-
-The repository previously referenced the older structure and naming.  
-R-01’s job is to eradicate those operational references:
-
-- **Old methodology path/name:**  
-  `docs/development-methodology.md` → now `docs/process/development-methodology.md`
-
-- **Old catalog name/path:**  
-  `docs/progress/audit-catalog.md` → now `docs/progress/development-catalog.md`
-
-- Any remaining use of **“audit”** that implies the previous governance model  
-  (e.g., “audit process”, “audit catalog”) in:
-  - documentation  
-  - CLAUDE.md navigation  
-  - code comments  
-  - prompts or agent instructions  
-  - tests or scripts
-
-> Note: The word *audit* may remain only as historical narration in  
-> `lessons-learned.md`; it must not appear as an active instruction system.
-
-### Intent
-
-Bring the entire repository into alignment with the new governance triad so that:
-
-- **Methodology = execution discipline only** (HOW)  
-- **Roadmap = strategic intent only** (WHAT/WHY)  
-- **Catalog = neutral work/proof ledger only** (RECORD)
-
-and therefore:
-
-- Legacy filenames/paths no longer exist in operational guidance  
-- Agents reliably follow: **Step 1 → Step 1b → Steps 2–8**  
-- No document mixes strategy with execution law
-- 
-### Why
-
-- Agents and humans drift when multiple sources disagree about “what to do next”
-- Legacy links and paths break automation and onboarding
-- The old “audit-era” mental model conflicts with roadmap-driven shaping
-- Future work must start from a clean, unambiguous governance base
-
-### Scope Boundaries
-
-**In Scope — Repository-wide convergence**
-
-1. **Reference Convergence (Documentation)**
-   - Update all markdown links from:
-     - `docs/development-methodology.md`  
-       → `docs/process/development-methodology.md`
-     - `docs/progress/audit-catalog.md`  
-       → `docs/progress/development-catalog.md`
-   - Update CLAUDE.md and navigation sections to include the Roadmap explicitly.
-
-2. **Reference Convergence (Code / Comments / Prompts)**
-   - Update any in-code comments referencing legacy docs/paths.
-   - Update stored prompts or agent instructions using legacy naming.
-
-3. **Semantic Convergence (Language)**
-   - Replace governance-active language:
-     - “audit process” → “work discovery”
-     - “audit catalog” → “development catalog”
-   - Align terminology with: methodology / roadmap / catalog / lessons.
-
-4. **Catalog Neutralization**
-   - Ensure the catalog reads as a **ledger**, not a plan:
-     - neutral header/title wording  
-     - no roadmap narrative embedded  
-     - proofs and completion evidence preserved
-
-5. **Verification**
-   - Repo-wide searches confirm legacy references removed.
-   - All links resolve.
-   - Start-a-task flow matches: Roadmap → Step 1b → Catalog → Micro-Plan.
-
-**Out of Scope**
-
-- Any change to `docs/system-vision.md`
-- Any change to `docs/target-architecture.md`
-- Application/runtime behavior changes
-- Re-auditing existing catalog items
-- Restructuring internal catalog entry format
-
-### Success Criteria
-
+### 5. Success Definition
 - Zero operational references remain to:
   - `docs/development-methodology.md`
   - `docs/progress/audit-catalog.md`
-  - “audit catalog” as a current governance object
-- CLAUDE.md navigation reflects the new triad
-- Catalog remains intact as a ledger (items + proofs preserved)
-- A new agent can start work without inference or ambiguity
+  - “audit catalog” as an active governance object
+- CLAUDE.md reflects the governance triad.
+- All documentation links resolve.
+- A new agent can start work without ambiguity.
 
-### Proof Signals
+### 6. Exclusions
+- Changes to `docs/system-vision.md`
+- Changes to `docs/target-architecture.md`
+- Application/runtime behavior changes
+- Re-auditing catalog items
+- Altering catalog entry structure
 
-Evidence this direction is complete:
+### 7. Ordering / Dependencies
+Must precede: All new feature work  
+Blocked by: None  
+Parallel-safe: No
 
-- Repo search results:
-  - `docs/development-methodology.md` → **0 matches**
-  - `audit-catalog` → **0 operational matches**
-- All documentation links resolve to current paths
-- CLAUDE.md “Starting a task?” flow matches the methodology
-- A trial run of:
-  - select roadmap item  
-  - Step 1b shaping  
-  - create catalog item  
-  - micro-plan  
-  works without confusion
-
-**Non-negotiable:**  
-If any file contains legacy governance references, it must be updated or removed **before** any new feature work proceeds.
+### 8. Status
+- [x] Planned  
+- [x] In Progress  
+- [x] Complete  
 
 ---
 
-## R-02 — [Your Next Direction]
+## R-02: Implement Data Connector Tier System
 
-### Intent
-(TBD)
+### 1. Intent
+Establish a prioritized data acquisition strategy that maximizes data quality and coverage while minimizing operational complexity and cost. The system should enable Edinburgh Finds to operate with authoritative baseline data first, then layer in Edinburgh-specific enrichment, without premature optimization or connector sprawl.
 
-### Why
-(TBD)
+### 2. Type
+Infrastructure
 
-### Scope Boundaries
-(TBD)
+### 3. Target Area
+Data acquisition pipeline, connector integration capabilities.
 
-### Success Criteria
-(TBD)
+### 4. Scope Boundary
 
-### Proof Signals
-(TBD)
+**Tier 1 (Foundation - Needed for Launch):**
+- Overture Maps: Edinburgh POI baseline with persistent GERS IDs, monthly refresh capability
+- Companies House API: UK business verification and entity validation
+- Firecrawl: Web scraping with LLM-ready markdown output (free tier: 500 credits)
+
+**Tier 2 (Enrichment - Add Post-Launch):**
+- TellMeScotland: Planning and licensing signals specific to Scotland
+- Jina Reader: Supplementary web scraping (free tier: 10M tokens, 200 RPM)
+- Wikidata Query Service: Entity linking and enrichment (QIDs as external references, not primary keys)
+
+**Tier 3 (Conditional - Only If Gap Validated):**
+- Define evaluation criteria for: Foursquare Places API, Yelp Fusion API, Eventbrite API
+- Implement only after validating specific need against Tier 1+2 capabilities
+
+**Tier 4 (Explicitly Rejected):**
+- Document rationale for exclusion: TomTom, Mapbox, Meta APIs, Meetup, Reddit, Apify, ScrapingBee, Bright Data, Perplexity, Geoapify, Nominatim
+
+**Out of Scope:**
+- Changes to existing 6 connectors (Google Places, OSM, Sport Scotland, Edinburgh Council, Open Charge Map, Serper)
+- Modifications to confidence grading methodology (A/B/C/X system)
+- Venue data schema changes
+- Frontend/UI changes
+- Paid API tier usage (stay on free tiers for Tier 1 & 2)
+
+### 5. Success Definition
+
+- Edinburgh POI baseline dataset from Overture Maps is queryable
+- All Tier 1 connectors are operational and producing data
+- All Tier 2 connectors are operational and enriching venue records
+- Tier system is documented with clear rationale for each tier placement
+- Zero API costs incurred during Tier 1 & 2 implementation
+- System can answer: "What data sources contributed to this venue record?"
+
+### 6. Exclusions
+
+- Implementation details (let methodology discover optimal approach)
+- Specific module/file structure decisions
+- Technical architecture choices
+- How connectors integrate with existing pipeline
+- Data transformation logic
+
+### 7. Ordering / Dependencies
+
+Must precede: Launch preparation, bulk venue population  
+Blocked by: R-01 (governance convergence)  
+Parallel-safe: No
+
+**Logical ordering:**
+1. Tier 1 connectors first (foundation cannot be skipped)
+2. Tier 2 connectors after Tier 1 complete
+3. Tier 3 evaluation only after product validation with Tier 1+2
+
+### 8. Status
+
+- [ ] Planned  
+- [ ] In Progress  
+- [ ] Complete  
+
+**Milestones:**
+- [ ] Tier 1 complete: Foundation connectors operational
+- [ ] Tier 2 complete: Enrichment connectors operational
+- [ ] Documentation: Tier system rationale captured
+- [ ] Evaluation framework: Tier 3 promotion criteria defined
