@@ -30,12 +30,14 @@ from engine.orchestration.cli import bootstrap_lens
 
 @pytest.mark.slow
 @pytest.mark.asyncio
-async def test_one_perfect_entity_end_to_end_validation():
+async def test_ope_live_integration():
     """
-    End-to-end validation: Query → Orchestration → Extraction → Lens → Entity DB.
+    LIVE integration validation: Query -> Orchestration -> Extraction -> Lens -> Entity DB.
 
-    Per system-vision.md Section 6.3: "One Perfect Entity" validation requirement.
-    Per docs/target-architecture.md Section 4.1: Complete 11-stage pipeline validation.
+    This is a LIVE integration test that depends on current SERP data.
+    It may be flaky due to web data drift; this is acceptable.
+    This test is NOT the Phase 2 completion gate. See:
+    tests/engine/orchestration/test_one_perfect_entity_fixture.py
 
     Validates:
     1. Orchestration executes with explicit lens resolution (--lens edinburgh_finds)
@@ -45,10 +47,8 @@ async def test_one_perfect_entity_end_to_end_validation():
     5. modules field contains at least one module entry
     6. Entity data is retrievable and correct
 
-    This is THE critical proof that the architecture works end-to-end.
-    If this test passes, we have "at least one real-world entity" with
-    "non-empty canonical dimensions" and "at least one module field populated"
-    in the entity store (system-vision.md 6.3 requirement).
+    This remains useful for real-world smoke validation but does not
+    determine constitutional gate status.
     """
     # Bootstrap lens with explicit resolution (required for validation entity)
     ctx = bootstrap_lens("edinburgh_finds")
