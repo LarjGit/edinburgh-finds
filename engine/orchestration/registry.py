@@ -6,8 +6,7 @@ function to instantiate them. This registry serves as the single source of
 truth for connector capabilities, costs, and trust levels used by the planner
 to make intelligent selection decisions.
 
-Registry currently includes discovery and enrichment connectors used by
-orchestration planning.
+Phase 1 includes: Serper (discovery) and GooglePlaces (enrichment).
 """
 
 from dataclasses import dataclass
@@ -17,7 +16,6 @@ from engine.ingestion.base import BaseConnector
 from engine.ingestion.connectors.serper import SerperConnector
 from engine.ingestion.connectors.google_places import GooglePlacesConnector
 from engine.ingestion.connectors.open_street_map import OSMConnector
-from engine.ingestion.connectors.overture_maps import OvertureMapsConnector
 from engine.ingestion.connectors.sport_scotland import SportScotlandConnector
 from engine.ingestion.connectors.edinburgh_council import EdinburghCouncilConnector
 from engine.ingestion.connectors.open_charge_map import OpenChargeMapConnector
@@ -50,7 +48,7 @@ class ConnectorSpec:
     rate_limit_per_day: int
 
 
-# Global connector registry - includes 7 connectors
+# Global connector registry - Phase 3 includes 6 connectors
 CONNECTOR_REGISTRY: Dict[str, ConnectorSpec] = {
     "serper": ConnectorSpec(
         name="serper",
@@ -78,15 +76,6 @@ CONNECTOR_REGISTRY: Dict[str, ConnectorSpec] = {
         trust_level=0.70,  # Crowdsourced data, moderate-good trust
         timeout_seconds=60,
         rate_limit_per_day=10000,  # OSM Nominatim fair use policy
-    ),
-    "overture_maps": ConnectorSpec(
-        name="overture_maps",
-        connector_class="engine.ingestion.connectors.overture_maps.OvertureMapsConnector",
-        phase="discovery",
-        cost_per_call_usd=0.0,  # Tier 1 free baseline dataset
-        trust_level=0.85,  # Authoritative baseline POI data
-        timeout_seconds=60,
-        rate_limit_per_day=10000,  # Conservative free-tier baseline
     ),
     "sport_scotland": ConnectorSpec(
         name="sport_scotland",
@@ -124,7 +113,6 @@ _CONNECTOR_CLASSES: Dict[str, Type[BaseConnector]] = {
     "serper": SerperConnector,
     "google_places": GooglePlacesConnector,
     "openstreetmap": OSMConnector,
-    "overture_maps": OvertureMapsConnector,
     "sport_scotland": SportScotlandConnector,
     "edinburgh_council": EdinburghCouncilConnector,
     "open_charge_map": OpenChargeMapConnector,

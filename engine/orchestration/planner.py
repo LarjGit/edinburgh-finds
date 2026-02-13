@@ -44,8 +44,7 @@ def select_connectors(request: IngestRequest) -> ExecutionPlan:
     Phase C: Budget-aware gating
 
     Selection logic:
-    - DISCOVER_MANY always includes Overture Maps as baseline discovery
-    - Category searches use additional discovery sources (serper, openstreetmap)
+    - Category searches use multiple discovery sources (serper, openstreetmap)
     - Specific searches prioritize high-trust enrichment (google_places)
     - Domain-specific connectors determined by Lens (VERTICAL-AGNOSTIC)
       e.g., Padel lens adds sport_scotland for sports queries
@@ -82,8 +81,7 @@ def select_connectors(request: IngestRequest) -> ExecutionPlan:
             enrichment_connectors.append("google_places")
 
     else:  # DISCOVER_MANY
-        # Discovery phase: Always include baseline + broad web discovery
-        discovery_connectors.append("overture_maps")
+        # Discovery phase: Use multiple sources for broad coverage
         discovery_connectors.append("serper")
 
         if query_features.looks_like_category_search:

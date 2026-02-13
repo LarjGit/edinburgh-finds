@@ -2,7 +2,7 @@
 
 **Current Phase:** Phase 2: Pipeline Implementation
 **Validation Entity:** West of Scotland Padel (validation) / Edinburgh Sports Club (investigation)
-**Last Updated:** 2026-02-13 (R-02.1 completed: Overture Maps baseline queryability integrated into registry/planner with passing proof tests.)
+**Last Updated:** 2026-02-13 (LA-014 completed: modules population issue confirmed as live SERP drift and closed via deterministic constitutional gate LA-020a.)
 
 ---
 
@@ -2096,76 +2096,6 @@ Items that align the repository with the new governance model (methodology/roadm
     - `docs/progress/development-catalog.md` exists
   - Legacy file confirmed deleted: `audit-catalog.md` removed in commit 94a7e4c
   - R-01 repository convergence complete ✅
-
----
-
-## R-02: Data Connector Tier System
-
-Workflow A approved items for roadmap epic `R-02` (Infrastructure). Item
-`R-02.1` is complete; remaining items are pending.
-
-### **R-02.1: Overture Maps Baseline Queryability (Tier 1, Slice A)**
-- **Type:** Infrastructure
-- **Goal:** Add Overture Maps as a Tier 1 foundation connector that is queryable through orchestration selection for `DISCOVER_MANY`.
-- **Boundaries:**
-  - Implement Overture connector class
-  - Wire Overture into connector registry/factory
-  - Add deterministic planner selection for `DISCOVER_MANY` (always-on baseline)
-  - Add unit/orchestration selection tests
-- **Exclusions:**
-  - No extractor implementation
-  - No live API persistence smoke run
-  - No lens-specific routing work
-  - No Tier 2 or Tier 3 connectors
-- **Files (Estimated):**
-  - `engine/ingestion/connectors/overture_maps.py`
-  - `engine/orchestration/registry.py`
-  - `tests/engine/orchestration/test_registry.py`
-  - `tests/engine/orchestration/test_planner.py`
-- **Proof Approach:**
-  - Registry contains `overture_maps`
-  - Factory instantiates Overture connector
-  - `select_connectors()` includes `overture_maps` for `DISCOVER_MANY`
-- **Estimated Scope:** 4 files, ~80-100 lines
-- **Completed:** 2026-02-13
-- **Executable Proof:**
-  - `pytest tests/engine/orchestration/test_registry.py::TestConnectorRegistry::test_registry_contains_overture_maps tests/engine/orchestration/test_registry.py::TestGetConnectorInstance::test_can_instantiate_overture_maps tests/engine/orchestration/test_planner.py::TestSelectConnectors::test_select_connectors_includes_base_connectors -q` -> 3 passed
-  - `pytest tests/engine/orchestration/test_registry.py tests/engine/orchestration/test_planner.py::TestSelectConnectors tests/engine/orchestration/test_planner.py::TestSelectConnectorsPhaseB tests/engine/orchestration/test_planner.py::TestSelectConnectorsBudgetAware -q` -> 52 passed
-- **Fix Applied:**
-  - Added `OvertureMapsConnector` implementation (`engine/ingestion/connectors/overture_maps.py`)
-  - Wired `overture_maps` into `CONNECTOR_REGISTRY` and factory class map
-  - Made planner include `overture_maps` for `DISCOVER_MANY` baseline discovery
-  - Extended registry/planner tests for overture presence, instantiation, and selection
-- **Status:** [x] Complete
-
-### **R-02.2: Tier 1 Completion - Companies House + Firecrawl Queryability**
-- **Type:** Infrastructure
-- **Goal:** Add remaining Tier 1 connectors with deterministic registry and planner queryability integration.
-- **Boundaries:**
-  - Connector class implementation
-  - Registry/factory wiring
-  - Planner selection integration
-  - Unit/orchestration selection tests
-- **Exclusions:**
-  - No extractor implementation in this item
-  - No live API persistence smoke run
-- **Files (Estimated):** To be split into C3-compliant sub-items before execution
-- **Proof Approach:** Unit + orchestration selection tests
-- **Estimated Scope:** Requires split under C3 before Workflow B execution
-- **Status:** [ ] Pending
-
-### **R-02.3: Tier System Documentation + Tier 3/4 Governance**
-- **Type:** Infrastructure
-- **Goal:** Document tier rationale, Tier 3 promotion criteria, and explicit Tier 4 rejected-source policy.
-- **Boundaries:**
-  - Documentation updates for Tier 1/2/3/4 rationale and governance
-  - Explicit criteria for Tier 3 promotion decisions
-  - Explicit rationale for Tier 4 exclusions
-- **Exclusions:** No connector implementation
-- **Files (Estimated):** 1-2 docs files
-- **Proof Approach:** Repository grep and document presence checks for tier rationale/criteria/exclusions
-- **Estimated Scope:** <=2 files, <100 lines
-- **Status:** [ ] Pending
 
 ---
 
