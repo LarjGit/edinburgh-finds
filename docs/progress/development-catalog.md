@@ -1000,7 +1000,7 @@ Phase 2 → Phase 3 requires LA-020a (deterministic fixture-based OPE test) to p
 
 - [x] **LA-003: One Perfect Entity End-to-End Validation** ⚠️ REGRESSED (superseded by LA-014)
   - **Principle:** Module Extraction (architecture.md 4.1 Stage 7 - execute module field rules), System Validation (system-vision.md 6.3 - "One Perfect Entity" requirement)
-  - **Location:** `tests/engine/orchestration/test_end_to_end_validation.py::test_one_perfect_entity_end_to_end_validation`
+  - **Location:** `tests/engine/orchestration/test_end_to_end_validation.py::test_ope_live_integration`
   - **Description:** End-to-end validation test that proves the complete 11-stage pipeline works. Asserts ONLY system-vision.md 6.3 requirements: non-empty canonical dimensions + at least one populated module field. Latitude/longitude is NOT asserted here — it was never a constitutional requirement and has been split into the OPE+Geo gate (see LA-012).
   - **Status:** REGRESSED ❌ — Test passed 2026-02-04 but subsequently regressed. Canonical dimensions populate correctly but modules={} remains empty. Root cause tracked in LA-014 (dimension key mismatch in build_canonical_values_by_facet). Do not mark complete until LA-014 resolved and test passes again.
   - **Validation entity:** "West of Scotland Padel" (Serper-discovered)
@@ -1341,7 +1341,7 @@ Phase 2 → Phase 3 requires LA-020a (deterministic fixture-based OPE test) to p
   - **Blocking:** **CRITICAL** — Phase 2 completion (blocked on LA-020a deterministic fixture test)
   - **Success Criteria:** LA-020a passes (deterministic fixture-based OPE test)
 
-- [ ] **LA-020a: Deterministic OPE Fixture Test (Constitutional Gate)**
+- [x] **LA-020a: Deterministic OPE Fixture Test (Constitutional Gate)**
   - **Principle:** Test Stability (prevent SERP drift from breaking constitutional validation), One Perfect Entity (system-vision.md 6.3)
   - **Location:** `tests/engine/orchestration/test_one_perfect_entity_fixture.py` (NEW), `tests/fixtures/connectors/` (NEW)
   - **Description:** Create a deterministic OPE test that validates the full 11-stage pipeline using pinned connector inputs with known-good extractable data. Current live test (LA-003/LA-014) fails due to SERP data drift, making the constitutional gate non-deterministic. This fixture-based test decouples the Phase 2 completion gate from external web dependencies.
@@ -1366,8 +1366,12 @@ Phase 2 → Phase 3 requires LA-020a (deterministic fixture-based OPE test) to p
     - ❌ No relaxing regex rules to "make it pass"
     - ❌ No widening lens mapping beyond padel in this item
     - ❌ No runtime behavior changes; this is test determinism work only
+  - **Completed:** 2026-02-12
   - **Blocking:** **CRITICAL** — Phase 2 completion (constitutional gate)
   - **Blocks:** LA-003 completion, LA-014 resolution
+  - **Executable Proof:**
+    - `pytest tests/engine/orchestration/test_one_perfect_entity_fixture.py -v` ✅ 1 passed (deterministic constitutional gate test)
+    - Sub-items complete: LA-020a-R1a ✅, LA-020a-R1b ✅, LA-020a-R2 ✅
   - **Success Criteria:**
     - ✅ Fixture-based OPE test passes reliably offline / repeatably
     - ✅ Test runs without network access (all connector calls stubbed)
@@ -1404,14 +1408,19 @@ Phase 2 → Phase 3 requires LA-020a (deterministic fixture-based OPE test) to p
     - **Description:** Update test to assert against FINAL merged entity (not single-source bypass). Mock persistence boundary to eliminate live DB dependency for CI execution.
     - **Verification:** Commit `3f16687` - Test updated with mocked persistence, validates merged entity text preservation, CI-friendly execution confirmed
 
-  - [ ] **LA-020a-R2: Document Fixture Scope Accounting**
+  - [x] **LA-020a-R2: Document Fixture Scope Accounting**
     - **Principle:** Methodology Compliance (development-methodology.md C4 ≤100 LOC)
     - **Location:** `docs/progress/development-catalog.md` (LA-020a completion record)
-    - **Description:** Add explicit note to LA-020a completion record stating that fixture JSON lines counted toward scope, requiring split into R1a/R1b.
+    - **Completed:** 2026-02-12
+    - **Description:** Added explicit scope-accounting note to the LA-020a completion record clarifying that fixture JSON line changes count toward the ≤100 LOC cap, which required splitting execution into LA-020a-R1a (fixture updates) and LA-020a-R1b (test updates).
+    - **Executable Proof:**
+      - `rg "fixture JSON line changes count toward the <=100 LOC cap" docs/progress/development-catalog.md` ✅ 1 match
+      - `rg "LA-020a-R1a \\(fixture updates\\) and LA-020a-R1b \\(test updates\\)" docs/progress/development-catalog.md` ✅ 1 match
+    - **Scope Accounting Note (LA-020a):** Fixture JSON line changes count toward methodology scope limits; LA-020a was intentionally split into R1a (fixture edits) and R1b (test edits) to remain compliant with C4 (≤100 LOC, ≤2 files per micro-iteration).
 
-- [ ] **LA-020b: Rename Existing OPE Test as Live Integration (Non-gating)**
+- [x] **LA-020b: Rename Existing OPE Test as Live Integration (Non-gating)**
   - **Principle:** Test Classification, Phase Gate Clarity
-  - **Location:** `tests/engine/orchestration/test_end_to_end_validation.py::test_one_perfect_entity_end_to_end_validation`
+  - **Location:** `tests/engine/orchestration/test_end_to_end_validation.py::test_ope_live_integration`
   - **Description:** Rename the current live SERP-dependent OPE test to clearly indicate it is non-deterministic and not a constitutional gate. Keep it as a live integration test for real-world validation, but do not use it as the Phase 2 completion criterion.
   - **Scope:** Test file only (rename + docstring update)
   - **Deliverables:**
@@ -1428,6 +1437,10 @@ Phase 2 → Phase 3 requires LA-020a (deterministic fixture-based OPE test) to p
     - ✅ Docstring updated to indicate live/flaky nature
     - ✅ Test continues to run but does not block Phase gates
     - ✅ Documentation updated to reference LA-020a as the constitutional gate
+  - **Completed:** 2026-02-12
+  - **Verification:**
+    - `rg "test_ope_live_integration|@pytest.mark.slow|LIVE integration test that depends on current SERP data" tests/engine/orchestration/test_end_to_end_validation.py` [ok]
+    - `pytest tests/engine/orchestration/test_end_to_end_validation.py::test_ope_live_integration -v -s` (live integration; environment-dependent)
 
 - [x] **LA-015: Schema/Policy Separation — entity.yaml vs entity_model.yaml Shadow Schema Duplication**
   - **Principle:** Single Source of Truth (system-vision.md Invariant 2), Schema Authority (CLAUDE.md "Schema Single Source of Truth")
