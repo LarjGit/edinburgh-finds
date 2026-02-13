@@ -37,11 +37,12 @@ class TestSelectConnectors:
         plan = select_connectors(request)
         connector_names = [node.spec.name for node in plan.connectors]
 
-        # Should always include serper (discovery) and google_places (enrichment)
+        # Should always include overture_maps + serper (discovery) and google_places (enrichment)
+        assert "overture_maps" in connector_names, "overture_maps should be selected as baseline"
         assert "serper" in connector_names, "serper should be selected for discovery"
         assert "google_places" in connector_names, "google_places should be selected for enrichment"
         # Phase B: May include additional connectors based on query features
-        assert len(connector_names) >= 2, "Should select at least base connectors"
+        assert len(connector_names) >= 3, "Should select at least baseline + core connectors"
 
     def test_select_connectors_deterministic(self):
         """select_connectors should return same connectors for same request."""
