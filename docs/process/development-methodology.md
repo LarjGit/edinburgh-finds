@@ -12,7 +12,8 @@
 - **docs/system-vision.md:** Architectural constitution (10 immutable invariants) — GOLDEN DOC
 - **docs/target-architecture.md:** Runtime execution pipeline specification (11 stages) — GOLDEN DOC
 - **docs/process/development-roadmap.md:** Strategic intent for what we are choosing to pursue (replaceable)
-- **`docs/progress/development-catalog-active.md`:** Execution ledger (items + completion proofs)
+- **`docs/progress/development-catalog.md`:** Execution ledger (items + completion proofs)
+- **docs/progress/development-catalog-archive.md:** Completed item archive (append-only)
 - **docs/progress/lessons-learned.md:** Patterns, pitfalls, doc clarifications (institutional learning)
 
 **Golden Docs Defined:** `system-vision.md` and `target-architecture.md` are the immutable architectural constitution. All work must be **compatible with** these documents. When golden docs define a rule or constraint, that rule cannot be violated. Conflicts → golden docs always win.
@@ -30,7 +31,7 @@
 1. Constraint System (C1–C9)
 2. Workflow A: Catalog Item Creation (Steps 1-3)
 3. Workflow B: Catalog Item Execution (Steps 4-11)
-4. Validation Gates (G1–G6)
+4. Validation Gates (Gate 1–6)
 5. Recovery Protocol
 6. Templates
 7. Catalog Archival Policy
@@ -166,7 +167,7 @@ These constraints are **MANDATORY** and **CANNOT BE VIOLATED**.
 
 **Context:** This workflow is exploratory and context-heavy. Requires understanding of roadmap, golden docs, and high-level architecture. Does NOT require reading actual code.
 
-**Output:** One or more catalog items written to `docs/progress/development-catalog-active.md`
+**Output:** One or more catalog items written to `docs/progress/development-catalog.md`
 
 **Session Independence:** After Step 3 completes, session can be cleared. Workflow B is context-independent.
 
@@ -281,7 +282,7 @@ One OR MORE **draft catalog items**, each containing:
 
 **Agent Action Upon Approval:**
 
-1. Write approved items to `docs/progress/development-catalog-active.md`
+1. Write approved items to `docs/progress/development-catalog.md`
 2. Remove `[DRAFT]` prefix
 3. Confirm to user: "Catalog items [IDs] written to catalog. Session can be cleared. To execute, reference catalog item ID."
 
@@ -305,7 +306,7 @@ One OR MORE **draft catalog items**, each containing:
 
 ### Step 4 — Code Reality Review (MANDATORY)
 
-**Precondition:** Catalog item must exist in `docs/progress/development-catalog-active.md`
+**Precondition:** Catalog item must exist in `docs/progress/development-catalog.md`
 
 **Agent Action:**
 
@@ -313,7 +314,7 @@ One OR MORE **draft catalog items**, each containing:
 
 ```bash
    # Agent reads:
-   `docs/progress/development-catalog-active.md`
+   `docs/progress/development-catalog.md`
    # Locates the specified item by ID
 ```
 
@@ -1017,8 +1018,6 @@ Actions:
 
 ### Micro-Plan Template (Principle-Driven)
 
-markdown
-
 ````markdown
 **Catalog Item ID:** [ID]
 
@@ -1030,17 +1029,17 @@ markdown
 - `path/to/file.py` ([N] file)
 
 **Current State (from Step 4 review):**
-```
+~~~
 # Lines X-Y in file.py contain:
 [actual code from review]
 # (explanation of how this violates/doesn't uphold principle)
-```n
+~~~
 **Minimal Change:**
 - [specific change to specific lines]
 - [replacement logic that upholds principle]:
-```
+~~~
 [pseudocode or generic code structure]
-```
+~~~
 
 **Executable Proof:**
 - Test `test_name()` passes (validates principle)
@@ -1057,8 +1056,6 @@ markdown
 
 ### Micro-Plan Template (Goal-Driven)
 
-markdown
-
 ````markdown
 **Catalog Item ID:** [ID]
 
@@ -1070,17 +1067,17 @@ markdown
 - `path/to/file.py` ([N] file)
 
 **Current State (from Step 4 review):**
-```
+~~~
 # Lines X-Y in file.py contain:
 [actual code from review]
 # (explanation of current behavior)
-```n
+~~~
 **Minimal Change:**
 - [specific change to specific lines]
 - [new behavior logic]:
-```
+~~~
 [pseudocode or generic code structure]
-```
+~~~
 
 **Executable Proof:**
 - Test `test_name()` passes (validates goal achievement)
@@ -1100,8 +1097,6 @@ markdown
 ---
 
 ### Completion Proof Template
-
-markdown
 
 ````markdown
 **Completed:** [YYYY-MM-DD]
@@ -1135,11 +1130,12 @@ psql $DATABASE_URL -c "SELECT entity_name, canonical_activities FROM entities WH
 
 ## 7. Catalog Archival Policy
 
-The Active Catalog (`docs/progress/development-catalog-active.md`) contains:
+The Active Catalog (`docs/progress/development-catalog.md`) contains:
 
 - Pending items
 - In-progress items
 - Completed items that have dependent active items
+- Completed items that are referenced by active roadmap items
 
 Archive Catalog file:
 
