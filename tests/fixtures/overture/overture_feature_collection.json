@@ -1,0 +1,37 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "overture-001",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -3.1883,
+          55.9533
+        ]
+      },
+      "properties": {
+        "name": "Overture Test Venue One",
+        "category": "sports_facility",
+        "city": "Edinburgh"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "overture-002",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -3.2005,
+          55.9448
+        ]
+      },
+      "properties": {
+        "name": "Overture Test Venue Two",
+        "category": "sports_facility",
+        "city": "Edinburgh"
+      }
+    }
+  ]
+}

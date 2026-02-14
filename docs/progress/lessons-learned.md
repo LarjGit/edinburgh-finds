@@ -125,3 +125,22 @@ Agents must consult this file during Step 2 (Code Reality Audit) to incorporate 
 **Suggested Guardrail (optional)**
 - Add schema validation test that verifies extractor output field names exactly match schema field names for all universal primitives. Test would iterate through EntityExtraction model fields and verify each extractor's test fixtures use identical field names. This would catch schema mismatches during development before they leak fields into discovered_attributes in production.
 
+
+---
+
+## 2026-02-14 - R-02.1 - Local Overture Adapter->RawIngestion Slice
+
+**Context**
+- Added local-file Overture connector and validated adapter->RawIngestion persistence behavior with deterministic metadata proof.
+
+**Pattern Candidate**
+- Yes
+- For local connector onboarding slices, validate the adapter contract first (`results` envelope + candidate mapping) before planner routing or live network integration.
+- Reference: `engine/ingestion/connectors/overture_local.py`, `tests/engine/orchestration/test_overture_adapter_persistence.py`
+
+**Documentation Clarity**
+- No
+
+**Pitfall**
+- Yes
+- Sandbox temp-path constraints can break `tmp_path` tests; prefer deterministic mocking of file reads when the test goal is payload-shape validation.
