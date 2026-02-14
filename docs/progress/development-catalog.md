@@ -2,7 +2,7 @@
 
 **Current Phase:** Phase 2: Pipeline Implementation
 **Validation Entity:** West of Scotland Padel (validation) / Edinburgh Sports Club (investigation)
-**Last Updated:** 2026-02-14 (R-02.1 completed: local Overture adapter->RawIngestion slice validated with deterministic metadata proof.)
+**Last Updated:** 2026-02-14 (R-02.1 completed in commit `bf9698c`: local Overture adapter->RawIngestion slice validated with deterministic metadata proof.)
 
 ---
 
@@ -2127,7 +2127,7 @@ executed under methodology constraints (C1-C9, G1-G6).
   - `tests/engine/orchestration/test_overture_adapter_persistence.py`
 - **Status:** Complete
 - **Completed:** 2026-02-14
-- **Commit:** `<pending>`
+- **Commit:** `bf9698c`
 - **Executable Proof:**
   - `pytest tests/engine/ingestion/connectors/test_overture_local_connector.py -v` ✅ PASSED
   - `pytest tests/engine/orchestration/test_overture_adapter_persistence.py::test_overture_adapter_path_persists_raw_ingestion_even_when_extraction_fails -v` ✅ PASSED
