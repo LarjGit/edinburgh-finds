@@ -12,7 +12,7 @@
 - **docs/system-vision.md:** Architectural constitution (10 immutable invariants) — GOLDEN DOC
 - **docs/target-architecture.md:** Runtime execution pipeline specification (11 stages) — GOLDEN DOC
 - **docs/process/development-roadmap.md:** Strategic intent for what we are choosing to pursue (replaceable)
-- **docs/progress/development-catalog.md:** Execution ledger (items + completion proofs)
+- **`docs/progress/development-catalog-active.md`:** Execution ledger (items + completion proofs)
 - **docs/progress/lessons-learned.md:** Patterns, pitfalls, doc clarifications (institutional learning)
 
 **Golden Docs Defined:** `system-vision.md` and `target-architecture.md` are the immutable architectural constitution. All work must be **compatible with** these documents. When golden docs define a rule or constraint, that rule cannot be violated. Conflicts → golden docs always win.
@@ -33,7 +33,8 @@
 4. Validation Gates (G1–G6)
 5. Recovery Protocol
 6. Templates
-7. Quick Reference
+7. Catalog Archival Policy
+8. Quick Reference
 
 ---
 
@@ -165,7 +166,7 @@ These constraints are **MANDATORY** and **CANNOT BE VIOLATED**.
 
 **Context:** This workflow is exploratory and context-heavy. Requires understanding of roadmap, golden docs, and high-level architecture. Does NOT require reading actual code.
 
-**Output:** One or more catalog items written to `docs/progress/development-catalog.md`
+**Output:** One or more catalog items written to `docs/progress/development-catalog-active.md`
 
 **Session Independence:** After Step 3 completes, session can be cleared. Workflow B is context-independent.
 
@@ -280,7 +281,7 @@ One OR MORE **draft catalog items**, each containing:
 
 **Agent Action Upon Approval:**
 
-1. Write approved items to `docs/progress/development-catalog.md`
+1. Write approved items to `docs/progress/development-catalog-active.md`
 2. Remove `[DRAFT]` prefix
 3. Confirm to user: "Catalog items [IDs] written to catalog. Session can be cleared. To execute, reference catalog item ID."
 
@@ -304,7 +305,7 @@ One OR MORE **draft catalog items**, each containing:
 
 ### Step 4 — Code Reality Review (MANDATORY)
 
-**Precondition:** Catalog item must exist in `docs/progress/development-catalog.md`
+**Precondition:** Catalog item must exist in `docs/progress/development-catalog-active.md`
 
 **Agent Action:**
 
@@ -312,7 +313,7 @@ One OR MORE **draft catalog items**, each containing:
 
 ```bash
    # Agent reads:
-   docs/progress/development-catalog.md
+   `docs/progress/development-catalog-active.md`
    # Locates the specified item by ID
 ```
 
@@ -390,6 +391,8 @@ Create a **half-page maximum** plan that:
 
 #### 🛑 USER CHECKPOINT 1: Approve Micro-Plan (1-2 min)
 
+**Position:** Between Steps 5 and 5.5.
+
 **Agent presents:** "Catalog item [ID]. Will change [specific function in file]. Here's the micro-plan. Approve?"
 
 **User reviews:**
@@ -413,6 +416,20 @@ Create a **half-page maximum** plan that:
 - 🔄 Revise → agent updates plan
 - ❌ Reject → agent proposes different approach or stops
 
+After approval, perform Step 5.5 (Persist Approved Micro-Plan).
+
+---
+
+### Step 5.5 — Persist Approved Micro-Plan
+
+After Checkpoint 1 approval, the agent must write the approved micro-plan to:
+
+`tmp/microplan_<CATALOG_ITEM_ID>.md`
+
+Ensure `tmp/` exists (create if missing).
+
+This file is the execution source of truth for the item.
+
 ---
 
 ### Step 6 — Review Constraints (Agent Self-Check)
@@ -432,6 +449,18 @@ Before executing, verify all constraints satisfied:
 **If any constraint violated → return to Step 5, revise plan**
 
 Confirm C1–C9 are satisfied. If not, stop and report blocker.
+
+---
+
+### Step 6.5 — Reload Micro-Plan from `tmp/`
+
+Before any implementation begins, the agent must re-open and read:
+
+`tmp/microplan_<CATALOG_ITEM_ID>.md`
+
+Execution must follow the contents of that file.
+
+If the chat context and the `tmp/` micro-plan differ, the `tmp/` file governs execution.
 
 ---
 
@@ -517,6 +546,12 @@ Confirm C1–C9 are satisfied. If not, stop and report blocker.
 - ❌ No continuation after invalidated assumptions without approval
 - ✅ Momentum preserved when goal and scope are stable
 - ✅ Full audit trail maintained via amendment notices
+
+If Step 8 occurs and is approved, the amendment must be appended to:
+
+`tmp/microplan_<CATALOG_ITEM_ID>.md`
+
+This file remains append-only during execution.
 
 ---
 
@@ -627,7 +662,10 @@ Confirm C1–C9 are satisfied. If not, stop and report blocker.
 3. **Foundation is now solid**
     - Never needs to be revisited
     - Permanent improvement
-4. Proceed to Step 11 (Compounding)
+4. **Completion cleanup**
+    - Delete `tmp/microplan_<CATALOG_ITEM_ID>.md`
+    - Micro-plan files are transient execution artifacts and are not retained as governance records
+5. Proceed to Step 11 (Compounding)
 
 ---
 
@@ -1095,7 +1133,32 @@ psql $DATABASE_URL -c "SELECT entity_name, canonical_activities FROM entities WH
 
 ---
 
-## 7. Quick Reference
+## 7. Catalog Archival Policy
+
+The Active Catalog (`docs/progress/development-catalog-active.md`) contains:
+
+- Pending items
+- In-progress items
+- Completed items that have dependent active items
+
+Archive Catalog file:
+
+- `docs/progress/development-catalog-archive.md`
+
+When a catalog item:
+
+- Is marked complete
+- Has no dependent active items
+- Is not referenced by any active roadmap item
+
+It must be moved from the Active Catalog to the Archive Catalog within 24 hours.
+
+- The Archive Catalog is append-only.
+- Archived items are not modified.
+
+---
+
+## 8. Quick Reference
 
 ### Two Independent Workflows
 
@@ -1111,7 +1174,9 @@ psql $DATABASE_URL -c "SELECT entity_name, canonical_activities FROM entities WH
 
 - Step 4: Code Reality Review
 - Step 5: Write Micro-Plan
+- Step 5.5: Persist Approved Micro-Plan
 - Step 6: Review Constraints
+- Step 6.5: Reload Micro-Plan from `tmp/`
 - Step 7: Execute with Proof-First
 - Step 8: Execution Amendment
 - Step 9: Agent Self-Validation
@@ -1124,7 +1189,7 @@ psql $DATABASE_URL -c "SELECT entity_name, canonical_activities FROM entities WH
 
 ### The 2 User Checkpoints (Workflow B Only)
 
-- **Checkpoint 1 (Start):** Approve micro-plan (1-2 min) — between Steps 5 and 6
+- **Checkpoint 1 (Start):** Approve micro-plan (1-2 min) — between Steps 5 and 5.5
 - **Checkpoint 2 (End):** Validate result (2-3 min) — between Steps 9 and 10
 
 ---
