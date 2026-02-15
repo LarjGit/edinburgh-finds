@@ -100,10 +100,14 @@ executed under methodology constraints (C1-C9, G1-G6).
 - **Goal:** Prove Overture works end-to-end (orchestration -> lens application -> persistence) with deterministic fixture input.
 - **Boundaries:** Add one deterministic E2E integration test using local fixtures and existing pipeline entrypoints; assert persisted entity shape.
 - **Exclusions:** No live API calls, no new connector hardening items, no production logic changes beyond test scaffolding.
-- **Files (Estimated):** `tests/engine/orchestration/test_overture_end_to_end_validation.py`
+- **Files (Actual):** `tests/engine/orchestration/test_overture_end_to_end_validation.py`
 - **Proof Approach:** Fixture-based E2E test asserting non-empty `canonical_*` and at least one populated `modules.*` field in persisted output.
 - **Estimated Scope:** 1 file, ~70 lines
-- **Status:** [ ] Pending
+- **Status:** Complete
+- **Completed:** 2026-02-15
+- **Commit:** `deb91b8`
+- **Executable Proof:**
+  - `pytest tests/engine/orchestration/test_overture_end_to_end_validation.py -v` PASSED
 
 ### R-02.5: Overture Release Download Connector (Live Source)
 - **Type:** Infrastructure

@@ -202,3 +202,22 @@ Agents must consult this file during Step 2 (Code Reality Audit) to incorporate 
 **Pitfall**
 - Yes
 - If module triggers depend only on activity facet, place-type-only evidence from sources like Overture can map canonical values but still produce empty modules.
+
+---
+
+## 2026-02-15 - R-02.4 - Overture Deterministic End-to-End Proof (Fixture-Based)
+
+**Context**
+- Added a deterministic orchestration E2E test that runs the Overture local connector through persistence, extraction, lens application, and final Entity upsert with canonical and module assertions.
+
+**Pattern Candidate**
+- Yes
+- For connector onboarding, add a fixture-based orchestration proof by patching planner connector selection to a single deterministic connector while keeping real extraction and lens application paths intact.
+- Reference: `tests/engine/orchestration/test_overture_end_to_end_validation.py`, commit `deb91b8`
+
+**Documentation Clarity**
+- No
+
+**Pitfall**
+- Yes
+- Environment temp directory permissions can break `tmp_path` in async tests; use an in-workspace deterministic fixture path with explicit cleanup in `finally` when sandbox constraints are present.
