@@ -109,7 +109,7 @@ mapping_rules:
     confidence: 0.95
 
   - id: map_sports_facility_type
-    pattern: "(?i)(sports\\s*(centre|center|facility|club)|leisure\\s*(centre|center)|padel\\s*(club|centre|center)|padel\\s*courts?)"
+    pattern: "(?i)(sports[\\s_]*(centre|center|facility|club)|leisure[\\s_]*(centre|center)|padel[\\s_]*(club|centre|center)|padel\\s*courts?)"
     canonical: "sports_facility"
     confidence: 0.85
 
@@ -125,6 +125,13 @@ module_triggers:
   - when:
       facet: activity
       value: tennis
+    add_modules: [sports_facility]
+    conditions:
+      - entity_class: place
+
+  - when:
+      facet: place_type
+      value: sports_facility
     add_modules: [sports_facility]
     conditions:
       - entity_class: place
@@ -155,6 +162,16 @@ modules:
           source: [serper, google_places, sport_scotland]
           entity_class: [place]
         normalizers: [round_integer]
+
+      - rule_id: extract_overture_primary_category
+        target_path: source_signals.primary_category
+        extractor: regex_capture
+        pattern: "(?i)(sports_centre|sports_center|sports\\s*(centre|center|facility|club))"
+        source_fields: [raw_categories]
+        confidence: 0.8
+        applicability:
+          source: [overture_local]
+          entity_class: [place]
 
 # Confidence threshold for mapping
 confidence_threshold: 0.7
