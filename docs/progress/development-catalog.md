@@ -83,10 +83,17 @@ executed under methodology constraints (C1-C9, G1-G6).
 - **Goal:** Map Overture evidence to non-empty `canonical_*` targets and trigger at least one module path via lens rules.
 - **Boundaries:** Lens-only rule updates for canonical mappings and at least one module trigger compatible with existing engine contracts.
 - **Exclusions:** No engine code changes, no planner/routing changes, no merge/finalization changes, no schema changes.
-- **Files (Estimated):** `engine/lenses/edinburgh_finds/lens.yaml`
+- **Files (Actual):**
+  - `engine/lenses/edinburgh_finds/lens.yaml`
+  - `tests/engine/extraction/test_lens_integration_modules.py`
 - **Proof Approach:** Fixture-based integration test at lens-application boundary asserting non-empty mapped `canonical_*` fields and at least one populated `modules.*` field.
 - **Estimated Scope:** 1 file, ~80 lines
-- **Status:** [ ] Pending
+- **Status:** Complete
+- **Completed:** 2026-02-15
+- **Commit:** `0257381`
+- **Executable Proof:**
+  - `pytest tests/engine/extraction/test_lens_integration_modules.py::test_module_extraction_for_overture_entity -v` PASSED
+  - `pytest tests/engine/extraction/test_lens_integration_modules.py::test_module_extraction_for_padel_entity -v` PASSED
 
 ### R-02.4: Overture Deterministic End-to-End Proof (Fixture-Based)
 - **Type:** Infrastructure

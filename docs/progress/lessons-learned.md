@@ -182,3 +182,23 @@ Agents must consult this file during Step 2 (Code Reality Audit) to incorporate 
 **Pitfall**
 - Yes
 - If tests assert `external_id` inside split `attributes`, they will fail because `external_id` is extraction-only and intentionally not part of persisted schema attributes.
+
+---
+
+## 2026-02-15 - R-02.3 - Overture Lens Mapping to Canonical + Module Trigger
+
+**Context**
+- Added lens-only mapping/trigger/rule updates so Overture `raw_categories=["sports_centre"]` produces non-empty `canonical_place_types` and at least one populated `modules.sports_facility.*` field.
+
+**Pattern Candidate**
+- Yes
+- For new connector evidence tokens, first add a lens-integration RED test that uses connector-native raw evidence (not entity name), then add minimal lens rules to satisfy mapping + trigger + deterministic module population.
+- Reference: `tests/engine/extraction/test_lens_integration_modules.py::test_module_extraction_for_overture_entity`, `engine/lenses/edinburgh_finds/lens.yaml`, commit `0257381`
+
+**Documentation Clarity**
+- Yes
+- `docs/target-architecture.md` Section 7.2 (Module Triggers) could include one explicit example that triggers from `place_type` facet, not only `activity`, to make multi-facet module triggering expectations concrete.
+
+**Pitfall**
+- Yes
+- If module triggers depend only on activity facet, place-type-only evidence from sources like Overture can map canonical values but still produce empty modules.
