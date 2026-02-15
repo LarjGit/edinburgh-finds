@@ -205,7 +205,7 @@ executed under methodology constraints (C1-C9, G1-G6).
 - **Prerequisite:** `R-02.7` complete (manual live connector execution path available).
 - **Status:** Complete
 - **Completed:** 2026-02-15
-- **Commit:** pending
+- **Commit:** `401487b`
 - **Executable Proof:**
   - `pytest tests/engine/ingestion/connectors/test_overture_release_connector.py -v` PASSED
   - `python -m engine.orchestration.cli run --lens edinburgh_finds --connector overture_release "overture live slice"` not executed in sandboxed validation (network-restricted environment)
