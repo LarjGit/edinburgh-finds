@@ -40,11 +40,19 @@ executed under methodology constraints (C1-C9, G1-G6).
 - **Goal:** Ensure Overture extraction emits only schema primitives and raw observations (no `canonical_*`, no `modules`) from fixture-driven input.
 - **Boundaries:** Implement/adjust Overture extractor output mapping to schema primitives + raw evidence surfaces; enforce Phase-1 contract at extraction boundary.
 - **Exclusions:** No lens mapping changes, no module population logic, no planner/routing changes, no merge/finalization changes.
-- **Files (Estimated):** `engine/extraction/extractors/overture_local_extractor.py`, `engine/extraction/run.py`
+- **Files (Actual):**
+  - `engine/extraction/extractors/overture_local_extractor.py`
+  - `engine/extraction/run.py`
+  - `tests/engine/extraction/extractors/test_overture_local_extractor.py`
 - **Proof Approach:** Fixture-based integration test asserting extraction output includes required primitives and excludes all `canonical_*`/`modules`.
 - **Estimated Scope:** 2 files, ~90 lines
 - **Prerequisite:** `R-02.2a` complete (real input contract established).
-- **Status:** [ ] Pending
+- **Status:** Complete
+- **Completed:** 2026-02-15
+- **Commit:** `dfdcf68`
+- **Executable Proof:**
+  - `pytest tests/engine/extraction/extractors/test_overture_local_extractor.py -v` PASSED
+  - `pytest tests/engine/orchestration/test_overture_adapter_persistence.py::test_overture_adapter_path_persists_raw_ingestion_even_when_extraction_fails -v` PASSED
 
 ### R-02.2a: Overture Official-Format Discovery + Contract Baseline (Prerequisite)
 - **Type:** Infrastructure

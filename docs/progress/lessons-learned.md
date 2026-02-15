@@ -164,3 +164,21 @@ Agents must consult this file during Step 2 (Code Reality Audit) to incorporate 
 **Pitfall**
 - Yes
 - Local synthetic fixtures can drift from official upstream format and silently force incorrect extractor contracts unless an explicit source-cited contract test is added first.
+
+## 2026-02-15 - R-02.2 - Overture Phase-1 Extraction Contract Compliance
+
+**Context**
+- Added a deterministic Overture Phase-1 extractor and source dispatch wiring so `overture_local` emits schema primitives plus raw observations from row-style Overture records.
+
+**Pattern Candidate**
+- Yes
+- Implement new connector extractors with an explicit boundary guard in `validate()` that rejects `canonical_*` and `modules` keys, then prove the contract with a fixture-based extraction test.
+- Reference: `engine/extraction/extractors/overture_local_extractor.py`, `tests/engine/extraction/extractors/test_overture_local_extractor.py`, commit `dfdcf68`
+
+**Documentation Clarity**
+- Yes
+- `docs/target-architecture.md` Section 4.2 could add one line under Phase 1: "New extractors should include explicit forbidden-field validation for canonical dimensions and modules at extractor validation time."
+
+**Pitfall**
+- Yes
+- If tests assert `external_id` inside split `attributes`, they will fail because `external_id` is extraction-only and intentionally not part of persisted schema attributes.
