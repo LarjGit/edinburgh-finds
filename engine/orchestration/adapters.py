@@ -349,6 +349,8 @@ class ConnectorAdapter:
             return self._map_openstreetmap(raw_item)
         elif source == "sport_scotland":
             return self._map_sport_scotland(raw_item)
+        elif source == "overture_release":
+            return self._map_overture_release(raw_item)
         else:
             # Fallback for unknown connectors
             return self._map_generic(raw_item)
@@ -541,6 +543,59 @@ class ConnectorAdapter:
             "lng": lng,
             "name": name,
             "source": "sport_scotland",
+            "raw": raw,
+        }
+
+    def _map_overture_release(self, item: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Map Overture row-style place record to canonical candidate schema.
+
+        Overture row records provide:
+        - id (stable Overture place ID)
+        - names.primary (display name)
+        - geometry.coordinates in GeoJSON [lng, lat] order (optional)
+        """
+        raw = normalize_for_json(item)
+
+        ids = {}
+        if item.get("id") is not None:
+            ids["overture"] = str(item["id"])
+
+        name = item.get("name")
+        if not isinstance(name, str) or not name.strip():
+            names = item.get("names")
+            if isinstance(names, dict):
+                primary_name = names.get("primary")
+                if isinstance(primary_name, str):
+                    name = primary_name
+                elif isinstance(primary_name, dict):
+                    primary_value = primary_name.get("value")
+                    if isinstance(primary_value, str):
+                        name = primary_value
+
+        if not isinstance(name, str) or not name.strip():
+            raise KeyError("Missing required Overture field: names.primary")
+        name = name.strip()
+
+        lat = None
+        lng = None
+        geometry = item.get("geometry")
+        if isinstance(geometry, dict) and geometry.get("type") == "Point":
+            coordinates = geometry.get("coordinates")
+            if isinstance(coordinates, list) and len(coordinates) >= 2:
+                try:
+                    lng = float(coordinates[0])
+                    lat = float(coordinates[1])
+                except (TypeError, ValueError):
+                    lat = None
+                    lng = None
+
+        return {
+            "ids": ids,
+            "lat": lat,
+            "lng": lng,
+            "name": name,
+            "source": "overture_release",
             "raw": raw,
         }
 
