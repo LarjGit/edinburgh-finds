@@ -281,3 +281,23 @@ Agents must consult this file during Step 2 (Code Reality Audit) to incorporate 
 **Pitfall**
 - Yes
 - Choosing artifacts by filename ordering alone can silently select oversized files and surface as timeout instability instead of an attributable connector constraint failure.
+
+---
+
+## 2026-02-15 - R-02.11 - Overture Release Connector Output Contract Alignment
+
+**Context**
+- Updated `overture_release` fetch output to return row-style place records under `results` (instead of artifact metadata), while preserving deterministic size-cap artifact selection.
+
+**Pattern Candidate**
+- Yes
+- For connector contract alignment, keep tests focused on outward payload shape and deterministic selection behavior, while mocking decode internals to avoid brittle parsing dependencies in contract tests.
+- Reference: `engine/ingestion/connectors/overture_release.py`, `tests/engine/ingestion/connectors/test_overture_release_connector.py`, commit `398803a`
+
+**Documentation Clarity**
+- Yes
+- `docs/target-architecture.md` Section 4.1/4.2 could add one line noting that live parquet-based connectors require an explicit runtime decode dependency and should fail fast if unavailable.
+
+**Pitfall**
+- Yes
+- Contract tests can pass with mocked decode, while live runtime still fails if parquet decode dependencies (for example `pyarrow`) are not installed.
