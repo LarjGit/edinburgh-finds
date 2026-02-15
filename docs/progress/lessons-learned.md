@@ -261,3 +261,23 @@ Agents must consult this file during Step 2 (Code Reality Audit) to incorporate 
 **Pitfall**
 - Yes
 - A connector can be "runnable" but still not operationally complete if first-default artifacts are too large for current timeout/budget constraints (live Overture part observed around 965 MB), so registration proof should be split from throughput hardening.
+
+---
+
+## 2026-02-15 - R-02.10 - Overture Live Timeout Hardening (Artifact Size Guardrails)
+
+**Context**
+- Added size-aware artifact selection in `overture_release` so live runs avoid oversized default parquet files, select deterministically, and fail fast with explicit error when no artifact is under cap.
+
+**Pattern Candidate**
+- Yes
+- For large bucket-backed connectors, resolve candidate artifacts from listing metadata first, enforce an explicit size cap before download, and make selection deterministic with stable tie-break keys.
+- Reference: `engine/ingestion/connectors/overture_release.py`, `tests/engine/ingestion/connectors/test_overture_release_connector.py`
+
+**Documentation Clarity**
+- Yes
+- `docs/target-architecture.md` Section 2.5 (Failure Semantics) could add one explicit connector example: "Operational guardrails (e.g., artifact size caps) should raise clear deterministic errors rather than allowing timeout-driven failures."
+
+**Pitfall**
+- Yes
+- Choosing artifacts by filename ordering alone can silently select oversized files and surface as timeout instability instead of an attributable connector constraint failure.

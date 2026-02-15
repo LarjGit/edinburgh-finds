@@ -21,13 +21,22 @@ def _getting_data_html() -> str:
 
 
 def _places_listing_xml() -> str:
-    return """
-    <ListBucketResult>
-      <Contents><Key>release/2026-02-01.0/theme=places/type=place/part-00001.parquet</Key></Contents>
-      <Contents><Key>release/2026-02-01.0/theme=places/type=place/part-00000.parquet</Key></Contents>
-    </ListBucketResult>
-    """
+    return _places_listing_xml_from_items(
+        [("part-00001.parquet", 200), ("part-00000.parquet", 100)]
+    )
 
+
+def _places_listing_xml_from_items(items) -> str:
+    contents = "".join(
+        (
+            "<Contents>"
+            f"<Key>release/2026-02-01.0/theme=places/type=place/{artifact_name}</Key>"
+            f"<Size>{size_bytes}</Size>"
+            "</Contents>"
+        )
+        for artifact_name, size_bytes in items
+    )
+    return f"<ListBucketResult>{contents}</ListBucketResult>"
 
 def _workspace_temp_dir() -> Path:
     temp_dir = Path("tmp") / "test_overture_release_connector" / uuid4().hex
@@ -57,6 +66,8 @@ async def test_fetch_downloads_latest_places_artifact_and_returns_deterministic_
                 {
                     "release": "2026-02-01.0",
                     "artifact_url": "https://overturemaps-us-west-2.s3.amazonaws.com/release/2026-02-01.0/theme=places/type=place/part-00000.parquet",
+                    "artifact_size_bytes": 100,
+                    "artifact_size_cap_bytes": 1073741824,
                     "file_path": str(temp_dir / "2026-02-01.0" / "part-00000.parquet"),
                     "file_hash": expected_hash,
                     "cached": False,
@@ -91,3 +102,47 @@ async def test_fetch_uses_cached_artifact_without_redownloading():
         assert second_payload["results"][0]["cached"] is True
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)
+
+@pytest.mark.asyncio
+async def test_fetch_selects_smallest_eligible_artifact_with_deterministic_tie_break():
+    temp_dir = _workspace_temp_dir()
+    try:
+        connector = OvertureReleaseConnector(cache_dir=str(temp_dir), max_artifact_size_bytes=800)
+        connector._fetch_text = AsyncMock(
+            side_effect=lambda url: _getting_data_html()
+            if url == connector.getting_data_url
+            else _places_listing_xml_from_items(
+                [
+                    ("part-00002.parquet", 700),
+                    ("part-00000.parquet", 700),
+                    ("part-00001.parquet", 900),
+                ]
+            )
+        )
+        connector._fetch_bytes = AsyncMock(return_value=b"overture parquet bytes")
+
+        payload = await connector.fetch("ignored query")
+
+        assert payload["results"][0]["artifact_url"].endswith("part-00000.parquet")
+        assert payload["results"][0]["artifact_size_bytes"] == 700
+        assert payload["results"][0]["artifact_size_cap_bytes"] == 800
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+@pytest.mark.asyncio
+async def test_fetch_raises_when_no_artifact_satisfies_size_cap():
+    connector = OvertureReleaseConnector(max_artifact_size_bytes=150)
+    connector._fetch_text = AsyncMock(
+        side_effect=lambda url: _getting_data_html()
+        if url == connector.getting_data_url
+        else _places_listing_xml_from_items(
+            [("part-00000.parquet", 200), ("part-00001.parquet", 300)]
+        )
+    )
+    connector._fetch_bytes = AsyncMock(return_value=b"unused")
+
+    with pytest.raises(
+        ValueError,
+        match="No Overture places parquet artifact for release 2026-02-01.0 satisfies size cap 150 bytes",
+    ):
+        await connector.fetch("ignored query")

@@ -19,11 +19,13 @@ class OvertureReleaseConnector(BaseConnector):
         getting_data_url: str = "https://docs.overturemaps.org/getting-data/",
         blob_base_url: str = "https://overturemaps-us-west-2.s3.amazonaws.com",
         timeout_seconds: int = 30,
+        max_artifact_size_bytes: int = 1024 * 1024 * 1024,
     ):
         self.cache_dir = Path(cache_dir or "engine/data/raw/overture_release")
         self.getting_data_url = getting_data_url
         self.blob_base_url = blob_base_url.rstrip("/")
         self.timeout_seconds = timeout_seconds
+        self.max_artifact_size_bytes = max_artifact_size_bytes
 
     @property
     def source_name(self) -> str:
@@ -33,7 +35,17 @@ class OvertureReleaseConnector(BaseConnector):
         del query  # Connector fetch is release-driven rather than query-driven.
 
         release = await self._resolve_latest_release()
-        artifact_url = (await self._resolve_places_artifact_urls(release))[0]
+        artifacts = await self._resolve_places_artifacts(release)
+        eligible_artifacts = [
+            artifact for artifact in artifacts if artifact["size_bytes"] <= self.max_artifact_size_bytes
+        ]
+        if not eligible_artifacts:
+            raise ValueError(
+                f"No Overture places parquet artifact for release {release} satisfies size cap {self.max_artifact_size_bytes} bytes"
+            )
+        selected_artifact = eligible_artifacts[0]
+        artifact_url = selected_artifact["url"]
+        artifact_size_bytes = selected_artifact["size_bytes"]
         cache_path = self._artifact_cache_path(release, artifact_url)
 
         if cache_path.exists():
@@ -50,6 +62,8 @@ class OvertureReleaseConnector(BaseConnector):
                 {
                     "release": release,
                     "artifact_url": artifact_url,
+                    "artifact_size_bytes": artifact_size_bytes,
+                    "artifact_size_cap_bytes": self.max_artifact_size_bytes,
                     "file_path": str(cache_path),
                     "file_hash": hashlib.sha256(file_bytes).hexdigest(),
                     "cached": cached,
@@ -68,17 +82,36 @@ class OvertureReleaseConnector(BaseConnector):
             raise ValueError("Could not resolve Overture release identifier from getting-data page")
         return release_ids[-1]
 
-    async def _resolve_places_artifact_urls(self, release: str) -> List[str]:
+    async def _resolve_places_artifacts(self, release: str) -> List[Dict[str, Any]]:
         listing_xml = await self._fetch_text(self._places_listing_url(release))
+        contents_blocks = re.findall(r"<Contents>(.*?)</Contents>", listing_xml, flags=re.DOTALL)
         key_pattern = (
             r"<Key>(release/"
             + re.escape(release)
             + r"/theme=places/type=place/[^<]+\.parquet)</Key>"
         )
-        keys = sorted(set(re.findall(key_pattern, listing_xml)))
-        if not keys:
+        size_pattern = r"<Size>(\d+)</Size>"
+
+        artifact_sizes: Dict[str, int] = {}
+        for block in contents_blocks:
+            key_match = re.search(key_pattern, block)
+            size_match = re.search(size_pattern, block)
+            if key_match is None or size_match is None:
+                continue
+            key = key_match.group(1)
+            size_bytes = int(size_match.group(1))
+            existing_size = artifact_sizes.get(key)
+            if existing_size is None or size_bytes < existing_size:
+                artifact_sizes[key] = size_bytes
+
+        if not artifact_sizes:
             raise ValueError(f"Could not resolve Overture places parquet artifacts for release {release}")
-        return [f"{self.blob_base_url}/{key}" for key in keys]
+
+        artifacts = [
+            {"key": key, "url": f"{self.blob_base_url}/{key}", "size_bytes": size_bytes}
+            for key, size_bytes in artifact_sizes.items()
+        ]
+        return sorted(artifacts, key=lambda artifact: (artifact["size_bytes"], artifact["key"]))
 
     def _places_listing_url(self, release: str) -> str:
         prefix = f"release/{release}/theme=places/type=place/"

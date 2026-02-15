@@ -1,5 +1,7 @@
 # Development Catalog
 
+**Last Updated:** 2026-02-15
+
 ---
 
 ## R-02: Connector Tier System
@@ -195,10 +197,15 @@ executed under methodology constraints (C1-C9, G1-G6).
   - No planner heuristic changes.
   - No lens/extraction/module/merge/finalization changes.
   - No UI or schema changes.
-- **Files (Estimated):** `engine/ingestion/connectors/overture_release.py`, `tests/engine/ingestion/connectors/test_overture_release_connector.py`
+- **Files (Actual):** `engine/ingestion/connectors/overture_release.py`, `tests/engine/ingestion/connectors/test_overture_release_connector.py`
 - **Proof Approach:**
   - `pytest tests/engine/ingestion/connectors/test_overture_release_connector.py -v`
   - `python -m engine.orchestration.cli run --lens edinburgh_finds --connector overture_release "overture live slice"` (connector reports success path or explicit guarded failure, not timeout)
 - **Estimated Scope:** 2 files, ~100 lines
 - **Prerequisite:** `R-02.7` complete (manual live connector execution path available).
-- **Status:** [ ] Pending
+- **Status:** Complete
+- **Completed:** 2026-02-15
+- **Commit:** pending
+- **Executable Proof:**
+  - `pytest tests/engine/ingestion/connectors/test_overture_release_connector.py -v` PASSED
+  - `python -m engine.orchestration.cli run --lens edinburgh_finds --connector overture_release "overture live slice"` not executed in sandboxed validation (network-restricted environment)
