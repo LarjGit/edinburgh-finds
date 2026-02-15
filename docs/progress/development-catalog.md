@@ -97,3 +97,58 @@ executed under methodology constraints (C1-C9, G1-G6).
 - **Proof Approach:** Fixture-based E2E test asserting non-empty `canonical_*` and at least one populated `modules.*` field in persisted output.
 - **Estimated Scope:** 1 file, ~70 lines
 - **Status:** [ ] Pending
+
+### R-02.5: Overture Release Download Connector (Live Source)
+- **Type:** Infrastructure
+- **Goal:** Add a live Overture acquisition path that downloads the latest Overture Places release artifact over HTTP and caches it locally for ingestion.
+- **Boundaries:** Implement release URL resolution, download, cache path, and deterministic file hash metadata.
+- **Exclusions:** No extraction changes, no lens changes, no merge/finalization changes.
+- **Files (Estimated):** `engine/ingestion/connectors/overture_release.py`, `tests/engine/ingestion/connectors/test_overture_release_connector.py`
+- **Proof Approach:** Connector test validates successful download/caching contract and deterministic metadata fields.
+- **Estimated Scope:** 2 files, ~90 lines
+- **Prerequisite:** `R-02.4` complete (fixture E2E baseline in place).
+- **Status:** [ ] Pending
+
+### R-02.6: Overture Row-Record Ingestion to RawIngestion (Live Path)
+- **Type:** Infrastructure
+- **Goal:** Ingest live Overture row-style records from the downloaded release into `RawIngestion` through the orchestration adapter path.
+- **Boundaries:** Adapter mapping for row records, one raw payload per persisted ingestion record, deterministic hash/metadata.
+- **Exclusions:** No extraction/lens/module logic changes.
+- **Files (Estimated):** `engine/orchestration/adapters.py`, `tests/engine/orchestration/test_overture_release_adapter_persistence.py`
+- **Proof Approach:** Integration test proving adapter->`RawIngestion` persistence for live-format row records.
+- **Estimated Scope:** 2 files, ~100 lines
+- **Prerequisite:** `R-02.5` complete (live artifact acquisition available).
+- **Status:** [ ] Pending
+
+### R-02.7: Overture Live Connector Registration + Runnable Execution Slice
+- **Type:** Infrastructure
+- **Goal:** Make the live Overture connector runnable from orchestration so a single live execution can be triggered intentionally.
+- **Boundaries:** Register connector spec and minimal execution wiring needed for one manual live run.
+- **Exclusions:** No planner heuristics expansion, no UI, no schema changes.
+- **Files (Estimated):** `engine/orchestration/connectors/registry.py`, `engine/orchestration/cli.py`
+- **Proof Approach:** CLI proof command executes the live Overture connector and produces accepted candidates.
+- **Estimated Scope:** 2 files, ~80 lines
+- **Prerequisite:** `R-02.6` complete (live row ingestion seam validated).
+- **Status:** [ ] Pending
+
+### R-02.8: Overture Live End-to-End Single-Run Proof (DB Validation)
+- **Type:** Infrastructure
+- **Goal:** Prove one real live Overture run persists at least one entity with primitives plus non-empty canonical dimensions and at least one populated module field.
+- **Boundaries:** Add a live E2E validation artifact (test/script) and explicit DB assertions.
+- **Exclusions:** No new connector capabilities, no lens refactor beyond what `R-02.3` already covers.
+- **Files (Estimated):** `tests/engine/orchestration/test_overture_live_end_to_end_validation.py`, `docs/progress/overture_live_e2e_proof.md`
+- **Proof Approach:** Run command + DB assertions for required persisted fields (`entity_name`, coordinates/address if available, non-empty `canonical_*`, non-empty `modules.*` field).
+- **Estimated Scope:** 2 files, ~100 lines
+- **Prerequisite:** `R-02.3` and `R-02.7` complete (lens mapping and live run path both available).
+- **Status:** [ ] Pending
+
+### R-02.9: Overture Live Runbook + Safety Controls
+- **Type:** Infrastructure
+- **Goal:** Document and enforce the operational run steps for the live Overture E2E slice (inputs, limits, retry/failure behavior).
+- **Boundaries:** Add operator runbook and guardrails for controlled single-run execution.
+- **Exclusions:** No runtime behavior changes beyond guardrail flags already introduced.
+- **Files (Estimated):** `COMMANDS.md`, `docs/progress/overture_live_e2e_proof.md`
+- **Proof Approach:** Runbook commands are executable and reproduce the live single-run proof flow.
+- **Estimated Scope:** 2 files, ~70 lines
+- **Prerequisite:** `R-02.8` complete (live E2E proof implemented).
+- **Status:** [ ] Pending
