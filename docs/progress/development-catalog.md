@@ -114,11 +114,16 @@ executed under methodology constraints (C1-C9, G1-G6).
 - **Goal:** Add a live Overture acquisition path that downloads the latest Overture Places release artifact over HTTP and caches it locally for ingestion.
 - **Boundaries:** Implement release URL resolution, download, cache path, and deterministic file hash metadata.
 - **Exclusions:** No extraction changes, no lens changes, no merge/finalization changes.
-- **Files (Estimated):** `engine/ingestion/connectors/overture_release.py`, `tests/engine/ingestion/connectors/test_overture_release_connector.py`
+- **Files (Actual):** `engine/ingestion/connectors/overture_release.py`, `tests/engine/ingestion/connectors/test_overture_release_connector.py`
 - **Proof Approach:** Connector test validates successful download/caching contract and deterministic metadata fields.
 - **Estimated Scope:** 2 files, ~90 lines
 - **Prerequisite:** `R-02.4` complete (fixture E2E baseline in place).
-- **Status:** [ ] Pending
+- **Status:** Complete
+- **Completed:** 2026-02-15
+- **Commit:** `4bfa1d5`
+- **Executable Proof:**
+  - `pytest tests/engine/ingestion/connectors/test_overture_release_connector.py -v` PASSED
+  - `pytest tests/engine/ingestion/connectors/test_overture_local_connector.py -v` PASSED
 
 ### R-02.6: Overture Row-Record Ingestion to RawIngestion (Live Path)
 - **Type:** Infrastructure
