@@ -144,3 +144,23 @@ Agents must consult this file during Step 2 (Code Reality Audit) to incorporate 
 **Pitfall**
 - Yes
 - Sandbox temp-path constraints can break `tmp_path` tests; prefer deterministic mocking of file reads when the test goal is payload-shape validation.
+
+---
+
+## 2026-02-15 - R-02.2a - Overture Official Input Contract Baseline
+
+**Context**
+- Established a fixture-backed Overture Places contract baseline from official docs/schema/release sources and added fail-fast tests that reject unsupported GeoJSON `FeatureCollection` assumptions.
+
+**Pattern Candidate**
+- Yes
+- For upstream-source onboarding, define a contract fixture + boundary test + source-cited doc before implementing extractor behavior; this prevents extraction logic from being built on local shape assumptions.
+- Reference: `tests/engine/ingestion/connectors/test_overture_input_contract.py`, `tests/fixtures/overture/overture_places_contract_samples.json`, `docs/progress/overture_input_contract.md`, commit `b5d231b`
+
+**Documentation Clarity**
+- Yes
+- `docs/target-architecture.md` Section 4.2 (Extraction Boundary) could add a one-line note: "For new connectors, establish and cite an upstream payload contract baseline before Phase-1 extractor implementation."
+
+**Pitfall**
+- Yes
+- Local synthetic fixtures can drift from official upstream format and silently force incorrect extractor contracts unless an explicit source-cited contract test is added first.
