@@ -156,7 +156,7 @@ executed under methodology constraints (C1-C9, G1-G6).
 - **Prerequisite:** `R-02.6` complete (live row ingestion seam validated).
 - **Status:** Complete
 - **Completed:** 2026-02-15
-- **Commit:** `<pending>`
+- **Commit:** `d237659`
 - **Executable Proof:**
   - `pytest tests/engine/orchestration/test_registry.py -v` PASSED
   - `pytest tests/engine/orchestration/test_cli.py -v` PASSED
