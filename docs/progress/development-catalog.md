@@ -209,3 +209,27 @@ executed under methodology constraints (C1-C9, G1-G6).
 - **Executable Proof:**
   - `pytest tests/engine/ingestion/connectors/test_overture_release_connector.py -v` PASSED
   - `python -m engine.orchestration.cli run --lens edinburgh_finds --connector overture_release "overture live slice"` not executed in sandboxed validation (network-restricted environment)
+
+### R-02.11: Overture Release Connector Output Contract Alignment
+- **Type:** Infrastructure
+- **Goal:** Align `overture_release` connector output with the established Overture row-record contract so downstream adapter/persistence can consume real connector output deterministically.
+- **Boundaries:**
+  - Update live connector fetch output shape to return row-style place records under the existing adapter envelope.
+  - Keep deterministic artifact-selection guardrails intact (size-cap behavior remains explicit/fail-fast).
+  - Add/adjust connector-focused tests that validate returned payload contract (row records, required core fields for downstream mapping).
+- **Exclusions:**
+  - No extractor dispatch changes (`overture_release` extraction wiring is out of scope).
+  - No lens mapping/module logic changes.
+  - No planner/CLI/persistence behavior changes.
+  - No DB E2E proof work (remains in `R-02.8` after this prerequisite is complete).
+- **Files (Actual):**
+  - `engine/ingestion/connectors/overture_release.py`
+  - `tests/engine/ingestion/connectors/test_overture_release_connector.py`
+- **Proof Approach:** Connector contract tests pass and assert row-style place records are returned (not artifact-metadata-only payloads).
+- **Estimated Scope:** 2 files, ~90 lines
+- **Status:** Complete
+- **Completed:** 2026-02-15
+- **Commit:** `398803a`
+- **Executable Proof:**
+  - `pytest tests/engine/ingestion/connectors/test_overture_release_connector.py -v` PASSED
+  - `pytest tests/engine/orchestration/test_overture_release_adapter_persistence.py -v` PASSED
