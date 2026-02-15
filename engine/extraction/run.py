@@ -22,6 +22,7 @@ from engine.extraction.extractors import (
     SerperExtractor,
     OSMExtractor,
 )
+from engine.extraction.extractors.overture_local_extractor import OvertureLocalExtractor
 from engine.extraction.base import BaseExtractor
 from engine.extraction.logging_config import (
     get_extraction_logger,
@@ -69,6 +70,7 @@ def get_extractor_for_source(source: str) -> BaseExtractor:
         "open_charge_map": OpenChargeMapExtractor,
         "serper": SerperExtractor,
         "osm": OSMExtractor,
+        "overture_local": OvertureLocalExtractor,
     }
 
     extractor_class = extractors.get(source)
