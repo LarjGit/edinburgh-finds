@@ -155,7 +155,7 @@ Agents must consult this file during Step 2 (Code Reality Audit) to incorporate 
 **Pattern Candidate**
 - Yes
 - For upstream-source onboarding, define a contract fixture + boundary test + source-cited doc before implementing extractor behavior; this prevents extraction logic from being built on local shape assumptions.
-- Reference: `tests/engine/ingestion/connectors/test_overture_input_contract.py`, `tests/fixtures/overture/overture_places_contract_samples.json`, `docs/progress/overture_input_contract.md`, commit `b5d231b`
+- Reference: `tests/engine/ingestion/connectors/test_overture_input_contract.py`, `tests/fixtures/overture/overture_places_contract_samples.json`, commit `b5d231b`
 
 **Documentation Clarity**
 - Yes
@@ -301,3 +301,23 @@ Agents must consult this file during Step 2 (Code Reality Audit) to incorporate 
 **Pitfall**
 - Yes
 - Contract tests can pass with mocked decode, while live runtime still fails if parquet decode dependencies (for example `pyarrow`) are not installed.
+
+---
+
+## 2026-02-15 - R-02.8 - Overture Live End-to-End Single-Run Proof
+
+**Context**
+- Added a live-gated Overture E2E validation test artifact plus proof runbook so DB-shape assertions are executable without changing production connector capabilities.
+
+**Pattern Candidate**
+- Yes
+- For live-source proofs, keep the validation path in a dedicated live-gated test and document operator commands/inputs in a colocated proof artifact.
+- Reference: `tests/engine/orchestration/test_overture_live_end_to_end_validation.py`, `docs/progress/overture_live_e2e_proof.md`
+
+**Documentation Clarity**
+- Yes
+- `docs/target-architecture.md` Section 11.1 could add one sentence: "Live validation artifacts may be environment-gated, but must encode explicit DB assertions for canonical dimensions and modules."
+
+**Pitfall**
+- Yes
+- A connector can be operationally runnable but still fail constitutional DB validation unless source dispatch and module applicability are explicitly accounted for in proof design.

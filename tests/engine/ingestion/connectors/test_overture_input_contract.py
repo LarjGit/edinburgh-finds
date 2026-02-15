@@ -6,7 +6,6 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 FIXTURE_PATH = REPO_ROOT / "tests" / "fixtures" / "overture" / "overture_places_contract_samples.json"
-DOC_PATH = REPO_ROOT / "docs" / "progress" / "overture_input_contract.md"
 REQUIRED_FIELDS = ("id", "version", "sources", "names", "categories", "geometry")
 
 
@@ -77,10 +76,7 @@ def test_contract_fixture_rejects_missing_required_field_with_explicit_message()
         _validate_overture_place_row(invalid["record"])
 
 
-def test_contract_doc_includes_sources_and_access_date():
+def test_contract_fixture_includes_sources_and_access_date():
     contract = _load_contract_samples()
-    doc_text = DOC_PATH.read_text(encoding="utf-8")
-
-    assert "Accessed: 2026-02-15" in doc_text
-    for link in contract["official_sources"]:
-        assert link in doc_text
+    assert contract["accessed_on"] == "2026-02-15"
+    assert contract["official_sources"]

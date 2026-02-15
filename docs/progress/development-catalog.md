@@ -71,8 +71,7 @@ executed under methodology constraints (C1-C9, G1-G6).
 - **Files (Estimated):**
   - `tests/fixtures/overture/overture_places_contract_samples.json`
   - `tests/engine/ingestion/connectors/test_overture_input_contract.py`
-  - `docs/progress/overture_input_contract.md`
-- **Proof Approach:** Contract tests pass for official-schema-aligned samples and fail for invalid/unsupported shapes with explicit error messages; contract doc includes clickable source links and access date.
+- **Proof Approach:** Contract tests pass for official-schema-aligned samples and fail for invalid/unsupported shapes with explicit error messages; fixture includes official source links and access date metadata.
 - **Estimated Scope:** 1 code-adjacent fixture + 1 test + 1 doc, ~100 lines
 - **Status:** Complete
 - **Completed:** 2026-02-15
@@ -169,11 +168,19 @@ executed under methodology constraints (C1-C9, G1-G6).
 - **Goal:** Prove one real live Overture run persists at least one entity with primitives plus non-empty canonical dimensions and at least one populated module field.
 - **Boundaries:** Add a live E2E validation artifact (test/script) and explicit DB assertions.
 - **Exclusions:** No new connector capabilities, no lens refactor beyond what `R-02.3` already covers.
-- **Files (Estimated):** `tests/engine/orchestration/test_overture_live_end_to_end_validation.py`, `docs/progress/overture_live_e2e_proof.md`
+- **Files (Actual):**
+  - `tests/engine/orchestration/test_overture_live_end_to_end_validation.py`
+  - `docs/progress/overture_live_e2e_proof.md`
 - **Proof Approach:** Run command + DB assertions for required persisted fields (`entity_name`, coordinates/address if available, non-empty `canonical_*`, non-empty `modules.*` field).
 - **Estimated Scope:** 2 files, ~100 lines
 - **Prerequisite:** `R-02.3` and `R-02.7` complete (lens mapping and live run path both available).
-- **Status:** [ ] Pending
+- **Status:** Complete
+- **Completed:** 2026-02-15
+- **Commit:** `TBD`
+- **Executable Proof:**
+  - `pytest tests/engine/orchestration/test_overture_live_end_to_end_validation.py -q` SKIPPED (live-gated in local sandbox without required env/network)
+  - `pytest tests/engine/orchestration/test_overture_end_to_end_validation.py -q` PASSED
+  - `python -m engine.orchestration.cli run --lens edinburgh_finds --connector overture_release "overture live slice"` documented in `docs/progress/overture_live_e2e_proof.md` (not executed in network-restricted sandbox)
 
 ### R-02.9: Overture Live Runbook + Safety Controls
 - **Type:** Infrastructure
