@@ -24,6 +24,14 @@ load_dotenv(Path(__file__).parent.parent.parent / ".env")
 from engine.orchestration.planner import orchestrate
 from engine.orchestration.types import IngestRequest, IngestionMode
 from engine.orchestration.execution_context import ExecutionContext
+from engine.orchestration.adapters import ConnectorAdapter
+from engine.orchestration.orchestrator_state import OrchestratorState
+from engine.orchestration.query_features import QueryFeatures
+from engine.orchestration.execution_plan import (
+    ConnectorSpec as PlanConnectorSpec,
+    ExecutionPhase,
+)
+from engine.orchestration.registry import CONNECTOR_REGISTRY, get_connector_instance
 from engine.lenses.loader import VerticalLens, LensConfigError
 
 import os
@@ -255,6 +263,59 @@ def format_report(report: Dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+async def orchestrate_single_connector(
+    connector_name: str,
+    request: IngestRequest,
+    *,
+    ctx: ExecutionContext,
+) -> Dict[str, Any]:
+    """
+    Execute exactly one connector through the adapter path.
+
+    This is an intentional manual execution slice that bypasses planner
+    connector selection while preserving adapter execution, metrics, and
+    deduplication behavior.
+    """
+    registry_spec = CONNECTOR_REGISTRY[connector_name]
+    execution_spec = PlanConnectorSpec(
+        name=registry_spec.name,
+        phase=(
+            ExecutionPhase.DISCOVERY
+            if registry_spec.phase == "discovery"
+            else ExecutionPhase.ENRICHMENT
+        ),
+        trust_level=int(registry_spec.trust_level * 100),
+        requires=["request.query"],
+        provides=["context.candidates"],
+        supports_query_only=True,
+        estimated_cost_usd=registry_spec.cost_per_call_usd,
+        timeout_seconds=registry_spec.timeout_seconds,
+        rate_limit_per_day=registry_spec.rate_limit_per_day,
+    )
+
+    connector = get_connector_instance(connector_name)
+    adapter = ConnectorAdapter(connector, execution_spec)
+    state = OrchestratorState()
+    query_features = QueryFeatures.extract(
+        request.query,
+        request,
+        lens_name=ctx.lens_id,
+    )
+
+    await adapter.execute(request, query_features, ctx, state, db=None)
+
+    for candidate in state.candidates:
+        state.accept_entity(candidate)
+
+    return {
+        "query": request.query,
+        "candidates_found": len(state.candidates),
+        "accepted_entities": len(state.accepted_entities),
+        "connectors": state.metrics,
+        "errors": state.errors,
+    }
+
+
 def main():
     """
     CLI entry point for orchestration.
@@ -297,6 +358,12 @@ def main():
         action="store_true",
         default=False,
         help="Allow fallback to default lens 'edinburgh_finds' for dev/test (default: False)",
+    )
+    run_parser.add_argument(
+        "--connector",
+        type=str,
+        default=None,
+        help="Run exactly one connector by name (bypasses planner selection)",
     )
 
     # Parse arguments
@@ -374,8 +441,27 @@ def main():
             persist=args.persist,
         )
 
+        if args.connector is not None and args.connector not in CONNECTOR_REGISTRY:
+            print(colorize(f"ERROR: Unknown connector '{args.connector}'", Colors.RED))
+            print(f"Available connectors: {', '.join(sorted(CONNECTOR_REGISTRY.keys()))}")
+            sys.exit(1)
+
+        if args.connector and args.persist:
+            print(
+                colorize(
+                    "ERROR: --persist is not supported with --connector manual override",
+                    Colors.RED,
+                )
+            )
+            sys.exit(1)
+
         # Execute orchestration with bootstrapped context (async)
-        report = asyncio.run(orchestrate(request, ctx=ctx))
+        if args.connector:
+            report = asyncio.run(
+                orchestrate_single_connector(args.connector, request, ctx=ctx)
+            )
+        else:
+            report = asyncio.run(orchestrate(request, ctx=ctx))
 
         # Format and print report
         formatted = format_report(report)

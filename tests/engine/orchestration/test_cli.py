@@ -289,6 +289,73 @@ class TestCLIMain:
                     assert len(output) > 0, "main() should print output"
                     assert "tennis courts Edinburgh" in output, "output should include query"
 
+    def test_main_run_with_connector_override_executes_single_connector_path(self):
+        """--connector should execute manual single-connector path and bypass planner orchestration."""
+        async def mock_async_single(connector_name, request, *, ctx):
+            assert connector_name == "overture_release"
+            return {
+                "query": request.query,
+                "candidates_found": 1,
+                "accepted_entities": 1,
+                "connectors": {
+                    "overture_release": {
+                        "executed": True,
+                        "candidates_added": 1,
+                        "execution_time_ms": 10,
+                        "cost_usd": 0.0,
+                    }
+                },
+                "errors": [],
+            }
+
+        with patch("sys.argv", ["cli.py", "run", "--lens", "edinburgh_finds", "--connector", "overture_release", "overture live slice"]):
+            with patch("engine.orchestration.cli.orchestrate_single_connector", side_effect=mock_async_single) as mock_single:
+                with patch("engine.orchestration.cli.orchestrate") as mock_orchestrate:
+                    with patch("engine.orchestration.cli.bootstrap_lens") as mock_bootstrap:
+                        from engine.orchestration.execution_context import ExecutionContext
+                        mock_bootstrap.return_value = ExecutionContext(
+                            lens_id="edinburgh_finds",
+                            lens_contract={
+                                "mapping_rules": [],
+                                "module_triggers": [],
+                                "modules": {},
+                                "facets": {},
+                                "values": [],
+                                "confidence_threshold": 0.7,
+                            },
+                            lens_hash="test_hash"
+                        )
+
+                        with pytest.raises(SystemExit) as exc_info:
+                            main()
+
+                        assert exc_info.value.code == 0
+                        mock_single.assert_called_once()
+                        mock_orchestrate.assert_not_called()
+
+    def test_main_run_with_unknown_connector_override_exits(self):
+        """Unknown --connector value should fail fast with non-zero exit."""
+        with patch("sys.argv", ["cli.py", "run", "--lens", "edinburgh_finds", "--connector", "does_not_exist", "test query"]):
+            with patch("engine.orchestration.cli.bootstrap_lens") as mock_bootstrap:
+                from engine.orchestration.execution_context import ExecutionContext
+                mock_bootstrap.return_value = ExecutionContext(
+                    lens_id="edinburgh_finds",
+                    lens_contract={
+                        "mapping_rules": [],
+                        "module_triggers": [],
+                        "modules": {},
+                        "facets": {},
+                        "values": [],
+                        "confidence_threshold": 0.7,
+                    },
+                    lens_hash="test_hash"
+                )
+
+                with pytest.raises(SystemExit) as exc_info:
+                    main()
+
+                assert exc_info.value.code == 1
+
 
 class TestCLIIntegration:
     """Integration tests for CLI with real orchestration."""

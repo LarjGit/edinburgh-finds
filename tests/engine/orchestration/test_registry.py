@@ -20,6 +20,7 @@ from engine.ingestion.connectors.open_street_map import OSMConnector
 from engine.ingestion.connectors.sport_scotland import SportScotlandConnector
 from engine.ingestion.connectors.edinburgh_council import EdinburghCouncilConnector
 from engine.ingestion.connectors.open_charge_map import OpenChargeMapConnector
+from engine.ingestion.connectors.overture_release import OvertureReleaseConnector
 
 
 class TestConnectorSpec:
@@ -167,6 +168,21 @@ class TestConnectorRegistry:
         assert 0.0 <= spec.trust_level <= 1.0
         assert spec.timeout_seconds > 0
 
+    def test_registry_contains_overture_release(self):
+        """Registry should contain overture_release connector for live release fetches."""
+        assert "overture_release" in CONNECTOR_REGISTRY
+        assert isinstance(CONNECTOR_REGISTRY["overture_release"], ConnectorSpec)
+
+    def test_overture_release_spec_metadata(self):
+        """Overture release spec should have metadata for live release downloads."""
+        spec = CONNECTOR_REGISTRY["overture_release"]
+
+        assert spec.name == "overture_release"
+        assert spec.phase == "discovery"
+        assert spec.cost_per_call_usd == 0.0  # Free source download
+        assert 0.0 <= spec.trust_level <= 1.0
+        assert spec.timeout_seconds > 0
+
     def test_all_specs_have_valid_phases(self):
         """All connector specs should have valid phase values."""
         valid_phases = {"discovery", "enrichment"}
@@ -262,6 +278,14 @@ class TestGetConnectorInstance:
         assert isinstance(connector, OpenChargeMapConnector)
         assert connector.source_name == "open_charge_map"
 
+    def test_can_instantiate_overture_release(self):
+        """Should be able to instantiate OvertureReleaseConnector."""
+        connector = get_connector_instance("overture_release")
+
+        assert isinstance(connector, BaseConnector)
+        assert isinstance(connector, OvertureReleaseConnector)
+        assert connector.source_name == "overture_release"
+
     def test_each_call_creates_new_instance(self):
         """Each factory call should create a fresh instance."""
         connector1 = get_connector_instance("serper")
@@ -286,14 +310,15 @@ class TestGetConnectorInstance:
         error_message = str(exc_info.value)
         assert "serper" in error_message
         assert "google_places" in error_message
+        assert "overture_release" in error_message
 
 
 class TestRegistryConnectorCoverage:
     """Test that registry covers all Phase 1 connectors."""
 
-    def test_phase3_has_six_connectors(self):
-        """Phase 3 should include 6 connectors: all Phase 2 connectors plus EdinburghCouncil and OpenChargeMap."""
-        assert len(CONNECTOR_REGISTRY) == 6
+    def test_phase3_has_seven_connectors(self):
+        """Phase 3 should include 7 connectors including overture_release."""
+        assert len(CONNECTOR_REGISTRY) == 7
         assert set(CONNECTOR_REGISTRY.keys()) == {
             "serper",
             "google_places",
@@ -301,16 +326,17 @@ class TestRegistryConnectorCoverage:
             "sport_scotland",
             "edinburgh_council",
             "open_charge_map",
+            "overture_release",
         }
 
-    def test_has_two_discovery_connectors(self):
-        """Phase 2 should have two discovery connectors."""
+    def test_has_three_discovery_connectors(self):
+        """Registry should have three discovery connectors including overture_release."""
         discovery_connectors = [
             spec for spec in CONNECTOR_REGISTRY.values() if spec.phase == "discovery"
         ]
-        assert len(discovery_connectors) == 2
+        assert len(discovery_connectors) == 3
         discovery_names = {spec.name for spec in discovery_connectors}
-        assert discovery_names == {"serper", "openstreetmap"}
+        assert discovery_names == {"serper", "openstreetmap", "overture_release"}
 
     def test_has_four_enrichment_connectors(self):
         """Phase 3 should have four enrichment connectors."""

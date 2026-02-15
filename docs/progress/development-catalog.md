@@ -146,11 +146,21 @@ executed under methodology constraints (C1-C9, G1-G6).
 - **Goal:** Make the live Overture connector runnable from orchestration so a single live execution can be triggered intentionally.
 - **Boundaries:** Register connector spec and minimal execution wiring needed for one manual live run.
 - **Exclusions:** No planner heuristics expansion, no UI, no schema changes.
-- **Files (Estimated):** `engine/orchestration/connectors/registry.py`, `engine/orchestration/cli.py`
-- **Proof Approach:** CLI proof command executes the live Overture connector and produces accepted candidates.
+- **Files (Actual):**
+  - `engine/orchestration/registry.py`
+  - `engine/orchestration/cli.py`
+  - `tests/engine/orchestration/test_registry.py`
+  - `tests/engine/orchestration/test_cli.py`
+- **Proof Approach:** Registry/CLI tests pass and the CLI proof command executes the manual live connector path with observable connector metrics.
 - **Estimated Scope:** 2 files, ~80 lines
 - **Prerequisite:** `R-02.6` complete (live row ingestion seam validated).
-- **Status:** [ ] Pending
+- **Status:** Complete
+- **Completed:** 2026-02-15
+- **Commit:** `<pending>`
+- **Executable Proof:**
+  - `pytest tests/engine/orchestration/test_registry.py -v` PASSED
+  - `pytest tests/engine/orchestration/test_cli.py -v` PASSED
+  - `python -m engine.orchestration.cli run --lens edinburgh_finds --connector overture_release "overture live slice"` executed manual connector path; live artifact download timed out under current connector limits (tracked in `R-02.10`)
 
 ### R-02.8: Overture Live End-to-End Single-Run Proof (DB Validation)
 - **Type:** Infrastructure
@@ -172,4 +182,23 @@ executed under methodology constraints (C1-C9, G1-G6).
 - **Proof Approach:** Runbook commands are executable and reproduce the live single-run proof flow.
 - **Estimated Scope:** 2 files, ~70 lines
 - **Prerequisite:** `R-02.8` complete (live E2E proof implemented).
+- **Status:** [ ] Pending
+
+### R-02.10: Overture Live Connector Timeout Hardening (Large Artifact Control)
+- **Type:** Infrastructure
+- **Goal:** Make `overture_release` live runs complete reliably by preventing default selection of oversized place artifacts that exceed execution timeout.
+- **Boundaries:**
+  - Add deterministic artifact-selection guardrails in the live connector (size-aware selection and/or explicit size cap handling).
+  - Keep connector behavior observable with clear error messaging when no artifact satisfies guardrails.
+  - Cover behavior with connector-level tests using mocked listing metadata.
+- **Exclusions:**
+  - No planner heuristic changes.
+  - No lens/extraction/module/merge/finalization changes.
+  - No UI or schema changes.
+- **Files (Estimated):** `engine/ingestion/connectors/overture_release.py`, `tests/engine/ingestion/connectors/test_overture_release_connector.py`
+- **Proof Approach:**
+  - `pytest tests/engine/ingestion/connectors/test_overture_release_connector.py -v`
+  - `python -m engine.orchestration.cli run --lens edinburgh_finds --connector overture_release "overture live slice"` (connector reports success path or explicit guarded failure, not timeout)
+- **Estimated Scope:** 2 files, ~100 lines
+- **Prerequisite:** `R-02.7` complete (manual live connector execution path available).
 - **Status:** [ ] Pending

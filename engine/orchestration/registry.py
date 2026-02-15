@@ -19,6 +19,7 @@ from engine.ingestion.connectors.open_street_map import OSMConnector
 from engine.ingestion.connectors.sport_scotland import SportScotlandConnector
 from engine.ingestion.connectors.edinburgh_council import EdinburghCouncilConnector
 from engine.ingestion.connectors.open_charge_map import OpenChargeMapConnector
+from engine.ingestion.connectors.overture_release import OvertureReleaseConnector
 
 
 @dataclass(frozen=True)
@@ -48,7 +49,7 @@ class ConnectorSpec:
     rate_limit_per_day: int
 
 
-# Global connector registry - Phase 3 includes 6 connectors
+# Global connector registry - Phase 3 includes 7 connectors
 CONNECTOR_REGISTRY: Dict[str, ConnectorSpec] = {
     "serper": ConnectorSpec(
         name="serper",
@@ -104,6 +105,15 @@ CONNECTOR_REGISTRY: Dict[str, ConnectorSpec] = {
         timeout_seconds=60,
         rate_limit_per_day=10000,  # Conservative estimate (no published limit)
     ),
+    "overture_release": ConnectorSpec(
+        name="overture_release",
+        connector_class="engine.ingestion.connectors.overture_release.OvertureReleaseConnector",
+        phase="discovery",
+        cost_per_call_usd=0.0,  # Public release artifacts
+        trust_level=0.85,  # Authoritative structured release data
+        timeout_seconds=120,
+        rate_limit_per_day=1000,  # Operational cap for intentional manual runs
+    ),
 }
 
 
@@ -116,6 +126,7 @@ _CONNECTOR_CLASSES: Dict[str, Type[BaseConnector]] = {
     "sport_scotland": SportScotlandConnector,
     "edinburgh_council": EdinburghCouncilConnector,
     "open_charge_map": OpenChargeMapConnector,
+    "overture_release": OvertureReleaseConnector,
 }
 
 
