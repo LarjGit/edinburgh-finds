@@ -1,6 +1,5 @@
 """Live Overture release connector for downloading Places artifacts over HTTP."""
 
-import hashlib
 import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -50,26 +49,14 @@ class OvertureReleaseConnector(BaseConnector):
 
         if cache_path.exists():
             file_bytes = cache_path.read_bytes()
-            cached = True
         else:
             file_bytes = await self._fetch_bytes(artifact_url)
             cache_path.parent.mkdir(parents=True, exist_ok=True)
             cache_path.write_bytes(file_bytes)
-            cached = False
+        rows = self._decode_place_rows(file_bytes, artifact_url)
 
-        return {
-            "results": [
-                {
-                    "release": release,
-                    "artifact_url": artifact_url,
-                    "artifact_size_bytes": artifact_size_bytes,
-                    "artifact_size_cap_bytes": self.max_artifact_size_bytes,
-                    "file_path": str(cache_path),
-                    "file_hash": hashlib.sha256(file_bytes).hexdigest(),
-                    "cached": cached,
-                }
-            ]
-        }
+        del release, artifact_size_bytes  # Selection metadata is internal; contract returns rows.
+        return {"results": rows}
 
     def _artifact_cache_path(self, release: str, artifact_url: str) -> Path:
         artifact_name = artifact_url.rsplit("/", 1)[-1]
@@ -134,6 +121,60 @@ class OvertureReleaseConnector(BaseConnector):
                 if response.status != 200:
                     raise RuntimeError(f"HTTP {response.status} while requesting {url}")
                 return await response.read()
+
+    def _decode_place_rows(
+        self, artifact_bytes: bytes, artifact_url: str
+    ) -> List[Dict[str, Any]]:
+        try:
+            import pyarrow as pa
+            import pyarrow.parquet as pq
+        except ImportError as exc:
+            raise RuntimeError(
+                "pyarrow is required to decode Overture parquet artifacts from "
+                f"{artifact_url}"
+            ) from exc
+
+        try:
+            table = pq.read_table(pa.BufferReader(artifact_bytes))
+        except Exception as exc:
+            raise RuntimeError(
+                f"Failed decoding Overture parquet artifact {artifact_url}"
+            ) from exc
+
+        records = table.to_pylist()
+        if not isinstance(records, list):
+            raise ValueError(
+                f"Decoded Overture artifact did not yield row records: {artifact_url}"
+            )
+
+        filtered_rows = [row for row in records if self._is_supported_place_row(row)]
+        if not filtered_rows:
+            raise ValueError(
+                "Decoded Overture artifact contained no rows with required id and "
+                f"name fields: {artifact_url}"
+            )
+        return filtered_rows
+
+    def _is_supported_place_row(self, row: Any) -> bool:
+        if not isinstance(row, dict):
+            return False
+        if row.get("id") is None:
+            return False
+
+        name = row.get("name")
+        if isinstance(name, str) and name.strip():
+            return True
+
+        names = row.get("names")
+        if isinstance(names, dict):
+            primary_name = names.get("primary")
+            if isinstance(primary_name, str) and primary_name.strip():
+                return True
+            if isinstance(primary_name, dict):
+                value = primary_name.get("value")
+                return isinstance(value, str) and bool(value.strip())
+
+        return False
 
     async def save(self, data: dict, source_url: str) -> str:
         del data, source_url
