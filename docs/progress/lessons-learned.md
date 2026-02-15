@@ -221,3 +221,23 @@ Agents must consult this file during Step 2 (Code Reality Audit) to incorporate 
 **Pitfall**
 - Yes
 - Environment temp directory permissions can break `tmp_path` in async tests; use an in-workspace deterministic fixture path with explicit cleanup in `finally` when sandbox constraints are present.
+
+---
+
+## 2026-02-15 - R-02.6 - Overture Row-Record Adapter Persistence
+
+**Context**
+- Added explicit `overture_release` row-record mapping in orchestration adapter and validated adapter->RawIngestion persistence emits one raw ingestion per row with deterministic hash/metadata.
+
+**Pattern Candidate**
+- Yes
+- For new connector payload shapes, add a proof-first adapter->persistence seam test before mapper changes; then implement connector-specific mapping only for structural fields (name/id/coords/raw).
+- Reference: `tests/engine/orchestration/test_overture_release_adapter_persistence.py`, `engine/orchestration/adapters.py`, commit `fd3896d`
+
+**Documentation Clarity**
+- Yes
+- `docs/target-architecture.md` Section 4.2 could add one line clarifying that connector adapters may perform source-format structural mapping, while semantic interpretation remains exclusively in lens application.
+
+**Pitfall**
+- Yes
+- Relying on generic adapter fallback for row-style records can silently degrade names to `"Unknown"` and still produce candidates, masking ingestion quality regressions until persistence-stage assertions are added.

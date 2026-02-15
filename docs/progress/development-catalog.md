@@ -130,11 +130,16 @@ executed under methodology constraints (C1-C9, G1-G6).
 - **Goal:** Ingest live Overture row-style records from the downloaded release into `RawIngestion` through the orchestration adapter path.
 - **Boundaries:** Adapter mapping for row records, one raw payload per persisted ingestion record, deterministic hash/metadata.
 - **Exclusions:** No extraction/lens/module logic changes.
-- **Files (Estimated):** `engine/orchestration/adapters.py`, `tests/engine/orchestration/test_overture_release_adapter_persistence.py`
+- **Files (Actual):** `engine/orchestration/adapters.py`, `tests/engine/orchestration/test_overture_release_adapter_persistence.py`
 - **Proof Approach:** Integration test proving adapter->`RawIngestion` persistence for live-format row records.
 - **Estimated Scope:** 2 files, ~100 lines
 - **Prerequisite:** `R-02.5` complete (live artifact acquisition available).
-- **Status:** [ ] Pending
+- **Status:** Complete
+- **Completed:** 2026-02-15
+- **Commit:** `fd3896d`
+- **Executable Proof:**
+  - `pytest tests/engine/orchestration/test_overture_release_adapter_persistence.py -v` PASSED
+  - `pytest tests/engine/orchestration/test_overture_adapter_persistence.py -v` PASSED
 
 ### R-02.7: Overture Live Connector Registration + Runnable Execution Slice
 - **Type:** Infrastructure
