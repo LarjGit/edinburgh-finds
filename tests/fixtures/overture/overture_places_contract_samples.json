@@ -1,0 +1,96 @@
+{
+  "contract_version": "2026-02-15",
+  "accessed_on": "2026-02-15",
+  "accepted_shape": "row_place_records",
+  "official_sources": [
+    "https://docs.overturemaps.org/getting-data/",
+    "https://docs.overturemaps.org/schema/reference/places/place/",
+    "https://docs.overturemaps.org/schema/reference/places/",
+    "https://github.com/OvertureMaps/data/releases"
+  ],
+  "valid_samples": [
+    {
+      "id": "08f2a3f1b87c9b1f03f0c1671dc10000",
+      "version": 1,
+      "sources": [
+        {
+          "dataset": "osm",
+          "record_id": "node/123456789"
+        }
+      ],
+      "names": {
+        "primary": "Example Club"
+      },
+      "categories": {
+        "primary": "sports_centre"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -3.1902,
+          55.9521
+        ]
+      },
+      "bbox": {
+        "xmin": -3.1902,
+        "xmax": -3.1902,
+        "ymin": 55.9521,
+        "ymax": 55.9521
+      },
+      "theme": "places",
+      "type": "place"
+    },
+    {
+      "id": "08f2a3f1b87c9b1f03f0c1671dc10001",
+      "version": 2,
+      "sources": [
+        {
+          "dataset": "msft",
+          "record_id": "poi_98765"
+        }
+      ],
+      "names": {
+        "primary": "Example Cafe"
+      },
+      "categories": {
+        "primary": "cafe"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -3.1856,
+          55.9478
+        ]
+      }
+    }
+  ],
+  "invalid_samples": [
+    {
+      "label": "feature_collection_wrapper",
+      "record": {
+        "type": "FeatureCollection",
+        "features": []
+      }
+    },
+    {
+      "label": "missing_required_fields",
+      "record": {
+        "id": "08f2a3f1b87c9b1f03f0c1671dc10002",
+        "version": 1,
+        "names": {
+          "primary": "Broken Record"
+        },
+        "categories": {
+          "primary": "cafe"
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -3.18,
+            55.95
+          ]
+        }
+      }
+    }
+  ]
+}
