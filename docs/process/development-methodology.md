@@ -352,6 +352,32 @@ One OR MORE **draft catalog items**, each containing:
 
 ---
 
+### Step 4.5 — Existing Micro-Plan Check (Mandatory)
+
+**Purpose:**  
+Prevent plan drift and ensure execution follows the persisted micro-plan when one already exists.
+
+Before drafting a new micro-plan (Step 5), the agent MUST:
+
+1. Compute the expected path:
+   - `tmp/microplan_<CATALOG_ITEM_ID>.md`
+
+2. Check whether that file exists.
+
+3. If the file exists:
+   - The agent MUST immediately load and read it.
+   - The agent MUST treat it as the authoritative execution plan.
+   - The agent MUST NOT draft a new plan in chat.
+   - The agent MUST proceed directly to execution using the loaded plan.
+
+4. If the file does not exist:
+   - The agent may proceed to Step 5 and draft a new micro-plan.
+
+**Violation Rule:**  
+If a micro-plan exists in `tmp/` and the agent drafts a new one in chat, execution must stop and restart from this step.
+
+---
+
 ### Step 5 — Write Micro-Plan
 
 Create a **half-page maximum** plan that:
