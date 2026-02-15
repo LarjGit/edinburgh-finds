@@ -176,7 +176,7 @@ executed under methodology constraints (C1-C9, G1-G6).
 - **Prerequisite:** `R-02.3` and `R-02.7` complete (lens mapping and live run path both available).
 - **Status:** Complete
 - **Completed:** 2026-02-15
-- **Commit:** `TBD`
+- **Commit:** `b7cc1e5`
 - **Executable Proof:**
   - `pytest tests/engine/orchestration/test_overture_live_end_to_end_validation.py -q` SKIPPED (live-gated in local sandbox without required env/network)
   - `pytest tests/engine/orchestration/test_overture_end_to_end_validation.py -q` PASSED
