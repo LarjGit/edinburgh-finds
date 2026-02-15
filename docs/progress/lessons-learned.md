@@ -241,3 +241,23 @@ Agents must consult this file during Step 2 (Code Reality Audit) to incorporate 
 **Pitfall**
 - Yes
 - Relying on generic adapter fallback for row-style records can silently degrade names to `"Unknown"` and still produce candidates, masking ingestion quality regressions until persistence-stage assertions are added.
+
+---
+
+## 2026-02-15 - R-02.7 - Overture Live Connector Registration + Runnable Execution Slice
+
+**Context**
+- Registered `overture_release` in orchestration registry/factory and added CLI `--connector` override for intentional single-connector execution through the adapter path.
+
+**Pattern Candidate**
+- Yes
+- For connector onboarding, add a manual execution slice (`--connector`) that reuses existing adapter metrics and deduplication flow rather than introducing a separate execution path.
+- Reference: `engine/orchestration/registry.py`, `engine/orchestration/cli.py`, commit `d237659`
+
+**Documentation Clarity**
+- Yes
+- `docs/target-architecture.md` Section 4.1 could include a short note that manual connector selection is an allowed operator path when it still flows through the same deterministic adapter boundary.
+
+**Pitfall**
+- Yes
+- A connector can be "runnable" but still not operationally complete if first-default artifacts are too large for current timeout/budget constraints (live Overture part observed around 965 MB), so registration proof should be split from throughput hardening.
